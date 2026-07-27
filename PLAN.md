@@ -16,6 +16,8 @@ Outcome of this plan: a new standalone repo, `YEPPDash`, with an ASP.NET Core 10
 
 ## Architecture Overview
 
+All three diagrams below are also available as editable scenes in [`docs/diagrams/`](docs/diagrams) (`architecture.excalidraw`, `auth-flow.excalidraw`, `join-flow.excalidraw`) — open them at [excalidraw.com](https://excalidraw.com) for a version you can rearrange, annotate, or export from directly.
+
 ```mermaid
 flowchart LR
     Browser["Browser<br/>(Angular SPA)"] -->|"https://yeppbot.com/*"| Proxy["Caddy Reverse Proxy<br/>(TLS, path routing)"]

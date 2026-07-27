@@ -18,10 +18,12 @@ Status: early development, pre-Phase 1. See [`ROADMAP.md`](ROADMAP.md) for curre
 
 ```
 YEPPDash/
-├── backend/     # ASP.NET Core 10 Web API (Rider project)
-├── frontend/    # Angular 22 + Material SSR app (WebStorm project)
-├── infra/       # Caddyfile, dev DB seed scripts
-└── docker-compose.yml
+├── backend/           # ASP.NET Core 10 Web API (Rider project)
+├── frontend/          # Angular 22 + Material SSR app (WebStorm project)
+├── infra/             # Caddyfile
+├── docs/diagrams/     # architecture + sequence diagrams as editable .excalidraw scenes
+├── docker-compose.yml # local: backend + frontend + Caddy, connects out to the real Dev/Prod MariaDB
+└── .env.example       # template for the gitignored .env (DB connection strings)
 ```
 
 `backend/` and `frontend/` are independent IDE project roots (Rider / WebStorm respectively) inside this one repository — see [`PLAN.md`](PLAN.md#repository-structure) for why they're kept separate.
@@ -30,6 +32,7 @@ YEPPDash/
 
 - [`PLAN.md`](PLAN.md) — architecture, design decisions and their rationale, API contracts, deployment approach
 - [`ROADMAP.md`](ROADMAP.md) — ordered, checkable implementation steps
+- [`docs/diagrams/`](docs/diagrams) — architecture overview, auth flow, and channel join/leave flow as editable [Excalidraw](https://excalidraw.com) scenes
 
 ## Relationship to YEPPBot
 

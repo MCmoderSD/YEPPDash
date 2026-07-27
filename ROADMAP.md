@@ -16,8 +16,8 @@ Konkrete, abhakbare Schrittfolge zur Umsetzung von [PLAN.md](PLAN.md). Jeder Sch
 - [x] 10. Throwaway-Endpoint `GET /api/_internal/dbcheck` gegen den DB-User testen, insbesondere `BIT(1)`-Mapping von `Channel.active`/`autoShoutout` verifizieren — bestätigt: MySqlConnector liefert `BIT(1)` als `UInt64`, nicht `bool`; `BitBoolTypeHandler` registriert, Endpoint liefert danach saubere `bool`-Werte gegen `yeppdash_ro` auf Dev
 - [x] 11. Lokale `docker-compose.yml`: Backend-Container, Frontend-SSR-Container, Caddy — kein lokaler DB-Container, Backend verbindet sich über `DbTarget` (`Dev`/`Prod`, Default `Dev`) nach draußen zu den echten Servern 10.10.10.1/dedi.mcmodersd.de; Zugangsdaten über gitignorete `.env` (Vorlage: `.env.example`)
 - [x] 12. Caddyfile (`infra/Caddyfile`): `/` → Frontend-Container `:4000`, `/api/*` → Backend-Container, aktuell auf `:80` (noch kein Reverse-Proxy-VPS vorhanden)
-- [ ] 13. Vollständigen Round-Trip lokal verifizieren: Theme rendert korrekt, `dbcheck` liefert Daten — `dbcheck` über Caddy gegen Dev-DB bereits bestätigt (echte Zeilen kommen durch); visuelle Theme-Prüfung im Browser steht noch aus
-- [ ] 14. Drei Diagramme aus PLAN.md als `.excalidraw`-Szenendateien exportieren (Architektur, Auth-Flow, Join-Flow)
+- [x] 13. Vollständigen Round-Trip lokal verifizieren: Theme rendert korrekt, `dbcheck` liefert Daten — im Browser über `http://localhost/` bestätigt: `body`-Hintergrund `rgb(24,24,27)`/`--mat-sys-surface: #18181b`, `--mat-sys-primary: #a3d73c`, `color-scheme: dark`, keine Konsolenfehler; `/api/_internal/dbcheck` liefert echte Dev-DB-Zeilen durch Caddy
+- [x] 14. Drei Diagramme aus PLAN.md als `.excalidraw`-Szenendateien exportieren (Architektur, Auth-Flow, Join-Flow) — liegen unter `docs/diagrams/`, strukturell validiert (Schema, Bound-Element-Referenzen, keine doppelten IDs); kurzer Sichtcheck in Excalidraw selbst empfohlen
 
 ## Phase 1 — Twitch Auth Ende-zu-Ende
 
