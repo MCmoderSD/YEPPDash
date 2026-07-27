@@ -119,7 +119,7 @@ YEPPDash/
 
 | Environment | Redirect URI to add |
 |---|---|
-| Local dev | `http://localhost:8080/api/auth/callback` (Twitch allows plain HTTP for `localhost`) |
+| Local dev | `https://localhost:7218/api/auth/callback` (Kestrel's own HTTPS port from `launchSettings.json`, backend run directly via `dotnet run`/Rider — no Docker, no Caddy; port 8080 was already in use on the dev machine) |
 | Prod (once deployed) | `https://api.yeppbot.com/api/auth/callback` |
 | Dev (once deployed) | `https://api.yeppbot.dev/api/auth/callback` |
 
