@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Backend — .NET / NuGet
+  - package-ecosystem: "nuget"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    groups:
+      dotnet-dependencies:
+        patterns:
+          - "*"
+
+  # Frontend — npm / Angular
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    groups:
+      angular-dependencies:
+        patterns:
+          - "@angular/*"
+      other-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@angular/*"
+
+  # Dockerfiles (backend + frontend base images)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # GitHub Actions workflows, once added
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

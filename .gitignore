@@ -1,0 +1,39 @@
+# ── .NET (backend/) ──────────────────────────────────────────
+bin/
+obj/
+*.user
+*.userosscache
+*.suo
+.vs/
+artifacts/
+*.dll
+*.pdb
+
+# ── Node / Angular (frontend/) ───────────────────────────────
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+.npm/
+
+# ── JetBrains IDEs (Rider / WebStorm — one .idea/ per sub-project) ──
+.idea/
+*.iml
+*.iws
+
+# ── Docker ────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Secrets / local config (never commit real credentials) ──
+*.local.json
+appsettings.Local.json
+.env
+.env.*
+!.env.example
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

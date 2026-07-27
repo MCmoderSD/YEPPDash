@@ -1,0 +1,18 @@
+# Applies wherever a Docker build context includes the repo root.
+# Once backend/ and frontend/ are scaffolded, add matching per-folder
+# .dockerignore files (bin/obj for backend, node_modules/dist for frontend)
+# scoped to each service's own build context.
+
+.git/
+.github/
+.idea/
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+*.md
+!README.md
+.env
+.env.*
+!.env.example
