@@ -20,9 +20,10 @@ All three diagrams below are also available as editable scenes in [`docs/diagram
 
 ```mermaid
 flowchart LR
-    Browser["Browser<br/>(Angular SPA)"] -->|"https://yeppbot.com/*"| Proxy["Caddy Reverse Proxy<br/>(TLS, path routing)"]
-    Proxy -->|"/ (proxy -> :4000)"| FE["YEPPDash Frontend<br/>Angular 22 SSR + Material<br/>(Express runtime, like MCmoderSD.de)"]
-    Proxy -->|"/api/*"| BE["YEPPDash Backend<br/>ASP.NET Core 10"]
+    Browser["Browser"] -->|"https://dash.yeppbot.com/.dev"| Proxy["Caddy<br/>(operator's existing reverse-proxy setup,<br/>NOT part of this repo)"]
+    Browser -->|"https://api.yeppbot.com/.dev"| Proxy
+    Proxy -->|"dash.* -> :4000"| FE["YEPPDash Frontend<br/>Angular 22 SSR + Material<br/>(Express runtime, like MCmoderSD.de)"]
+    Proxy -->|"api.* -> :8080"| BE["YEPPDash Backend<br/>ASP.NET Core 10"]
     BE -->|"SELECT-only, least-priv user"| DB[("MariaDB `helix`<br/>owned by YEPPBot")]
     BE -->|"OIDC/OAuth login"| Twitch["Twitch<br/>(Identity Provider)"]
     BE -.->|"internal API (deferred)<br/>shared-secret header"| Bot["YEPPBot<br/>(Java, Twitch4J)"]
@@ -30,33 +31,35 @@ flowchart LR
     Bot -->|"bot-account token"| Twitch
 ```
 
+Note: `dash.` and `api.` are separate subdomains (not path prefixes on one origin), so frontend↔backend calls are cross-origin from the browser's point of view — see [Auth](#auth) and [Deployment](#deployment) for what that changes.
+
 ```mermaid
 sequenceDiagram
     participant U as Browser
-    participant P as Caddy Proxy
-    participant BE as YEPPDash Backend
+    participant P as Caddy (operator's setup)
+    participant BE as YEPPDash Backend (api.yeppbot.*)
     participant T as Twitch (OIDC)
 
-    U->>P: GET /api/auth/login
+    U->>P: GET api.yeppbot.com/api/auth/login
     P->>BE: forward
     BE-->>U: 302 -> Twitch authorize (+claims param for email)
     U->>T: authenticate & consent
-    T-->>U: 302 -> /api/auth/callback?code=...
+    T-->>U: 302 -> api.yeppbot.com/api/auth/callback?code=...
     U->>P: GET /api/auth/callback
     P->>BE: forward
     BE->>T: exchange code for tokens (server-to-server)
     T-->>BE: id_token (sub=Twitch user ID, email)
-    BE->>BE: SignInAsync (httpOnly cookie)
-    BE-->>U: 302 -> /dash (cookie set)
-    U->>P: GET /dash, then GET /api/auth/me
+    BE->>BE: SignInAsync (httpOnly cookie, Domain=.yeppbot.com/.dev)
+    BE-->>U: 302 -> dash.yeppbot.com (cookie set)
+    U->>P: GET dash.yeppbot.com, then GET api.yeppbot.com/api/auth/me (CORS, credentials: include)
     P->>BE: forward
     BE-->>U: 200 {twitchId, login, displayName}
 ```
 
 ```mermaid
 sequenceDiagram
-    participant U as Browser (/dash)
-    participant BE as YEPPDash Backend
+    participant U as Browser (dash.yeppbot.*)
+    participant BE as YEPPDash Backend (api.yeppbot.*)
     participant IB as IBotClient (stub now, real later)
     participant Bot as YEPPBot internal API
 
@@ -82,10 +85,8 @@ Monorepo at `C:\Users\MCmoderSD\Desktop\YEPPDash` (not yet a git repo — `git i
 
 ```
 YEPPDash/
-├── docker-compose.yml          # local: backend, frontend, caddy — connects out to the real Dev/Prod MariaDB, no local DB container
+├── docker-compose.yml          # local only: backend + frontend, published directly on :8080/:4000 — no reverse proxy in this repo
 ├── .env.example                 # DB_TARGET + both HelixDev/HelixProd connection strings (real values in gitignored .env)
-├── infra/
-│   └── Caddyfile                # yeppbot.com/ -> frontend, /api/* -> backend (":80" locally until a reverse-proxy VPS exists)
 ├── backend/
 │   ├── YEPPDash.slnx            # XML solution format (Rider/.NET 10) — cleaner git diffs than classic .sln
 │   ├── global.json
@@ -112,7 +113,17 @@ YEPPDash/
 ## Backend Design (ASP.NET Core 10)
 
 ### Auth
-`Microsoft.AspNetCore.Authentication.OpenIdConnect` against Twitch's OIDC endpoints (`https://id.twitch.tv/.well-known/openid-configuration`), cookie scheme as the default/protecting scheme, OIDC only as the challenge scheme on `/api/auth/login`. Twitch quirk: email is only returned if the authorize request carries an explicit `claims={"id_token":{"email":null}}` parameter — inject it in `OnRedirectToIdentityProvider`. `sub` claim = Twitch user ID = the same ID already used as PK in YEPPBot's `User`/`Channel` tables, so no mapping table is needed. Fallback if OIDC proves awkward: hand-rolled `AddOAuth` + a call to Helix `GET /users` in `OnCreatingTicket`. Cookie: httpOnly, Secure, `SameSite=Lax` (compatible with Twitch's redirect-back GET, no CORS needed at all since frontend and backend share an origin behind Caddy).
+`Microsoft.AspNetCore.Authentication.OpenIdConnect` against Twitch's OIDC endpoints (`https://id.twitch.tv/.well-known/openid-configuration`), cookie scheme as the default/protecting scheme, OIDC only as the challenge scheme on `/api/auth/login`. Twitch quirk: email is only returned if the authorize request carries an explicit `claims={"id_token":{"email":null}}` parameter — inject it in `OnRedirectToIdentityProvider`. `sub` claim = Twitch user ID = the same ID already used as PK in YEPPBot's `User`/`Channel` tables, so no mapping table is needed. Fallback if OIDC proves awkward: hand-rolled `AddOAuth` + a call to Helix `GET /users` in `OnCreatingTicket`. Cookie: httpOnly, Secure, `SameSite=Lax`, `Domain=.yeppbot.com` (or `.yeppbot.dev`) so it's readable by both the `api.` and `dash.` subdomains.
+
+**Twitch application**: YEPPDash doesn't register its own Twitch app — it reuses YEPPBot's existing Dev and Prod apps (same `clientId`/`clientSecret` the bot itself already uses for its own OAuth flow), since dashboard and bot are the same product/identity. Credentials for both are stored as `Twitch:ClientIdDev`/`ClientSecretDev` and `Twitch:ClientIdProd`/`ClientSecretProd` via `dotnet user-secrets` locally, mirroring the `ConnectionStrings:HelixDev`/`HelixProd` pattern — never committed. Twitch apps accept multiple registered OAuth redirect URLs, so YEPPDash's callback(s) are *added* alongside the bot's existing `https://home.mcmodersd.de:420/callback`, not a replacement for it. Needed additions (one Twitch Developer Console change per environment, done by the operator, not by this repo):
+
+| Environment | Redirect URI to add |
+|---|---|
+| Local dev | `http://localhost:8080/api/auth/callback` (Twitch allows plain HTTP for `localhost`) |
+| Prod (once deployed) | `https://api.yeppbot.com/api/auth/callback` |
+| Dev (once deployed) | `https://api.yeppbot.dev/api/auth/callback` |
+
+**Cross-origin implication of the subdomain split**: `dash.yeppbot.com` and `api.yeppbot.com` are two different origins to the browser (different host), even though they're the same registrable domain — `SameSite=Lax` still ships the cookie (subdomains are "same-site"), but the frontend's `fetch()` calls to the API are now genuinely cross-origin and require CORS. Backend needs `AddCors` with an explicit allowlist (`https://dash.yeppbot.com`, `https://dash.yeppbot.dev`, plus local dev origins) and `AllowCredentials()`; frontend's `HttpClient` calls need `withCredentials: true` (Angular's `withFetch()` + `credentials: 'include'`). This wasn't needed under the old single-origin, path-routed design — it's a direct consequence of moving to `dash.*`/`api.*` subdomains.
 
 ### Database access
 Dapper + `MySqlConnector`, deliberately **not** EF Core — the `helix` schema is owned and migrated solely by YEPPBot's own `CREATE TABLE IF NOT EXISTS` scripts, and `User.user` is an LZ4-compressed Java-serialized blob that's undecodable from C# and must simply never be selected. Backend DB user (`yeppdash_ro`) gets **SELECT-only** grants on `User`/`Channel` — no write grants at all, so "all mutations go through the bot" is enforced by the database, not just convention. Confirmed in Phase 0: MySqlConnector maps `BIT(1)` columns (`Channel.active`/`autoShoutout`) as `UInt64`, not `bool` — a `BitBoolTypeHandler` registered once in `Program.cs` fixes this for every query.
@@ -138,7 +149,7 @@ The shared-secret header is required **regardless of network topology** (see Dep
 | Method & Path | Auth | Purpose |
 |---|---|---|
 | `GET /api/auth/login` | anon | 302 → Twitch authorize |
-| `GET /api/auth/callback` | anon | completes login, sets cookie, 302 → `/dash` |
+| `GET /api/auth/callback` | anon | completes login, sets cookie, 302 → `dash.yeppbot.*` |
 | `POST /api/auth/logout` | cookie | clears cookie |
 | `GET /api/auth/me` | cookie | `{twitchId, login, displayName, profileImageUrl}` |
 | `GET /api/channel/status` | cookie | via `IBotClient`, for caller's own Twitch ID |
@@ -158,7 +169,7 @@ Standalone components, functional `CanActivateFn` guards, signals for state (no 
 
 **Theming**: seed color `#9ACD32` (`rgb(154,205,50)`) via `ng generate @angular/material:m3-theme` (dark mode). M3's computed dark surface/background tones won't land exactly on the target `#18181B` (`rgb(24,24,27)`, Twitch's chrome) since they're derived from the seed hue — after generating the theme, explicitly override `--mat-sys-surface`/`--mat-sys-background`/related `surface-container*` tokens to `#18181B` in a clearly-marked brand-override block, so future Material upgrades don't silently regenerate over it.
 
-**SSR**: reuse the same setup already proven in the `MCmoderSD.de` portfolio project (`C:\Users\MCmoderSD\WebstormProjects\Webpage`) — Angular 22 + `@angular/ssr` + Express runtime server (`src/server.ts`, `serve:ssr:*` npm script), same Angular/Material versions (`^22.0.x`), same 4-stage Dockerfile pattern (deps → build → prod-deps → runtime, non-root user, port 4000). Unlike the portfolio (which prerenders every route via `RenderMode.Prerender` on `**` in `app.routes.server.ts`), YEPPDash needs **hybrid per-route rendering**: `/` stays `RenderMode.Prerender` (build-time static HTML — SEO/link-preview metadata for Discord/Twitter shares of `yeppbot.com`, zero runtime cost for that route), `/dash` is `RenderMode.Client` (personalized, behind the auth guard — cannot be prerendered at build time, rendered client-side like a normal SPA once the session cookie is confirmed via `/api/auth/me`).
+**SSR**: reuse the same setup already proven in the `MCmoderSD.de` portfolio project (`C:\Users\MCmoderSD\WebstormProjects\Webpage`) — Angular 22 + `@angular/ssr` + Express runtime server (`src/server.ts`, `serve:ssr:*` npm script), same Angular/Material versions (`^22.0.x`), same 4-stage Dockerfile pattern (deps → build → prod-deps → runtime, non-root user, port 4000). Unlike the portfolio (which prerenders every route via `RenderMode.Prerender` on `**` in `app.routes.server.ts`), YEPPDash needs **hybrid per-route rendering**: `/` stays `RenderMode.Prerender` (build-time static HTML — SEO/link-preview metadata for Discord/Twitter shares of `dash.yeppbot.com`/`.dev`, zero runtime cost for that route), `/dash` is `RenderMode.Client` (personalized, behind the auth guard — cannot be prerendered at build time, rendered client-side like a normal SPA once the session cookie is confirmed via `/api/auth/me`).
 
 Packages: `@angular/material`, `@angular/cdk`, `@angular/animations`, `@angular/ssr`, `@angular/platform-server`, `express`, `compression`, `angular-eslint`, `prettier`.
 
@@ -166,19 +177,30 @@ Packages: `@angular/material`, `@angular/cdk`, `@angular/animations`, `@angular/
 
 ## Deployment
 
-**Caddy** reverse proxy, path-based routing (`/` → Frontend SSR container `:4000`, `/api/*` → Backend container) — avoids CORS entirely and keeps cookies same-site (`SameSite=Lax`). No reverse-proxy VPS exists yet, so the `Caddyfile` currently binds plain HTTP on `:80` for local `docker-compose` verification; once a VPS exists, swap `:80` for the real domain (`yeppbot.com`) to get Caddy's automatic HTTPS for free — the routing rules themselves don't change. Caddy's automatic HTTPS can also simplify YEPPBot's currently-manual cert handling if reused there later.
+**Caddy lives outside this repo.** This repo ships source code and Dockerfiles only — no reverse-proxy config. Reverse proxying is handled by the operator's existing, separate Caddy setup (already running other sites), which will get new site blocks added for YEPPDash. This repo's `docker-compose.yml` is local-dev-only: it builds and runs the backend + frontend containers with their ports published directly (`8080`, `4000`), no proxy container in front.
+
+**Domains & routing (subdomain-based, not path-based)**: both `yeppbot.com` and `yeppbot.dev` will be supported. Per domain:
+
+| Subdomain | Routes to |
+|---|---|
+| `dash.yeppbot.com` / `dash.yeppbot.dev` | YEPPDash Frontend (`:4000`) |
+| `api.yeppbot.com` / `api.yeppbot.dev` | YEPPDash Backend (`:8080`) |
+
+This replaces the earlier path-based design (`yeppbot.com/` + `yeppbot.com/api/*`) from Phase 0. The switch to subdomains means frontend and backend are different origins to the browser — see [Auth](#auth) for the resulting CORS + cookie `Domain` requirements. The operator's Caddy setup gets automatic HTTPS per site block as usual; nothing here needs to change when that happens.
 
 **Docker images**: both frontend and backend are multi-stage builds producing slim runtime images — never `dotnet run`/`ng serve` inside a container, those are dev-only. Backend: SDK image builds + publishes, `mcr.microsoft.com/dotnet/aspnet:10.0` runs `dotnet YEPPDash.Api.dll`. Frontend: reuse the exact 4-stage pattern from `MCmoderSD.de`'s `Dockerfile` (deps/build/prod-deps/runtime on `node:26-alpine`, non-root user, `CMD ["node", "dist/YEPPDash/server/server.mjs"]`, `EXPOSE 4000`) — proven, already in production use, no need to design a new pattern.
 
-Backend and YEPPBot run on the same dedicated server in Docker for now, but should stay portable to split hosts later. Design for that from day one: the Bot API base URL is a config value (not hardcoded `localhost`), and the shared-secret header is always required (not "trust the private network" alone). Today, keep the internal API off the public Caddy routes entirely (only reachable on the shared Docker network); if it's ever split across hosts, front the internal API with a private tunnel (WireGuard/Tailscale) or an IP-allowlisted TLS listener — an ops-time decision, no code changes needed since the client already carries a config URL + secret.
+Backend and YEPPBot run on the same dedicated server in Docker for now, but should stay portable to split hosts later. Design for that from day one: the Bot API base URL is a config value (not hardcoded `localhost`), and the shared-secret header is always required (not "trust the private network" alone). Today, keep the internal API off the operator's public Caddy site blocks entirely (only reachable on the shared Docker network); if it's ever split across hosts, front the internal API with a private tunnel (WireGuard/Tailscale) or an IP-allowlisted TLS listener — an ops-time decision, no code changes needed since the client already carries a config URL + secret.
 
 ---
 
 ## Phased Roadmap
 
-**Phase 0 — Scaffolding & smoke tests**: `git init`; `dotnet new webapi` for `YEPPDash.Api`; `ng new frontend --standalone --routing --style=scss`, add Material + generate M3 theme with brand override; add Dapper/MySqlConnector and a throwaway `GET /api/_internal/dbcheck` to validate DB connectivity and the `BIT(1)` mapping against the least-priv `yeppdash_ro` user (against Dev, `10.10.10.1`); local `docker-compose.yml` with backend, frontend, Caddy — no local DB container, the backend connects out to the real Dev/Prod MariaDB via `DbTarget` — confirm the full path-routed round trip and theme render. Also generate the three diagrams above as real `.excalidraw` scene files (architecture, auth sequence, join sequence) for editing/sharing.
+**Phase 0 — Scaffolding & smoke tests**: `git init`; `dotnet new webapi` for `YEPPDash.Api`; `ng new frontend --standalone --routing --style=scss`, add Material + generate M3 theme with brand override; add Dapper/MySqlConnector and a throwaway `GET /api/_internal/dbcheck` to validate DB connectivity and the `BIT(1)` mapping against the least-priv `yeppdash_ro` user (against Dev, `10.10.10.1`); local `docker-compose.yml` with backend + frontend only, ports published directly, no proxy container — no local DB container, the backend connects out to the real Dev/Prod MariaDB via `DbTarget` — confirm both containers serve correctly and the theme renders. Also generate the three diagrams above as real `.excalidraw` scene files (architecture, auth sequence, join sequence) for editing/sharing.
 
-**Phase 1 — Twitch auth end-to-end**: register a Twitch app (redirect URIs for prod + local dev); implement backend OIDC + `/api/auth/*`; implement frontend landing page, guard, `AuthService`, `/dash` shell. Exit: real login → `/dash`, session survives refresh, logout works.
+*(Amended after initial completion: Phase 0 originally verified this through a local Caddy container doing path-based routing. That Caddy setup has since been removed from this repo — reverse proxying now lives entirely in the operator's separate, existing Caddy setup, and production routing is subdomain-based, not path-based. See [Deployment](#deployment).)*
+
+**Phase 1 — Twitch auth end-to-end**: reuse YEPPBot's existing Dev/Prod Twitch apps (add YEPPDash's callback redirect URIs alongside the bot's own); implement backend OIDC + `/api/auth/*`; implement frontend landing page, guard, `AuthService`, `/dash` shell. Exit: real login → `/dash`, session survives refresh, logout works.
 
 **Phase 2 — Channel join/leave v1 (against `StubBotClient`)**: backend `/api/channel/*` + `IBotClient`/`StubBotClient`; frontend status card + join/leave button with loading/error states. Exit: full UI flow works end-to-end against the stub. Swapping in `HttpBotClient` once the separate YEPPBot-side API change ships is a config-only follow-up, not a code change here.
 
@@ -188,6 +210,6 @@ Backend and YEPPBot run on the same dedicated server in Docker for now, but shou
 
 ## Verification
 
-- Phase 0: `GET /api/_internal/dbcheck` returns real rows from the Dev DB through Caddy; Angular renders through `http://localhost/` (Caddy) with the correct green/dark theme in both light/dark OS settings.
+- Phase 0: `GET /api/_internal/dbcheck` (`http://localhost:8080`) returns real rows from the Dev DB; Angular renders at `http://localhost:4000` with the correct green/dark theme in both light/dark OS settings.
 - Phase 1: manual browser test — click "Login with Twitch" through to `/dash`, confirm `GET /api/auth/me` returns the right Twitch ID, confirm cookie is httpOnly/Secure in devtools, confirm logout clears the session.
 - Phase 2: manual browser test against the stub — join/leave button toggles status card state, error state renders if the stub simulates a failure. Once the real YEPPBot internal API exists (separate task), re-test the same flow with `HttpBotClient` and confirm the bot actually joins live Twitch chat, not just the DB flag.

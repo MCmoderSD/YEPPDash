@@ -12,7 +12,7 @@ Status: early development, pre-Phase 1. See [`ROADMAP.md`](ROADMAP.md) for curre
 | Frontend | Angular 22 + Angular Material, SSR (`@angular/ssr` + Express) |
 | Auth | Twitch as OIDC identity provider — no local passwords/user table |
 | Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot; this repo reads with a least-privilege, SELECT-only user |
-| Reverse proxy | Caddy — single origin (`yeppbot.com`), path-based routing (`/` → frontend, `/api/*` → backend) |
+| Reverse proxy | Caddy, run by the operator outside this repo — subdomain routing (`dash.yeppbot.com`/`.dev` → frontend, `api.yeppbot.com`/`.dev` → backend) |
 
 ## Repository Structure
 
@@ -20,11 +20,12 @@ Status: early development, pre-Phase 1. See [`ROADMAP.md`](ROADMAP.md) for curre
 YEPPDash/
 ├── backend/           # ASP.NET Core 10 Web API (Rider project)
 ├── frontend/          # Angular 22 + Material SSR app (WebStorm project)
-├── infra/             # Caddyfile
 ├── docs/diagrams/     # architecture + sequence diagrams as editable .excalidraw scenes
-├── docker-compose.yml # local: backend + frontend + Caddy, connects out to the real Dev/Prod MariaDB
+├── docker-compose.yml # local dev only: backend + frontend, ports published directly, no reverse proxy
 └── .env.example       # template for the gitignored .env (DB connection strings)
 ```
+
+Reverse proxying (Caddy) is not part of this repo — it's handled by the operator's separate, existing Caddy setup, which routes `dash.yeppbot.com`/`.dev` to the frontend and `api.yeppbot.com`/`.dev` to the backend. See [`PLAN.md`](PLAN.md#deployment).
 
 `backend/` and `frontend/` are independent IDE project roots (Rider / WebStorm respectively) inside this one repository — see [`PLAN.md`](PLAN.md#repository-structure) for why they're kept separate.
 
