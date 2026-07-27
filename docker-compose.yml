@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: ./backend/YEPPDash.Api
+    container_name: YEPPDash-Backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DbTarget: ${DB_TARGET:-Dev}
+      ConnectionStrings__HelixDev: ${CONNECTIONSTRINGS__HELIXDEV}
+      ConnectionStrings__HelixProd: ${CONNECTIONSTRINGS__HELIXPROD}
+    expose:
+      - "8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: YEPPDash-Frontend
+    restart: unless-stopped
+    expose:
+      - "4000"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: YEPPDash-Caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - backend
+      - frontend
+
+networks:
+  default:
+    name: YEPPDash-Network

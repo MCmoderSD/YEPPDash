@@ -4,9 +4,16 @@ using MySqlConnector;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Selects which of the two real MariaDB servers (Dev: 10.10.10.1, Prod: dedi.mcmodersd.de)
+// this instance talks to. Both connection strings are always configured; DbTarget just
+// picks one, so the same container image can be pointed at either without a rebuild.
+var dbTarget = builder.Configuration["DbTarget"] ?? "Dev";
+var helixConnectionStringKey = $"Helix{dbTarget}";
+
 builder.Services.AddTransient<MySqlConnection>(_ =>
-    new MySqlConnection(builder.Configuration.GetConnectionString("Helix")
-        ?? throw new InvalidOperationException("Missing connection string 'ConnectionStrings:Helix'.")));
+    new MySqlConnection(builder.Configuration.GetConnectionString(helixConnectionStringKey)
+        ?? throw new InvalidOperationException(
+            $"Missing connection string 'ConnectionStrings:{helixConnectionStringKey}' for DbTarget '{dbTarget}'.")));
 
 // MariaDB's BIT(1) columns (Channel.active/autoShoutout) come back from MySqlConnector
 // as UInt64, not bool — confirmed empirically via /api/_internal/dbcheck. This handler

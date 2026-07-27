@@ -1,0 +1,15 @@
+# Local docker-compose testing: plain HTTP on :80, no domain yet — there's no
+# reverse-proxy VPS to deploy this to in production so far. Once one exists,
+# swap ":80" for the real domain (e.g. "yeppbot.com") to get Caddy's automatic
+# HTTPS; the routing rules below stay the same.
+:80 {
+	# Keep the internal bot-facing API (Phase 2+) off these public routes
+	# entirely — it must only ever be reachable on the Docker network.
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		reverse_proxy frontend:4000
+	}
+}

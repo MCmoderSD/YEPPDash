@@ -14,9 +14,9 @@ Konkrete, abhakbare Schrittfolge zur Umsetzung von [PLAN.md](PLAN.md). Jeder Sch
 - [x] 8. Backend: `Dapper` + `MySqlConnector` NuGet-Pakete hinzufügen — Dapper 2.1.79, MySqlConnector 2.6.1, `dotnet build` grün
 - [x] 9. Least-privilege DB-User (SELECT-only auf `User`/`Channel`) auf dem `helix`-Schema anlegen (manueller Ops-Schritt, nicht im Code) — `yeppdash_ro`@`%` auf Prod, SELECT-only auf `helix.User`/`helix.Channel`; zusätzlich neue `YEPPDash`-DB auf Dev + Prod angelegt, Full-Access über YEPPBots bestehenden `helix`-User (dessen `helix.*`-Rechte sind sein eigentlicher Bot-Zugriff, nicht dashboard-spezifisch — später ggf. durch dedizierten Dashboard-User ersetzbar)
 - [x] 10. Throwaway-Endpoint `GET /api/_internal/dbcheck` gegen den DB-User testen, insbesondere `BIT(1)`-Mapping von `Channel.active`/`autoShoutout` verifizieren — bestätigt: MySqlConnector liefert `BIT(1)` als `UInt64`, nicht `bool`; `BitBoolTypeHandler` registriert, Endpoint liefert danach saubere `bool`-Werte gegen `yeppdash_ro` auf Dev
-- [ ] 11. Lokale `docker-compose.yml`: seeded Dev-MariaDB (aus Kopien von YEPPBots `.sql`-Dateien unter `infra/db/seed/`), Backend-Container, Frontend-SSR-Container, Caddy
-- [ ] 12. Caddyfile: `/` → Frontend-Container `:4000`, `/api/*` → Backend-Container
-- [ ] 13. Vollständigen Round-Trip lokal verifizieren: Theme rendert korrekt, `dbcheck` liefert Daten
+- [x] 11. Lokale `docker-compose.yml`: Backend-Container, Frontend-SSR-Container, Caddy — kein lokaler DB-Container, Backend verbindet sich über `DbTarget` (`Dev`/`Prod`, Default `Dev`) nach draußen zu den echten Servern 10.10.10.1/dedi.mcmodersd.de; Zugangsdaten über gitignorete `.env` (Vorlage: `.env.example`)
+- [x] 12. Caddyfile (`infra/Caddyfile`): `/` → Frontend-Container `:4000`, `/api/*` → Backend-Container, aktuell auf `:80` (noch kein Reverse-Proxy-VPS vorhanden)
+- [ ] 13. Vollständigen Round-Trip lokal verifizieren: Theme rendert korrekt, `dbcheck` liefert Daten — `dbcheck` über Caddy gegen Dev-DB bereits bestätigt (echte Zeilen kommen durch); visuelle Theme-Prüfung im Browser steht noch aus
 - [ ] 14. Drei Diagramme aus PLAN.md als `.excalidraw`-Szenendateien exportieren (Architektur, Auth-Flow, Join-Flow)
 
 ## Phase 1 — Twitch Auth Ende-zu-Ende
