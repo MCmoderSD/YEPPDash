@@ -4,7 +4,7 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/backend"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     groups:
       dotnet-dependencies:
         patterns:
@@ -14,7 +14,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     groups:
       angular-dependencies:
         patterns:
@@ -29,10 +29,10 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
 
   # GitHub Actions workflows, once added
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
