@@ -11,7 +11,7 @@ Konkrete, abhakbare Schrittfolge zur Umsetzung von [PLAN.md](PLAN.md). Jeder Sch
 - [x] 5. Frontend-Projekt in WebStorm anlegen: Location `frontend/`, Angular 22, `--standalone --routing --style=scss --ssr`, Git-Init-Option **deaktiviert** — baut, SSR-Bundles + Prerendering laufen
 - [x] 6. `ng add @angular/material`, M3-Theme generieren (Seed `#9ACD32`, dark mode), Brand-Override für `--mat-sys-surface`/`--mat-sys-background` auf `#18181B` — dabei zusätzlich `provideAnimationsAsync()` ergänzt (kam nicht automatisch)
 - [x] 7. Commit: gescaffoldetes Backend + Frontend
-- [ ] 8. Backend: `Dapper` + `MySqlConnector` NuGet-Pakete hinzufügen
+- [x] 8. Backend: `Dapper` + `MySqlConnector` NuGet-Pakete hinzufügen — Dapper 2.1.79, MySqlConnector 2.6.1, `dotnet build` grün
 - [ ] 9. Least-privilege DB-User (SELECT-only auf `User`/`Channel`) auf dem `helix`-Schema anlegen (manueller Ops-Schritt, nicht im Code)
 - [ ] 10. Throwaway-Endpoint `GET /api/_internal/dbcheck` gegen den DB-User testen, insbesondere `BIT(1)`-Mapping von `Channel.active`/`autoShoutout` verifizieren
 - [ ] 11. Lokale `docker-compose.yml`: seeded Dev-MariaDB (aus Kopien von YEPPBots `.sql`-Dateien unter `infra/db/seed/`), Backend-Container, Frontend-SSR-Container, Caddy
