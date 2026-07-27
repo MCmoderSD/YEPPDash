@@ -28,8 +28,14 @@ yarn-error.log*
 docker-compose.override.yml
 
 # ── Secrets / local config (never commit real credentials) ──
+# Blanket-ignore every environment-flavored appsettings file (Local, Production, Staging,
+# whatever gets added later) so a stray one with real credentials can't be committed by
+# accident. The two base files are checked in on purpose — no secrets in either, just
+# non-sensitive defaults (DbTarget, logging) — so they're explicitly un-ignored again.
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
 *.local.json
-appsettings.Local.json
 .env
 .env.*
 !.env.example

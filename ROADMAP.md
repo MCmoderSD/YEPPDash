@@ -22,12 +22,13 @@ Konkrete, abhakbare Schrittfolge zur Umsetzung von [PLAN.md](PLAN.md). Jeder Sch
 ## Phase 1 — Twitch Auth Ende-zu-Ende
 
 - [x] 1. ~~Twitch-App registrieren~~ **entfällt**: YEPPBot besitzt bereits eigene Twitch-Apps für Dev und Prod, diese werden 1:1 mitgenutzt (`Twitch:ClientIdDev`/`ClientSecretDev`, `Twitch:ClientIdProd`/`ClientSecretProd` — als `dotnet user-secrets` hinterlegt, nie committed). Offen (Ops-Schritt beim Nutzer, nicht in diesem Repo): in der Twitch Developer Console zusätzlich zur bestehenden Redirect-URI (`https://home.mcmodersd.de:420/callback`, bleibt für den Bot selbst bestehen) die YEPPDash-Callback-URIs eintragen — lokal `https://localhost:7218/api/auth/callback` (Kestrels eigener HTTPS-Port aus `launchSettings.json`, Backend läuft dafür direkt per `dotnet run`/Rider — kein Docker, kein Caddy; Port 8080 war auf dem Dev-Rechner bereits belegt), später `https://api.yeppbot.com/api/auth/callback` (Prod) und `https://api.yeppbot.dev/api/auth/callback` (Dev). Details in [PLAN.md](PLAN.md#auth).
-- [ ] 2. Backend: `Microsoft.AspNetCore.Authentication.OpenIdConnect` einrichten, Cookie-Scheme als Default, OIDC als Challenge-Scheme
-- [ ] 3. `claims`-Parameter-Workaround für Twitch-E-Mail-Scope implementieren (`OnRedirectToIdentityProvider`)
-- [ ] 4. `/api/auth/login`, `/api/auth/callback`, `/api/auth/logout`, `/api/auth/me` implementieren
+- [x] 2. Backend: `Microsoft.AspNetCore.Authentication.OpenIdConnect` (NuGet-Paket ergänzt, nicht Teil des Shared Framework) eingerichtet, Cookie-Scheme als Default, OIDC als Challenge-Scheme, `ClientId`/`ClientSecret` je nach `DbTarget` (Dev/Prod) aus den zugehörigen Twitch-App-Credentials
+- [x] 3. `claims`-Parameter-Workaround für Twitch-E-Mail-Scope implementiert (`OnRedirectToIdentityProvider`) — zusätzlich zum `email`-Scope-Trick brauchte auch `login` (`preferred_username`) denselben Workaround, sonst kommt es `null` zurück; beide jetzt im `claims`-Parameter: `{"id_token":{"email":null,"preferred_username":null}}`
+- [x] 4. `/api/auth/login` (Challenge, optionaler `returnUrl`, Default `/api/auth/me` solange es noch kein `/dash` gibt), `/api/auth/callback` (via OIDC-Middleware `CallbackPath`, kein eigener Endpoint nötig), `/api/auth/logout`, `/api/auth/me` implementiert
 - [ ] 5. Frontend: Landing-Page `/` mit "Login with Twitch"-Link (`<a href="/api/auth/login">`, kein Router-Link)
 - [ ] 6. Frontend: `AuthService` (Signal-basiert), `authGuard` für `/dash`, `/dash`-Shell-Komponente
-- [ ] 7. Manueller Test: Login → Twitch-Consent → `/dash`, Session übersteht Reload, Logout funktioniert
+- [x] 7a. Manueller Test (Teil 1, ohne Frontend): Login → Twitch-Consent → `/api/auth/me` (Platzhalter-Ziel, da `/dash` noch nicht existiert) — **echt durchgeführt und bestätigt**: `{"twitchId":"164284617","login":"...", "email":"social@mcmodersd.de"}` (E-Mail beim ersten Durchlauf korrekt, `login` war zunächst `null`, siehe Schritt 3 — Fix noch nicht erneut gegengetestet, da dafür ein frischer Login nötig ist, das bestehende Cookie trägt noch die alten Claims)
+- [ ] 7b. Session übersteht Reload, Logout funktioniert, sowie vollständiger Test gegen `/dash` — verschoben bis Schritt 5/6 (Frontend) stehen
 
 ## Phase 2 — Channel Join/Leave v1 (gegen Stub)
 
