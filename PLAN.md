@@ -91,13 +91,15 @@ YEPPDash/
 │   ├── YEPPDash.slnx            # XML solution format (Rider/.NET 10) — cleaner git diffs than classic .sln
 │   ├── global.json
 │   ├── YEPPDash.Api/            # sibling to the .slnx, standard .NET layout (no extra src/ nesting)
-│   │   ├── Program.cs           # top-level statements
-│   │   ├── Auth/            # Twitch OIDC + cookie scheme wiring
-│   │   ├── Endpoints/       # AuthEndpoints.cs, ChannelEndpoints.cs (minimal APIs)
-│   │   ├── Data/            # Dapper repositories (ChannelRepository, UserRepository)
-│   │   ├── BotClient/       # IBotClient + HttpBotClient + StubBotClient
-│   │   ├── Contracts/       # request/response DTOs
-│   │   └── Options/         # TwitchOptions, BotApiOptions, DatabaseOptions
+│   │   ├── Program.cs           # composition root only — builder/DI wiring, no endpoint/business logic
+│   │   ├── Auth/            # AddYeppDashAuth: Twitch OIDC + cookie scheme wiring
+│   │   ├── Endpoints/       # AuthEndpoints.cs, DiagnosticsEndpoints.cs (minimal APIs — the "controller" layer); ChannelEndpoints.cs in Phase 2
+│   │   ├── Services/        # business logic between endpoints and repositories (DiagnosticsService now; channel/bot logic in Phase 2)
+│   │   ├── Data/            # AddYeppDashDatabase, Dapper repositories (ChannelRepository; UserRepository later), BitBoolTypeHandler
+│   │   ├── Contracts/       # request/response DTOs (ChannelSummary, UserInfo, ...)
+│   │   ├── Helpers/         # cross-cutting extensions (ConfigurationExtensions, ClaimsPrincipalExtensions)
+│   │   ├── BotClient/       # IBotClient + HttpBotClient + StubBotClient — Phase 2
+│   │   └── Options/         # TwitchOptions, BotApiOptions, DatabaseOptions — once there's config worth binding to a type
 │   └── YEPPDash.Api.Tests/
 └── frontend/
     └── src/app/
