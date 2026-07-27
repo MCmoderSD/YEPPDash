@@ -37,3 +37,6 @@ appsettings.Local.json
 # ── OS ────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Claude Code local session/tool state ─────────────────────
+.claude/
