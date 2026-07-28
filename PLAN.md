@@ -178,6 +178,9 @@ The shared-secret header is required **regardless of network topology** (see Dep
 | `POST /api/channel/join` | cookie | via `IBotClient` |
 | `POST /api/channel/leave` | cookie | via `IBotClient` |
 | `GET /api/twitch/chat-color/{userId?}` | cookie | `{id, color}` from Helix, caller's own when `userId` is omitted |
+| `GET /api/twitch/users?id=&login=` | cookie | Helix get users, up to 100 ids/logins mixed per call |
+| `GET /api/twitch/moderators` | cookie | full moderator list, paginated + cached (`moderation:read`) |
+| `GET /api/twitch/vips` | cookie | full VIP list, paginated + cached (`channel:read:vips`) |
 | `POST /api/twitch/moderators/{userId}` | cookie | Helix add channel moderator (`channel:manage:moderators`) |
 | `DELETE /api/twitch/moderators/{userId}` | cookie | Helix remove channel moderator (`channel:manage:moderators`) |
 | `POST /api/twitch/vips/{userId}` | cookie | Helix add channel VIP (`channel:manage:vips`) |
@@ -186,6 +189,8 @@ The shared-secret header is required **regardless of network topology** (see Dep
 Target channel is always derived from the auth cookie's claim, never accepted from the client.
 
 `/api/twitch/*` calls Helix directly with the caller's own stored token, whereas `/api/channel/*` goes through YEPPBot's internal API — hence the separate namespaces. The `{userId}` path segment is the *target* of the action (who gets modded/VIP'd); the broadcaster is always the caller, so these can only ever change the caller's own channel. Twitch's own client-error statuses are passed through rather than flattened (404 unknown user, 409 already a VIP, 422 already a moderator or the broadcaster themselves), since that is where the actionable detail lives.
+
+The moderator and VIP lists are read whole rather than page by page: the API follows Helix's cursor to the end (100 per page) and keeps the result in a process-wide cache, so the frontend never deals with cursors. Freshness is re-checked by request, not by clock — a repeat call always fetches page one, and if every entry on it is already cached the cached list is returned unchanged (one Helix request); anything unfamiliar triggers a full re-pagination. Our own add/remove calls drop the affected entry outright. The blind spot is a removal beyond the first page with no additions, which page one cannot reveal — it resolves on the next mutation or restart, which is an acceptable trade for a list that is nearly always ≤100 entries and changes almost exclusively through this dashboard.
 
 ### NuGet packages
 `Microsoft.AspNetCore.Authentication.OpenIdConnect`, `Dapper`, `MySqlConnector`, `Microsoft.Extensions.Http` + `Microsoft.Extensions.Http.Resilience` (for `HttpBotClient`), `Microsoft.AspNetCore.OpenApi`, `Serilog.AspNetCore`, `Microsoft.Extensions.Diagnostics.HealthChecks`. Dev-only: `dotnet user-secrets` for Twitch client secret + internal API key.

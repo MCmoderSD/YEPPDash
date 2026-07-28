@@ -31,6 +31,54 @@ public sealed class TwitchController(
         }
     }
 
+    // Both id and login may be repeated and mixed, e.g. ?id=1&id=2&login=mcmodersd — the whole
+    // point of the batch form is resolving a chatter list in one round trip instead of N.
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers(
+        [FromQuery(Name = "id")] string[]? id,
+        [FromQuery(Name = "login")] string[]? login,
+        CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var userIds = Clean(id);
+        var logins = Clean(login);
+
+        var total = userIds.Count + logins.Count;
+        if (total is 0 or > TwitchApiClient.MaxBatchSize)
+        {
+            return BadRequest(
+                $"Pass between 1 and {TwitchApiClient.MaxBatchSize} id and login values in total, got {total}.");
+        }
+
+        try
+        {
+            var users = await channelService.GetUsersAsync(twitchId, userIds, logins, cancellationToken);
+            return Ok(users);
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"look up {total} Twitch users");
+        }
+    }
+
+    [HttpGet("moderators")]
+    public Task<IActionResult> GetModerators(CancellationToken cancellationToken)
+    {
+        return ListChannelUsersAsync(
+            broadcasterId => channelService.GetModeratorsAsync(broadcasterId, cancellationToken),
+            "list the moderators");
+    }
+
+    [HttpGet("vips")]
+    public Task<IActionResult> GetVips(CancellationToken cancellationToken)
+    {
+        return ListChannelUsersAsync(
+            broadcasterId => channelService.GetVipsAsync(broadcasterId, cancellationToken),
+            "list the VIPs");
+    }
+
     [HttpPost("moderators/{userId}")]
     public Task<IActionResult> AddModerator(string userId, CancellationToken cancellationToken)
     {
@@ -61,6 +109,30 @@ public sealed class TwitchController(
         return EditChannelAsync(
             broadcasterId => channelService.RemoveVipAsync(broadcasterId, userId, cancellationToken),
             $"remove {userId} as VIP");
+    }
+
+    private async Task<IActionResult> ListChannelUsersAsync(
+        Func<string, Task<IReadOnlyList<TwitchChannelUser>>> list, string description)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var users = await list(twitchId);
+            return Ok(users.Select(ChannelUserResponse.From));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, description);
+        }
+    }
+
+    private static List<string> Clean(string[]? values)
+    {
+        return values is null
+            ? []
+            : values.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).ToList();
     }
 
     private async Task<IActionResult> EditChannelAsync(Func<string, Task> edit, string description)
