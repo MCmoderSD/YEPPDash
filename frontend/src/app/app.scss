@@ -1,0 +1,12 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+// Takes the space the navbar and footer leave over, so pages can centre inside it.
+.app-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}

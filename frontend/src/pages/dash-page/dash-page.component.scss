@@ -1,22 +1,13 @@
-.dash {
-  min-height: 100dvh;
+:host {
   display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
 }
 
-.dash-card {
+.dash-placeholder {
   width: 100%;
-  max-width: 28rem;
-}
-
-.dash-avatar {
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.placeholder-note {
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
+  max-width: 32rem;
+  text-align: center;
 }

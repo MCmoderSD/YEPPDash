@@ -1,26 +1,35 @@
-<main class="landing">
-  <mat-card appearance="outlined" class="landing-card">
-    <mat-card-header>
-      <mat-card-title>YEPPDash</mat-card-title>
-      <mat-card-subtitle>Dashboard für YEPPBot</mat-card-subtitle>
-    </mat-card-header>
+<section class="hero">
+  @if (authError(); as error) {
+    <p class="login-error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <span>{{ error }}</span>
+    </p>
+  }
 
-    <mat-card-content>
-      <p>Melde dich mit deinem Twitch-Account an, um YEPPBot für deinen Kanal zu steuern.</p>
+  <h1 class="hero-title">YEPPBot</h1>
+  <p class="hero-tagline">The best Twitch bot for your channel.</p>
 
-      @if (authError(); as error) {
-        <p class="login-error" role="alert">
-          <mat-icon aria-hidden="true">error_outline</mat-icon>
-          <span>{{ error }}</span>
-        </p>
-      }
-    </mat-card-content>
+  <p class="hero-description">
+    YEPPBot keeps your chat clean, hypes up your community and takes the routine work off your
+    hands while you stream. Connect your Twitch account to manage the bot for your channel.
+  </p>
 
-    <mat-card-actions align="end">
-      <a mat-flat-button [href]="loginUrl">
-        <mat-icon>login</mat-icon>
-        Login with Twitch
-      </a>
-    </mat-card-actions>
-  </mat-card>
-</main>
+  <ul class="hero-features">
+    <li class="hero-feature">
+      <mat-icon aria-hidden="true">shield</mat-icon>
+      <span>Moderates your chat and removes messages you don't want to see</span>
+    </li>
+    <li class="hero-feature">
+      <mat-icon aria-hidden="true">campaign</mat-icon>
+      <span>Sends shoutouts and handles raids to and from other streamers</span>
+    </li>
+    <li class="hero-feature">
+      <mat-icon aria-hidden="true">group</mat-icon>
+      <span>Manages VIPs and moderators without leaving your stream</span>
+    </li>
+    <li class="hero-feature">
+      <mat-icon aria-hidden="true">chat</mat-icon>
+      <span>Answers chat commands and keeps your community entertained</span>
+    </li>
+  </ul>
+</section>

@@ -4,10 +4,10 @@ import { AuthService } from '../../services/auth.service';
 
 // Error codes the backend appends when the OAuth2 flow does not complete (AuthController.RedirectToFrontend).
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  access_denied: 'Du hast den Zugriff bei Twitch abgelehnt.',
-  invalid_state: 'Der Login ist abgelaufen oder wurde unterbrochen. Bitte erneut versuchen.',
-  missing_code: 'Twitch hat keinen Autorisierungscode zurückgegeben. Bitte erneut versuchen.',
-  twitch_error: 'Twitch hat den Login abgelehnt. Bitte später erneut versuchen.',
+  access_denied: 'You denied access on Twitch.',
+  invalid_state: 'The login expired or was interrupted. Please try again.',
+  missing_code: 'Twitch did not return an authorization code. Please try again.',
+  twitch_error: 'Twitch rejected the login. Please try again later.',
 };
 
 @Component({
@@ -25,9 +25,6 @@ export class LandingPageComponent {
   protected readonly authError = signal<string | null>(null);
 
   constructor() {
-    // '/' stays statically prerendered at build time (PLAN.md#frontend-design), so this check
-    // can only happen client-side, after hydration — afterNextRender guarantees it never runs
-    // during the server-side prerender step, where there's no real cookie to check anyway.
     afterNextRender(() => {
       this.readAuthError();
       void this.redirectIfAlreadyAuthenticated();
@@ -37,7 +34,7 @@ export class LandingPageComponent {
   private readAuthError(): void {
     const error = this.route.snapshot.queryParamMap.get('error');
     if (error) {
-      this.authError.set(AUTH_ERROR_MESSAGES[error] ?? 'Der Login ist fehlgeschlagen.');
+      this.authError.set(AUTH_ERROR_MESSAGES[error] ?? 'The login failed.');
     }
   }
 

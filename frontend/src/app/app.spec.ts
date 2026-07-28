@@ -1,12 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { App } from './app';
+import { AppModule } from './app-module';
 
 describe('App', () => {
   beforeEach(async () => {
+    // App is AOT-compiled with its directive scope bound to AppModule, so the real module has to
+    // come along — re-declaring App in a bare testing module leaves <app-navbar> unresolved.
     await TestBed.configureTestingModule({
-      imports: [RouterModule.forRoot([])],
-      declarations: [App],
+      imports: [AppModule],
+      providers: [provideHttpClientTesting(), provideNoopAnimations()],
     }).compileComponents();
   });
 
@@ -21,5 +25,21 @@ describe('App', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should render the navbar and footer around the outlet', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-navbar')).toBeTruthy();
+    expect(compiled.querySelector('app-footer')).toBeTruthy();
+  });
+
+  it('should offer a login link while signed out', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-user-menu')).toBeNull();
+    expect(compiled.querySelector('a[href*="/api/auth/login"]')).toBeTruthy();
   });
 });

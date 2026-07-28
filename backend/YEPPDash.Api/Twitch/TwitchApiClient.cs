@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text.Json.Serialization;
+using System.Net.Http.Json;
 using YEPPDash.Api.Data;
 
 namespace YEPPDash.Api.Twitch;
@@ -23,15 +23,16 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             throw new TwitchOAuthException($"Helix /users failed ({(int)response.StatusCode}).", response.StatusCode, body);
         }
 
-        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchUser>>(cancellationToken);
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchUser>>(
+            TwitchJson.Options, cancellationToken);
         var user = payload?.Data.FirstOrDefault();
 
         return user ?? throw new TwitchOAuthException("Helix /users returned no user for this token.", HttpStatusCode.NotFound);
     }
 
+    // Every Helix endpoint wraps its payload in {"data":[...]}.
     private sealed record HelixResponse<T>
     {
-        [JsonPropertyName("data")]
         public T[] Data { get; init; } = [];
     }
 }

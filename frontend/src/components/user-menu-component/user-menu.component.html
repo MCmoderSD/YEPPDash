@@ -1,0 +1,42 @@
+<button
+  mat-button
+  type="button"
+  class="user-menu-trigger"
+  [matMenuTriggerFor]="menu"
+  [attr.aria-label]="'Account menu for ' + user().displayName"
+>
+
+  <span class="user-menu-identity">
+    <img
+      class="user-menu-avatar"
+      [ngSrc]="user().profileImageUrl"
+      width="32"
+      height="32"
+      alt=""
+    />
+    <span class="user-menu-name">{{ user().displayName }}</span>
+  </span>
+
+  <mat-icon aria-hidden="true" iconPositionEnd>expand_more</mat-icon>
+</button>
+
+<mat-menu #menu="matMenu">
+
+  <div class="user-menu-details" role="group" aria-label="Account details">
+    <p class="user-menu-detail">
+      <span class="user-menu-label">User:</span>
+      <span class="user-menu-value">{{ user().id }}</span>
+    </p>
+    <p class="user-menu-detail">
+      <span class="user-menu-label">Email:</span>
+      <span class="user-menu-value">{{ user().email ?? 'Not shared' }}</span>
+    </p>
+  </div>
+
+  <mat-divider />
+
+  <button mat-menu-item type="button" (click)="logout()">
+    <mat-icon aria-hidden="true">logout</mat-icon>
+    <span>Log out</span>
+  </button>
+</mat-menu>

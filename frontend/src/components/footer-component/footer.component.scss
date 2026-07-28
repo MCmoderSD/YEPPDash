@@ -1,0 +1,38 @@
+.footer {
+  background: var(--mat-sys-surface-container);
+  border-block-start: 1px solid var(--mat-sys-outline-variant);
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1rem;
+  // on-surface-variant over surface-container is a guaranteed AA pair in Material 3.
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.footer-copyright {
+  margin: 0;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.footer-links a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}

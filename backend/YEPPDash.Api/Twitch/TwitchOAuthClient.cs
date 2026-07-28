@@ -79,7 +79,8 @@ public sealed class TwitchOAuthClient(HttpClient httpClient, TwitchAuthOptions o
             throw new TwitchOAuthException($"Twitch token request failed ({(int)response.StatusCode}).", response.StatusCode, body);
         }
 
-        var token = await response.Content.ReadFromJsonAsync<TwitchTokenResponse>(cancellationToken);
+        var token = await response.Content.ReadFromJsonAsync<TwitchTokenResponse>(
+            TwitchJson.Options, cancellationToken);
         return token ?? throw new TwitchOAuthException("Twitch token response was empty.", response.StatusCode);
     }
 }

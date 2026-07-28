@@ -1,29 +1,12 @@
-<main class="dash">
-  <mat-card appearance="outlined" class="dash-card">
-    @if (auth.currentUser(); as user) {
-      <mat-card-header>
-        <img
-          mat-card-avatar
-          class="dash-avatar"
-          [ngSrc]="user.profileImageUrl"
-          width="40"
-          height="40"
-          [alt]="'Profilbild von ' + user.displayName"
-        />
-        <mat-card-title>Willkommen, {{ user.displayName }}</mat-card-title>
-        <mat-card-subtitle>Twitch-ID: {{ user.id }}</mat-card-subtitle>
-      </mat-card-header>
+<section class="dash">
+  <mat-card appearance="outlined" class="dash-placeholder">
+    <mat-card-header>
+      <mat-card-title>Dashboard</mat-card-title>
+      <mat-card-subtitle>Nothing here yet</mat-card-subtitle>
+    </mat-card-header>
 
-      <mat-card-content>
-        @if (user.email; as email) {
-          <p>{{ email }}</p>
-        }
-        <p class="placeholder-note">Channel-Steuerung (Join/Leave) folgt in Phase 2.</p>
-      </mat-card-content>
-    }
-
-    <mat-card-actions align="end">
-      <button mat-button type="button" (click)="logout()">Abmelden</button>
-    </mat-card-actions>
+    <mat-card-content>
+      <p>Channel controls for YEPPBot will show up here.</p>
+    </mat-card-content>
   </mat-card>
-</main>
+</section>
