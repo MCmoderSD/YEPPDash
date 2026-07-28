@@ -10,8 +10,8 @@
     <img
       class="user-menu-avatar"
       [ngSrc]="user().profileImageUrl"
-      width="32"
-      height="32"
+      [width]=32
+      [height]=32
       alt=""
     />
     <span class="user-menu-name">{{ user().displayName }}</span>
@@ -24,7 +24,7 @@
 
   <div class="user-menu-details" role="group" aria-label="Account details">
     <p class="user-menu-detail">
-      <span class="user-menu-label">User:</span>
+      <span class="user-menu-label">User ID:</span>
       <span class="user-menu-value">{{ user().id }}</span>
     </p>
     <p class="user-menu-detail">
@@ -33,7 +33,7 @@
     </p>
   </div>
 
-  <mat-divider />
+  <mat-divider/>
 
   <button mat-menu-item type="button" (click)="logout()">
     <mat-icon aria-hidden="true">logout</mat-icon>

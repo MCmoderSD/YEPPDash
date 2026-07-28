@@ -9,10 +9,10 @@ import { authGuard } from '../services/auth.guard';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent, title: 'YEPPDash' },
-  { path: 'dash', component: DashPageComponent, canActivate: [authGuard], title: 'Dashboard — YEPPDash' },
-  { path: 'imprint', component: ImprintPageComponent, title: 'Imprint — YEPPDash' },
-  { path: 'privacy', component: PrivacyPageComponent, title: 'Privacy Policy — YEPPDash' },
-  { path: 'terms', component: TermsPageComponent, title: 'Terms of Service — YEPPDash' },
+  { path: 'dash', component: DashPageComponent, canActivate: [authGuard], title: 'Dashboard' },
+  { path: 'imprint', component: ImprintPageComponent, title: 'Imprint' },
+  { path: 'privacy', component: PrivacyPageComponent, title: 'Privacy Policy' },
+  { path: 'terms', component: TermsPageComponent, title: 'Terms of Service' },
 ];
 
 @NgModule({

@@ -7,13 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { NavbarComponent } from './navbar-component/navbar.component';
-import { UserMenuComponent } from './user-menu-component/user-menu.component';
 import { FooterComponent } from './footer-component/footer.component';
+import { UserMenuComponent } from './user-menu-component/user-menu.component';
 
 const components: any[] = [
   NavbarComponent,
-  UserMenuComponent,
-  FooterComponent
+  FooterComponent,
+  UserMenuComponent
 ];
 
 @NgModule({

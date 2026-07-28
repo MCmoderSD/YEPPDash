@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: false,
 })
 export class NavbarComponent {
-  protected readonly auth = inject(AuthService);
+  protected readonly auth: AuthService = inject(AuthService);
 
-  protected readonly loginUrl = this.auth.loginUrl('/dash');
+  protected readonly loginUrl: string = this.auth.loginUrl('/dash');
 }

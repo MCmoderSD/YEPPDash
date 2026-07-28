@@ -1,8 +1,8 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { TwitchUser } from "../../data/twitch-user";
 
-// Error codes the backend appends when the OAuth2 flow does not complete (AuthController.RedirectToFrontend).
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied: 'You denied access on Twitch.',
   invalid_state: 'The login expired or was interrupted. Please try again.',
@@ -17,31 +17,29 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   standalone: false,
 })
 export class LandingPageComponent {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
-  protected readonly loginUrl = this.auth.loginUrl('/dash');
+  private readonly auth: AuthService = inject(AuthService);
+
+  private readonly router: Router = inject(Router);
+  private readonly route:ActivatedRoute = inject(ActivatedRoute);
+
+  protected readonly loginUrl: string = this.auth.loginUrl('/dash');
   protected readonly authError = signal<string | null>(null);
 
   constructor() {
-    afterNextRender(() => {
+    afterNextRender((): void => {
       this.readAuthError();
       void this.redirectIfAlreadyAuthenticated();
     });
   }
 
   private readAuthError(): void {
-    const error = this.route.snapshot.queryParamMap.get('error');
-    if (error) {
-      this.authError.set(AUTH_ERROR_MESSAGES[error] ?? 'The login failed.');
-    }
+    const error: string | null = this.route.snapshot.queryParamMap.get('error');
+    if (error) this.authError.set(AUTH_ERROR_MESSAGES[error] ?? 'The login failed.');
   }
 
   private async redirectIfAlreadyAuthenticated(): Promise<void> {
-    const user = await this.auth.ensureLoaded();
-    if (user) {
-      await this.router.navigateByUrl('/dash');
-    }
+    const user: TwitchUser | null = await this.auth.ensureLoaded();
+    if (user) await this.router.navigateByUrl('/dash');
   }
 }

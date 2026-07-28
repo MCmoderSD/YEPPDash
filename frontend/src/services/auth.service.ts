@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient } from "@angular/common/http";
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
@@ -6,7 +6,7 @@ import { TwitchUser } from '../data/twitch-user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly http: HttpClient = inject(HttpClient);
 
   private readonly user = signal<TwitchUser | null>(null);
   private readonly loaded = signal(false);

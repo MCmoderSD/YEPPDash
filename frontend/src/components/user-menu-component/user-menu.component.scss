@@ -4,11 +4,6 @@
   gap: 0.5rem;
 }
 
-// mat-button's own label wrapper sizes itself unpredictably around projected content and can
-// wrap the avatar and name onto separate lines — this owns a fixed single-row layout instead.
-// It still sits one level inside that (block-display) label span rather than as a direct flex
-// child of the button, so the button's align-items:center never reaches it — vertical-align on
-// its own box is what centers it against the label's line box.
 .user-menu-identity {
   display: inline-flex;
   align-items: center;
@@ -49,7 +44,6 @@
 
 .user-menu-value {
   font: var(--mat-sys-body-small);
-  // Twitch emails and IDs are arbitrary length — keep the panel from growing without bound.
   max-width: 14rem;
   overflow-wrap: anywhere;
 }

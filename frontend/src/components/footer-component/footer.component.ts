@@ -7,7 +7,5 @@ import { Component } from '@angular/core';
   standalone: false,
 })
 export class FooterComponent {
-  // Resolved once when the component is created. On the prerendered landing page that means the
-  // build date, everywhere else the date the app was loaded.
-  protected readonly year = new Date().getFullYear();
+  protected readonly year: number = new Date().getFullYear();
 }
