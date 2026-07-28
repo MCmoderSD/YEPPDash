@@ -6,4 +6,5 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'privacy', renderMode: RenderMode.Prerender },
   { path: 'terms', renderMode: RenderMode.Prerender },
   { path: 'dash', renderMode: RenderMode.Client },
+  { path: 'dash/**', renderMode: RenderMode.Client },
 ];

@@ -1,0 +1,44 @@
+.role-management {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.role-management-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.role-management-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.role-management-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.role-management-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.role-management-login {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+}
+
+// Lines the button up with the input itself rather than with the hint text below it.
+.role-management-submit {
+  margin-block-start: 0.5rem;
+}
+
+// Kept in the layout while idle so the table does not jump every time a request starts.
+.role-management-progress {
+  flex: none;
+}

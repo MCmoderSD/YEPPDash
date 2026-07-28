@@ -1,13 +1,18 @@
 :host {
   display: flex;
   flex: 1;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+}
+
+.dash-content {
+  flex: 1;
+  min-width: 0;
   padding: 2rem 1rem;
 }
 
-.dash-placeholder {
-  width: 100%;
-  max-width: 32rem;
-  text-align: center;
+// Below this the side column would leave the table almost nothing, so the two stack instead.
+@media (max-width: 47.99rem) {
+  :host {
+    flex-direction: column;
+  }
 }

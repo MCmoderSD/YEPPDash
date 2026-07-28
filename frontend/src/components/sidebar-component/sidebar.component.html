@@ -1,0 +1,28 @@
+<!-- mat-nav-list already carries role="navigation", so wrapping it in a <nav> would nest two
+     landmarks and leave the inner one unlabelled. The label goes straight on the list instead. -->
+<mat-nav-list class="sidebar" aria-label="Dashboard sections">
+
+  <a
+    mat-list-item
+    routerLink="/dash/role-management"
+    [queryParams]="{ mode: 'moderator' }"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">shield</mat-icon>
+    <span matListItemTitle>Moderator Management</span>
+  </a>
+
+  <a
+    mat-list-item
+    routerLink="/dash/role-management"
+    [queryParams]="{ mode: 'vip' }"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">star</mat-icon>
+    <span matListItemTitle>VIP Management</span>
+  </a>
+</mat-nav-list>
