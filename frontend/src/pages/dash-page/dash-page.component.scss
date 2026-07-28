@@ -11,6 +11,11 @@
   max-width: 28rem;
 }
 
+.dash-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .placeholder-note {
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);

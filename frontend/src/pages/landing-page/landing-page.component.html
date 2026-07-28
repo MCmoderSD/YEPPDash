@@ -6,9 +6,14 @@
     </mat-card-header>
 
     <mat-card-content>
-      <p>
-        Melde dich mit deinem Twitch-Account an, um YEPPBot für deinen Kanal zu steuern.
-      </p>
+      <p>Melde dich mit deinem Twitch-Account an, um YEPPBot für deinen Kanal zu steuern.</p>
+
+      @if (authError(); as error) {
+        <p class="login-error" role="alert">
+          <mat-icon aria-hidden="true">error_outline</mat-icon>
+          <span>{{ error }}</span>
+        </p>
+      }
     </mat-card-content>
 
     <mat-card-actions align="end">

@@ -1,0 +1,30 @@
+.landing {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.landing-card {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-block-end: 0;
+  // --mat-sys-error on --mat-sys-error-container is a guaranteed AA pair in Material 3.
+  padding: 0.75rem;
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+a[mat-flat-button] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}

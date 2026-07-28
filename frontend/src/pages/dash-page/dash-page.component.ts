@@ -1,17 +1,15 @@
 import { Component, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { AuthService } from '../../core/auth/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 // Placeholder shell (ROADMAP Phase 1, step 6) — just proves the login round-trip end to end.
 // The actual channel status/join-leave card is Phase 2 (IBotClient).
 @Component({
-  selector: 'app-dash',
-  imports: [MatButtonModule, MatCardModule],
-  templateUrl: './dash.html',
-  styleUrl: './dash.scss',
+  selector: 'app-dash-page',
+  templateUrl: './dash-page.component.html',
+  styleUrl: './dash-page.component.scss',
+  standalone: false,
 })
-export class Dash {
+export class DashPageComponent {
   protected readonly auth = inject(AuthService);
 
   protected async logout(): Promise<void> {

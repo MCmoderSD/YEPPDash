@@ -1,18 +1,15 @@
 using System.Security.Claims;
-using YEPPDash.Api.Contracts;
+using YEPPDash.Api.Auth;
 
 namespace YEPPDash.Api.Helpers;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static UserInfo ToUserInfo(this ClaimsPrincipal user)
+    extension(ClaimsPrincipal user)
     {
-        var info = new UserInfo(
-            user.FindFirst("sub")?.Value,
-            user.FindFirst("preferred_username")?.Value,
-            user.FindFirst("email")?.Value
-        );
-        
-        return info;
-    } 
+        public string? GetTwitchId()
+        {
+            return user.FindFirst(TwitchClaimTypes.TwitchId)?.Value;
+        }
+    }
 }

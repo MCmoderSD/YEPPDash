@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MySqlConnector;
 
-namespace YEPPDash.Api.Data;
+namespace YEPPDash.Api.Repositories;
 
 public sealed class DatabaseHealthCheck(MySqlConnection connection) : IHealthCheck
 {
