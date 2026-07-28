@@ -7,8 +7,6 @@ using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Controllers;
 
-// Thin pass-through to the Helix endpoints YEPPDash needs directly. Kept apart from the planned
-// /api/channel surface, which goes through YEPPBot's internal API rather than Twitch.
 [ApiController]
 [Authorize]
 [Route("api/twitch")]
@@ -16,8 +14,6 @@ public sealed class TwitchController(
     TwitchChannelService channelService,
     ILogger<TwitchController> logger) : ControllerBase
 {
-    // Without a user id this answers for the caller, so the dashboard can tint its own header
-    // without having to look up its own Twitch id first.
     [HttpGet("chat-color/{userId?}")]
     public async Task<IActionResult> GetChatColor(string? userId, CancellationToken cancellationToken)
     {
@@ -27,7 +23,7 @@ public sealed class TwitchController(
         try
         {
             var color = await channelService.GetChatColorAsync(twitchId, userId ?? twitchId, cancellationToken);
-            return color is null ? NotFound() : Ok(new ChatColorResponse(color.Color));
+            return color is null ? NotFound() : Ok(new ChatColorResponse(color.UserId, color.Color));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -83,9 +79,6 @@ public sealed class TwitchController(
         }
     }
 
-    // Twitch's own status carries the useful detail here — 404 no such user, 409 already a VIP,
-    // 422 already a moderator or the broadcaster themselves — so pass client errors through
-    // instead of flattening every failure into a 502.
     private IActionResult HandleTwitchFailure(Exception exception, string description)
     {
         if (exception is not TwitchOAuthException twitchException)

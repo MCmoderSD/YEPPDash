@@ -3,10 +3,12 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
 import { TwitchUser } from '../data/twitch-user';
+import { TwitchService } from './twitch.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http: HttpClient = inject(HttpClient);
+  private readonly twitch: TwitchService = inject(TwitchService);
 
   private readonly user = signal<TwitchUser | null>(null);
   private readonly loaded = signal(false);
@@ -28,6 +30,12 @@ export class AuthService {
 
   async ensureLoaded(): Promise<TwitchUser | null> {
     if (this.loaded()) return this.user();
+
+    // Fired alongside /me instead of after the user menu mounts and reacts to the
+    // resolved user — that ordering forced two round trips back to back before the
+    // colour ever showed up. Both requests share the same session cookie, so there is
+    // no need to wait for one to know the other is worth sending.
+    void this.twitch.loadChatColor();
 
     try {
       const info = await firstValueFrom(

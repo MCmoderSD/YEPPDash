@@ -1,4 +1,5 @@
 namespace YEPPDash.Api.Data;
 
-// Hex colour like "#9146FF", or null when the user never picked one.
-public sealed record ChatColorResponse(string? Color);
+// Trimmed down from Twitch's full chat-color payload (which also carries login/display
+// name) — the dashboard only needs to know whose colour this is and what it is.
+public sealed record ChatColorResponse(string Id, string? Color);

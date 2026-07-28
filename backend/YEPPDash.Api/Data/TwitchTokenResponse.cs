@@ -1,6 +1,5 @@
 namespace YEPPDash.Api.Data;
 
-// Read with TwitchJson.Options, which maps Twitch's snake_case onto these names.
 public sealed record TwitchTokenResponse
 {
     public required string AccessToken { get; init; }
