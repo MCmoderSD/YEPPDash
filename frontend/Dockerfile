@@ -28,7 +28,7 @@ FROM node:26-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NG_ALLOWED_HOSTS=*
+ENV NG_ALLOWED_HOSTS=www.yeppbot.com,yeppbot.com,dash.yeppbot.com
 
 RUN addgroup -S angular && adduser -S angular -G angular
 
