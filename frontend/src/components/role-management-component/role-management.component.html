@@ -25,5 +25,5 @@
     [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
   />
 
-  <app-user-table [users]="users()" [mode]="role()" (remove)="remove($event)"/>
+  <app-user-table [users]="users()" [mode]="tableMode()" (remove)="remove($event)"/>
 </section>

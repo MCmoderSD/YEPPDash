@@ -23,13 +23,10 @@ export class UserInfoDialogComponent {
     void this.loadChatColor();
   }
 
-  // Opening goes through here rather than through MatDialog directly so the sizing stays with the
-  // dialog itself — callers should not have to know it wants a third of the viewport.
   static open(dialog: MatDialog, user: TwitchUser): MatDialogRef<UserInfoDialogComponent> {
     return dialog.open(UserInfoDialogComponent, {
       data: user,
       width: '33vw',
-      // A third of a phone screen is unusable, so it stops shrinking well before that.
       minWidth: 'min(22rem, 92vw)',
       maxWidth: '92vw',
     });

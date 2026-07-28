@@ -12,8 +12,6 @@ describe('SidebarComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         DashModule,
-        // The real route lives in DashModule's forChild config, which only reaches the router
-        // through lazy loading, so the target is restated here to make navigation possible.
         RouterModule.forRoot([{ path: 'dash/role-management', component: SidebarComponent }]),
       ],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideNoopAnimations()],
@@ -34,13 +32,13 @@ describe('SidebarComponent', () => {
 
   it('should point both entries at role management in their own mode', () => {
     expect(links().map((link) => link.getAttribute('href')))
-      .toEqual(['/dash/role-management?mode=moderator', '/dash/role-management?mode=vip']);
+      .toEqual(['/dash/role-management?mode=0', '/dash/role-management?mode=1']);
   });
 
   it('should mark only the entry matching the current mode as active', async () => {
     const router = TestBed.inject(Router);
-    const navigated = await router.navigateByUrl('/dash/role-management?mode=vip');
-    expect([navigated, router.url]).toEqual([true, '/dash/role-management?mode=vip']);
+    const navigated = await router.navigateByUrl('/dash/role-management?mode=1');
+    expect([navigated, router.url]).toEqual([true, '/dash/role-management?mode=1']);
 
     const fixture = TestBed.createComponent(SidebarComponent);
     fixture.detectChanges();

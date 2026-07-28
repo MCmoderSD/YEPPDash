@@ -19,7 +19,6 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  // Lets /dash/role-management?mode=vip arrive as a plain `mode` input on the component.
   imports: [RouterModule.forRoot(routes, { bindToComponentInputs: true })],
   exports: [RouterModule]
 })

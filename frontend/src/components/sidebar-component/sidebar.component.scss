@@ -1,4 +1,3 @@
-// The active entry has to read as selected without relying on colour alone, hence the bar.
 .sidebar-entry-active {
   background: var(--mat-sys-surface-container-high);
   box-shadow: inset 0.25rem 0 0 0 var(--mat-sys-primary);

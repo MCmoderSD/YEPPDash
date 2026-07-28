@@ -1,23 +1,37 @@
-import { Component, computed, effect, inject, input, InputSignal, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, input, InputSignalWithTransform, Signal, signal, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
+import { UserTableMode } from '../user-table-component/user-table.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
+import { RoleManagementMode } from '../../data/role-management-mode';
 import { TwitchUser } from '../../data/twitch-user';
 
-export type RoleManagementMode = 'moderator' | 'vip';
+function titleFor(mode: RoleManagementMode): string {
+  switch (mode) {
+    case RoleManagementMode.Moderator: return 'Moderator Management';
+    case RoleManagementMode.Vip: return 'VIP Management';
+    default: throw new Error(`Unknown RoleManagementMode: ${mode}`);
+  }
+}
 
-const TITLES: Record<RoleManagementMode, string> = {
-  moderator: 'Moderator Management',
-  vip: 'VIP Management',
-};
+function roleNameFor(mode: RoleManagementMode): string {
+  switch (mode) {
+    case RoleManagementMode.Moderator: return 'moderator';
+    case RoleManagementMode.Vip: return 'VIP';
+    default: throw new Error(`Unknown RoleManagementMode: ${mode}`);
+  }
+}
 
-const ROLE_NAMES: Record<RoleManagementMode, string> = {
-  moderator: 'moderator',
-  vip: 'VIP',
-};
+function tableModeFor(mode: RoleManagementMode): UserTableMode {
+  switch (mode) {
+    case RoleManagementMode.Moderator: return 'moderator';
+    case RoleManagementMode.Vip: return 'vip';
+    default: throw new Error(`Unknown RoleManagementMode: ${mode}`);
+  }
+}
 
 @Component({
   selector: 'app-role-management',
@@ -31,14 +45,20 @@ export class RoleManagementComponent {
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  // Typed loosely because the router binds this straight from ?mode=, where anything can show up.
-  readonly mode: InputSignal<string> = input<string>('moderator');
+  // The router hands this in as the raw query-string value ("0"/"1"), so the transform is what
+  // turns it into the enum. There is no default: a missing or malformed ?mode= is a hard failure
+  // (Angular's own "required input" error, or the throw in the functions below) rather than a
+  // silent fallback to Moderator.
+  readonly mode: InputSignalWithTransform<RoleManagementMode, string | RoleManagementMode> = input.required({
+    transform: (value: string | RoleManagementMode): RoleManagementMode =>
+      typeof value === 'string' ? Number(value) : value,
+  });
 
-  protected readonly role: Signal<RoleManagementMode> = computed(() => this.mode() === 'vip' ? 'vip' : 'moderator');
+  protected readonly title: Signal<string> = computed(() => titleFor(this.mode()));
 
-  protected readonly title: Signal<string> = computed(() => TITLES[this.role()]);
+  protected readonly roleName: Signal<string> = computed(() => roleNameFor(this.mode()));
 
-  protected readonly roleName: Signal<string> = computed(() => ROLE_NAMES[this.role()]);
+  protected readonly tableMode: Signal<UserTableMode> = computed(() => tableModeFor(this.mode()));
 
   protected readonly users: WritableSignal<TwitchUser[]> = signal<TwitchUser[]>([]);
 
@@ -47,11 +67,11 @@ export class RoleManagementComponent {
   protected readonly busy: WritableSignal<boolean> = signal(false);
 
   constructor() {
-    effect(() => void this.load(this.role()));
+    effect(() => void this.load(this.mode()));
   }
 
   protected async openAddDialog(): Promise<void> {
-    const dialogRef = UserAddDialogComponent.open(this.dialog, this.roleName());
+    const dialogRef = UserAddDialogComponent.open(this.dialog, `Add ${this.roleName()}`);
     const user: TwitchUser | undefined = await firstValueFrom(dialogRef.afterClosed());
 
     // Closed with Cancel, Escape or a backdrop click — nothing was picked, so nothing happens.
@@ -59,16 +79,16 @@ export class RoleManagementComponent {
   }
 
   protected async remove(user: TwitchUser): Promise<void> {
-    const role: RoleManagementMode = this.role();
-    const roleName: string = ROLE_NAMES[role];
+    const mode: RoleManagementMode = this.mode();
+    const roleName: string = roleNameFor(mode);
 
     this.busy.set(true);
     try {
-      if (role === 'vip') await this.twitch.removeVip(user.id);
+      if (mode === RoleManagementMode.Vip) await this.twitch.removeVip(user.id);
       else await this.twitch.removeModerator(user.id);
 
       this.notifications.success(`${user.displayName} is no longer a ${roleName}.`);
-      await this.load(role);
+      await this.load(mode);
     } catch {
       this.notifications.failure(`Could not remove ${user.displayName} as ${roleName}.`);
     } finally {
@@ -78,16 +98,16 @@ export class RoleManagementComponent {
 
   // The dialog has already resolved the name to a real account, so this only has to act on it.
   private async add(user: TwitchUser): Promise<void> {
-    const role: RoleManagementMode = this.role();
-    const roleName: string = ROLE_NAMES[role];
+    const mode: RoleManagementMode = this.mode();
+    const roleName: string = roleNameFor(mode);
 
     this.busy.set(true);
     try {
-      if (role === 'vip') await this.twitch.addVip(user.id);
+      if (mode === RoleManagementMode.Vip) await this.twitch.addVip(user.id);
       else await this.twitch.addModerator(user.id);
 
       this.notifications.success(`${user.displayName} is now a ${roleName}.`);
-      await this.load(role);
+      await this.load(mode);
     } catch {
       this.notifications.failure(`Could not add ${user.displayName} as ${roleName}.`);
     } finally {
@@ -97,17 +117,17 @@ export class RoleManagementComponent {
 
   // The role list only carries ids and names, so the avatars the table shows need a second call —
   // that is what the batched Get Users endpoint is for, one request per 100 entries.
-  private async load(role: RoleManagementMode): Promise<void> {
+  private async load(mode: RoleManagementMode): Promise<void> {
     this.loading.set(true);
     try {
-      const entries: ChannelUser[] = role === 'vip'
+      const entries: ChannelUser[] = mode === RoleManagementMode.Vip
         ? await this.twitch.loadVips()
         : await this.twitch.loadModerators();
 
       this.users.set(await this.twitch.getUsers(entries.map((entry) => entry.id)));
     } catch {
       this.users.set([]);
-      this.notifications.failure(`Could not load the ${ROLE_NAMES[role]} list.`);
+      this.notifications.failure(`Could not load the ${roleNameFor(mode)} list.`);
     } finally {
       this.loading.set(false);
     }

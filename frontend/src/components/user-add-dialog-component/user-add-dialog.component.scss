@@ -9,6 +9,11 @@
 
 .user-add-field {
   width: 100%;
+  margin-top: 0.5rem;
+}
+
+.user-add-field button {
+  margin-right: 0.5rem;
 }
 
 // Holds whatever the last search produced. Given a fixed floor so the dialog does not resize
@@ -22,10 +27,12 @@
 
 .user-add-result {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
   text-align: center;
+  margin-top: 1rem;
+  gap: 1rem;
 }
 
 .user-add-avatar {

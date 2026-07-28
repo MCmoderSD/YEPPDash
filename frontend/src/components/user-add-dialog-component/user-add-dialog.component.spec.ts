@@ -43,7 +43,7 @@ describe('UserAddDialogComponent', () => {
     await TestBed.configureTestingModule({
       imports: [UserComponentsModule],
       providers: [
-        { provide: MAT_DIALOG_DATA, useValue: { role: 'moderator' } },
+        { provide: MAT_DIALOG_DATA, useValue: { title: 'Add moderator' } },
         { provide: MatDialogRef, useValue: { close: (value?: TwitchUser) => closed.push(value) } },
         { provide: TwitchService, useClass: FakeTwitchService },
         provideHttpClient(),

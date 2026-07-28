@@ -11,6 +11,5 @@ import { SidebarService } from '../../services/sidebar.service';
 export class NavbarComponent {
   protected readonly auth: AuthService = inject(AuthService);
   protected readonly sidebar: SidebarService = inject(SidebarService);
-
   protected readonly loginUrl: string = this.auth.loginUrl('/dash');
 }

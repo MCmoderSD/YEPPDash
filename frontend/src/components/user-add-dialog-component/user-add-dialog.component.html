@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Add {{ data.role }}</h2>
+<h2 mat-dialog-title>{{ data.title }}</h2>
 
 <mat-dialog-content class="user-add">
 
@@ -50,6 +50,6 @@
 <mat-dialog-actions align="end">
   <button mat-button type="button" mat-dialog-close>Cancel</button>
   <button mat-flat-button type="button" [disabled]="!user()" (click)="add()">
-    Add {{ data.role }}
+    {{ data.title }}
   </button>
 </mat-dialog-actions>

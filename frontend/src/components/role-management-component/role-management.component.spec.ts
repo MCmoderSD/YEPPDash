@@ -12,6 +12,7 @@ import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-di
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
+import { RoleManagementMode } from '../../data/role-management-mode';
 import { TwitchUser } from '../../data/twitch-user';
 
 function twitchUser(id: string, displayName: string): TwitchUser {
@@ -64,7 +65,7 @@ describe('RoleManagementComponent', () => {
   let twitch: FakeTwitchService;
   let notifications: FakeNotificationService;
 
-  async function render(mode: string): Promise<void> {
+  async function render(mode: RoleManagementMode): Promise<void> {
     fixture.componentRef.setInput('mode', mode);
     fixture.detectChanges();
     await settle();
@@ -98,7 +99,7 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should load the moderator list and resolve avatars in one batch', async () => {
-    await render('moderator');
+    await render(RoleManagementMode.Moderator);
 
     expect(twitch.calls).toEqual(['loadModerators', 'getUsers(9|)']);
     expect(element.querySelector('.role-management-title')!.textContent).toContain('Moderator Management');
@@ -106,27 +107,29 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should load VIPs instead when asked for that mode', async () => {
-    await render('vip');
+    await render(RoleManagementMode.Vip);
 
     expect(twitch.calls).toEqual(['loadVips', 'getUsers(42|)']);
     expect(element.querySelector('.role-management-title')!.textContent).toContain('VIP Management');
   });
 
-  it('should fall back to moderators for a mode the URL made up', async () => {
-    await render('nonsense');
+  it('should reject a mode the URL made up instead of silently defaulting to moderator', () => {
+    fixture.componentRef.setInput('mode', 42);
+    expect(() => fixture.detectChanges()).toThrow();
+  });
 
-    expect(twitch.loadModerators).toHaveBeenCalled();
-    expect(twitch.loadVips).not.toHaveBeenCalled();
+  it('should require the mode input rather than defaulting when it is missing entirely', () => {
+    expect(() => fixture.detectChanges()).toThrow();
   });
 
   it('should hand the table the matching mode so the remove column appears', async () => {
-    await render('vip');
+    await render(RoleManagementMode.Vip);
 
     expect(element.querySelectorAll('thead th')).toHaveLength(3);
   });
 
   it('should remove a VIP through the VIP endpoint and confirm it', async () => {
-    await render('vip');
+    await render(RoleManagementMode.Vip);
     twitch.calls.length = 0;
 
     element.querySelector<HTMLButtonElement>('.user-table-actions button')!.click();
@@ -140,7 +143,7 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should remove a moderator through the moderator endpoint', async () => {
-    await render('moderator');
+    await render(RoleManagementMode.Moderator);
 
     element.querySelector<HTMLButtonElement>('.user-table-actions button')!.click();
     await settle();
@@ -150,7 +153,7 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should report a failed removal instead of pretending it worked', async () => {
-    await render('moderator');
+    await render(RoleManagementMode.Moderator);
     twitch.removeModerator.mockRejectedValueOnce(new Error('403'));
 
     element.querySelector<HTMLButtonElement>('.user-table-actions button')!.click();
@@ -171,18 +174,18 @@ describe('RoleManagementComponent', () => {
   }
 
   it('should open the add dialog for the role it is managing', async () => {
-    await render('vip');
+    await render(RoleManagementMode.Vip);
     const open = stubDialog(undefined);
 
     addButton().click();
     await settle();
 
     expect(open.mock.calls[0][0]).toBe(UserAddDialogComponent);
-    expect(open.mock.calls[0][1]?.data).toEqual({ role: 'VIP' });
+    expect(open.mock.calls[0][1]?.data).toEqual({ title: 'Add VIP' });
   });
 
   it('should add whoever the dialog handed back and confirm it', async () => {
-    await render('vip');
+    await render(RoleManagementMode.Vip);
     stubDialog(twitchUser('555', 'Newbie'));
     twitch.calls.length = 0;
 
@@ -197,7 +200,7 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should add through the moderator endpoint in moderator mode', async () => {
-    await render('moderator');
+    await render(RoleManagementMode.Moderator);
     stubDialog(twitchUser('555', 'Newbie'));
 
     addButton().click();
@@ -208,7 +211,7 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should do nothing when the dialog was cancelled', async () => {
-    await render('moderator');
+    await render(RoleManagementMode.Moderator);
     stubDialog(undefined);
 
     addButton().click();
@@ -220,7 +223,7 @@ describe('RoleManagementComponent', () => {
   });
 
   it('should report a failed add instead of pretending it worked', async () => {
-    await render('moderator');
+    await render(RoleManagementMode.Moderator);
     stubDialog(twitchUser('555', 'Newbie'));
     twitch.addModerator.mockRejectedValueOnce(new Error('401'));
 
