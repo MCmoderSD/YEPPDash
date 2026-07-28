@@ -3,9 +3,6 @@ using YEPPDash.Api.Auth;
 
 namespace YEPPDash.Api.Data;
 
-// Persists Twitch tokens in YEPPDash's own `TwitchToken` table. Access and refresh token are
-// encrypted before they ever reach the database; scopes and timestamps stay in the clear so the
-// rows remain diagnosable without the key.
 public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connections, ITokenCipher cipher)
     : ITwitchTokenStore
 {
@@ -32,10 +29,7 @@ public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connectio
                 new { userId = ParseUserId(twitchUserId) },
                 cancellationToken: cancellationToken));
 
-        if (row is null)
-        {
-            return null;
-        }
+        if (row is null) return null;
 
         return new StoredTwitchToken(
             row.UserId.ToString(),
@@ -86,7 +80,6 @@ public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connectio
                 cancellationToken: cancellationToken));
     }
 
-    // Twitch user IDs arrive as strings but are numeric, and YEPPBot's schema stores them as INT.
     private static int ParseUserId(string twitchUserId)
     {
         if (!int.TryParse(twitchUserId, out var id))

@@ -2,7 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace YEPPDash.Api.Contracts;
 
-// Response body of POST https://id.twitch.tv/oauth2/token (authorization_code and refresh_token grants).
 public sealed record TwitchTokenResponse
 {
     [JsonPropertyName("access_token")]

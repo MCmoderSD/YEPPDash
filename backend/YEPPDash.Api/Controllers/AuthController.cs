@@ -15,8 +15,6 @@ public sealed class AuthController(
     IConfiguration configuration,
     ILogger<AuthController> logger) : ControllerBase
 {
-    // Step 1: hand the browser off to Twitch. The return URL travels in the state cookie rather
-    // than through Twitch, so nothing user-controlled has to survive the round-trip.
     [HttpGet("login")]
     public IActionResult Login(string? returnUrl)
     {
@@ -26,8 +24,6 @@ public sealed class AuthController(
         return Redirect(authService.BuildLoginUrl(state));
     }
 
-    // Step 2: Twitch redirects back here with ?code=&state=. This is the URI registered in the
-    // Twitch developer console.
     [HttpGet("callback")]
     public async Task<IActionResult> Callback(
         [FromQuery] string? code,
@@ -36,7 +32,6 @@ public sealed class AuthController(
         [FromQuery(Name = "error_description")] string? errorDescription,
         CancellationToken cancellationToken)
     {
-        // The state cookie is consumed no matter how this turns out — it is single-use.
         var stateValid = OAuthStateCookie.TryConsume(Request, Response, state, out var returnUrl);
 
         if (error is not null)
@@ -64,9 +59,7 @@ public sealed class AuthController(
         }
         catch (TwitchOAuthException exception)
         {
-            logger.LogWarning(
-                exception, "Login via Twitch failed ({StatusCode}): {Body}", exception.StatusCode, exception.ResponseBody);
-
+            logger.LogWarning(exception, "Login via Twitch failed ({StatusCode}): {Body}", exception.StatusCode, exception.ResponseBody);
             return RedirectToFrontend("twitch_error");
         }
 
@@ -87,8 +80,6 @@ public sealed class AuthController(
         return Ok();
     }
 
-    // Intentionally without [Authorize]: an unauthenticated call has to answer 401 so the
-    // frontend's fetch can read it. [Authorize] would instead start a redirect chain to Twitch.
     [HttpGet("me")]
     public async Task<IActionResult> Me(CancellationToken cancellationToken)
     {
@@ -108,7 +99,6 @@ public sealed class AuthController(
             var user = await authService.GetCurrentUserAsync(twitchId, cancellationToken);
             if (user is null)
             {
-                // Cookie is intact but the Twitch grant behind it is gone — the session is worthless.
                 logger.LogInformation("Session for {TwitchId} has no usable Twitch token, signing out", twitchId);
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return Unauthorized();
@@ -119,7 +109,6 @@ public sealed class AuthController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            // Twitch being down must not log everyone out; serve what the cookie knows instead.
             logger.LogWarning(exception, "Twitch is unreachable, answering /me from cookie claims for {TwitchId}", twitchId);
 
             var cached = User.ToCachedUserInfo();
@@ -135,9 +124,6 @@ public sealed class AuthController(
             && configuration.GetAllowedFrontendOrigins().Contains($"{uri.Scheme}://{uri.Authority}");
     }
 
-    // Failure paths land back on the frontend with an error code instead of showing raw JSON.
-    // The first allowed origin is the frontend by definition — it is the only one the login flow
-    // is ever permitted to return to.
     private IActionResult RedirectToFrontend(string error)
     {
         var origin = configuration.GetAllowedFrontendOrigins().FirstOrDefault();

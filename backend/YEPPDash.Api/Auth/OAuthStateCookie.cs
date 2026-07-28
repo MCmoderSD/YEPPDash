@@ -5,18 +5,9 @@ using System.Text.Json.Serialization;
 
 namespace YEPPDash.Api.Auth;
 
-// CSRF protection for the authorization-code flow (RFC 6749 §10.12). The OIDC middleware used to
-// do this implicitly; driving OAuth2 by hand means owning it explicitly.
-//
-// A random nonce goes out as the `state` query parameter and, together with the return URL, into a
-// short-lived HttpOnly cookie. On the callback both must match, which is only possible for a
-// browser that actually started the flow here.
-//
-// SameSite=Lax is correct even across sites: the callback is a top-level GET navigation, which Lax
-// explicitly permits.
 public static class OAuthStateCookie
 {
-    public const string Name = "yeppdash.oauth-state";
+    private const string Name = "yeppdash.oauth-state";
 
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(10);
 
@@ -37,9 +28,6 @@ public static class OAuthStateCookie
         return nonce;
     }
 
-    // Single-use: the cookie is dropped whether or not validation succeeded, so a leaked state
-    // value cannot be replayed. Returns false for every failure mode — missing, malformed or
-    // mismatched — because the caller has no reason to treat them differently.
     public static bool TryConsume(HttpRequest request, HttpResponse response, string? state, out string? returnUrl)
     {
         returnUrl = null;
@@ -72,7 +60,7 @@ public static class OAuthStateCookie
         return true;
     }
 
-    public static void Delete(HttpResponse response)
+    private static void Delete(HttpResponse response)
     {
         response.Cookies.Delete(Name, new CookieOptions
         {

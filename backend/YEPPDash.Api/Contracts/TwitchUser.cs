@@ -2,8 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace YEPPDash.Api.Contracts;
 
-// One entry of the "data" array returned by GET https://api.twitch.tv/helix/users.
-// "email" is only populated when the access token carries the user:read:email scope.
 public sealed record TwitchUser
 {
     [JsonPropertyName("id")]
