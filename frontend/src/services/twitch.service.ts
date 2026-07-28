@@ -21,6 +21,10 @@ export class TwitchService {
 
   private readonly vipList: WritableSignal<ChannelUser[] | null> = signal<ChannelUser[] | null>(null);
 
+  // Chat colours never change mid-session in practice, so once looked up a user is remembered —
+  // including the "has no colour" answer, which is why null and "not asked yet" are kept apart.
+  private readonly colorsByUser = new Map<string, string | null>();
+
   readonly chatColor: Signal<string | null> = this.color.asReadonly();
 
   // null means "not loaded yet", an empty array means "loaded, the channel has none".
@@ -37,6 +41,27 @@ export class TwitchService {
     } catch {
       this.color.set(null);
     }
+  }
+
+  async getChatColor(userId: string): Promise<string | null> {
+    const remembered: string | null | undefined = this.colorsByUser.get(userId);
+    if (remembered !== undefined) return remembered;
+
+    let color: string | null = null;
+    try {
+      const response: ChatColor = await firstValueFrom(
+        this.http.get<ChatColor>(
+          `${environment.apiBaseUrl}/api/twitch/chat-color/${encodeURIComponent(userId)}`,
+          { withCredentials: true },
+        ),
+      );
+      color = response.color;
+    } catch {
+      color = null;
+    }
+
+    this.colorsByUser.set(userId, color);
+    return color;
   }
 
   // The backend paginates and caches these, so calling this again is cheap — one Helix request
