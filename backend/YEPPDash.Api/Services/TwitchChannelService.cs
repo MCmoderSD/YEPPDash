@@ -4,9 +4,6 @@ using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Services;
 
-// Channel-level Helix calls made with the caller's own token. The broadcaster id always comes
-// from the session rather than the request, so a caller can only ever edit their own channel —
-// the same rule the rest of the public API follows.
 public sealed class TwitchChannelService(
     TwitchAuthService authService,
     TwitchApiClient apiClient,
@@ -78,18 +75,12 @@ public sealed class TwitchChannelService(
         logger.LogInformation("Removed {UserId} as VIP in channel {BroadcasterId}", userId, broadcasterId);
     }
 
-    // Always costs exactly one request when nothing changed: the first page of 100 is fetched
-    // regardless, and if every name on it is already cached the cached list is handed back
-    // unchanged. Anything else — an unknown name, a shrunk list, a cold cache — means the cursor
-    // gets followed to the end and the whole list is rebuilt.
     private async Task<IReadOnlyList<TwitchChannelUser>> GetChannelUsersAsync(
         ChannelRole role, string broadcasterId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
         var page = await FetchPageAsync(role, broadcasterId, accessToken, cursor: null, cancellationToken);
 
-        // No cursor means the first page already is the complete list, so there is nothing to
-        // validate against — it simply replaces whatever was cached.
         if (page.Cursor is null)
         {
             cache.Set(role, broadcasterId, page.Items);
@@ -144,13 +135,10 @@ public sealed class TwitchChannelService(
         return page.All(user => known.Contains(user.UserId));
     }
 
-    // A session without a usable stored token is indistinguishable from an expired one to the
-    // caller, so report it the way Twitch itself would rather than inventing a second failure mode.
     private async Task<string> GetAccessTokenAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var token = await authService.GetValidTokenAsync(twitchUserId, cancellationToken);
 
-        return token?.AccessToken ?? throw new TwitchOAuthException(
-            $"No usable Twitch token stored for {twitchUserId}.", HttpStatusCode.Unauthorized);
+        return token?.AccessToken ?? throw new TwitchOAuthException($"No usable Twitch token stored for {twitchUserId}.", HttpStatusCode.Unauthorized);
     }
 }

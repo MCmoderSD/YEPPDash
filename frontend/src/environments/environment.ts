@@ -1,5 +1,6 @@
 export const environment = {
-  // Temporary: yeppbot.com isn't registered yet, using the mcmodersd.de subdomains until it is.
-  apiBaseUrl: 'https://api.mcmodersd.de',
-  frontendBaseUrl: 'https://dash.mcmodersd.de',
+  production: true,
+  apiBaseUrl: 'https://api.yeppbot.com',
+  frontendBaseUrl: 'https://dash.yeppbot.com',
+  marketingBaseUrl: 'https://www.yeppbot.com',
 };

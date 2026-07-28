@@ -7,7 +7,7 @@ public static class TwitchScopes
         return dbTarget.Equals("Prod", StringComparison.OrdinalIgnoreCase) ? Prod : Dev;
     }
 
-    public static readonly string[] Prod =
+    private static readonly string[] Prod =
     [
         "channel:read:vips",
         "channel:edit:commercial",
@@ -24,8 +24,7 @@ public static class TwitchScopes
         "moderator:manage:shoutouts"
     ];
 
-    // All 80 scopes Twitch currently defines — the Dev app deliberately grants everything.
-    public static readonly string[] Dev =
+    private static readonly string[] Dev =
     [
         "user:manage:chat_color",
         "channel:read:stream_key",

@@ -32,7 +32,7 @@ export class TwitchService {
   async loadChatColor(): Promise<void> {
     try {
       const response: ChatColor = await firstValueFrom(
-        this.http.get<ChatColor>(`${environment.apiBaseUrl}/api/twitch/chat-color`, { withCredentials: true }),
+        this.http.get<ChatColor>(`${environment.apiBaseUrl}/twitch/chat-color`, { withCredentials: true }),
       );
       this.color.set(response.color);
     } catch {
@@ -48,7 +48,7 @@ export class TwitchService {
     try {
       const response: ChatColor = await firstValueFrom(
         this.http.get<ChatColor>(
-          `${environment.apiBaseUrl}/api/twitch/chat-color/${encodeURIComponent(userId)}`,
+          `${environment.apiBaseUrl}/twitch/chat-color/${encodeURIComponent(userId)}`,
           { withCredentials: true },
         ),
       );
@@ -82,41 +82,41 @@ export class TwitchService {
 
   async addModerator(userId: string): Promise<void> {
     await firstValueFrom(
-      this.http.post(`${environment.apiBaseUrl}/api/twitch/moderators/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
+      this.http.post(`${environment.apiBaseUrl}/twitch/moderators/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
     );
     this.moderatorList.set(null);
   }
 
   async removeModerator(userId: string): Promise<void> {
     await firstValueFrom(
-      this.http.delete(`${environment.apiBaseUrl}/api/twitch/moderators/${encodeURIComponent(userId)}`, { withCredentials: true }),
+      this.http.delete(`${environment.apiBaseUrl}/twitch/moderators/${encodeURIComponent(userId)}`, { withCredentials: true }),
     );
     this.moderatorList.set(null);
   }
 
   async addVip(userId: string): Promise<void> {
     await firstValueFrom(
-      this.http.post(`${environment.apiBaseUrl}/api/twitch/vips/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
+      this.http.post(`${environment.apiBaseUrl}/twitch/vips/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
     );
     this.vipList.set(null);
   }
 
   async removeVip(userId: string): Promise<void> {
     await firstValueFrom(
-      this.http.delete(`${environment.apiBaseUrl}/api/twitch/vips/${encodeURIComponent(userId)}`, { withCredentials: true }),
+      this.http.delete(`${environment.apiBaseUrl}/twitch/vips/${encodeURIComponent(userId)}`, { withCredentials: true }),
     );
     this.vipList.set(null);
   }
 
   private getChannelUsers(path: string): Promise<ChannelUser[]> {
     return firstValueFrom(
-      this.http.get<ChannelUser[]>(`${environment.apiBaseUrl}/api/twitch/${path}`, { withCredentials: true }),
+      this.http.get<ChannelUser[]>(`${environment.apiBaseUrl}/twitch/${path}`, { withCredentials: true }),
     );
   }
 
   private getUserBatch(params: HttpParams): Promise<TwitchUser[]> {
     return firstValueFrom(
-      this.http.get<TwitchUser[]>(`${environment.apiBaseUrl}/api/twitch/users`, { params, withCredentials: true }),
+      this.http.get<TwitchUser[]>(`${environment.apiBaseUrl}/twitch/users`, { params, withCredentials: true }),
     );
   }
 

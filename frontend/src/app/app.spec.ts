@@ -40,6 +40,6 @@ describe('App', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-user-menu')).toBeNull();
-    expect(compiled.querySelector('a[href*="/api/auth/login"]')).toBeTruthy();
+    expect(compiled.querySelector('a[href*="/auth/login"]')).toBeTruthy();
   });
 });

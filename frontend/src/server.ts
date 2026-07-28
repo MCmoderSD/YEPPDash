@@ -6,23 +6,45 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { environment } from './environments/environment';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+const dashHost = new URL(environment.frontendBaseUrl).hostname;
+const isProd = process.env['NODE_ENV'] === 'production';
+
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
+ * Only in production do www/dash actually mean different domains: locally there is just one
+ * hostname, so the dashboard keeps living under /dash and none of this applies.
  *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * The Angular route table mounts the dashboard app at '/dash' (see app.routes.server.ts, which
+ * ships it as a client-rendered shell). On the dash subdomain it needs to appear at the root
+ * instead, so requests are rewritten to that internal path before Angular ever sees them - the
+ * browser's own address bar is untouched, since that rewrite only affects the upstream request.
  */
+app.use((req, res, next) => {
+  if (!isProd) return next();
+
+  const host = (req.headers.host ?? '').split(':')[0];
+  const targetsDash = req.url === '/dash' || req.url.startsWith('/dash/') || req.url.startsWith('/dash?');
+
+  if (host === dashHost) {
+    if (!targetsDash) {
+      const queryIndex = req.url.indexOf('?');
+      const path = queryIndex === -1 ? req.url : req.url.slice(0, queryIndex);
+      const query = queryIndex === -1 ? '' : req.url.slice(queryIndex);
+      req.url = `/dash${path === '/' ? '' : path}${query}`;
+    }
+  } else if (targetsDash) {
+    res.status(404).end();
+    return;
+  }
+
+  next();
+});
 
 /**
  * Serve static files from /browser

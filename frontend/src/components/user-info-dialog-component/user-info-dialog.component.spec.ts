@@ -65,7 +65,7 @@ describe('UserInfoDialogComponent', () => {
   it('should paint the name in the chat colour of that user', async () => {
     const fixture = await open(USER);
 
-    http.expectOne(`${environment.apiBaseUrl}/api/twitch/chat-color/164284617`)
+    http.expectOne(`${environment.apiBaseUrl}/twitch/chat-color/164284617`)
       .flush({ id: USER.id, color: '#9146FF' });
 
     // The colour arrives through a promise chain the fixture does not track, so let the
@@ -80,7 +80,7 @@ describe('UserInfoDialogComponent', () => {
   it('should leave the name at the default colour when the user has none', async () => {
     const fixture = await open(USER);
 
-    http.expectOne(`${environment.apiBaseUrl}/api/twitch/chat-color/164284617`)
+    http.expectOne(`${environment.apiBaseUrl}/twitch/chat-color/164284617`)
       .flush({ id: USER.id, color: null });
 
     // The colour arrives through a promise chain the fixture does not track, so let the

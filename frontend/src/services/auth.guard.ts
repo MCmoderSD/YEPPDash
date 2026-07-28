@@ -2,11 +2,22 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from "@angular/router";
 import { AuthService } from './auth.service';
 import { TwitchUser } from "../data/twitch-user";
+import { environment } from '../environments/environment';
+import { isDashHost } from './dash-host';
 
-export const authGuard: CanActivateFn = async (): Promise<true | UrlTree> => {
+export const authGuard: CanActivateFn = async (): Promise<boolean | UrlTree> => {
   const auth: AuthService = inject(AuthService);
   const router: Router = inject(Router);
 
   const user: TwitchUser | null = await auth.ensureLoaded();
-  return user !== null ? true : router.createUrlTree(['/']);
+  if (user !== null) return true;
+
+  // On the dash host, '/' is this very guarded route - redirecting there again would loop.
+  // The marketing site is a different origin, so this has to be a real navigation, not a UrlTree.
+  if (isDashHost()) {
+    window.location.href = environment.marketingBaseUrl;
+    return false;
+  }
+
+  return router.createUrlTree(['/']);
 };

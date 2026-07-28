@@ -2,6 +2,7 @@ import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TwitchUser } from "../../data/twitch-user";
+import { environment } from '../../environments/environment';
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied: 'You denied access on Twitch.',
@@ -23,7 +24,7 @@ export class LandingPageComponent {
   private readonly router: Router = inject(Router);
   private readonly route:ActivatedRoute = inject(ActivatedRoute);
 
-  protected readonly loginUrl: string = this.auth.loginUrl('/dash');
+  protected readonly loginUrl: string = this.auth.loginUrl(environment.production ? '/' : '/dash');
   protected readonly authError = signal<string | null>(null);
 
   constructor() {
@@ -40,6 +41,11 @@ export class LandingPageComponent {
 
   private async redirectIfAlreadyAuthenticated(): Promise<void> {
     const user: TwitchUser | null = await this.auth.ensureLoaded();
-    if (user) await this.router.navigateByUrl('/dash');
+    if (!user) return;
+
+    // In production the dashboard lives on its own subdomain, so this is a real cross-origin
+    // navigation rather than an in-app route change.
+    if (environment.production) window.location.href = environment.frontendBaseUrl;
+    else await this.router.navigateByUrl('/dash');
   }
 }

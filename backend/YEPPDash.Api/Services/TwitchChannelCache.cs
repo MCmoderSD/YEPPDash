@@ -9,25 +9,22 @@ public enum ChannelRole
     Vip
 }
 
-// Process-wide store for the fully paginated moderator/VIP lists. Deliberately not time-based:
-// freshness is decided by re-reading the first page (see TwitchChannelService), and our own
-// add/remove calls drop the affected entry outright.
 public sealed class TwitchChannelCache
 {
-    private readonly ConcurrentDictionary<(ChannelRole Role, string BroadcasterId), IReadOnlyList<TwitchChannelUser>> entries = new();
+    private readonly ConcurrentDictionary<(ChannelRole Role, string BroadcasterId), IReadOnlyList<TwitchChannelUser>> _entries = new();
 
     public IReadOnlyList<TwitchChannelUser>? Get(ChannelRole role, string broadcasterId)
     {
-        return entries.TryGetValue((role, broadcasterId), out var cached) ? cached : null;
+        return _entries.GetValueOrDefault((role, broadcasterId));
     }
 
     public void Set(ChannelRole role, string broadcasterId, IReadOnlyList<TwitchChannelUser> users)
     {
-        entries[(role, broadcasterId)] = users;
+        _entries[(role, broadcasterId)] = users;
     }
 
     public void Invalidate(ChannelRole role, string broadcasterId)
     {
-        entries.TryRemove((role, broadcasterId), out _);
+        _entries.TryRemove((role, broadcasterId), out _);
     }
 }

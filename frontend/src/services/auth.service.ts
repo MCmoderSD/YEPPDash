@@ -19,12 +19,12 @@ export class AuthService {
 
   loginUrl(returnPath: string): string {
     const returnUrl = `${environment.frontendBaseUrl}${returnPath}`;
-    return `${environment.apiBaseUrl}/api/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+    return `${environment.apiBaseUrl}/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`;
   }
 
   async logout(): Promise<void> {
     await firstValueFrom(
-      this.http.post(`${environment.apiBaseUrl}/api/auth/logout`, null, { withCredentials: true }),
+      this.http.post(`${environment.apiBaseUrl}/auth/logout`, null, { withCredentials: true }),
     );
     this.user.set(null);
   }
@@ -35,7 +35,7 @@ export class AuthService {
 
     try {
       const info: TwitchUser = await firstValueFrom(
-        this.http.get<TwitchUser>(`${environment.apiBaseUrl}/api/auth/me`, { withCredentials: true }),
+        this.http.get<TwitchUser>(`${environment.apiBaseUrl}/auth/me`, { withCredentials: true }),
       );
       this.user.set(info);
     } catch {

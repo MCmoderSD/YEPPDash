@@ -29,7 +29,7 @@ class FakeAuthService {
   readonly currentUser = signal<TwitchUser | null>(null);
 
   loginUrl(returnPath: string): string {
-    return `https://api.test/api/auth/login?returnUrl=${returnPath}`;
+    return `https://api.test/auth/login?returnUrl=${returnPath}`;
   }
 
   async logout(): Promise<void> { }
@@ -80,7 +80,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('a[href*="/api/auth/login"]')).toBeTruthy();
+    expect(compiled.querySelector('a[href*="/auth/login"]')).toBeTruthy();
     expect(compiled.querySelector('app-user-menu')).toBeNull();
   });
 
@@ -90,7 +90,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('a[href*="/api/auth/login"]')).toBeNull();
+    expect(compiled.querySelector('a[href*="/auth/login"]')).toBeNull();
 
     const trigger = compiled.querySelector('.user-menu-trigger');
     expect(trigger?.textContent).toContain('MCmoderSD');

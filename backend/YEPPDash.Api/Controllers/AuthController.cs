@@ -9,7 +9,7 @@ using YEPPDash.Api.Twitch;
 namespace YEPPDash.Api.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[Route("auth")]
 public sealed class AuthController(
     TwitchAuthService authService,
     IConfiguration configuration,
@@ -63,7 +63,7 @@ public sealed class AuthController(
             return RedirectToFrontend("twitch_error");
         }
 
-        return Redirect(IsAllowedReturnUrl(returnUrl) ? returnUrl! : "/api/auth/me");
+        return Redirect(IsAllowedReturnUrl(returnUrl) ? returnUrl! : "/auth/me");
     }
 
     [HttpPost("logout")]

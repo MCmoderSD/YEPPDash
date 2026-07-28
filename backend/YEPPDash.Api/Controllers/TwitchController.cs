@@ -9,7 +9,7 @@ namespace YEPPDash.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/twitch")]
+[Route("twitch")]
 public sealed class TwitchController(
     TwitchChannelService channelService,
     ILogger<TwitchController> logger) : ControllerBase
@@ -31,8 +31,6 @@ public sealed class TwitchController(
         }
     }
 
-    // Both id and login may be repeated and mixed, e.g. ?id=1&id=2&login=mcmodersd — the whole
-    // point of the batch form is resolving a chatter list in one round trip instead of N.
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers(
         [FromQuery(Name = "id")] string[]? id,

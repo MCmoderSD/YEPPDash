@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { IsActiveMatchOptions } from '@angular/router';
 import { SidebarService } from '../../services/sidebar.service';
 import { RoleManagementMode } from "../role-management-component/role-management.component";
+import { isDashHost } from '../../services/dash-host';
 
 const ACTIVE_MATCH: IsActiveMatchOptions = {
   paths: 'exact',
@@ -23,6 +24,8 @@ export class SidebarComponent {
   protected readonly activeMatch: IsActiveMatchOptions = ACTIVE_MATCH;
 
   protected readonly Mode = RoleManagementMode;
+
+  protected readonly roleManagementPath: string = isDashHost() ? '/role-management' : '/dash/role-management';
 
   protected close(): void {
     this.sidebar.close();

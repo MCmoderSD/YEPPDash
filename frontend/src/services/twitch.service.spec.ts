@@ -28,7 +28,7 @@ describe('TwitchService', () => {
 
   it('should keep the chat colour null when the request fails', async () => {
     const loading = service.loadChatColor();
-    http.expectOne(`${API}/api/twitch/chat-color`).flush(null, { status: 502, statusText: 'Bad Gateway' });
+    http.expectOne(`${API}/twitch/chat-color`).flush(null, { status: 502, statusText: 'Bad Gateway' });
     await loading;
 
     expect(service.chatColor()).toBeNull();
@@ -38,7 +38,7 @@ describe('TwitchService', () => {
     expect(service.moderators()).toBeNull();
 
     const loading = service.loadModerators();
-    http.expectOne(`${API}/api/twitch/moderators`).flush([channelUser(1), channelUser(2)]);
+    http.expectOne(`${API}/twitch/moderators`).flush([channelUser(1), channelUser(2)]);
 
     expect(await loading).toHaveLength(2);
     expect(service.moderators()?.map((user) => user.login)).toEqual(['user1', 'user2']);
@@ -46,11 +46,11 @@ describe('TwitchService', () => {
 
   it('should drop the cached list after a moderator change so the next read refetches', async () => {
     const loading = service.loadModerators();
-    http.expectOne(`${API}/api/twitch/moderators`).flush([channelUser(1)]);
+    http.expectOne(`${API}/twitch/moderators`).flush([channelUser(1)]);
     await loading;
 
     const adding = service.addModerator('42');
-    http.expectOne(`${API}/api/twitch/moderators/42`).flush(null, { status: 204, statusText: 'No Content' });
+    http.expectOne(`${API}/twitch/moderators/42`).flush(null, { status: 204, statusText: 'No Content' });
     await adding;
 
     expect(service.moderators()).toBeNull();
@@ -63,7 +63,7 @@ describe('TwitchService', () => {
   it('should send ids and logins as repeated query parameters', async () => {
     const loading = service.getUsers(['1', '2'], ['mcmodersd']);
 
-    const request = http.expectOne((candidate) => candidate.url === `${API}/api/twitch/users`);
+    const request = http.expectOne((candidate) => candidate.url === `${API}/twitch/users`);
     expect(request.request.params.getAll('id')).toEqual(['1', '2']);
     expect(request.request.params.getAll('login')).toEqual(['mcmodersd']);
 
@@ -77,7 +77,7 @@ describe('TwitchService', () => {
     const ids = Array.from({ length: 250 }, (_, index) => `${index}`);
     const loading = service.getUsers(ids);
 
-    const requests = http.match((candidate) => candidate.url === `${API}/api/twitch/users`);
+    const requests = http.match((candidate) => candidate.url === `${API}/twitch/users`);
     expect(requests.map((request) => request.request.params.getAll('id')?.length)).toEqual([100, 100, 50]);
 
     requests.forEach((request, batch) => request.flush([{ id: `batch${batch}` }]));
