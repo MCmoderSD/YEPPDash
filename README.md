@@ -8,7 +8,7 @@ Status: early development, pre-Phase 1. See [`ROADMAP.md`](ROADMAP.md) for curre
 
 | | |
 |---|---|
-| Backend | ASP.NET Core 10 (C#), Minimal APIs, Dapper + MySqlConnector |
+| Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector |
 | Frontend | Angular 22 + Angular Material, SSR (`@angular/ssr` + Express) |
 | Auth | Twitch as OIDC identity provider — no local passwords/user table |
 | Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot; this repo reads with a least-privilege, SELECT-only user |

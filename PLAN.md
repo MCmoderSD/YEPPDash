@@ -93,10 +93,10 @@ YEPPDash/
 │   ├── YEPPDash.Api/            # sibling to the .slnx, standard .NET layout (no extra src/ nesting)
 │   │   ├── Program.cs           # composition root only — builder/DI wiring, no endpoint/business logic
 │   │   ├── Auth/            # AddYeppDashAuth: Twitch OIDC + cookie scheme wiring
-│   │   ├── Endpoints/       # AuthEndpoints.cs, DiagnosticsEndpoints.cs (minimal APIs — the "controller" layer); ChannelEndpoints.cs in Phase 2
-│   │   ├── Services/        # business logic between endpoints and repositories (DiagnosticsService now; channel/bot logic in Phase 2)
-│   │   ├── Data/            # AddYeppDashDatabase, Dapper repositories (ChannelRepository; UserRepository later), BitBoolTypeHandler
-│   │   ├── Contracts/       # request/response DTOs (ChannelSummary, UserInfo, ...)
+│   │   ├── Controllers/     # MVC controllers — AuthController.cs ([ApiController]/[Route]/[Http*] attribute routing); ChannelController.cs in Phase 2
+│   │   ├── Services/        # business logic between controllers and repositories — empty until Phase 2 (channel/bot logic) gives it something to hold
+│   │   ├── Data/            # AddYeppDashDatabase, DatabaseHealthCheck, BitBoolTypeHandler; ChannelRepository/UserRepository once a feature needs one (Phase 2)
+│   │   ├── Contracts/       # request/response DTOs (UserInfo, ...)
 │   │   ├── Helpers/         # cross-cutting extensions (ConfigurationExtensions, ClaimsPrincipalExtensions)
 │   │   ├── BotClient/       # IBotClient + HttpBotClient + StubBotClient — Phase 2
 │   │   └── Options/         # TwitchOptions, BotApiOptions, DatabaseOptions — once there's config worth binding to a type
@@ -169,7 +169,7 @@ Target channel is always derived from the auth cookie's claim, never accepted fr
 
 Standalone components, functional `CanActivateFn` guards, signals for state (no NgRx needed at this scope). `app.config.ts` wires `provideRouter`, `provideHttpClient(withFetch())`, `provideAnimationsAsync()`. `authGuard` on `/dash` checks a signal hydrated from `GET /api/auth/me`. Login is a plain `<a href="/api/auth/login">` (full navigation, not a router link or XHR) so the server-driven OAuth redirect chain works.
 
-**Theming**: seed color `#9ACD32` (`rgb(154,205,50)`) via `ng generate @angular/material:m3-theme` (dark mode). M3's computed dark surface/background tones won't land exactly on the target `#18181B` (`rgb(24,24,27)`, Twitch's chrome) since they're derived from the seed hue — after generating the theme, explicitly override `--mat-sys-surface`/`--mat-sys-background`/related `surface-container*` tokens to `#18181B` in a clearly-marked brand-override block, so future Material upgrades don't silently regenerate over it.
+**Theming**: seed color `#9ACD32` (`rgb(154,205,50)`) via `ng generate @angular/material:m3-theme` (dark mode). M3's computed dark surface/background tones won't land exactly on the target `#0E0E10` (`rgb(14,14,16)`, Twitch's chrome) since they're derived from the seed hue — after generating the theme, explicitly override `--mat-sys-surface`/`--mat-sys-background`/related `surface-container*` tokens to `#0E0E10` in a clearly-marked brand-override block, so future Material upgrades don't silently regenerate over it.
 
 **SSR**: reuse the same setup already proven in the `MCmoderSD.de` portfolio project (`C:\Users\MCmoderSD\WebstormProjects\Webpage`) — Angular 22 + `@angular/ssr` + Express runtime server (`src/server.ts`, `serve:ssr:*` npm script), same Angular/Material versions (`^22.0.x`), same 4-stage Dockerfile pattern (deps → build → prod-deps → runtime, non-root user, port 4000). Unlike the portfolio (which prerenders every route via `RenderMode.Prerender` on `**` in `app.routes.server.ts`), YEPPDash needs **hybrid per-route rendering**: `/` stays `RenderMode.Prerender` (build-time static HTML — SEO/link-preview metadata for Discord/Twitter shares of `dash.yeppbot.com`/`.dev`, zero runtime cost for that route), `/dash` is `RenderMode.Client` (personalized, behind the auth guard — cannot be prerendered at build time, rendered client-side like a normal SPA once the session cookie is confirmed via `/api/auth/me`).
 

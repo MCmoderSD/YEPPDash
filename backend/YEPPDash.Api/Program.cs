@@ -1,7 +1,6 @@
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Data;
-using YEPPDash.Api.Endpoints;
-using YEPPDash.Api.Services;
+using YEPPDash.Api.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,22 +27,33 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
 // container image can be pointed at either without a rebuild.
 var dbTarget = builder.Configuration["DbTarget"] ?? "Dev";
 
+// The Angular frontend always calls this API cross-origin (different port locally, different
+// subdomain in prod — no shared-origin reverse proxy anymore, see PLAN.md#deployment), so every
+// browser-driven request needs an explicit CORS policy naming its exact origin, not a wildcard,
+// since credentials (the auth cookie) are involved.
+const string FrontendCorsPolicy = "Frontend";
+var allowedFrontendOrigins = builder.Configuration.GetAllowedFrontendOrigins();
+builder.Services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy => policy
+    .WithOrigins(allowedFrontendOrigins)
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials()));
+
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
-builder.Services.AddYeppDashServices();
-builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
+builder.Services.AddYeppDashAuth(builder.Configuration, builder.Environment, dbTarget);
 builder.Services.AddAuthorization();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
+app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/", () => "Hello World!");
-app.MapAuthEndpoints();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapDiagnosticsEndpoints();
-}
+// Health checks use the dedicated middleware rather than a controller action — that's the
+// idiomatic ASP.NET Core mechanism regardless of whether the rest of the API is MVC or minimal,
+// and it composes fine alongside MapControllers().
+app.MapHealthChecks("/health");
+app.MapControllers();
 
 app.Run();
