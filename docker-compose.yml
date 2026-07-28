@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     pull_policy: always
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       DbTarget: ${DB_TARGET:-Dev}
       ConnectionStrings__HelixDev: ${CONNECTIONSTRINGS__HELIXDEV}
       ConnectionStrings__HelixProd: ${CONNECTIONSTRINGS__HELIXPROD}
