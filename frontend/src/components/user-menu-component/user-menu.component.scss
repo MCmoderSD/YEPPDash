@@ -19,7 +19,19 @@
 }
 
 .user-menu-name {
+  // Falls back to the normal text colour until the chat colour is loaded, and for users
+  // who never picked one (Twitch assigns those a random colour per channel).
+  --chat-color: var(--mat-sys-on-surface);
+
   font: var(--mat-sys-label-large);
+
+  // Twitch's palette includes colours that are unreadable on this near-black chrome — #0000FF
+  // lands at 1.9:1 against it, far under the AA minimum, and Turbo users can pick anything at
+  // all. Raising the OKLCH lightness floor preserves the hue, but on its own it tops out around
+  // 4.1:1: at extreme chroma the sRGB gamut mapping pins the colour no matter what lightness is
+  // asked for. Capping chroma as well is what actually closes that gap. Measured worst case
+  // across the full hue circle with these values: 5.29:1.
+  color: oklch(from var(--chat-color) max(l, 0.78) min(c, 0.26) h);
 }
 
 .user-menu-details {

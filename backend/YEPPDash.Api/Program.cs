@@ -1,6 +1,7 @@
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
+using YEPPDash.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddCors(options => options.AddPolicy(frontendCorsPolicy, policy
 
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
 builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
+builder.Services.AddScoped<TwitchChannelService>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

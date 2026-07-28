@@ -3,9 +3,6 @@ using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Data;
 
-// Field names are mapped by TwitchJson.Options when reading Twitch's snake_case, and by ASP.NET's
-// camelCase web defaults when writing this back to the frontend — see TwitchJson for why there are
-// no [JsonPropertyName] attributes here.
 public sealed record TwitchUser
 {
     public required string Id { get; init; }

@@ -3,10 +3,12 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
 import { TwitchUser } from '../data/twitch-user';
+import { TwitchService } from './twitch.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http: HttpClient = inject(HttpClient);
+  private readonly twitch: TwitchService = inject(TwitchService);
 
   private readonly user = signal<TwitchUser | null>(null);
   private readonly loaded = signal(false);
@@ -28,6 +30,7 @@ export class AuthService {
 
   async ensureLoaded(): Promise<TwitchUser | null> {
     if (this.loaded()) return this.user();
+    void this.twitch.loadChatColor();
 
     try {
       const info = await firstValueFrom(

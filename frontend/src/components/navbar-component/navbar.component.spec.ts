@@ -1,10 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ComponentsModule } from '../components.module';
 import { NavbarComponent } from './navbar.component';
 import { AuthService } from '../../services/auth.service';
+import { TwitchService } from '../../services/twitch.service';
 import { TwitchUser } from '../../data/twitch-user';
 
 const USER: TwitchUser = {
@@ -38,6 +41,10 @@ describe('NavbarComponent', () => {
       imports: [ComponentsModule, RouterModule.forRoot([])],
       providers: [
         { provide: AuthService, useClass: FakeAuthService },
+        // The user menu pulls in TwitchService, which needs an HttpClient — declared here
+        // rather than relying on it happening to resolve from somewhere else.
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideNoopAnimations(),
       ],
     }).compileComponents();
@@ -123,7 +130,30 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
 
     const rows = [...document.querySelectorAll('.user-menu-detail')].map((row) => row.textContent?.trim());
-    expect(rows).toContain('User:164284617');
+    expect(rows).toContain('User ID:164284617');
     expect(rows).toContain('Email:mail@mcmodersd.de');
+  });
+
+  it('should expose the Twitch chat colour to the name as a custom property', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    auth.currentUser.set(USER);
+    fixture.detectChanges();
+
+    TestBed.inject(TwitchService)['color'].set('#9146FF');
+    fixture.detectChanges();
+
+    // The stylesheet reads --chat-color and clamps it for contrast, so the binding is the part
+    // worth asserting here — jsdom applies no stylesheet and resolves no oklch().
+    const name = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.user-menu-name')!;
+    expect(name.style.getPropertyValue('--chat-color')).toBe('#9146FF');
+  });
+
+  it('should leave the name uncoloured for users without a chat colour', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    auth.currentUser.set(USER);
+    fixture.detectChanges();
+
+    const name = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.user-menu-name')!;
+    expect(name.style.getPropertyValue('--chat-color')).toBe('');
   });
 });
