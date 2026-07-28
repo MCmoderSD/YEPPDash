@@ -1,7 +1,7 @@
 using Dapper;
 using MySqlConnector;
 
-namespace YEPPDash.Api.Data;
+namespace YEPPDash.Api.Repositories;
 
 public static class DatabaseServiceCollectionExtensions
 {

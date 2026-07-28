@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace YEPPDash.Api.Contracts;
+namespace YEPPDash.Api.Data;
 
 public sealed record TwitchTokenResponse
 {

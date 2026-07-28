@@ -1,4 +1,6 @@
-namespace YEPPDash.Api.Auth;
+using YEPPDash.Api.Data;
+
+namespace YEPPDash.Api.Repositories;
 
 public interface ITwitchTokenStore
 {

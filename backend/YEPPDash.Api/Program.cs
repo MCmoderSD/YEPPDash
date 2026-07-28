@@ -1,6 +1,6 @@
 using YEPPDash.Api.Auth;
-using YEPPDash.Api.Data;
 using YEPPDash.Api.Helpers;
+using YEPPDash.Api.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

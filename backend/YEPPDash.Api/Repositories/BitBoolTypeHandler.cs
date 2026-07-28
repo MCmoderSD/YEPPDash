@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace YEPPDash.Api.Data;
+namespace YEPPDash.Api.Repositories;
 
 // MariaDB's BIT(1) columns (Channel.active/autoShoutout) come back from MySqlConnector as
 // UInt64, not bool — confirmed empirically via /api/_internal/dbcheck. Registering this handler

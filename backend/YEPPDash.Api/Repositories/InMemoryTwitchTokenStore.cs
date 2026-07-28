@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
+using YEPPDash.Api.Data;
 
-namespace YEPPDash.Api.Auth;
-
+namespace YEPPDash.Api.Repositories;
 
 public sealed class InMemoryTwitchTokenStore : ITwitchTokenStore
 {

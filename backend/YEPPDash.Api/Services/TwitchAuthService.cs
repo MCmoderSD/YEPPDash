@@ -1,7 +1,8 @@
 using System.Net;
 using System.Security.Claims;
 using YEPPDash.Api.Auth;
-using YEPPDash.Api.Contracts;
+using YEPPDash.Api.Data;
+using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Services;
@@ -20,7 +21,7 @@ public sealed class TwitchAuthService(
     }
 
     
-    public async Task<(ClaimsPrincipal Principal, UserInfo User)> CompleteLoginAsync(string code, CancellationToken cancellationToken)
+    public async Task<(ClaimsPrincipal Principal, TwitchUser User)> CompleteLoginAsync(string code, CancellationToken cancellationToken)
     {
         var token = await oauthClient.ExchangeCodeAsync(code, cancellationToken);
         var twitchUser = await apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
@@ -31,18 +32,17 @@ public sealed class TwitchAuthService(
             "Login succeeded via Twitch for {TwitchId} ({Login}), {ScopeCount} scopes granted",
             twitchUser.Id, twitchUser.Login, token.Scope.Length);
 
-        return (BuildPrincipal(twitchUser), ToUserInfo(twitchUser));
+        return (BuildPrincipal(twitchUser), twitchUser);
     }
 
-    public async Task<UserInfo?> GetCurrentUserAsync(string twitchUserId, CancellationToken cancellationToken)
+    public async Task<TwitchUser?> GetCurrentUserAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var token = await GetValidTokenAsync(twitchUserId, cancellationToken);
         if (token is null) return null;
 
         try
         {
-            var twitchUser = await apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
-            return ToUserInfo(twitchUser);
+            return await apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
         }
         catch (TwitchOAuthException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -105,11 +105,6 @@ public sealed class TwitchAuthService(
             token.RefreshToken,
             token.Scope,
             DateTimeOffset.UtcNow.AddSeconds(token.ExpiresIn));
-    }
-
-    private static UserInfo ToUserInfo(TwitchUser user)
-    {
-        return new UserInfo(user.Id, user.Login, user.DisplayName, user.Email, user.ProfileImageUrl);
     }
 
     private static ClaimsPrincipal BuildPrincipal(TwitchUser user)

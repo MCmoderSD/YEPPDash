@@ -1,6 +1,6 @@
 using MySqlConnector;
 
-namespace YEPPDash.Api.Data;
+namespace YEPPDash.Api.Repositories;
 
 public sealed class YeppDashConnectionFactory(string connectionString)
 {

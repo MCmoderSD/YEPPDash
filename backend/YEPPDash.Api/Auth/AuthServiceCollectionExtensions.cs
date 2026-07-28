@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using YEPPDash.Api.Data;
 using YEPPDash.Api.Helpers;
+using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services;
 using YEPPDash.Api.Twitch;
 

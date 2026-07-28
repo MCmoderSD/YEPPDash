@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using YEPPDash.Api.Contracts;
+using YEPPDash.Api.Data;
 
 namespace YEPPDash.Api.Twitch;
 

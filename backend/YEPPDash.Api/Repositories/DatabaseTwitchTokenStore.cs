@@ -1,7 +1,8 @@
 using Dapper;
 using YEPPDash.Api.Auth;
+using YEPPDash.Api.Data;
 
-namespace YEPPDash.Api.Data;
+namespace YEPPDash.Api.Repositories;
 
 public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connections, ITokenCipher cipher)
     : ITwitchTokenStore

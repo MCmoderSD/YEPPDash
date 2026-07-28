@@ -1,4 +1,4 @@
-namespace YEPPDash.Api.Auth;
+namespace YEPPDash.Api.Data;
 
 public sealed record StoredTwitchToken(
     string TwitchUserId,

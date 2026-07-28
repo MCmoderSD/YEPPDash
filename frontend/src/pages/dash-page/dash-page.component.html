@@ -2,18 +2,16 @@
   <mat-card appearance="outlined" class="dash-card">
     @if (auth.currentUser(); as user) {
       <mat-card-header>
-        @if (user.profileImageUrl; as avatar) {
-          <img
-            mat-card-avatar
-            class="dash-avatar"
-            [ngSrc]="avatar"
-            width="40"
-            height="40"
-            [alt]="'Profilbild von ' + user.displayName"
-          />
-        }
+        <img
+          mat-card-avatar
+          class="dash-avatar"
+          [ngSrc]="user.profileImageUrl"
+          width="40"
+          height="40"
+          [alt]="'Profilbild von ' + user.displayName"
+        />
         <mat-card-title>Willkommen, {{ user.displayName }}</mat-card-title>
-        <mat-card-subtitle>Twitch-ID: {{ user.twitchId }}</mat-card-subtitle>
+        <mat-card-subtitle>Twitch-ID: {{ user.id }}</mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content>

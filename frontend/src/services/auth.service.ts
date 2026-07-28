@@ -2,13 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
-import { UserInfo } from './user-info';
+import { TwitchUser } from '../data/twitch-user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
 
-  private readonly user = signal<UserInfo | null>(null);
+  private readonly user = signal<TwitchUser | null>(null);
   private readonly loaded = signal(false);
 
   readonly currentUser = this.user.asReadonly();
@@ -26,12 +26,12 @@ export class AuthService {
     this.user.set(null);
   }
 
-  async ensureLoaded(): Promise<UserInfo | null> {
+  async ensureLoaded(): Promise<TwitchUser | null> {
     if (this.loaded()) return this.user();
 
     try {
       const info = await firstValueFrom(
-        this.http.get<UserInfo>(`${environment.apiBaseUrl}/api/auth/me`, { withCredentials: true }),
+        this.http.get<TwitchUser>(`${environment.apiBaseUrl}/api/auth/me`, { withCredentials: true }),
       );
       this.user.set(info);
     } catch {

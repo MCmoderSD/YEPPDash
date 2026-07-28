@@ -1,7 +1,7 @@
 using Dapper;
 using MySqlConnector;
 
-namespace YEPPDash.Api.Data;
+namespace YEPPDash.Api.Repositories;
 
 public static class DatabaseInitializationExtensions
 {
@@ -9,7 +9,7 @@ public static class DatabaseInitializationExtensions
     {
         using var scope = services.CreateScope();
 
-        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("YEPPDash.Api.Data");
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("YEPPDash.Api.Repositories");
         var connections = scope.ServiceProvider.GetService<YeppDashConnectionFactory>();
 
         if (connections is null)
