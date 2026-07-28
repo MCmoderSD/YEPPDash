@@ -5,19 +5,11 @@ namespace YEPPDash.Api.Helpers;
 
 public static class ConfigurationExtensions
 {
-    // Frontend and backend are always on different origins (dash.*/api.* subdomains in prod,
-    // different localhost ports in dev — there is no shared-origin reverse proxy anymore, see
-    // PLAN.md#deployment), so this list backs both the CORS policy and the /api/auth/login
-    // returnUrl allowlist below. Not secret, just not yet populated with real prod domains
-    // since those aren't deployed behind Caddy yet.
-    public static string[] GetAllowedFrontendOrigins(this IConfiguration configuration) =>
-        configuration.GetSection("AllowedFrontendOrigins").Get<string[]>() ?? [];
+    public static string[] GetAllowedFrontendOrigins(this IConfiguration configuration)
+    {
+        return configuration.GetSection("AllowedFrontendOrigins").Get<string[]>() ?? [];
+    }
 
-
-    // Missing local credentials are the single most likely startup failure, and "it's missing"
-    // alone doesn't say why — so report the resolved UserSecretsId, APPDATA, and the exact
-    // secrets file path/existence, which is what decides whether user secrets can be found at
-    // all. `context` is free-form extra info to include in the message (e.g. "DbTarget 'Dev'").
     public static string GetRequiredValue(this IConfiguration configuration, string key, string? context = null)
     {
         var value = configuration[key];

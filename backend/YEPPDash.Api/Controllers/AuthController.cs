@@ -46,9 +46,6 @@ public sealed class AuthController(IConfiguration configuration, ILogger<AuthCon
         }
         else
         {
-            // Logged too, so "the browser never sent a cookie" stays distinguishable from
-            // "the request never arrived" when a login round-trip misbehaves. The cookie names
-            // separate "browser attached nothing" from "cookie arrived but was rejected".
             logger.LogInformation(
                 "Session check failed: no valid auth cookie (origin={Origin}, cookies=[{Cookies}])",
                 Request.Headers.Origin.ToString(),
