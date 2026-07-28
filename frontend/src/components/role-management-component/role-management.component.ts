@@ -6,8 +6,12 @@ import { UserTableMode } from '../user-table-component/user-table.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
-import { RoleManagementMode } from '../../data/role-management-mode';
 import { TwitchUser } from '../../data/twitch-user';
+
+export enum RoleManagementMode {
+  Moderator = 0,
+  Vip = 1,
+}
 
 function titleFor(mode: RoleManagementMode): string {
   switch (mode) {
@@ -45,20 +49,16 @@ export class RoleManagementComponent {
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  // The router hands this in as the raw query-string value ("0"/"1"), so the transform is what
-  // turns it into the enum. There is no default: a missing or malformed ?mode= is a hard failure
-  // (Angular's own "required input" error, or the throw in the functions below) rather than a
-  // silent fallback to Moderator.
   readonly mode: InputSignalWithTransform<RoleManagementMode, string | RoleManagementMode> = input.required({
     transform: (value: string | RoleManagementMode): RoleManagementMode =>
       typeof value === 'string' ? Number(value) : value,
   });
 
-  protected readonly title: Signal<string> = computed(() => titleFor(this.mode()));
+  protected readonly title: Signal<string> = computed((): string => titleFor(this.mode()));
 
-  protected readonly roleName: Signal<string> = computed(() => roleNameFor(this.mode()));
+  protected readonly roleName: Signal<string> = computed((): string => roleNameFor(this.mode()));
 
-  protected readonly tableMode: Signal<UserTableMode> = computed(() => tableModeFor(this.mode()));
+  protected readonly tableMode: Signal<UserTableMode> = computed((): UserTableMode => tableModeFor(this.mode()));
 
   protected readonly users: WritableSignal<TwitchUser[]> = signal<TwitchUser[]>([]);
 
@@ -67,14 +67,13 @@ export class RoleManagementComponent {
   protected readonly busy: WritableSignal<boolean> = signal(false);
 
   constructor() {
-    effect(() => void this.load(this.mode()));
+    effect((): undefined => void this.load(this.mode()));
   }
 
   protected async openAddDialog(): Promise<void> {
     const dialogRef = UserAddDialogComponent.open(this.dialog, `Add ${this.roleName()}`);
     const user: TwitchUser | undefined = await firstValueFrom(dialogRef.afterClosed());
 
-    // Closed with Cancel, Escape or a backdrop click — nothing was picked, so nothing happens.
     if (user) await this.add(user);
   }
 
@@ -96,7 +95,6 @@ export class RoleManagementComponent {
     }
   }
 
-  // The dialog has already resolved the name to a real account, so this only has to act on it.
   private async add(user: TwitchUser): Promise<void> {
     const mode: RoleManagementMode = this.mode();
     const roleName: string = roleNameFor(mode);
@@ -115,8 +113,6 @@ export class RoleManagementComponent {
     }
   }
 
-  // The role list only carries ids and names, so the avatars the table shows need a second call —
-  // that is what the batched Get Users endpoint is for, one request per 100 entries.
   private async load(mode: RoleManagementMode): Promise<void> {
     this.loading.set(true);
     try {

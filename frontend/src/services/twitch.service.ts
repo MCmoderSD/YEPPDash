@@ -21,13 +21,10 @@ export class TwitchService {
 
   private readonly vipList: WritableSignal<ChannelUser[] | null> = signal<ChannelUser[] | null>(null);
 
-  // Chat colours never change mid-session in practice, so once looked up a user is remembered —
-  // including the "has no colour" answer, which is why null and "not asked yet" are kept apart.
-  private readonly colorsByUser = new Map<string, string | null>();
+  private readonly colorsByUser: Map<string,string | null> = new Map<string, string | null>();
 
   readonly chatColor: Signal<string | null> = this.color.asReadonly();
 
-  // null means "not loaded yet", an empty array means "loaded, the channel has none".
   readonly moderators: Signal<ChannelUser[] | null> = this.moderatorList.asReadonly();
 
   readonly vips: Signal<ChannelUser[] | null> = this.vipList.asReadonly();
@@ -64,8 +61,6 @@ export class TwitchService {
     return color;
   }
 
-  // The backend paginates and caches these, so calling this again is cheap — one Helix request
-  // when nothing changed. No client-side staleness guessing on top of it.
   async loadModerators(): Promise<ChannelUser[]> {
     const moderators: ChannelUser[] = await this.getChannelUsers('moderators');
     this.moderatorList.set(moderators);
@@ -127,14 +122,14 @@ export class TwitchService {
 
   private toBatches(userIds: readonly string[], logins: readonly string[]): HttpParams[] {
     const keyed: [string, string][] = [
-      ...userIds.map((id): [string, string] => ['id', id]),
-      ...logins.map((login): [string, string] => ['login', login]),
+      ...userIds.map((id: string): [string, string] => ['id', id]),
+      ...logins.map((login: string): [string, string] => ['login', login]),
     ];
 
     const batches: HttpParams[] = [];
-    for (let start = 0; start < keyed.length; start += BATCH_SIZE) {
+    for (let start: number = 0; start < keyed.length; start += BATCH_SIZE) {
       batches.push(keyed.slice(start, start + BATCH_SIZE).reduce(
-        (params, [key, value]) => params.append(key, value),
+        (params: HttpParams, [key, value]: [string, string]): HttpParams => params.append(key, value),
         new HttpParams(),
       ));
     }

@@ -7,12 +7,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { DashModule } from '../../pages/dash.module';
-import { RoleManagementComponent } from './role-management.component';
+import { RoleManagementComponent, RoleManagementMode } from "./role-management.component";
 import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
-import { RoleManagementMode } from '../../data/role-management-mode';
 import { TwitchUser } from '../../data/twitch-user';
 
 function twitchUser(id: string, displayName: string): TwitchUser {

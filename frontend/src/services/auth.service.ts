@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal, Signal, WritableSignal } from "@angular/core";
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
 import { TwitchUser } from '../data/twitch-user';
@@ -7,14 +7,15 @@ import { TwitchService } from './twitch.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+
   private readonly http: HttpClient = inject(HttpClient);
   private readonly twitch: TwitchService = inject(TwitchService);
 
-  private readonly user = signal<TwitchUser | null>(null);
-  private readonly loaded = signal(false);
+  private readonly user: WritableSignal<TwitchUser | null> = signal<TwitchUser | null>(null);
+  private readonly loaded: WritableSignal<boolean> = signal(false);
 
-  readonly currentUser = this.user.asReadonly();
-  readonly isAuthenticated = computed(() => this.user() !== null);
+  readonly currentUser: Signal<TwitchUser | null> = this.user.asReadonly();
+  readonly isAuthenticated: Signal<boolean> = computed((): boolean => this.user() !== null);
 
   loginUrl(returnPath: string): string {
     const returnUrl = `${environment.frontendBaseUrl}${returnPath}`;
@@ -33,7 +34,7 @@ export class AuthService {
     void this.twitch.loadChatColor();
 
     try {
-      const info = await firstValueFrom(
+      const info: TwitchUser = await firstValueFrom(
         this.http.get<TwitchUser>(`${environment.apiBaseUrl}/api/auth/me`, { withCredentials: true }),
       );
       this.user.set(info);
