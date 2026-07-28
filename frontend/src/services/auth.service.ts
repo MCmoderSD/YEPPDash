@@ -30,11 +30,6 @@ export class AuthService {
 
   async ensureLoaded(): Promise<TwitchUser | null> {
     if (this.loaded()) return this.user();
-
-    // Fired alongside /me instead of after the user menu mounts and reacts to the
-    // resolved user — that ordering forced two round trips back to back before the
-    // colour ever showed up. Both requests share the same session cookie, so there is
-    // no need to wait for one to know the other is worth sending.
     void this.twitch.loadChatColor();
 
     try {

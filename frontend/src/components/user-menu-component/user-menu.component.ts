@@ -16,8 +16,6 @@ export class UserMenuComponent {
 
   readonly user:InputSignal<TwitchUser> = input.required<TwitchUser>();
 
-  // AuthService.ensureLoaded() kicks this off in parallel with /me, so it is usually
-  // already resolved by the time this component exists at all.
   protected readonly chatColor: Signal<string | null> = this.twitch.chatColor;
 
   protected async logout(): Promise<void> {
