@@ -17,7 +17,8 @@ public static class AuthServiceCollectionExtensions
         {
             ClientId = configuration.GetRequiredValue($"Twitch:ClientId{dbTarget}", $"dbTarget '{dbTarget}'"),
             ClientSecret = configuration.GetRequiredValue($"Twitch:ClientSecret{dbTarget}", $"dbTarget '{dbTarget}'"),
-            RedirectUri = configuration.GetRequiredValue("Twitch:RedirectUri")
+            RedirectUri = configuration.GetRequiredValue("Twitch:RedirectUri"),
+            Scopes = TwitchScopes.For(dbTarget)
         };
 
         services.AddSingleton(options);

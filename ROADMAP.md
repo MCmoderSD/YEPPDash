@@ -40,7 +40,7 @@ Branch `feat/twitch-oauth2-direct`. Phase 1 lief über OIDC und funktionierte, b
 
 - [x] 1. `Microsoft.AspNetCore.Authentication.OpenIdConnect` entfernt; Cookie-Scheme ist jetzt das einzige registrierte Scheme (kein Challenge-Scheme mehr → kein versehentlicher Twitch-Redirect bei unauthentifizierten Requests)
 - [x] 2. `TwitchOAuthClient` (authorize-URL, `/oauth2/token` für Code-Tausch und Refresh, `/oauth2/revoke`) und `TwitchApiClient` (`/helix/users`) als typed `HttpClient`s
-- [x] 3. Scope-Set exakt wie YEPPBot (`TwitchScopes.Required`, 13 Scopes) — eine Zustimmung deckt Dashboard und Bot ab
+- [x] 3. Scope-Sets exakt wie YEPPBots zwei Twitch-Apps, ausgewählt über `DbTarget` (`TwitchScopes.For`): Prod 13 Scopes, Dev alle 80 die Twitch kennt — eine Zustimmung deckt Dashboard und Bot ab
 - [x] 4. `state`-Handling selbst gebaut (`OAuthStateCookie`): 32-Byte-Nonce in Authorize-URL + kurzlebigem httpOnly-Cookie, Vergleich in konstanter Zeit, Cookie ist single-use. Die Return-URL läuft im Cookie statt über Twitch und wird zusätzlich gegen `AllowedFrontendOrigins` geprüft
 - [x] 5. Token-Persistenz: `TwitchToken` in der eigenen `YEPPDash`-DB, Access + Refresh Token AES-256-GCM-verschlüsselt (Key = SHA-256 des Client Secrets). Ohne `ConnectionStrings:YeppDash{DbTarget}` fällt der Store auf In-Memory zurück und warnt beim Start
 - [x] 6. `TwitchAuthService.GetValidTokenAsync` refresht 5 Minuten vor Ablauf und ersetzt die Zeile — Twitch gibt beim Refresh ggf. einen neuen Refresh Token zurück. Schlägt der Refresh fehl (Passwortwechsel, App getrennt, revoked), wird die Zeile verworfen statt endlos weiterzuprobieren
@@ -49,7 +49,8 @@ Branch `feat/twitch-oauth2-direct`. Phase 1 lief über OIDC und funktionierte, b
 - [x] 9. `SameSite=None`-Sonderfall für Development entfernt — seit der Dev-Server HTTPS spricht, sind Frontend und Backend same-site, `Lax` reicht in allen Umgebungen
 - [x] 10. Verifiziert ohne Twitch-Consent (den kann nur der Betreiber klicken): `/health` 200, `/api/auth/me` ohne Cookie 401, Authorize-URL mit korrekten 13 Scopes + passendem State-Cookie, fremde `returnUrl` wird verworfen, falscher State → `invalid_state`, Consent-Abbruch → `access_denied`, echter Code-Tausch erreicht Twitch (Antwort `Invalid authorization code` für einen Fake-Code beweist, dass Client-ID, Secret und Redirect-URI stimmen). AES-GCM-Cipher separat auf Round-Trip, Nicht-Determinismus und Tamper-Erkennung geprüft
 - [ ] 11. **Offen (nur vom Betreiber machbar)**: echter Login mit Twitch-Consent durchklicken
-- [ ] 12. **Offen (Ops)**: `ConnectionStrings:YeppDashDev`/`YeppDashProd` in `appsettings.Local.json` bzw. den Prod-Secrets hinterlegen, sonst bleiben die Tokens im Speicher
+- [x] 12. `ConnectionStrings:YeppDashDev`/`YeppDashProd` in `appsettings.Local.json` eingetragen (Datei ist gitignored), zeigen auf die `YEPPDash`-DB auf 10.10.10.1 bzw. dedi.mcmodersd.de
+- [ ] 13. **Offen (Ops, DB-Rechte)**: `yeppdash_ro` hat auf die `YEPPDash`-DB keinerlei Rechte (`Access denied for user 'yeppdash_ro'@'%' to database 'YEPPDash'`, direkt gegen Dev verifiziert). Entweder Grants ergänzen oder in den beiden `YeppDash*`-Strings auf YEPPBots `helix`-User wechseln. Ohne das bricht der Start bewusst mit einer klaren Meldung ab, statt still auf den In-Memory-Store zurückzufallen
 
 **Bewusst nicht gemacht**: in YEPPBots `helix.RefreshToken` schreiben. Das würde den Bot direkt mit-autorisieren, aber beide Prozesse teilten sich dann einen Refresh Token pro User — und da Twitch den Refresh Token bei Benutzung rotiert, fliegt der jeweils zweite raus. Details in [PLAN.md](PLAN.md#auth).
 
