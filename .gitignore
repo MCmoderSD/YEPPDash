@@ -39,6 +39,10 @@ appsettings.*.json
 .env
 .env.*
 !.env.example
+# Local HTTPS dev certificate, exported from `dotnet dev-certs` — machine-specific, regenerable.
+.certs/
+*.pem
+*.key
 
 # ── OS ────────────────────────────────────────────────────────
 .DS_Store

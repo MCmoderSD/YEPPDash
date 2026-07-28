@@ -21,12 +21,12 @@ html {
   );
 
   // Brand override: YEPPBot's dashboard always runs dark, matching Twitch's
-  // own chrome (rgb(24,24,27)). M3's computed dark surface tone for our
+  // own chrome (rgb(14,14,16)). M3's computed dark surface tone for our
   // yellowgreen seed doesn't land exactly on that value since it's derived
   // from the seed hue, so it's pinned explicitly here. Re-check this block
   // after any Angular Material upgrade that regenerates theme tokens.
-  --mat-sys-surface: #18181b;
-  --mat-sys-background: #18181b;
+  --mat-sys-surface: #0e0e10;
+  --mat-sys-background: #0e0e10;
 }
 
 body {
