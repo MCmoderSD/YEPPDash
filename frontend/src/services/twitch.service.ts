@@ -24,9 +24,6 @@ export class TwitchService {
     }
   }
 
-  // Unlike loadChatColor, these are real state-changing actions a user explicitly
-  // triggered — errors are left to propagate (404 unknown user, 409 already a VIP,
-  // 422 already a moderator or the broadcaster themselves) so a caller can show them.
   async addModerator(userId: string): Promise<void> {
     await firstValueFrom(
       this.http.post(`${environment.apiBaseUrl}/api/twitch/moderators/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
