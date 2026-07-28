@@ -1,5 +1,15 @@
-<app-sidebar/>
+<mat-sidenav-container class="dash-shell">
 
-<div class="dash-content">
-  <router-outlet/>
-</div>
+  <mat-sidenav
+    class="dash-drawer"
+    mode="over"
+    [opened]="sidebar.opened()"
+    (closed)="sidebar.close()"
+  >
+    <app-sidebar/>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="dash-content">
+    <router-outlet/>
+  </mat-sidenav-content>
+</mat-sidenav-container>

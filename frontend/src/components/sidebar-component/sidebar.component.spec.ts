@@ -5,6 +5,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { DashModule } from '../../pages/dash.module';
 import { SidebarComponent } from './sidebar.component';
+import { SidebarService } from '../../services/sidebar.service';
 
 describe('SidebarComponent', () => {
   beforeEach(async () => {
@@ -54,5 +55,15 @@ describe('SidebarComponent', () => {
 
     // Both entries share a path and differ only in ?mode=, so query params have to be compared.
     expect(active).toEqual([null, 'page']);
+  });
+
+  it('should minimize the drawer once an entry is picked', () => {
+    const sidebar = TestBed.inject(SidebarService);
+    sidebar.toggle();
+    expect(sidebar.opened()).toBe(true);
+
+    links()[0].click();
+
+    expect(sidebar.opened()).toBe(false);
   });
 });

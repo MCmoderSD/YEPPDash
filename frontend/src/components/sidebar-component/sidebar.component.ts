@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { IsActiveMatchOptions } from '@angular/router';
+import { SidebarService } from '../../services/sidebar.service';
 
 // Both entries point at the same path and differ only in ?mode=, so the active one can only be
 // told apart by comparing query parameters as well.
@@ -18,5 +19,11 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
 })
 export class SidebarComponent {
 
+  private readonly sidebar: SidebarService = inject(SidebarService);
+
   protected readonly activeMatch: IsActiveMatchOptions = ACTIVE_MATCH;
+
+  protected close(): void {
+    this.sidebar.close();
+  }
 }

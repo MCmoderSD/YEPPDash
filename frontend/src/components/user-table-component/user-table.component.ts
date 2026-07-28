@@ -3,11 +3,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
+import { TwitchService } from '../../services/twitch.service';
 import { TwitchUser } from '../../data/twitch-user';
 
 export type UserTableMode = 'user' | 'vip' | 'editor' | 'moderator';
-
-const COLUMNS: string[] = ['avatar', 'displayName', 'id'];
 
 const ROLE_LABELS: Record<UserTableMode, string> = {
   user: 'user',
@@ -25,10 +24,13 @@ const ROLE_LABELS: Record<UserTableMode, string> = {
 export class UserTableComponent {
 
   private readonly dialog: MatDialog = inject(MatDialog);
+  private readonly twitch: TwitchService = inject(TwitchService);
 
   readonly users: InputSignal<TwitchUser[]> = input.required<TwitchUser[]>();
 
   readonly mode: InputSignal<UserTableMode> = input<UserTableMode>('user');
+
+  readonly showId: InputSignal<boolean> = input<boolean>(true);
 
   readonly remove: OutputEmitterRef<TwitchUser> = output<TwitchUser>();
 
@@ -37,9 +39,12 @@ export class UserTableComponent {
   protected readonly query: WritableSignal<string> = signal('');
 
   // Plain users cannot be removed from anything, so the column would only ever be an empty stub.
-  protected readonly columns: Signal<string[]> = computed(
-    () => this.mode() === 'user' ? COLUMNS : [...COLUMNS, 'remove'],
-  );
+  protected readonly columns: Signal<string[]> = computed(() => {
+    const columns: string[] = ['user'];
+    if (this.showId()) columns.push('id');
+    if (this.mode() !== 'user') columns.push('remove');
+    return columns;
+  });
 
   protected readonly role: Signal<string> = computed(() => ROLE_LABELS[this.mode()]);
 
@@ -62,6 +67,12 @@ export class UserTableComponent {
     effect(() => {
       const sorter: MatSort | undefined = this.sorter();
       if (sorter) this.dataSource.sort = sorter;
+    });
+
+    // Warms TwitchService's per-user cache as soon as the table gets its rows, rather than
+    // waiting for the details dialog to ask — that is what used to make the dialog feel slow.
+    effect(() => {
+      for (const user of this.users()) void this.twitch.getChatColor(user.id);
     });
   }
 

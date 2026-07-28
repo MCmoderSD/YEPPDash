@@ -16,22 +16,7 @@
   <div class="user-table-scroll">
     <table mat-table matSort [dataSource]="dataSource" class="user-table-grid">
 
-      <ng-container matColumnDef="avatar">
-        <th mat-header-cell *matHeaderCellDef scope="col">
-          <span class="user-table-hidden-label">Profile picture</span>
-        </th>
-        <td mat-cell *matCellDef="let user">
-          <img
-            class="user-table-avatar"
-            [ngSrc]="user.profileImageUrl"
-            [width]=40
-            [height]=40
-            alt=""
-          />
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="displayName">
+      <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
         <td mat-cell *matCellDef="let user">
           <!-- A real button here is what makes the row reachable by keyboard; the row's own click
@@ -40,7 +25,16 @@
             type="button"
             class="user-table-name"
             (click)="showDetails(user, $event)"
-          >{{ user.displayName }}</button>
+          >
+            <img
+              class="user-table-avatar"
+              [ngSrc]="user.profileImageUrl"
+              [width]=32
+              [height]=32
+              alt=""
+            />
+            <span>{{ user.displayName }}</span>
+          </button>
         </td>
       </ng-container>
 

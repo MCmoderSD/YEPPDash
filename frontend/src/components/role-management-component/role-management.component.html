@@ -7,19 +7,6 @@
     </p>
   </header>
 
-  <form class="role-management-add" (submit)="submit($event, login)">
-    <mat-form-field appearance="outline" class="role-management-login">
-      <mat-label>Twitch login</mat-label>
-      <input matInput #login type="text" autocomplete="off" [disabled]="busy()"/>
-      <mat-hint>The name from the channel URL, not the display name.</mat-hint>
-    </mat-form-field>
-
-    <button mat-flat-button type="submit" class="role-management-submit" [disabled]="busy()">
-      <mat-icon aria-hidden="true">person_add</mat-icon>
-      <span>Add {{ roleName() }}</span>
-    </button>
-  </form>
-
   <mat-progress-bar
     class="role-management-progress"
     mode="indeterminate"

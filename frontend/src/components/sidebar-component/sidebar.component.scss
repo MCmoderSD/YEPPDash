@@ -1,18 +1,5 @@
-.sidebar {
-  border-inline-end: 1px solid var(--mat-sys-outline-variant);
-}
-
 // The active entry has to read as selected without relying on colour alone, hence the bar.
 .sidebar-entry-active {
   background: var(--mat-sys-surface-container-high);
   box-shadow: inset 0.25rem 0 0 0 var(--mat-sys-primary);
-}
-
-// Stacked under the content on narrow screens, where a fixed side column would leave the table no
-// room at all.
-@media (max-width: 47.99rem) {
-  .sidebar {
-    border-inline-end: none;
-    border-block-end: 1px solid var(--mat-sys-outline-variant);
-  }
 }

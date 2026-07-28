@@ -1,6 +1,18 @@
 <header class="navbar">
   <nav class="navbar-inner" aria-label="Main">
-    <a class="navbar-brand" routerLink="/">YEPPDash</a>
+    <div class="navbar-start">
+      @if (auth.currentUser()) {
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Toggle dashboard navigation"
+          (click)="sidebar.toggle()"
+        >
+          <mat-icon aria-hidden="true">menu</mat-icon>
+        </button>
+      }
+      <a class="navbar-brand" routerLink="/">YEPPDash</a>
+    </div>
 
     @if (auth.currentUser(); as user) {
       <app-user-menu [user]="user" />

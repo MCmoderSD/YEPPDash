@@ -42,6 +42,9 @@ class FakeTwitchService {
   removeModerator = vi.fn(async () => { this.calls.push('removeModerator'); });
   addVip = vi.fn(async () => { this.calls.push('addVip'); });
   removeVip = vi.fn(async () => { this.calls.push('removeVip'); });
+  // The table prefetches every row's chat colour as soon as it renders, so the fake needs to
+  // answer this even though these tests are not about chat colours.
+  getChatColor = vi.fn(async () => null);
 }
 
 class FakeNotificationService {
@@ -116,7 +119,7 @@ describe('RoleManagementComponent', () => {
   it('should hand the table the matching mode so the remove column appears', async () => {
     await render('vip');
 
-    expect(element.querySelectorAll('thead th')).toHaveLength(4);
+    expect(element.querySelectorAll('thead th')).toHaveLength(3);
   });
 
   it('should remove a VIP through the VIP endpoint and confirm it', async () => {
@@ -154,40 +157,6 @@ describe('RoleManagementComponent', () => {
     expect(notifications.failures[0]).toContain('Could not remove');
   });
 
-  it('should resolve a typed login before adding, then confirm', async () => {
-    await render('moderator');
-
-    const input = element.querySelector<HTMLInputElement>('.role-management-login input')!;
-    input.value = 'someone';
-    element.querySelector('form')!.dispatchEvent(new Event('submit'));
-    await settle();
-
-    expect(twitch.getUsers).toHaveBeenCalledWith([], ['someone']);
-    expect(twitch.addModerator).toHaveBeenCalled();
-    expect(notifications.successes[0]).toContain('is now a moderator');
-    expect(input.value).toBe('');
-  });
-
-  it('should say so when Twitch does not know the login', async () => {
-    await render('moderator');
-    twitch.getUsers.mockResolvedValueOnce([]);
-
-    const input = element.querySelector<HTMLInputElement>('.role-management-login input')!;
-    input.value = 'ghost';
-    element.querySelector('form')!.dispatchEvent(new Event('submit'));
-    await settle();
-
-    expect(twitch.addModerator).not.toHaveBeenCalled();
-    expect(notifications.failures[0]).toContain('ghost');
-  });
-
-  it('should ignore an empty add', async () => {
-    await render('moderator');
-
-    element.querySelector('form')!.dispatchEvent(new Event('submit'));
-    await settle();
-
-    expect(twitch.addModerator).not.toHaveBeenCalled();
-    expect(notifications.failures).toEqual([]);
-  });
+  // Adding a role member has no UI yet — the form was pulled pending a dialog (see
+  // RoleManagementComponent.submit/add), so there is nothing here to drive through the DOM.
 });

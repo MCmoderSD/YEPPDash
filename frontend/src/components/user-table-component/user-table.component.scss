@@ -1,10 +1,13 @@
 .user-table {
   display: flex;
   flex-direction: column;
+  // A user list is a small side task, not the page's main content — it should read as a
+  // compact panel, not stretch across the full width available to it.
+  max-width: 26rem;
 }
 
 .user-table-search {
-  width: min(24rem, 100%);
+  width: 100%;
 }
 
 // Narrow viewports scroll the table instead of squashing the columns into unreadable slivers.
@@ -12,9 +15,20 @@
   overflow-x: auto;
 }
 
-.user-table-grid {
-  width: 100%;
+table.user-table-grid {
+  // Material's own base style sets min-width: 100%, forcing the table to fill its wrapper
+  // regardless of content — with only two or three narrow columns that hands all the slack to
+  // whichever one is flexible, prying name and id apart. Overridden so the table hugs its own
+  // content instead, with any leftover width sitting quietly to its right.
+  min-width: 0;
   background: transparent;
+
+  // Material's default 16px inline padding on every cell adds up fast across three columns —
+  // tightened so name, id and remove sit close together instead of spread across the row.
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 0.5rem;
+  }
 }
 
 .user-table-row {
@@ -26,14 +40,11 @@
   }
 }
 
-.user-table-avatar {
-  display: block;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-// Looks like the surrounding cell text, behaves like the button it has to be for keyboard users.
+// Avatar and name sit in the same button so they read as one unit instead of two table cells.
 .user-table-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0;
   border: none;
   background: none;
@@ -45,6 +56,13 @@
   &:hover {
     text-decoration: underline;
   }
+}
+
+.user-table-avatar {
+  flex: none;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .user-table-id {

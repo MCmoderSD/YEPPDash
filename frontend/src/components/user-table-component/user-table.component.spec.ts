@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { UserComponentsModule } from '../user-components.module';
 import { UserTableComponent } from './user-table.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
+import { TwitchService } from '../../services/twitch.service';
 import { TwitchUser } from '../../data/twitch-user';
 
 function user(id: string, displayName: string): TwitchUser {
@@ -73,7 +74,7 @@ describe('UserTableComponent', () => {
   });
 
   it('should hide the remove column in user mode', () => {
-    expect(element.querySelectorAll('thead th')).toHaveLength(3);
+    expect(element.querySelectorAll('thead th')).toHaveLength(2);
     expect(element.querySelector('.user-table-actions')).toBeNull();
   });
 
@@ -81,8 +82,31 @@ describe('UserTableComponent', () => {
     fixture.componentRef.setInput('mode', mode);
     fixture.detectChanges();
 
-    expect(element.querySelectorAll('thead th')).toHaveLength(4);
+    expect(element.querySelectorAll('thead th')).toHaveLength(3);
     expect(element.querySelectorAll('.user-table-actions')).toHaveLength(3);
+  });
+
+  it('should hide the id column when asked to', () => {
+    fixture.componentRef.setInput('showId', false);
+    fixture.detectChanges();
+
+    expect(element.querySelectorAll('thead th')).toHaveLength(1);
+    expect(element.textContent).not.toContain('164284617');
+  });
+
+  it('should keep the avatar directly next to the name in the same cell', () => {
+    const nameButton = element.querySelector('.user-table-name')!;
+    expect(nameButton.querySelector('img.user-table-avatar')).toBeTruthy();
+    expect(nameButton.textContent!.trim()).toBe('zoe');
+  });
+
+  it('should warm the chat colour cache for every row as soon as the table gets its users', () => {
+    const getChatColor = vi.spyOn(TestBed.inject(TwitchService), 'getChatColor');
+
+    fixture.componentRef.setInput('users', [USERS[0]]);
+    fixture.detectChanges();
+
+    expect(getChatColor).toHaveBeenCalledWith('9');
   });
 
   it('should name the role of the removal in the button label', () => {

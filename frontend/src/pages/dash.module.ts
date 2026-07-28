@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSidenavModule } from '@angular/material/sidenav';
 
 import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
@@ -45,7 +46,8 @@ const components: any[] = [
     MatIconModule,
     MatInputModule,
     MatListModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MatSidenavModule
   ]
 })
 export class DashModule { }

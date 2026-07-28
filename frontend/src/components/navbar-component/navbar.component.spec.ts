@@ -4,10 +4,12 @@ import { RouterModule } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { vi } from 'vitest';
 import { ComponentsModule } from '../components.module';
 import { NavbarComponent } from './navbar.component';
 import { AuthService } from '../../services/auth.service';
 import { TwitchService } from '../../services/twitch.service';
+import { SidebarService } from '../../services/sidebar.service';
 import { TwitchUser } from '../../data/twitch-user';
 
 const USER: TwitchUser = {
@@ -50,6 +52,27 @@ describe('NavbarComponent', () => {
     }).compileComponents();
 
     auth = TestBed.inject(AuthService) as unknown as FakeAuthService;
+  });
+
+  it('should hide the dashboard menu toggle while signed out', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement)
+      .querySelector('[aria-label="Toggle dashboard navigation"]')).toBeNull();
+  });
+
+  it('should toggle the shared sidebar state once signed in', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    auth.currentUser.set(USER);
+    fixture.detectChanges();
+
+    const toggle = vi.spyOn(TestBed.inject(SidebarService), 'toggle');
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[aria-label="Toggle dashboard navigation"]')!.click();
+
+    expect(toggle).toHaveBeenCalledTimes(1);
   });
 
   it('should show a login link while signed out', () => {
