@@ -109,8 +109,6 @@ public sealed class AuthController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            // The session itself is still valid — Twitch is just unreachable right now — so the
-            // cookie stays intact and the frontend can simply retry, instead of losing the login.
             logger.LogWarning(exception, "Twitch is unreachable, cannot answer /me for {TwitchId}", twitchId);
             return StatusCode(StatusCodes.Status502BadGateway);
         }

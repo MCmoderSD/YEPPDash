@@ -3,8 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace YEPPDash.Api.Helpers;
 
-// Twitch sends "" instead of omitting a field when it is unset (e.g. offline_image_url) —
-// treat that the same as absent rather than forcing every consumer to check for both.
 public sealed class EmptyStringToNullConverter : JsonConverter<string?>
 {
     public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

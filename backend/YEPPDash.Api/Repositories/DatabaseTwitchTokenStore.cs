@@ -4,8 +4,7 @@ using YEPPDash.Api.Data;
 
 namespace YEPPDash.Api.Repositories;
 
-public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connections, ITokenCipher cipher)
-    : ITwitchTokenStore
+public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connections, ITokenCipher cipher) : ITwitchTokenStore
 {
     public const string CreateTableSql =
         """

@@ -1,12 +1,5 @@
 namespace YEPPDash.Api.Twitch;
 
-// Scope sets, one per environment, mirroring the two Twitch apps YEPPBot already uses. They are
-// intentionally different: the Prod app asks for the minimum YEPPBot actually needs in production,
-// the Dev app asks for Twitch's complete catalogue so new bot features can be tried out without a
-// re-authorization round.
-//
-// Dashboard and bot share one app per environment, so a single consent covers both — a user who
-// logs into the dashboard has thereby granted the bot everything it needs on their channel.
 public static class TwitchScopes
 {
     public static string[] For(string dbTarget)
@@ -14,7 +7,6 @@ public static class TwitchScopes
         return dbTarget.Equals("Prod", StringComparison.OrdinalIgnoreCase) ? Prod : Dev;
     }
 
-    // Exactly the 13 scopes YEPPBot's production app requests.
     public static readonly string[] Prod =
     [
         "channel:read:vips",
