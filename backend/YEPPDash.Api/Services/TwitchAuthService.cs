@@ -52,7 +52,7 @@ public sealed class TwitchAuthService(
         }
     }
 
-    private async Task<StoredTwitchToken?> GetValidTokenAsync(string twitchUserId, CancellationToken cancellationToken)
+    public async Task<StoredTwitchToken?> GetValidTokenAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var stored = await tokenStore.GetAsync(twitchUserId, cancellationToken);
         if (stored is null)

@@ -177,8 +177,15 @@ The shared-secret header is required **regardless of network topology** (see Dep
 | `GET /api/channel/status` | cookie | via `IBotClient`, for caller's own Twitch ID |
 | `POST /api/channel/join` | cookie | via `IBotClient` |
 | `POST /api/channel/leave` | cookie | via `IBotClient` |
+| `GET /api/twitch/chat-color/{userId?}` | cookie | `{color}` from Helix, caller's own when `userId` is omitted |
+| `POST /api/twitch/moderators/{userId}` | cookie | Helix add channel moderator (`channel:manage:moderators`) |
+| `DELETE /api/twitch/moderators/{userId}` | cookie | Helix remove channel moderator (`channel:manage:moderators`) |
+| `POST /api/twitch/vips/{userId}` | cookie | Helix add channel VIP (`channel:manage:vips`) |
+| `DELETE /api/twitch/vips/{userId}` | cookie | Helix remove channel VIP (`channel:manage:vips`) |
 
 Target channel is always derived from the auth cookie's claim, never accepted from the client.
+
+`/api/twitch/*` calls Helix directly with the caller's own stored token, whereas `/api/channel/*` goes through YEPPBot's internal API — hence the separate namespaces. The `{userId}` path segment is the *target* of the action (who gets modded/VIP'd); the broadcaster is always the caller, so these can only ever change the caller's own channel. Twitch's own client-error statuses are passed through rather than flattened (404 unknown user, 409 already a VIP, 422 already a moderator or the broadcaster themselves), since that is where the actionable detail lives.
 
 ### NuGet packages
 `Microsoft.AspNetCore.Authentication.OpenIdConnect`, `Dapper`, `MySqlConnector`, `Microsoft.Extensions.Http` + `Microsoft.Extensions.Http.Resilience` (for `HttpBotClient`), `Microsoft.AspNetCore.OpenApi`, `Serilog.AspNetCore`, `Microsoft.Extensions.Diagnostics.HealthChecks`. Dev-only: `dotnet user-secrets` for Twitch client secret + internal API key.
