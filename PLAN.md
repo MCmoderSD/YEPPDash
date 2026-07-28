@@ -38,22 +38,27 @@ sequenceDiagram
     participant U as Browser
     participant P as Caddy (operator's setup)
     participant BE as YEPPDash Backend (api.yeppbot.*)
-    participant T as Twitch (OIDC)
+    participant T as Twitch (OAuth2 + Helix)
 
     U->>P: GET api.yeppbot.com/api/auth/login
     P->>BE: forward
-    BE-->>U: 302 -> Twitch authorize (+claims param for email)
+    BE->>BE: issue state nonce + state cookie
+    BE-->>U: 302 -> Twitch authorize (bot scope set, state)
     U->>T: authenticate & consent
-    T-->>U: 302 -> api.yeppbot.com/api/auth/callback?code=...
+    T-->>U: 302 -> api.yeppbot.com/api/auth/callback?code=&state=
     U->>P: GET /api/auth/callback
     P->>BE: forward
-    BE->>T: exchange code for tokens (server-to-server)
-    T-->>BE: id_token (sub=Twitch user ID, email)
-    BE->>BE: SignInAsync (httpOnly cookie, Domain=.yeppbot.com/.dev)
+    BE->>BE: validate state against cookie (CSRF)
+    BE->>T: POST /oauth2/token (code, server-to-server)
+    T-->>BE: access_token + refresh_token + granted scopes
+    BE->>T: GET /helix/users (Bearer access_token)
+    T-->>BE: id, login, display_name, email, profile_image_url
+    BE->>BE: encrypt + store token, SignInAsync (httpOnly cookie)
     BE-->>U: 302 -> dash.yeppbot.com (cookie set)
     U->>P: GET dash.yeppbot.com, then GET api.yeppbot.com/api/auth/me (CORS, credentials: include)
     P->>BE: forward
-    BE-->>U: 200 {twitchId, login, displayName}
+    BE->>T: GET /helix/users (fresh profile on every call)
+    BE-->>U: 200 {twitchId, login, displayName, email, profileImageUrl}
 ```
 
 ```mermaid
@@ -92,11 +97,12 @@ YEPPDash/
 │   ├── global.json
 │   ├── YEPPDash.Api/            # sibling to the .slnx, standard .NET layout (no extra src/ nesting)
 │   │   ├── Program.cs           # composition root only — builder/DI wiring, no endpoint/business logic
-│   │   ├── Auth/            # AddYeppDashAuth: Twitch OIDC + cookie scheme wiring
+│   │   ├── Auth/            # AddYeppDashAuth (cookie scheme), state cookie, token store + AES-GCM cipher, claim types
+│   │   ├── Twitch/          # TwitchOAuthClient (id.twitch.tv), TwitchApiClient (Helix), scopes + options
 │   │   ├── Controllers/     # MVC controllers — AuthController.cs ([ApiController]/[Route]/[Http*] attribute routing); ChannelController.cs in Phase 2
-│   │   ├── Services/        # business logic between controllers and repositories — empty until Phase 2 (channel/bot logic) gives it something to hold
-│   │   ├── Data/            # AddYeppDashDatabase, DatabaseHealthCheck, BitBoolTypeHandler; ChannelRepository/UserRepository once a feature needs one (Phase 2)
-│   │   ├── Contracts/       # request/response DTOs (UserInfo, ...)
+│   │   ├── Services/        # business logic between controllers and clients/repositories — TwitchAuthService.cs
+│   │   ├── Data/            # AddYeppDashDatabase, DatabaseHealthCheck, BitBoolTypeHandler, DatabaseTwitchTokenStore; ChannelRepository/UserRepository once a feature needs one (Phase 2)
+│   │   ├── Contracts/       # request/response DTOs (UserInfo, TwitchUser, TwitchTokenResponse, ...)
 │   │   ├── Helpers/         # cross-cutting extensions (ConfigurationExtensions, ClaimsPrincipalExtensions)
 │   │   ├── BotClient/       # IBotClient + HttpBotClient + StubBotClient — Phase 2
 │   │   └── Options/         # TwitchOptions, BotApiOptions, DatabaseOptions — once there's config worth binding to a type
@@ -115,7 +121,21 @@ YEPPDash/
 ## Backend Design (ASP.NET Core 10)
 
 ### Auth
-`Microsoft.AspNetCore.Authentication.OpenIdConnect` against Twitch's OIDC endpoints (`https://id.twitch.tv/.well-known/openid-configuration`), cookie scheme as the default/protecting scheme, OIDC only as the challenge scheme on `/api/auth/login`. Twitch quirk: email is only returned if the authorize request carries an explicit `claims={"id_token":{"email":null}}` parameter — inject it in `OnRedirectToIdentityProvider`. `sub` claim = Twitch user ID = the same ID already used as PK in YEPPBot's `User`/`Channel` tables, so no mapping table is needed. Fallback if OIDC proves awkward: hand-rolled `AddOAuth` + a call to Helix `GET /users` in `OnCreatingTicket`. Cookie: httpOnly, Secure, `SameSite=Lax`, `Domain=.yeppbot.com` (or `.yeppbot.dev`) so it's readable by both the `api.` and `dash.` subdomains.
+Plain **OAuth2 authorization code flow**, driven by hand against `https://id.twitch.tv/oauth2/*` — no OIDC middleware, no `openid` scope, no `id_token`. Identity comes from `GET /helix/users` with the freshly obtained access token, which returns exactly the `id` / `login` / `display_name` / `email` / `profile_image_url` the dashboard needs.
+
+**Why not OIDC** (it was implemented first and then replaced, see [ROADMAP.md](ROADMAP.md#phase-1b--von-oidc-auf-direktes-oauth2)): the dashboard has to hold a broadcaster access token anyway to manage the bot's moderator status, to detect a banned/blocked bot, and to join/leave a channel. OIDC delivered identity in a second, separate mechanism on top of that token — two flows where one suffices. On top of that, Twitch's OIDC implementation needed three workarounds (non-standard discovery path, a `claims` request parameter for `email`/`preferred_username`, `response_mode=query`) that all disappear with the plain flow. The only thing given up is the signed `id_token`; the identity is now asserted by a server-to-server TLS call to Helix instead, which is at least as trustworthy.
+
+**Scopes**: the exact set YEPPBot itself requests (`TwitchScopes.Required`, 13 scopes). Dashboard and bot share one Twitch app per environment, so a single consent covers both — a user who logs into the dashboard has thereby granted the bot everything it needs.
+
+**Sessions**: cookie authentication (`yeppdash.session`, httpOnly, Secure, `SameSite=Lax`, 14 days sliding), registered as the *only* scheme. There is no challenge scheme, so an unauthenticated request can never accidentally trigger a redirect to Twitch — `/api/auth/login` is the single entry point into the flow. `SameSite=Lax` works everywhere because frontend and backend share a registrable domain (`dash.`/`api.yeppbot.com` in production, `localhost` in development) and the OAuth callback is a top-level GET.
+
+The cookie only carries `twitch_id` (plus `twitch_login` as an offline display fallback). Everything else is re-read from Helix on every `/api/auth/me`, because only the ID is stable — logins, display names, avatars and e-mail addresses all change. The Twitch user ID is also the PK of YEPPBot's `User`/`Channel` tables, so no mapping table is needed.
+
+**CSRF**: the `state` parameter is owned by the app now that the middleware no longer provides it. A 32-byte random nonce goes into the authorize URL and, together with the return URL, into a short-lived (10 min) httpOnly state cookie; the callback compares them in constant time and consumes the cookie either way. The return URL never travels through Twitch and is additionally validated against `AllowedFrontendOrigins`.
+
+**Token storage**: access and refresh token land in `TwitchToken` in YEPPDash's *own* database, AES-256-GCM encrypted with a key derived from the Twitch client secret (`AesGcmTokenCipher`) — one secret for the whole deployment, no separate key management, and rotating the client secret invalidates all stored tokens exactly as it does for the bot. `TwitchAuthService.GetValidTokenAsync` refreshes transparently 5 minutes before expiry and replaces the stored row, since Twitch may hand back a new refresh token. Without a configured `ConnectionStrings:YeppDash{DbTarget}` the backend falls back to an in-memory store and logs a warning, so a fresh clone can run the login flow before any database work happens.
+
+> **Deliberately *not* shared with the bot**: YEPPBot keeps its own tokens in `helix.RefreshToken` (encrypted AES-ECB with SHA3-256 of the client secret, see `Helix-API/SQL.java`). Writing into that table would provision the bot from a dashboard login, but both processes would then share one refresh token per user — and because Twitch rotates the refresh token on use, whichever side refreshes second gets rejected. Separate tokens per process avoids that race. Handing tokens over to the bot is a Phase 2 topic and, if it happens, belongs in the bot's internal API rather than in a shared table.
 
 **Twitch application**: YEPPDash doesn't register its own Twitch app — it reuses YEPPBot's existing Dev and Prod apps (same `clientId`/`clientSecret` the bot itself already uses for its own OAuth flow), since dashboard and bot are the same product/identity. Credentials for both are stored as `Twitch:ClientIdDev`/`ClientSecretDev` and `Twitch:ClientIdProd`/`ClientSecretProd` via `dotnet user-secrets` locally, mirroring the `ConnectionStrings:HelixDev`/`HelixProd` pattern — never committed. Twitch apps accept multiple registered OAuth redirect URLs, so YEPPDash's callback(s) are *added* alongside the bot's existing `https://home.mcmodersd.de:420/callback`, not a replacement for it. Needed additions (one Twitch Developer Console change per environment, done by the operator, not by this repo):
 
@@ -130,7 +150,7 @@ YEPPDash/
 ### Database access
 Dapper + `MySqlConnector`, deliberately **not** EF Core — the `helix` schema is owned and migrated solely by YEPPBot's own `CREATE TABLE IF NOT EXISTS` scripts, and `User.user` is an LZ4-compressed Java-serialized blob that's undecodable from C# and must simply never be selected. Backend DB user (`yeppdash_ro`) gets **SELECT-only** grants on `User`/`Channel` — no write grants at all, so "all mutations go through the bot" is enforced by the database, not just convention. Confirmed in Phase 0: MySqlConnector maps `BIT(1)` columns (`Channel.active`/`autoShoutout`) as `UInt64`, not `bool` — a `BitBoolTypeHandler` registered once in `Program.cs` fixes this for every query.
 
-There is no dedicated local/dev-only database — the app always talks to one of the two real MariaDB servers the bot already uses: Dev (`10.10.10.1`) and Prod (`dedi.mcmodersd.de`). Both connection strings (`ConnectionStrings:HelixDev`/`ConnectionStrings:HelixProd`) are always configured; a `DbTarget` setting (`Dev` or `Prod`, default `Dev`) picks which one is actually used, so the same container image can point at either without a rebuild. A separate `YEPPDash` database (own schema, not `helix`) exists on both servers for dashboard-specific state, with a full-access app user.
+There is no dedicated local/dev-only database — the app always talks to one of the two real MariaDB servers the bot already uses: Dev (`10.10.10.1`) and Prod (`dedi.mcmodersd.de`). Both connection strings (`ConnectionStrings:HelixDev`/`ConnectionStrings:HelixProd`) are always configured; a `DbTarget` setting (`Dev` or `Prod`, default `Dev`) picks which one is actually used, so the same container image can point at either without a rebuild. A separate `YEPPDash` database (own schema, not `helix`) exists on both servers for dashboard-specific state, with a full-access app user. It is reached through its own connection string (`ConnectionStrings:YeppDashDev`/`YeppDashProd`) and its own `YeppDashConnectionFactory`, deliberately kept apart from the read-only `helix` connection so the two access levels cannot be mixed up. `TwitchToken` (encrypted Twitch tokens, see [Auth](#auth)) is the first table living there; it is created on startup via `CREATE TABLE IF NOT EXISTS`, the same self-provisioning approach Helix-API uses.
 
 ### Internal Bot interface (contract now, implementation deferred)
 Backend defines `IBotClient` with `GetStatusAsync`, `JoinAsync`, `LeaveAsync(twitchUserId)`. Two implementations: `StubBotClient` (in-memory fake, used until the YEPPBot-side API exists — lets Phase 2 ship a working UI demo now) and `HttpBotClient` (typed `HttpClient` + Polly retry, calling the documented contract below once it's built on the YEPPBot side, separately). Swap via config/DI — no code changes needed in `Endpoints/` when the switch happens.

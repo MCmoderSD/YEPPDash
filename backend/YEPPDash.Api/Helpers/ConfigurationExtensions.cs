@@ -10,6 +10,14 @@ public static class ConfigurationExtensions
         return configuration.GetSection("AllowedFrontendOrigins").Get<string[]>() ?? [];
     }
 
+    // YEPPDash's own read/write database, kept apart from the read-only `helix` connection.
+    // Optional on purpose: without it the backend falls back to an in-memory token store so a
+    // fresh clone can run the login flow before anyone touches a database.
+    public static string? GetYeppDashConnectionString(this IConfiguration configuration, string dbTarget)
+    {
+        return configuration.GetConnectionString($"YeppDash{dbTarget}");
+    }
+
     public static string GetRequiredValue(this IConfiguration configuration, string key, string? context = null)
     {
         var value = configuration[key];

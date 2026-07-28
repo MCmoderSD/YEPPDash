@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { AuthService } from '../../core/auth/auth.service';
@@ -7,7 +8,7 @@ import { AuthService } from '../../core/auth/auth.service';
 // The actual channel status/join-leave card is Phase 2 (IBotClient).
 @Component({
   selector: 'app-dash',
-  imports: [MatButtonModule, MatCardModule],
+  imports: [MatButtonModule, MatCardModule, NgOptimizedImage],
   templateUrl: './dash.html',
   styleUrl: './dash.scss',
 })

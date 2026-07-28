@@ -1,72 +1,89 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using YEPPDash.Api.Data;
 using YEPPDash.Api.Helpers;
+using YEPPDash.Api.Services;
+using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Auth;
 
 public static class AuthServiceCollectionExtensions
 {
-    public static IServiceCollection AddYeppDashAuth(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment, string dbTarget)
+    public static IServiceCollection AddYeppDashAuth(
+        this IServiceCollection services, IConfiguration configuration, string dbTarget)
     {
-        var clientId = configuration.GetRequiredValue($"Twitch:ClientId{dbTarget}", $"dbTarget '{dbTarget}'");
-        var clientSecret = configuration.GetRequiredValue($"Twitch:ClientSecret{dbTarget}", $"dbTarget '{dbTarget}'");
+        // Dashboard and bot share one Twitch app per environment, so the credentials are selected
+        // by the same DbTarget switch that picks the database.
+        var options = new TwitchAuthOptions
+        {
+            ClientId = configuration.GetRequiredValue($"Twitch:ClientId{dbTarget}", $"dbTarget '{dbTarget}'"),
+            ClientSecret = configuration.GetRequiredValue($"Twitch:ClientSecret{dbTarget}", $"dbTarget '{dbTarget}'"),
+            RedirectUri = configuration.GetRequiredValue("Twitch:RedirectUri")
+        };
 
+        services.AddSingleton(options);
+        services.AddSingleton<ITokenCipher>(new AesGcmTokenCipher(options.ClientSecret));
+        services.AddScoped<TwitchAuthService>();
+
+        // Typed clients: the HttpClient comes from the factory, TwitchAuthOptions is filled in from
+        // DI by the default activator — no manual wiring needed.
+        services.AddHttpClient<TwitchOAuthClient>(client =>
+        {
+            client.BaseAddress = new Uri(TwitchOAuthClient.BaseUrl);
+        });
+
+        services.AddHttpClient<TwitchApiClient>(client =>
+        {
+            client.BaseAddress = new Uri(TwitchApiClient.BaseUrl);
+        });
+
+        AddTokenStore(services, configuration, dbTarget);
+
+        // Cookie-only: the session is ours, Twitch is just where it came from. No challenge scheme
+        // is registered, so an unauthenticated request can never trigger a redirect to Twitch by
+        // accident — /api/auth/login is the one and only entry point into the flow.
+        //
+        // SameSite=Lax is enough in every environment: frontend and backend share a registrable
+        // domain (dash./api.yeppbot.com in production, localhost in development), which makes them
+        // same-site, and the OAuth callback is a top-level GET that Lax permits.
         services
-            .AddAuthentication(options =>
+            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(cookieOptions =>
             {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-            })
-            .AddCookie(options =>
-            {
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                options.Cookie.SameSite = environment.IsDevelopment() ? SameSiteMode.None : SameSiteMode.Lax;
-            })
-            .AddOpenIdConnect(options =>
-            {
-                options.MetadataAddress = "https://id.twitch.tv/oauth2/.well-known/openid-configuration";
-                options.ClientId = clientId;
-                options.ClientSecret = clientSecret;
-                options.ResponseType = "code";
-                options.ResponseMode = "query";
-                options.CallbackPath = "/api/auth/callback";
-                options.SaveTokens = true;
-                options.MapInboundClaims = false;
-                options.TokenValidationParameters.NameClaimType = "preferred_username";
-                options.Scope.Clear();
-                options.Scope.Add("openid");
-                options.Scope.Add("user:read:email");
+                cookieOptions.Cookie.Name = "yeppdash.session";
+                cookieOptions.Cookie.HttpOnly = true;
+                cookieOptions.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                cookieOptions.Cookie.SameSite = SameSiteMode.Lax;
+                cookieOptions.SlidingExpiration = true;
+                cookieOptions.ExpireTimeSpan = TimeSpan.FromDays(14);
 
-                options.Events = new OpenIdConnectEvents
+                // Same reasoning as /api/auth/me: this is an API, so answer with status codes
+                // instead of redirecting to a login page that does not exist here.
+                cookieOptions.Events.OnRedirectToLogin = context =>
                 {
-                    OnRedirectToIdentityProvider = context =>
-                    {
-                        context.ProtocolMessage.SetParameter("claims", "{\"id_token\":{\"email\":null,\"preferred_username\":null}}");
-                        return Task.CompletedTask;
-                    },
-                    OnTokenValidated = context =>
-                    {
-                        var logger = GetLogger(context.HttpContext);
-                        var twitchId = context.Principal?.FindFirst("sub")?.Value;
-                        var login = context.Principal?.FindFirst("preferred_username")?.Value;
-                        logger.LogInformation("Login succeeded via Twitch for {TwitchId} ({Login})", twitchId, login);
-                        return Task.CompletedTask;
-                    },
-                    OnRemoteFailure = context =>
-                    {
-                        var logger = GetLogger(context.HttpContext);
-                        logger.LogWarning(context.Failure, "Login via Twitch failed");
-                        return Task.CompletedTask;
-                    }
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                };
+                cookieOptions.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return Task.CompletedTask;
                 };
             });
 
         return services;
     }
 
-    private static ILogger GetLogger(HttpContext httpContext)
+    private static void AddTokenStore(IServiceCollection services, IConfiguration configuration, string dbTarget)
     {
-        return httpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("YEPPDash.Api.Auth");
+        var connectionString = configuration.GetYeppDashConnectionString(dbTarget);
+
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            services.AddSingleton<ITwitchTokenStore, InMemoryTwitchTokenStore>();
+            return;
+        }
+
+        services.AddSingleton(new YeppDashConnectionFactory(connectionString));
+        services.AddScoped<ITwitchTokenStore, DatabaseTwitchTokenStore>();
     }
 }

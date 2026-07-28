@@ -1,18 +1,28 @@
 <main class="dash">
   <mat-card appearance="outlined" class="dash-card">
-    <mat-card-header>
-      <mat-card-title>Willkommen, {{ auth.currentUser()?.login }}</mat-card-title>
-      <mat-card-subtitle>Twitch-ID: {{ auth.currentUser()?.twitchId }}</mat-card-subtitle>
-    </mat-card-header>
+    @if (auth.currentUser(); as user) {
+      <mat-card-header>
+        @if (user.profileImageUrl; as avatar) {
+          <img
+            mat-card-avatar
+            class="dash-avatar"
+            [ngSrc]="avatar"
+            width="40"
+            height="40"
+            [alt]="'Profilbild von ' + user.displayName"
+          />
+        }
+        <mat-card-title>Willkommen, {{ user.displayName }}</mat-card-title>
+        <mat-card-subtitle>Twitch-ID: {{ user.twitchId }}</mat-card-subtitle>
+      </mat-card-header>
 
-    <mat-card-content>
-      @if (auth.currentUser()?.email; as email) {
-        <p>{{ email }}</p>
-      }
-      <p class="placeholder-note">
-        Channel-Steuerung (Join/Leave) folgt in Phase 2.
-      </p>
-    </mat-card-content>
+      <mat-card-content>
+        @if (user.email; as email) {
+          <p>{{ email }}</p>
+        }
+        <p class="placeholder-note">Channel-Steuerung (Join/Leave) folgt in Phase 2.</p>
+      </mat-card-content>
+    }
 
     <mat-card-actions align="end">
       <button mat-button type="button" (click)="logout()">Abmelden</button>

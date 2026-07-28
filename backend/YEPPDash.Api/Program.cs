@@ -20,11 +20,13 @@ builder.Services.AddCors(options => options.AddPolicy(frontendCorsPolicy, policy
     .AllowCredentials()));
 
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
-builder.Services.AddYeppDashAuth(builder.Configuration, builder.Environment, dbTarget);
+builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+await app.Services.InitializeYeppDashDatabaseAsync(dbTarget);
 
 app.UseCors(frontendCorsPolicy);
 app.UseAuthentication();
