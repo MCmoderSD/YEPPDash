@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>User details</h2>
+
+<mat-dialog-content class="user-info">
+
+  <div class="user-info-identity">
+    <img
+      class="user-info-avatar"
+      [ngSrc]="user.profileImageUrl"
+      [width]=128
+      [height]=128
+      alt=""
+    />
+    <p class="user-info-name" [style.--chat-color]="chatColor()">{{ user.displayName }}</p>
+  </div>
+
+  <dl class="user-info-details">
+
+    <div class="user-info-detail">
+      <dt class="user-info-label">User ID</dt>
+      <dd class="user-info-value">{{ user.id }}</dd>
+    </div>
+
+    @if (user.email) {
+      <div class="user-info-detail">
+        <dt class="user-info-label">Email</dt>
+        <dd class="user-info-value">{{ user.email }}</dd>
+      </div>
+    }
+  </dl>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Close</button>
+</mat-dialog-actions>

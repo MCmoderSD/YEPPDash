@@ -1,0 +1,29 @@
+<section class="role-management">
+
+  <header class="role-management-header">
+    <h1 class="role-management-title">{{ title() }}</h1>
+    <p class="role-management-count">
+      {{ users().length }} {{ roleName() }}{{ users().length === 1 ? '' : 's' }} in your channel
+    </p>
+  </header>
+
+  <button
+    mat-flat-button
+    type="button"
+    class="role-management-add"
+    [disabled]="busy()"
+    (click)="openAddDialog()"
+  >
+    <mat-icon aria-hidden="true">person_add</mat-icon>
+    <span>Add {{ roleName() }}</span>
+  </button>
+
+  <mat-progress-bar
+    class="role-management-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!(loading() || busy())"
+    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+  />
+
+  <app-user-table [users]="users()" [mode]="tableMode()" (remove)="remove($event)"/>
+</section>

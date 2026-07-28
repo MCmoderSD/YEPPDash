@@ -1,0 +1,79 @@
+<div class="user-table">
+
+  <mat-form-field appearance="outline" class="user-table-search">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      #search
+      type="search"
+      autocomplete="off"
+      placeholder="Name or user ID"
+      (input)="filter(search.value)"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+  </mat-form-field>
+
+  <div class="user-table-scroll">
+    <table mat-table matSort [dataSource]="dataSource" class="user-table-grid">
+
+      <ng-container matColumnDef="user">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
+        <td mat-cell *matCellDef="let user">
+          <button
+            type="button"
+            class="user-table-name"
+            (click)="showDetails(user, $event)"
+          >
+            <img
+              class="user-table-avatar"
+              [ngSrc]="user.profileImageUrl"
+              [width]=32
+              [height]=32
+              alt=""
+            />
+            <span>{{ user.displayName }}</span>
+          </button>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">User ID</th>
+        <td mat-cell *matCellDef="let user" class="user-table-id">{{ user.id }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="remove">
+        <th mat-header-cell *matHeaderCellDef scope="col">
+          <span class="user-table-hidden-label">Remove</span>
+        </th>
+        <td mat-cell *matCellDef="let user" class="user-table-actions">
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Remove ' + user.displayName + ' as ' + role()"
+            (click)="removeUser($event, user)"
+          >
+            <mat-icon aria-hidden="true">person_remove</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+      <tr
+        mat-row
+        *matRowDef="let user; columns: columns()"
+        class="user-table-row"
+        (click)="showDetails(user)"
+      ></tr>
+
+      <tr class="user-table-empty-row" *matNoDataRow>
+        <td class="user-table-empty" [attr.colspan]="columns().length">
+          @if (query()) {
+            No user matches “{{ query() }}”.
+          } @else {
+            No users to show.
+          }
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>

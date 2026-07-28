@@ -1,0 +1,29 @@
+<mat-nav-list class="sidebar" aria-label="Dashboard sections">
+  <h3 matSubheader>Management</h3>
+
+  <a
+    mat-list-item
+    routerLink="/dash/role-management"
+    [queryParams]="{ mode: Mode.Moderator }"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">shield</mat-icon>
+    <span matListItemTitle>Moderator Management</span>
+  </a>
+
+  <a
+    mat-list-item
+    routerLink="/dash/role-management"
+    [queryParams]="{ mode: Mode.Vip }"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">star</mat-icon>
+    <span matListItemTitle>VIP Management</span>
+  </a>
+</mat-nav-list>

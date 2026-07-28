@@ -1,0 +1,60 @@
+@use '../../styles/chat-color' as chat;
+
+.user-add {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+}
+
+.user-add-field {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.user-add-field button {
+  margin-right: 0.5rem;
+}
+
+// Holds whatever the last search produced. Given a fixed floor so the dialog does not resize
+// under the pointer between "searching", a result and a miss.
+.user-add-outcome {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 9rem;
+}
+
+.user-add-result {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.user-add-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  width: clamp(4rem, 16vw, 6rem);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.user-add-name {
+  @include chat.chat-color;
+
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+  overflow-wrap: anywhere;
+}
+
+.user-add-message {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  text-align: center;
+  overflow-wrap: anywhere;
+}

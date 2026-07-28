@@ -1,12 +1,15 @@
-<section class="dash">
-  <mat-card appearance="outlined" class="dash-placeholder">
-    <mat-card-header>
-      <mat-card-title>Dashboard</mat-card-title>
-      <mat-card-subtitle>Nothing here yet</mat-card-subtitle>
-    </mat-card-header>
+<mat-sidenav-container class="dash-shell">
 
-    <mat-card-content>
-      <p>Channel controls for YEPPBot will show up here.</p>
-    </mat-card-content>
-  </mat-card>
-</section>
+  <mat-sidenav
+    class="dash-drawer"
+    mode="over"
+    [opened]="sidebar.opened()"
+    (closed)="sidebar.close()"
+  >
+    <app-sidebar/>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="dash-content">
+    <router-outlet/>
+  </mat-sidenav-content>
+</mat-sidenav-container>

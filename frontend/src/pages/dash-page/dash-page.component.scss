@@ -1,13 +1,18 @@
 :host {
   display: flex;
   flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
 }
 
-.dash-placeholder {
+.dash-shell {
+  flex: 1;
   width: 100%;
-  max-width: 32rem;
-  text-align: center;
+}
+
+.dash-drawer {
+  width: 17rem;
+  max-width: 85vw;
+}
+
+.dash-content {
+  padding: 2rem 1rem;
 }

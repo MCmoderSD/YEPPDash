@@ -22,6 +22,7 @@ builder.Services.AddCors(options => options.AddPolicy(frontendCorsPolicy, policy
 
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
 builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
+builder.Services.AddSingleton<TwitchChannelCache>();
 builder.Services.AddScoped<TwitchChannelService>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();

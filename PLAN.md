@@ -178,6 +178,9 @@ The shared-secret header is required **regardless of network topology** (see Dep
 | `POST /api/channel/join` | cookie | via `IBotClient` |
 | `POST /api/channel/leave` | cookie | via `IBotClient` |
 | `GET /api/twitch/chat-color/{userId?}` | cookie | `{id, color}` from Helix, caller's own when `userId` is omitted |
+| `GET /api/twitch/users?id=&login=` | cookie | Helix get users, up to 100 ids/logins mixed per call |
+| `GET /api/twitch/moderators` | cookie | full moderator list, paginated + cached (`moderation:read`) |
+| `GET /api/twitch/vips` | cookie | full VIP list, paginated + cached (`channel:read:vips`) |
 | `POST /api/twitch/moderators/{userId}` | cookie | Helix add channel moderator (`channel:manage:moderators`) |
 | `DELETE /api/twitch/moderators/{userId}` | cookie | Helix remove channel moderator (`channel:manage:moderators`) |
 | `POST /api/twitch/vips/{userId}` | cookie | Helix add channel VIP (`channel:manage:vips`) |
@@ -187,6 +190,8 @@ Target channel is always derived from the auth cookie's claim, never accepted fr
 
 `/api/twitch/*` calls Helix directly with the caller's own stored token, whereas `/api/channel/*` goes through YEPPBot's internal API — hence the separate namespaces. The `{userId}` path segment is the *target* of the action (who gets modded/VIP'd); the broadcaster is always the caller, so these can only ever change the caller's own channel. Twitch's own client-error statuses are passed through rather than flattened (404 unknown user, 409 already a VIP, 422 already a moderator or the broadcaster themselves), since that is where the actionable detail lives.
 
+The moderator and VIP lists are read whole rather than page by page: the API follows Helix's cursor to the end (100 per page) and keeps the result in a process-wide cache, so the frontend never deals with cursors. Freshness is re-checked by request, not by clock — a repeat call always fetches page one, and if every entry on it is already cached the cached list is returned unchanged (one Helix request); anything unfamiliar triggers a full re-pagination. Our own add/remove calls drop the affected entry outright. The blind spot is a removal beyond the first page with no additions, which page one cannot reveal — it resolves on the next mutation or restart, which is an acceptable trade for a list that is nearly always ≤100 entries and changes almost exclusively through this dashboard.
+
 ### NuGet packages
 `Microsoft.AspNetCore.Authentication.OpenIdConnect`, `Dapper`, `MySqlConnector`, `Microsoft.Extensions.Http` + `Microsoft.Extensions.Http.Resilience` (for `HttpBotClient`), `Microsoft.AspNetCore.OpenApi`, `Serilog.AspNetCore`, `Microsoft.Extensions.Diagnostics.HealthChecks`. Dev-only: `dotnet user-secrets` for Twitch client secret + internal API key.
 
@@ -195,6 +200,14 @@ Target channel is always derived from the auth cookie's claim, never accepted fr
 ## Frontend Design (Angular 22 + Material)
 
 Standalone components, functional `CanActivateFn` guards, signals for state (no NgRx needed at this scope). `app.config.ts` wires `provideRouter`, `provideHttpClient(withFetch())`, `provideAnimationsAsync()`. `authGuard` on `/dash` checks a signal hydrated from `GET /api/auth/me`. Login is a plain `<a href="/api/auth/login">` (full navigation, not a router link or XHR) so the server-driven OAuth redirect chain works.
+
+**Routing**: `/dash` is a lazily loaded feature module (`DashModule`) holding the sidebar layout, the dashboard landing card and `/dash/role-management`, which reads `?mode=0|1` as a component input (`bindToComponentInputs`) — `0`/`1` are `RoleManagementMode.Moderator`/`.Vip` (`data/role-management-mode.ts`), a numeric enum rather than a `'moderator' | 'vip'` string union with a `Record` for the display strings. The input is required and transforms the raw query string into the enum with no default: a missing or malformed `?mode=` is a hard failure (Angular's own required-input error, or a thrown error from the exhaustive `switch` the moment an out-of-range value reaches it) instead of silently falling back to Moderator. Lazy is worth it here: the dashboard's Material table, sort, dialog, input, list, sidenav and progress bar are ~254 kB that the prerendered public pages never touch.
+
+**Dashboard navigation**: the "Management" section lives in a `mat-sidenav` drawer (`mode="over"`), not a static column — it slides in over the content and minimizes itself again once an entry is picked or the backdrop is clicked. The toggle button sits in the navbar (visible only once signed in), which is outside the lazy `DashModule` entirely, so a small root-provided `SidebarService` (one boolean signal) is what connects the two without the navbar depending on the dashboard module.
+
+**Role management**: one component in two configurations. It reads the full role list from `/api/twitch/moderators` or `/api/twitch/vips`, then resolves avatars for everyone on it through a single batched `/api/twitch/users` call, since the role endpoints only return ids and names. `UserTableComponent`'s `showId` input controls whether the id column renders at all, and it prefetches every row's chat colour as soon as it gets its users — the details dialog reads the same cache, so by the time someone opens it the colour is usually already there instead of loading visibly. Every add and remove ends in a snack bar in the bottom-right corner, failures in the error colours and on screen twice as long, because a failure usually carries the only explanation of what went wrong.
+
+**Adding members**: `UserAddDialogComponent` resolves a name to a real account before anything is added, and closes with the `TwitchUser` it found — the caller only decides what to do with it, which is what lets one dialog serve both moderators and VIPs. The search lowercases the term (Twitch logins are lowercase, and Helix matches them exactly), and retries a purely numeric term as a user ID only when no login matched — the login wins where both exist, since a numeric login is a legitimate account name.
 
 **Theming**: seed color `#9ACD32` (`rgb(154,205,50)`) via `ng generate @angular/material:m3-theme` (dark mode). M3's computed dark surface/background tones won't land exactly on the target `#0E0E10` (`rgb(14,14,16)`, Twitch's chrome) since they're derived from the seed hue — after generating the theme, explicitly override `--mat-sys-surface`/`--mat-sys-background`/related `surface-container*` tokens to `#0E0E10` in a clearly-marked brand-override block, so future Material upgrades don't silently regenerate over it.
 
