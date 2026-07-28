@@ -7,6 +7,17 @@
     </p>
   </header>
 
+  <button
+    mat-flat-button
+    type="button"
+    class="role-management-add"
+    [disabled]="busy()"
+    (click)="openAddDialog()"
+  >
+    <mat-icon aria-hidden="true">person_add</mat-icon>
+    <span>Add {{ roleName() }}</span>
+  </button>
+
   <mat-progress-bar
     class="role-management-progress"
     mode="indeterminate"

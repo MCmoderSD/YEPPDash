@@ -1,4 +1,7 @@
 import { Component, computed, effect, inject, input, InputSignal, Signal, signal, WritableSignal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
+import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
@@ -26,6 +29,7 @@ export class RoleManagementComponent {
 
   private readonly twitch: TwitchService = inject(TwitchService);
   private readonly notifications: NotificationService = inject(NotificationService);
+  private readonly dialog: MatDialog = inject(MatDialog);
 
   // Typed loosely because the router binds this straight from ?mode=, where anything can show up.
   readonly mode: InputSignal<string> = input<string>('moderator');
@@ -46,9 +50,12 @@ export class RoleManagementComponent {
     effect(() => void this.load(this.role()));
   }
 
-  protected submit(event: Event, input: HTMLInputElement): void {
-    event.preventDefault();
-    void this.add(input);
+  protected async openAddDialog(): Promise<void> {
+    const dialogRef = UserAddDialogComponent.open(this.dialog, this.roleName());
+    const user: TwitchUser | undefined = await firstValueFrom(dialogRef.afterClosed());
+
+    // Closed with Cancel, Escape or a backdrop click — nothing was picked, so nothing happens.
+    if (user) await this.add(user);
   }
 
   protected async remove(user: TwitchUser): Promise<void> {
@@ -69,30 +76,20 @@ export class RoleManagementComponent {
     }
   }
 
-  private async add(input: HTMLInputElement): Promise<void> {
-    const login: string = input.value.trim();
-    if (!login) return;
-
+  // The dialog has already resolved the name to a real account, so this only has to act on it.
+  private async add(user: TwitchUser): Promise<void> {
     const role: RoleManagementMode = this.role();
     const roleName: string = ROLE_NAMES[role];
 
     this.busy.set(true);
     try {
-      // Twitch's add endpoints only take ids, and a login is what a human has at hand.
-      const [found] = await this.twitch.getUsers([], [login]);
-      if (!found) {
-        this.notifications.failure(`Twitch has no user called “${login}”.`);
-        return;
-      }
+      if (role === 'vip') await this.twitch.addVip(user.id);
+      else await this.twitch.addModerator(user.id);
 
-      if (role === 'vip') await this.twitch.addVip(found.id);
-      else await this.twitch.addModerator(found.id);
-
-      input.value = '';
-      this.notifications.success(`${found.displayName} is now a ${roleName}.`);
+      this.notifications.success(`${user.displayName} is now a ${roleName}.`);
       await this.load(role);
     } catch {
-      this.notifications.failure(`Could not add “${login}” as ${roleName}.`);
+      this.notifications.failure(`Could not add ${user.displayName} as ${roleName}.`);
     } finally {
       this.busy.set(false);
     }

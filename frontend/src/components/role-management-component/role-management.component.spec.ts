@@ -3,9 +3,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { DashModule } from '../../pages/dash.module';
 import { RoleManagementComponent } from './role-management.component';
+import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
@@ -157,6 +160,74 @@ describe('RoleManagementComponent', () => {
     expect(notifications.failures[0]).toContain('Could not remove');
   });
 
-  // Adding a role member has no UI yet — the form was pulled pending a dialog (see
-  // RoleManagementComponent.submit/add), so there is nothing here to drive through the DOM.
+  function addButton(): HTMLButtonElement {
+    return element.querySelector<HTMLButtonElement>('.role-management-add')!;
+  }
+
+  // Stands in for the whole dialog: the component under test only cares what comes back out of it.
+  function stubDialog(result: TwitchUser | undefined) {
+    return vi.spyOn(TestBed.inject(MatDialog), 'open')
+      .mockReturnValue({ afterClosed: () => of(result) } as never);
+  }
+
+  it('should open the add dialog for the role it is managing', async () => {
+    await render('vip');
+    const open = stubDialog(undefined);
+
+    addButton().click();
+    await settle();
+
+    expect(open.mock.calls[0][0]).toBe(UserAddDialogComponent);
+    expect(open.mock.calls[0][1]?.data).toEqual({ role: 'VIP' });
+  });
+
+  it('should add whoever the dialog handed back and confirm it', async () => {
+    await render('vip');
+    stubDialog(twitchUser('555', 'Newbie'));
+    twitch.calls.length = 0;
+
+    addButton().click();
+    await settle();
+
+    expect(twitch.addVip).toHaveBeenCalledWith('555');
+    expect(twitch.addModerator).not.toHaveBeenCalled();
+    expect(notifications.successes[0]).toContain('Newbie is now a VIP');
+    // The list is re-read so the new row shows up without a manual refresh.
+    expect(twitch.calls).toContain('loadVips');
+  });
+
+  it('should add through the moderator endpoint in moderator mode', async () => {
+    await render('moderator');
+    stubDialog(twitchUser('555', 'Newbie'));
+
+    addButton().click();
+    await settle();
+
+    expect(twitch.addModerator).toHaveBeenCalledWith('555');
+    expect(notifications.successes[0]).toContain('is now a moderator');
+  });
+
+  it('should do nothing when the dialog was cancelled', async () => {
+    await render('moderator');
+    stubDialog(undefined);
+
+    addButton().click();
+    await settle();
+
+    expect(twitch.addModerator).not.toHaveBeenCalled();
+    expect(notifications.successes).toEqual([]);
+    expect(notifications.failures).toEqual([]);
+  });
+
+  it('should report a failed add instead of pretending it worked', async () => {
+    await render('moderator');
+    stubDialog(twitchUser('555', 'Newbie'));
+    twitch.addModerator.mockRejectedValueOnce(new Error('401'));
+
+    addButton().click();
+    await settle();
+
+    expect(notifications.successes).toEqual([]);
+    expect(notifications.failures[0]).toContain('Could not add Newbie');
+  });
 });

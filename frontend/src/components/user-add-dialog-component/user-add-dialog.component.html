@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>Add {{ data.role }}</h2>
+
+<mat-dialog-content class="user-add">
+
+  <form class="user-add-search" (submit)="submit($event, term)">
+    <mat-form-field appearance="outline" class="user-add-field">
+      <mat-label>Twitch username</mat-label>
+      <input
+        matInput
+        #term
+        type="text"
+        autocomplete="off"
+        [disabled]="status() === 'searching'"
+      />
+      <button
+        matSuffix
+        mat-icon-button
+        type="submit"
+        aria-label="Search Twitch"
+        [disabled]="status() === 'searching'"
+      >
+        <mat-icon aria-hidden="true">search</mat-icon>
+      </button>
+      <mat-hint>A numeric name is looked up as a user ID when no account matches.</mat-hint>
+    </mat-form-field>
+  </form>
+
+  <div class="user-add-outcome" role="status">
+    @if (status() === 'searching') {
+      <mat-progress-bar mode="indeterminate"/>
+    } @else if (user(); as found) {
+      <div class="user-add-result">
+        <img
+          class="user-add-avatar"
+          [ngSrc]="found.profileImageUrl"
+          [width]=96
+          [height]=96
+          alt=""
+        />
+        <p class="user-add-name" [style.--chat-color]="chatColor()">{{ found.displayName }}</p>
+      </div>
+    } @else if (status() === 'empty') {
+      <p class="user-add-message">No Twitch account matches “{{ query() }}”.</p>
+    } @else if (status() === 'failed') {
+      <p class="user-add-message">Could not reach Twitch. Please try again.</p>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cancel</button>
+  <button mat-flat-button type="button" [disabled]="!user()" (click)="add()">
+    Add {{ data.role }}
+  </button>
+</mat-dialog-actions>

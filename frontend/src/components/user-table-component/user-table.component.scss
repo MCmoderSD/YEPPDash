@@ -16,6 +16,10 @@
 }
 
 table.user-table-grid {
+  // Hugging its content means the table is usually narrower than the search box above it, so it
+  // is centred under it instead of hanging off the left edge.
+  margin-inline: auto;
+
   // Material's own base style sets min-width: 100%, forcing the table to fill its wrapper
   // regardless of content — with only two or three narrow columns that hands all the slack to
   // whichever one is flexible, prying name and id apart. Overridden so the table hugs its own
