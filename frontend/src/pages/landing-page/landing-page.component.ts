@@ -1,9 +1,6 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { AuthService } from '../../core/auth/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 // Error codes the backend appends when the OAuth2 flow does not complete (AuthController.RedirectToFrontend).
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -14,12 +11,12 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 @Component({
-  selector: 'app-landing',
-  imports: [MatButtonModule, MatCardModule, MatIconModule],
-  templateUrl: './landing.html',
-  styleUrl: './landing.scss',
+  selector: 'app-landing-page',
+  templateUrl: './landing-page.component.html',
+  styleUrl: './landing-page.component.scss',
+  standalone: false,
 })
-export class Landing {
+export class LandingPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
