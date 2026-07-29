@@ -15,7 +15,27 @@ h1 {
   font: var(--mat-sys-headline-medium);
 }
 
-p {
-  margin: 0;
+h2 {
+  margin: 2rem 0 0.75rem;
+  font: var(--mat-sys-title-medium);
+}
+
+p, li {
+  margin: 0 0 0.75rem;
   color: var(--mat-sys-on-surface-variant);
+}
+
+ul {
+  margin: 0 0 0.75rem;
+  padding-inline-start: 1.25rem;
+}
+
+a {
+  color: var(--mat-sys-primary);
+}
+
+.legal-updated {
+  margin-top: 2.5rem;
+  font-size: 0.875rem;
+  font-style: italic;
 }
