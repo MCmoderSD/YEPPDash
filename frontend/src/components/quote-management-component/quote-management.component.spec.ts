@@ -85,6 +85,32 @@ describe('QuoteManagementComponent', () => {
     return match as HTMLButtonElement;
   }
 
+  function texts(): string[] {
+    return rows().map((row) => row.querySelector('.quote-management-text')!.textContent!.trim());
+  }
+
+  function ids(): number[] {
+    return rows().map((row) => Number(row.querySelector('.quote-management-id')!.textContent!.trim()));
+  }
+
+  function search(term: string): void {
+    const input = element.querySelector<HTMLInputElement>('.quote-management-search input')!;
+
+    input.value = term;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function sortBy(header: string): void {
+    const match = [...element.querySelectorAll<HTMLElement>('th.mat-sort-header')]
+      .find((cell) => cell.textContent!.trim() === header);
+
+    if (!match) throw new Error(`No sortable column headed "${header}".`);
+
+    match.querySelector<HTMLElement>('.mat-sort-header-container')!.click();
+    fixture.detectChanges();
+  }
+
   function picker(): HTMLInputElement {
     return element.querySelector<HTMLInputElement>('.quote-management-picker')!;
   }
@@ -242,6 +268,88 @@ describe('QuoteManagementComponent', () => {
     expect(buttonLabelled('Move quote 1 up').disabled).toBe(true);
     expect(buttonLabelled('Move quote 3 down').disabled).toBe(true);
     expect(buttonLabelled('Move quote 1 down').disabled).toBe(false);
+  });
+
+  it('should filter by message text regardless of case', async () => {
+    quotes.quotes = [
+      { ...quote(1), quote: 'Alpha WISDOM here' },
+      { ...quote(2), quote: 'Beta something' },
+      { ...quote(3), quote: 'Gamma wisdom again' },
+    ];
+    await render();
+
+    search('wisdom');
+
+    expect(texts()).toEqual(['Alpha WISDOM here', 'Gamma wisdom again']);
+  });
+
+  it('should filter by the quote number as well', async () => {
+    await render();
+
+    search('2');
+
+    expect(texts()).toEqual(['Quote 2']);
+  });
+
+  it('should say which term matched nothing', async () => {
+    await render();
+
+    search('nothing matches this');
+
+    expect(element.querySelector('.quote-management-empty')!.textContent)
+      .toContain('nothing matches this');
+  });
+
+  it('should sort messages case-insensitively', async () => {
+    // A case-sensitive compare would put every capital ahead of every lowercase letter and sort
+    // "apple" after "Zebra", which is exactly the bug this guards against.
+    quotes.quotes = [
+      { ...quote(1), quote: 'Zebra' },
+      { ...quote(2), quote: 'apple' },
+      { ...quote(3), quote: 'Mango' },
+    ];
+    await render();
+
+    sortBy('Message');
+
+    expect(texts()).toEqual(['apple', 'Mango', 'Zebra']);
+  });
+
+  it('should sort the number column numerically', async () => {
+    quotes.quotes = [quote(1), quote(2), quote(3), quote(10)];
+    await render();
+
+    sortBy('#');
+    sortBy('#');
+
+    // A string sort would put 10 between 1 and 2.
+    expect(ids()).toEqual([10, 3, 2, 1]);
+  });
+
+  it('should sort dates by their instant, not their rendered text', async () => {
+    quotes.quotes = [
+      { ...quote(1), quote: 'newest', timestamp: '2026-06-01T00:00:00Z' },
+      { ...quote(2), quote: 'oldest', timestamp: '2024-02-01T00:00:00Z' },
+      { ...quote(3), quote: 'middle', timestamp: '2025-11-01T00:00:00Z' },
+    ];
+    await render();
+
+    sortBy('Date');
+
+    expect(texts()).toEqual(['oldest', 'middle', 'newest']);
+  });
+
+  // Sorting reorders the rows, so the top row is no longer necessarily quote 1.
+  it('should decide the move buttons by quote number rather than row position', async () => {
+    await render();
+    sortBy('#');
+    sortBy('#');
+
+    expect(ids()).toEqual([3, 2, 1]);
+    // Quote 3 is now the top row but is still the last quote, so it cannot move down.
+    expect(buttonLabelled('Move quote 3 down').disabled).toBe(true);
+    expect(buttonLabelled('Move quote 3 up').disabled).toBe(false);
+    expect(buttonLabelled('Move quote 1 up').disabled).toBe(true);
   });
 
   it('should download the exported workbook under the name the server chose', async () => {

@@ -49,6 +49,14 @@
   white-space: nowrap;
 }
 
+.quote-management-search {
+  align-self: stretch;
+
+  // Material reserves room under the field for a hint or error; there is neither here, so it would
+  // only push the table away from the search box.
+  margin-block-end: -1.25rem;
+}
+
 // Kept in the layout while idle so the table does not jump every time a request starts.
 .quote-management-progress {
   flex: none;

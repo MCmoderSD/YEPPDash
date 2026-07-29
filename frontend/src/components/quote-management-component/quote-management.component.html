@@ -62,21 +62,34 @@
     [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
   />
 
+  <mat-form-field appearance="outline" class="quote-management-search">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      #search
+      type="search"
+      autocomplete="off"
+      placeholder="Message or number"
+      (input)="filter(search.value)"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+  </mat-form-field>
+
   <div class="quote-management-scroll">
-    <table mat-table [dataSource]="quoteList()" class="quote-management-grid">
+    <table mat-table matSort [dataSource]="dataSource" class="quote-management-grid">
 
       <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef scope="col" class="quote-management-id">#</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="quote-management-id">#</th>
         <td mat-cell *matCellDef="let quote" class="quote-management-id">{{ quote.id }}</td>
       </ng-container>
 
       <ng-container matColumnDef="quote">
-        <th mat-header-cell *matHeaderCellDef scope="col">Message</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Message</th>
         <td mat-cell *matCellDef="let quote" class="quote-management-text">{{ quote.quote }}</td>
       </ng-container>
 
       <ng-container matColumnDef="timestamp">
-        <th mat-header-cell *matHeaderCellDef scope="col">Date</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Date</th>
         <td mat-cell *matCellDef="let quote" class="quote-management-date">
           <!-- The title carries the full timestamp so the short form stays readable in the cell. -->
           <time [attr.datetime]="quote.timestamp" [title]="quote.timestamp | date: 'medium'">
@@ -89,12 +102,14 @@
         <th mat-header-cell *matHeaderCellDef scope="col">
           <span class="quote-management-hidden-label">Actions</span>
         </th>
-        <td mat-cell *matCellDef="let quote; let index = index" class="quote-management-actions">
+        <td mat-cell *matCellDef="let quote" class="quote-management-actions">
+          <!-- Keyed off the quote's own number rather than its row index: sorting or filtering
+               reorders the rows, and then the top row is no longer quote 1. -->
           <button
             mat-icon-button
             type="button"
             [attr.aria-label]="'Move quote ' + quote.id + ' up'"
-            [disabled]="busy() || index === 0"
+            [disabled]="busy() || quote.id === 1"
             (click)="move(quote, -1)"
           >
             <mat-icon aria-hidden="true">arrow_upward</mat-icon>
@@ -104,7 +119,7 @@
             mat-icon-button
             type="button"
             [attr.aria-label]="'Move quote ' + quote.id + ' down'"
-            [disabled]="busy() || index === count() - 1"
+            [disabled]="busy() || quote.id === count()"
             (click)="move(quote, 1)"
           >
             <mat-icon aria-hidden="true">arrow_downward</mat-icon>
@@ -141,6 +156,8 @@
             Loading your quotes…
           } @else if (unreachable()) {
             Could not load your quotes. Please try again.
+          } @else if (query()) {
+            No quote matches “{{ query() }}”.
           } @else {
             No quotes yet. Add your first one above.
           }

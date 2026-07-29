@@ -1,7 +1,9 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 import { firstValueFrom } from 'rxjs';
 import { QuoteEditDialogComponent } from '../quote-edit-dialog-component/quote-edit-dialog.component';
 import { AuthService } from '../../services/auth.service';
@@ -45,8 +47,41 @@ export class QuoteManagementComponent {
 
   protected readonly count: Signal<number> = computed((): number => this.quoteList().length);
 
+  protected readonly dataSource: MatTableDataSource<Quote> = new MatTableDataSource<Quote>([]);
+
+  protected readonly query: WritableSignal<string> = signal('');
+
+  private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
+
   constructor() {
+    // Both the text and the id are searched, so "wisdom" and "12" both find something. The filter
+    // string arrives already lowercased, which is what makes the comparison case-insensitive.
+    this.dataSource.filterPredicate = (quote, filter): boolean => {
+      return quote.quote.toLowerCase().includes(filter) || `${quote.id}`.includes(filter);
+    };
+
+    this.dataSource.sortingDataAccessor = (quote, column): string | number => {
+      switch (column) {
+        // Sorted on the parsed instant rather than the rendered date, so the order does not follow
+        // whatever format the column happens to display.
+        case 'timestamp': return Date.parse(quote.timestamp);
+        case 'quote': return quote.quote.toLowerCase();
+        default: return quote.id;
+      }
+    };
+
+    effect((): Quote[] => this.dataSource.data = this.quoteList());
+    effect((): void => {
+      const sorter: MatSort | undefined = this.sorter();
+      if (sorter) this.dataSource.sort = sorter;
+    });
+
     void this.load();
+  }
+
+  protected filter(value: string): void {
+    this.query.set(value.trim());
+    this.dataSource.filter = value.trim().toLowerCase();
   }
 
   protected async add(): Promise<void> {
