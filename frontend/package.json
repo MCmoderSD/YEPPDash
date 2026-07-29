@@ -37,5 +37,14 @@
     "prettier": "^3.8.1",
     "typescript": "~6.0.3",
     "vitest": "^4.0.8"
+  },
+  "overrides": {
+    "@hono/node-server": "^2.0.12"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "esbuild@0.28.1": true,
+    "lmdb@3.5.4": true,
+    "msgpackr-extract@3.0.4": true
   }
 }
