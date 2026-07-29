@@ -111,6 +111,30 @@ describe('QuoteManagementComponent', () => {
     fixture.detectChanges();
   }
 
+  function positionButton(id: number): HTMLButtonElement {
+    const match = [...element.querySelectorAll<HTMLButtonElement>('.quote-management-position-button')]
+      .find((button) => button.textContent!.trim() === `${id}`);
+
+    if (!match) throw new Error(`No position cell for quote ${id}.`);
+    return match;
+  }
+
+  function positionInput(): HTMLInputElement {
+    return element.querySelector<HTMLInputElement>('.quote-management-position')!;
+  }
+
+  // Opens a quote's number cell, types a position and commits it with Enter.
+  async function typePosition(id: number, value: string): Promise<void> {
+    positionButton(id).click();
+    fixture.detectChanges();
+
+    const input = positionInput();
+    input.value = value;
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    await settle();
+  }
+
   function picker(): HTMLInputElement {
     return element.querySelector<HTMLInputElement>('.quote-management-picker')!;
   }
@@ -270,20 +294,10 @@ describe('QuoteManagementComponent', () => {
     expect(quotes.getQuotes).toHaveBeenCalledTimes(2);
   });
 
-  it('should move a quote up by asking for the position above it', async () => {
+  it('should move a quote to the position typed into its number cell', async () => {
     await render();
 
-    buttonLabelled('Move quote 2 up').click();
-    await settle();
-
-    expect(quotes.moveQuote).toHaveBeenCalledWith(CHANNEL, 2, 1);
-  });
-
-  it('should move a quote down by asking for the position below it', async () => {
-    await render();
-
-    buttonLabelled('Move quote 2 down').click();
-    await settle();
+    await typePosition(2, '3');
 
     expect(quotes.moveQuote).toHaveBeenCalledWith(CHANNEL, 2, 3);
   });
@@ -293,18 +307,104 @@ describe('QuoteManagementComponent', () => {
     await render();
     expect(quotes.getQuotes).toHaveBeenCalledTimes(1);
 
-    buttonLabelled('Move quote 2 up').click();
-    await settle();
+    await typePosition(2, '1');
 
     expect(quotes.getQuotes).toHaveBeenCalledTimes(1);
   });
 
-  it('should not offer to move the first quote up or the last one down', async () => {
+  it('should not move anything when the typed position is the current one', async () => {
     await render();
 
-    expect(buttonLabelled('Move quote 1 up').disabled).toBe(true);
-    expect(buttonLabelled('Move quote 3 down').disabled).toBe(true);
-    expect(buttonLabelled('Move quote 1 down').disabled).toBe(false);
+    await typePosition(2, '2');
+
+    expect(quotes.moveQuote).not.toHaveBeenCalled();
+  });
+
+  it('should clamp a position typed beyond either end of the list', async () => {
+    await render();
+
+    await typePosition(2, '99');
+    expect(quotes.moveQuote).toHaveBeenCalledWith(CHANNEL, 2, 3);
+
+    quotes.moveQuote.mockClear();
+    await typePosition(2, '0');
+    expect(quotes.moveQuote).toHaveBeenCalledWith(CHANNEL, 2, 1);
+  });
+
+  it('should ignore a position cell left blank or filled with nonsense', async () => {
+    await render();
+
+    await typePosition(2, '');
+    await typePosition(2, 'abc');
+
+    expect(quotes.moveQuote).not.toHaveBeenCalled();
+  });
+
+  it('should abandon the position edit on escape', async () => {
+    await render();
+
+    const cell = positionButton(2);
+    cell.click();
+    fixture.detectChanges();
+
+    const input = positionInput();
+    input.value = '1';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+
+    expect(quotes.moveQuote).not.toHaveBeenCalled();
+    expect(positionInput()).toBeNull();
+  });
+
+  // Enter commits and then blurs, and both handlers fire.
+  it('should apply a typed position only once', async () => {
+    await render();
+
+    const cell = positionButton(2);
+    cell.click();
+    fixture.detectChanges();
+
+    const input = positionInput();
+    input.value = '3';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    input.dispatchEvent(new Event('blur'));
+    await settle();
+
+    expect(quotes.moveQuote).toHaveBeenCalledTimes(1);
+  });
+
+  it('should open the edit dialog when a row is clicked', async () => {
+    await render();
+    answerDialogWith('Rewritten');
+
+    rows()[1].click();
+    await settle();
+
+    expect(quotes.updateQuote).toHaveBeenCalledWith(CHANNEL, 2, 'Rewritten');
+  });
+
+  // The delete button sits inside the row, so its click must not also open the editor.
+  it('should not open the edit dialog when the delete button is pressed', async () => {
+    await render();
+    const opened = vi.spyOn(dialog, 'open');
+
+    buttonLabelled('Delete quote 2').click();
+    await settle();
+
+    expect(opened).toHaveBeenCalledTimes(1);
+    await answerConfirm(false);
+    expect(quotes.updateQuote).not.toHaveBeenCalled();
+  });
+
+  it('should not open the edit dialog when the number is clicked', async () => {
+    await render();
+    const opened = vi.spyOn(dialog, 'open');
+
+    positionButton(2).click();
+    fixture.detectChanges();
+
+    expect(opened).not.toHaveBeenCalled();
+    expect(positionInput()).not.toBeNull();
   });
 
   it('should filter by message text regardless of case', async () => {
@@ -376,17 +476,18 @@ describe('QuoteManagementComponent', () => {
     expect(texts()).toEqual(['oldest', 'middle', 'newest']);
   });
 
-  // Sorting reorders the rows, so the top row is no longer necessarily quote 1.
-  it('should decide the move buttons by quote number rather than row position', async () => {
+  // Sorting reorders the rows, so the top row is no longer necessarily quote 1 — the position is
+  // read off the quote itself rather than where it happens to sit.
+  it('should move the right quote when the table is sorted the other way round', async () => {
     await render();
     sortBy('#');
     sortBy('#');
 
     expect(ids()).toEqual([3, 2, 1]);
-    // Quote 3 is now the top row but is still the last quote, so it cannot move down.
-    expect(buttonLabelled('Move quote 3 down').disabled).toBe(true);
-    expect(buttonLabelled('Move quote 3 up').disabled).toBe(false);
-    expect(buttonLabelled('Move quote 1 up').disabled).toBe(true);
+
+    await typePosition(3, '1');
+
+    expect(quotes.moveQuote).toHaveBeenCalledWith(CHANNEL, 3, 1);
   });
 
   it('should download the exported workbook under the name the server chose', async () => {

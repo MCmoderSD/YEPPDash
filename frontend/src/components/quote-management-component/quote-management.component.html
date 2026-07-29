@@ -80,12 +80,48 @@
 
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="quote-management-id">#</th>
-        <td mat-cell *matCellDef="let quote" class="quote-management-id">{{ quote.id }}</td>
+        <td mat-cell *matCellDef="let quote" class="quote-management-id">
+          @if (editingPosition() === quote.id) {
+            <!-- Typing the position beats stepping a quote up one row at a time, and it reuses the
+                 column that already shows the number instead of taking width of its own. -->
+            <input
+              #position
+              type="number"
+              class="quote-management-position"
+              min="1"
+              [max]="count()"
+              [value]="quote.id"
+              [attr.aria-label]="'Position of quote ' + quote.id + ', 1 to ' + count()"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="commitPositionEdit(quote, position.value)"
+              (keydown.escape)="cancelPositionEdit()"
+              (blur)="commitPositionEdit(quote, position.value)"
+            />
+          } @else {
+            <button
+              type="button"
+              class="quote-management-position-button"
+              [attr.aria-label]="'Quote ' + quote.id + ', change position'"
+              [disabled]="busy()"
+              (click)="startPositionEdit(quote, $event)"
+            >{{ quote.id }}</button>
+          }
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="quote">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Message</th>
-        <td mat-cell *matCellDef="let quote" class="quote-management-text">{{ quote.quote }}</td>
+        <td mat-cell *matCellDef="let quote" class="quote-management-text">
+          <!-- The row is clickable for the mouse, but the button is what makes editing reachable
+               by keyboard and gives screen readers something to announce. -->
+          <button
+            type="button"
+            class="quote-management-edit"
+            [attr.aria-label]="'Edit quote ' + quote.id"
+            [disabled]="busy()"
+            (click)="edit(quote); $event.stopPropagation()"
+          >{{ quote.quote }}</button>
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="timestamp">
@@ -103,44 +139,12 @@
           <span class="quote-management-hidden-label">Actions</span>
         </th>
         <td mat-cell *matCellDef="let quote" class="quote-management-actions">
-          <!-- Keyed off the quote's own number rather than its row index: sorting or filtering
-               reorders the rows, and then the top row is no longer quote 1. -->
-          <button
-            mat-icon-button
-            type="button"
-            [attr.aria-label]="'Move quote ' + quote.id + ' up'"
-            [disabled]="busy() || quote.id === 1"
-            (click)="move(quote, -1)"
-          >
-            <mat-icon aria-hidden="true">arrow_upward</mat-icon>
-          </button>
-
-          <button
-            mat-icon-button
-            type="button"
-            [attr.aria-label]="'Move quote ' + quote.id + ' down'"
-            [disabled]="busy() || quote.id === count()"
-            (click)="move(quote, 1)"
-          >
-            <mat-icon aria-hidden="true">arrow_downward</mat-icon>
-          </button>
-
-          <button
-            mat-icon-button
-            type="button"
-            [attr.aria-label]="'Edit quote ' + quote.id"
-            [disabled]="busy()"
-            (click)="edit(quote)"
-          >
-            <mat-icon aria-hidden="true">edit</mat-icon>
-          </button>
-
           <button
             mat-icon-button
             type="button"
             [attr.aria-label]="'Delete quote ' + quote.id"
             [disabled]="busy()"
-            (click)="remove(quote)"
+            (click)="remove(quote); $event.stopPropagation()"
           >
             <mat-icon aria-hidden="true">delete</mat-icon>
           </button>
@@ -148,7 +152,12 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let quote; columns: columns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let quote; columns: columns"
+        class="quote-management-row"
+        (click)="edit(quote)"
+      ></tr>
 
       <tr class="quote-management-empty-row" *matNoDataRow>
         <td class="quote-management-empty" [attr.colspan]="columns.length">

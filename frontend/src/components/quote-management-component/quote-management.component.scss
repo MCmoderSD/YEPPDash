@@ -82,11 +82,66 @@ table.quote-management-grid {
   }
 }
 
+.quote-management-row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-within {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
 .quote-management-id {
-  width: 3rem;
+  width: 4rem;
   font-variant-numeric: tabular-nums;
   text-align: end;
   white-space: nowrap;
+}
+
+// Looks like the plain number it replaces until you approach it, so the column stays quiet while
+// still admitting that it does something.
+.quote-management-position-button {
+  width: 100%;
+  padding: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  cursor: text;
+
+  &:hover:not(:disabled) {
+    border-color: var(--mat-sys-outline-variant);
+    background: var(--mat-sys-surface-container-highest);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 1px;
+  }
+}
+
+.quote-management-position {
+  width: 100%;
+  padding: 0.25rem;
+  border: 1px solid var(--mat-sys-primary);
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface);
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+
+  // The spinners would not fit the cell and the value is typed anyway.
+  appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+  }
 }
 
 // The message is the one column allowed to grow, so the fixed ones keep their width and it takes
@@ -96,14 +151,36 @@ table.quote-management-grid {
   overflow-wrap: anywhere;
 }
 
+// Fills its cell so the whole message reads as the click target, and carries the keyboard path to
+// the edit dialog now that the row itself is the mouse path.
+.quote-management-edit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
 .quote-management-date {
   width: 8rem;
   color: var(--mat-sys-on-surface-variant);
   white-space: nowrap;
 }
 
+// Just the delete button now that editing happens by clicking the row and reordering by typing
+// the number, so the column gives the message its width back.
 .quote-management-actions {
-  width: 11rem;
+  width: 3.5rem;
   text-align: end;
   white-space: nowrap;
 }
