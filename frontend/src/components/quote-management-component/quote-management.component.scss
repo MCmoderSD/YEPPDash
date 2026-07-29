@@ -28,6 +28,27 @@
   font: var(--mat-sys-body-medium);
 }
 
+.quote-management-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+// Clipped rather than display:none: the button in front of it opens the picker, but the input
+// itself stays in the accessibility tree so it keeps its label and can be reached directly.
+.quote-management-picker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 // Kept in the layout while idle so the table does not jump every time a request starts.
 .quote-management-progress {
   flex: none;

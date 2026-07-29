@@ -11,6 +11,11 @@ namespace YEPPDash.Api.Controllers;
 [Route("quotes")]
 public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController> logger) : ControllerBase
 {
+    // A channel's quotes are a few hundred short strings, so anything this large is not a quote
+    // list — cap it rather than letting an arbitrary upload be parsed into memory.
+    private const int MaxUploadBytes = 5 * 1024 * 1024;
+
+
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetQuotes(string userId, CancellationToken cancellationToken)
     {
@@ -35,6 +40,47 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         catch (UnknownQuoteChannelException exception)
         {
             logger.LogWarning(exception, "Cannot add a quote for channel {UserId}", userId);
+            return Conflict("YEPPBot does not know this channel yet, so it cannot store quotes for it.");
+        }
+    }
+
+    [HttpGet("{userId}/export")]
+    public async Task<IActionResult> ExportQuotes(string userId, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+
+        var workbook = await quotes.ExportAsync(userId, cancellationToken);
+        var name = $"quotes-{userId}-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
+
+        return File(workbook, QuoteWorkbook.ContentType, name);
+    }
+
+    /// <summary>
+    /// Replaces every quote of the channel with the contents of the uploaded workbook.
+    /// </summary>
+    [HttpPost("{userId}/import")]
+    [RequestSizeLimit(MaxUploadBytes)]
+    public async Task<IActionResult> ImportQuotes(
+        string userId, IFormFile? file, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+        if (file is null || file.Length is 0) return BadRequest("Attach an .xlsx file as 'file'.");
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var imported = await quotes.ImportAsync(userId, stream, cancellationToken);
+
+            return Ok(imported.Select(QuoteResponse.From));
+        }
+        catch (QuoteWorkbookException exception)
+        {
+            logger.LogInformation("Rejected a quote import for {UserId}: {Reason}", userId, exception.Message);
+            return BadRequest(exception.Message);
+        }
+        catch (UnknownQuoteChannelException exception)
+        {
+            logger.LogWarning(exception, "Cannot import quotes for channel {UserId}", userId);
             return Conflict("YEPPBot does not know this channel yet, so it cannot store quotes for it.");
         }
     }

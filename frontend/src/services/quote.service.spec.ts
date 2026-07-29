@@ -76,6 +76,52 @@ describe('QuoteService', () => {
     expect(await moving).toHaveLength(3);
   });
 
+  it('should take the export filename from the Content-Disposition header', async () => {
+    const exporting = service.exportQuotes(CHANNEL);
+
+    const request = http.expectOne(`${API}/quotes/${CHANNEL}/export`);
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['x']), {
+      headers: { 'content-disposition': 'attachment; filename=quotes-644984959-2026-07-29.xlsx' },
+    });
+
+    expect((await exporting).filename).toBe('quotes-644984959-2026-07-29.xlsx');
+  });
+
+  // ASP.NET switches to the RFC 5987 form as soon as the name is not plain ASCII.
+  it('should decode an RFC 5987 export filename', async () => {
+    const exporting = service.exportQuotes(CHANNEL);
+
+    http.expectOne(`${API}/quotes/${CHANNEL}/export`).flush(new Blob(['x']), {
+      headers: { 'content-disposition': "attachment; filename*=UTF-8''zitate%20%C3%A4%C3%B6%C3%BC.xlsx" },
+    });
+
+    expect((await exporting).filename).toBe('zitate äöü.xlsx');
+  });
+
+  it('should fall back to a name of its own when the header is missing', async () => {
+    const exporting = service.exportQuotes(CHANNEL);
+    http.expectOne(`${API}/quotes/${CHANNEL}/export`).flush(new Blob(['x']));
+
+    expect((await exporting).filename).toBe(`quotes-${CHANNEL}.xlsx`);
+  });
+
+  it('should upload an import as multipart form data', async () => {
+    const file = new File(['x'], 'quotes.xlsx');
+    const importing = service.importQuotes(CHANNEL, file);
+
+    const request = http.expectOne(`${API}/quotes/${CHANNEL}/import`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeInstanceOf(FormData);
+
+    // append() re-wraps the file, so the name is what identifies it rather than the reference.
+    const sent = (request.request.body as FormData).get('file') as File;
+    expect([sent.name, await sent.text()]).toEqual(['quotes.xlsx', 'x']);
+    request.flush([quote(1)]);
+
+    expect(await importing).toHaveLength(1);
+  });
+
   // The id goes into the path, so a channel id that is not plain digits must not break out of it.
   it('should escape the channel id it is handed', async () => {
     const loading = service.getQuotes('a/b');

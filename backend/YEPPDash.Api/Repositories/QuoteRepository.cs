@@ -65,6 +65,60 @@ public sealed class QuoteRepository(MySqlConnection connection)
         return ToQuote(row);
     }
 
+    /// <summary>
+    /// Swaps the channel's whole list for <paramref name="texts"/>, numbered from 1.
+    /// </summary>
+    /// <remarks>
+    /// One transaction around the delete and the inserts: a failure partway through would
+    /// otherwise leave the channel with the old quotes gone and only some of the new ones written.
+    /// </remarks>
+    public async Task<IReadOnlyList<Quote>> ReplaceAllAsync(
+        int channelId, IReadOnlyList<QuoteDraft> texts, CancellationToken cancellationToken)
+    {
+        await EnsureOpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                "DELETE FROM Quote WHERE channelId = @channelId",
+                new { channelId },
+                transaction,
+                cancellationToken: cancellationToken));
+
+        if (texts.Count > 0)
+        {
+            // A timestamp of null lets the column default apply, so a quote imported without a date
+            // is stamped by the database rather than silently backdated to the epoch.
+            var rows = texts.Select((draft, index) => new
+            {
+                channelId,
+                id = index + 1,
+                quote = draft.Text,
+                timestamp = draft.Timestamp?.UtcDateTime,
+            });
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    """
+                    INSERT INTO Quote (channelId, id, quote, timestamp)
+                    VALUES (@channelId, @id, @quote, COALESCE(@timestamp, CURRENT_TIMESTAMP))
+                    """,
+                    rows,
+                    transaction,
+                    cancellationToken: cancellationToken));
+        }
+
+        var written = await connection.QueryAsync<QuoteRow>(
+            new CommandDefinition(
+                "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId ORDER BY id",
+                new { channelId },
+                transaction,
+                cancellationToken: cancellationToken));
+
+        await transaction.CommitAsync(cancellationToken);
+        return written.Select(ToQuote).ToList();
+    }
+
     public async Task<Quote?> UpdateAsync(int channelId, int id, string text, CancellationToken cancellationToken)
     {
         var affected = await connection.ExecuteAsync(

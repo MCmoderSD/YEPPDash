@@ -1,5 +1,6 @@
 using MySqlConnector;
 using YEPPDash.Api.Data;
+using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 
 namespace YEPPDash.Api.Services;
@@ -27,6 +28,38 @@ public sealed class QuoteService(QuoteRepository repository, ILogger<QuoteServic
             logger.LogInformation("Added quote {QuoteId} to channel {ChannelId}", quote.Id, id);
 
             return quote;
+        }
+        catch (MySqlException exception) when (exception.ErrorCode is MySqlErrorCode.NoReferencedRow or MySqlErrorCode.NoReferencedRow2)
+        {
+            throw new UnknownQuoteChannelException(id, exception);
+        }
+    }
+
+    public async Task<byte[]> ExportAsync(string channelId, CancellationToken cancellationToken)
+    {
+        var quotes = await repository.GetAllAsync(ParseChannelId(channelId), cancellationToken);
+        return QuoteWorkbook.Write(quotes);
+    }
+
+    /// <summary>
+    /// Replaces the channel's quotes with the contents of an uploaded workbook.
+    /// </summary>
+    /// <exception cref="QuoteWorkbookException">The workbook could not be read.</exception>
+    public async Task<IReadOnlyList<Quote>> ImportAsync(
+        string channelId, Stream workbook, CancellationToken cancellationToken)
+    {
+        var id = ParseChannelId(channelId);
+
+        // Parsed before anything is deleted, so a workbook that turns out to be unreadable leaves
+        // the existing quotes alone.
+        var drafts = QuoteWorkbook.Read(workbook);
+
+        try
+        {
+            var imported = await repository.ReplaceAllAsync(id, drafts, cancellationToken);
+            logger.LogInformation("Imported {Count} quotes into channel {ChannelId}", imported.Count, id);
+
+            return imported;
         }
         catch (MySqlException exception) when (exception.ErrorCode is MySqlErrorCode.NoReferencedRow or MySqlErrorCode.NoReferencedRow2)
         {

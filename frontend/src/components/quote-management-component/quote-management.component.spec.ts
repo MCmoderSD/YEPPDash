@@ -1,5 +1,5 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MatDialog } from '@angular/material/dialog';
@@ -27,6 +27,11 @@ class FakeQuoteService {
   updateQuote = vi.fn(async (_channel: string, id: number, text: string): Promise<Quote> => ({ ...quote(id), quote: text }));
   deleteQuote = vi.fn(async (): Promise<void> => undefined);
   moveQuote = vi.fn(async (): Promise<Quote[]> => [quote(1), quote(2), quote(3)]);
+  exportQuotes = vi.fn(async (): Promise<{ blob: Blob; filename: string }> => ({
+    blob: new Blob(['x']),
+    filename: 'quotes.xlsx',
+  }));
+  importQuotes = vi.fn(async (): Promise<Quote[]> => [quote(1), quote(2)]);
 }
 
 class FakeAuthService {
@@ -78,6 +83,20 @@ describe('QuoteManagementComponent', () => {
 
     if (!match) throw new Error(`No button labelled "${label}".`);
     return match as HTMLButtonElement;
+  }
+
+  function picker(): HTMLInputElement {
+    return element.querySelector<HTMLInputElement>('.quote-management-picker')!;
+  }
+
+  async function pickFile(file: File): Promise<void> {
+    const input = picker();
+
+    // files is read-only, so the only way to simulate a pick is to redefine it on the element.
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change'));
+
+    await settle();
   }
 
   function answerDialogWith(value: string | undefined): void {
@@ -223,6 +242,85 @@ describe('QuoteManagementComponent', () => {
     expect(buttonLabelled('Move quote 1 up').disabled).toBe(true);
     expect(buttonLabelled('Move quote 3 down').disabled).toBe(true);
     expect(buttonLabelled('Move quote 1 down').disabled).toBe(false);
+  });
+
+  it('should download the exported workbook under the name the server chose', async () => {
+    const createObjectURL = vi.fn(() => 'blob:fake');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL });
+
+    await render();
+    const clicks: HTMLAnchorElement[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      clicks.push(this);
+    });
+
+    element.querySelector<HTMLButtonElement>('.quote-management-export')!.click();
+    await settle();
+
+    expect(quotes.exportQuotes).toHaveBeenCalledWith(CHANNEL);
+    expect(clicks[0].download).toBe('quotes.xlsx');
+    // The object URL has to be released, otherwise the blob is held for the life of the document.
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('should not offer an export when there is nothing to export', async () => {
+    quotes.quotes = [];
+    await render();
+
+    expect(element.querySelector<HTMLButtonElement>('.quote-management-export')!.disabled).toBe(true);
+  });
+
+  it('should show the imported list without reloading it', async () => {
+    await render();
+    expect(quotes.getQuotes).toHaveBeenCalledTimes(1);
+
+    await pickFile(new File(['x'], 'quotes.xlsx'));
+
+    expect(quotes.importQuotes).toHaveBeenCalledWith(CHANNEL, expect.any(File));
+    expect(rows()).toHaveLength(2);
+    expect(quotes.getQuotes).toHaveBeenCalledTimes(1);
+    expect(notifications.successes[0]).toContain('Imported 2 quotes');
+  });
+
+  it('should do nothing when the file picker was dismissed', async () => {
+    await render();
+
+    picker().dispatchEvent(new Event('change'));
+    await settle();
+
+    expect(quotes.importQuotes).not.toHaveBeenCalled();
+  });
+
+  // Re-picking the same file only fires a change event if the value was cleared in between.
+  it('should clear the picker so the same file can be chosen again', async () => {
+    await render();
+    await pickFile(new File(['x'], 'quotes.xlsx'));
+
+    expect(picker().value).toBe('');
+  });
+
+  // The backend names the offending row, which is far more useful than a generic failure.
+  it('should surface the reason the backend rejected an import', async () => {
+    await render();
+    quotes.importQuotes.mockRejectedValueOnce(
+      new HttpErrorResponse({ status: 400, error: 'Row 7: the message is 812 characters, the limit is 500.' }),
+    );
+
+    await pickFile(new File(['x'], 'broken.xlsx'));
+
+    expect(notifications.failures[0]).toBe('Row 7: the message is 812 characters, the limit is 500.');
+  });
+
+  it('should fall back to a generic message when an import fails without a reason', async () => {
+    await render();
+    quotes.importQuotes.mockRejectedValueOnce(new HttpErrorResponse({ status: 500 }));
+
+    await pickFile(new File(['x'], 'broken.xlsx'));
+
+    expect(notifications.failures[0]).toBe('Could not import the file.');
   });
 
   it('should report a failed action instead of pretending it worked', async () => {

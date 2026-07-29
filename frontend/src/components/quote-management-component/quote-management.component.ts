@@ -1,3 +1,5 @@
+import { DOCUMENT } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
@@ -6,6 +8,14 @@ import { AuthService } from '../../services/auth.service';
 import { QuoteService } from '../../services/quote.service';
 import { NotificationService } from '../../services/notification.service';
 import { Quote } from '../../data/quote';
+
+// A rejected import answers with the reason as plain text. It arrives as a Blob because the
+// request asked for JSON and the body is not, so it has to be unwrapped before it can be shown.
+function reasonFor(error: unknown): string | null {
+  if (!(error instanceof HttpErrorResponse) || error.status !== 400) return null;
+
+  return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
+}
 
 @Component({
   selector: 'app-quote-management',
@@ -19,6 +29,7 @@ export class QuoteManagementComponent {
   private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
+  private readonly document: Document = inject(DOCUMENT);
 
   private readonly entries: WritableSignal<Quote[]> = signal<Quote[]>([]);
   private readonly isLoading: WritableSignal<boolean> = signal(false);
@@ -86,6 +97,56 @@ export class QuoteManagementComponent {
       `Could not move quote ${quote.id}.`,
       { reload: false },
     );
+  }
+
+  protected async export(): Promise<void> {
+    const channelId: string | undefined = this.auth.currentUser()?.id;
+    if (!channelId) return;
+
+    this.isBusy.set(true);
+    try {
+      const { blob, filename } = await this.quotes.exportQuotes(channelId);
+      this.download(blob, filename);
+      this.notifications.success(`Exported ${this.count()} quote${this.count() === 1 ? '' : 's'}.`);
+    } catch {
+      this.notifications.failure('Could not export your quotes.');
+    } finally {
+      this.isBusy.set(false);
+    }
+  }
+
+  protected async import(input: HTMLInputElement): Promise<void> {
+    const file: File | undefined = input.files?.[0];
+
+    // Cleared straight away so picking the same file twice in a row still fires a change event.
+    input.value = '';
+    if (!file) return;
+
+    const channelId: string | undefined = this.auth.currentUser()?.id;
+    if (!channelId) return;
+
+    this.isBusy.set(true);
+    try {
+      const imported: Quote[] = await this.quotes.importQuotes(channelId, file);
+      this.entries.set(imported);
+      this.notifications.success(`Imported ${imported.length} quote${imported.length === 1 ? '' : 's'}.`);
+    } catch (error: unknown) {
+      // The backend explains exactly which row it choked on, so that beats a generic message.
+      this.notifications.failure(reasonFor(error) ?? 'Could not import the file.');
+    } finally {
+      this.isBusy.set(false);
+    }
+  }
+
+  private download(blob: Blob, filename: string): void {
+    const url: string = URL.createObjectURL(blob);
+    const link: HTMLAnchorElement = this.document.createElement('a');
+
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
   }
 
   private async ask(quote: Quote | null): Promise<string | undefined> {

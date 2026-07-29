@@ -7,16 +7,53 @@
     </p>
   </header>
 
-  <button
-    mat-flat-button
-    type="button"
-    class="quote-management-add"
-    [disabled]="busy() || loading()"
-    (click)="add()"
-  >
-    <mat-icon aria-hidden="true">add</mat-icon>
-    <span>Add quote</span>
-  </button>
+  <div class="quote-management-toolbar">
+    <button
+      mat-flat-button
+      type="button"
+      class="quote-management-add"
+      [disabled]="busy() || loading()"
+      (click)="add()"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      <span>Add quote</span>
+    </button>
+
+    <button
+      mat-stroked-button
+      type="button"
+      class="quote-management-export"
+      [disabled]="busy() || loading() || count() === 0"
+      (click)="export()"
+    >
+      <mat-icon aria-hidden="true">download</mat-icon>
+      <span>Export</span>
+    </button>
+
+    <!-- The file input is what actually opens the picker; the button in front of it is only there
+         so the control matches the others. Hidden with a clip rather than display:none so it can
+         still be reached and labelled by a screen reader. -->
+    <button
+      mat-stroked-button
+      type="button"
+      class="quote-management-import"
+      [disabled]="busy() || loading()"
+      (click)="picker.click()"
+    >
+      <mat-icon aria-hidden="true">upload</mat-icon>
+      <span>Import</span>
+    </button>
+
+    <input
+      #picker
+      type="file"
+      class="quote-management-picker"
+      accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      aria-label="Import quotes from an Excel file, replacing the current list"
+      [disabled]="busy() || loading()"
+      (change)="import(picker)"
+    />
+  </div>
 
   <mat-progress-bar
     class="quote-management-progress"
