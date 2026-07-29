@@ -1,0 +1,107 @@
+<mat-card appearance="outlined" class="bot-manage">
+
+  <mat-progress-bar
+    class="bot-manage-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!(loading() || busy())"
+    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+  />
+
+  <mat-card-content class="bot-manage-body">
+
+    @if (bot(); as bot) {
+
+      <div class="bot-manage-identity">
+        <img
+          class="bot-manage-avatar"
+          [ngSrc]="bot.profileImageUrl"
+          [width]="96"
+          [height]="96"
+          alt=""
+        />
+
+        <div class="bot-manage-names">
+          <p class="bot-manage-name" [style.--chat-color]="chatColor()">{{ bot.displayName }}</p>
+          <p class="bot-manage-login">&#64;{{ bot.login }}</p>
+        </div>
+      </div>
+
+      <h2 class="bot-manage-heading" tabindex="-1" #statusHeading>Status</h2>
+
+      @if (healthy()) {
+        <p class="bot-manage-healthy">
+          <mat-icon class="bot-manage-icon" aria-hidden="true">check_circle</mat-icon>
+          <span>{{ bot.displayName }} is set up and in your chat.</span>
+        </p>
+      }
+
+      <ul class="bot-manage-issues">
+
+        @if (banned()) {
+          <li class="bot-manage-issue">
+            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">gavel</mat-icon>
+            <span class="bot-manage-text">
+              {{ bot.displayName }} is banned from your channel and cannot join chat.
+            </span>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="unban()">
+              Unban
+            </button>
+          </li>
+        }
+
+        @if (blocked()) {
+          <li class="bot-manage-issue">
+            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">block</mat-icon>
+            <span class="bot-manage-text">
+              You have blocked {{ bot.displayName }}, so it cannot interact with you.
+            </span>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="unblock()">
+              Unblock
+            </button>
+          </li>
+        }
+
+        @if (!moderator()) {
+          <li class="bot-manage-issue">
+            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">shield</mat-icon>
+            <span class="bot-manage-text">
+              {{ bot.displayName }} is not a moderator and will be limited by your chat settings.
+            </span>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="makeModerator()">
+              Make moderator
+            </button>
+          </li>
+        }
+
+        <li class="bot-manage-issue">
+          @if (inChat()) {
+            <mat-icon class="bot-manage-icon bot-manage-icon-ok" aria-hidden="true">chat</mat-icon>
+            <span class="bot-manage-text">{{ bot.displayName }} is currently in your chat.</span>
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="notWiredUp('Leaving chat')">
+              Leave
+            </button>
+          } @else {
+            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">chat_bubble_outline</mat-icon>
+            <span class="bot-manage-text">{{ bot.displayName }} is not in your chat right now.</span>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="notWiredUp('Joining chat')">
+              Join
+            </button>
+          }
+        </li>
+      </ul>
+
+    } @else if (!loading()) {
+
+      <p class="bot-manage-empty">
+        <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">error_outline</mat-icon>
+        <span>
+          {{ unreachable() ? 'Could not reach Twitch to read the bot status.' : 'No Twitch account matches the configured bot ID.' }}
+        </span>
+      </p>
+
+      <button mat-stroked-button type="button" class="bot-manage-retry" [disabled]="busy()" (click)="reload()">
+        Try again
+      </button>
+    }
+  </mat-card-content>
+</mat-card>

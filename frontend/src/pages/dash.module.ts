@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, type Routes } from '@angular/router';
+import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,6 +14,7 @@ import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
 import { SidebarComponent } from '../components/sidebar-component/sidebar.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
+import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
 import { UserComponentsModule } from '../components/user-components.module';
 
 const routes: Routes = [
@@ -30,7 +32,8 @@ const components: any[] = [
   DashPageComponent,
   DashHomePageComponent,
   SidebarComponent,
-  RoleManagementComponent
+  RoleManagementComponent,
+  BotManageComponent
 ];
 
 // Loaded lazily behind /dash: everything in here — the Material table, sort, input, dialog, list
@@ -40,6 +43,7 @@ const components: any[] = [
   imports: [
     RouterModule.forChild(routes),
     UserComponentsModule,
+    NgOptimizedImage,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
