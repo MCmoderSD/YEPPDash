@@ -11,13 +11,18 @@
 }
 
 // Narrow viewports scroll the table instead of squashing the columns into unreadable slivers.
+// The outline is drawn here rather than on the table itself so it always spans the full width of
+// the search box above — the same width the flex column already gives this element — instead of
+// shrink-wrapping to whatever width the table content happens to need.
 .user-table-scroll {
   overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
 }
 
 table.user-table-grid {
-  // Hugging its content means the table is usually narrower than the search box above it, so it
-  // is centred under it instead of hanging off the left edge.
+  // Hugging its content means the table is usually narrower than the outline around it, so it is
+  // centred inside that outline instead of hanging off the left edge.
   margin-inline: auto;
 
   // Material's own base style sets min-width: 100%, forcing the table to fill its wrapper
