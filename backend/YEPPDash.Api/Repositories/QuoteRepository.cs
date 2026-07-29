@@ -36,8 +36,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
         await EnsureOpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
-        // FOR UPDATE so two quotes added at once cannot pick the same next id and collide on the
-        // (channelId, id) unique key.
         var nextId = await connection.ExecuteScalarAsync<int>(
             new CommandDefinition(
                 "SELECT COALESCE(MAX(id), 0) + 1 FROM Quote WHERE channelId = @channelId FOR UPDATE",
@@ -52,8 +50,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 transaction,
                 cancellationToken: cancellationToken));
 
-        // Read back rather than assuming DateTime.UtcNow: the timestamp column defaults to the
-        // database's clock, and that is the value every other reader will see.
         var row = await connection.QuerySingleAsync<QuoteRow>(
             new CommandDefinition(
                 "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId AND id = @id",
@@ -65,13 +61,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
         return ToQuote(row);
     }
 
-    /// <summary>
-    /// Swaps the channel's whole list for <paramref name="texts"/>, numbered from 1.
-    /// </summary>
-    /// <remarks>
-    /// One transaction around the delete and the inserts: a failure partway through would
-    /// otherwise leave the channel with the old quotes gone and only some of the new ones written.
-    /// </remarks>
     public async Task<IReadOnlyList<Quote>> ReplaceAllAsync(
         int channelId, IReadOnlyList<QuoteDraft> texts, CancellationToken cancellationToken)
     {
@@ -87,8 +76,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
 
         if (texts.Count > 0)
         {
-            // A timestamp of null lets the column default apply, so a quote imported without a date
-            // is stamped by the database rather than silently backdated to the epoch.
             var rows = texts.Select((draft, index) => new
             {
                 channelId,
