@@ -10,6 +10,18 @@
   pointer-events: none;
 }
 
+// Spans the page and clips it. A message sliding in starts past the right edge, which without
+// this widens the document and flashes a horizontal scrollbar on every notification. Nothing in
+// here is interactive on its own, so covering the area costs nothing.
+.notifications-viewport {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
 // Anchored by its bottom edge, so adding a message grows the stack upwards: the new one appears
 // at the bottom and shifts the older ones up instead of replacing them.
 .notifications-stack {
@@ -20,6 +32,64 @@
   flex-direction: column;
   gap: 0.5rem;
   max-width: min(28rem, calc(100vw - 2rem));
+}
+
+// Slides in past its own right edge plus the stack's inset, so it starts fully off screen rather
+// than appearing to peel out of the viewport border.
+@keyframes notification-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-leave {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+}
+
+// Movement is the part that causes trouble for motion sensitivity, so the reduced-motion variant
+// keeps the fade and drops the travel rather than removing the transition altogether.
+@keyframes notification-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes notification-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+// Material 3's emphasized easing: decelerate on the way in so it settles, accelerate on the way
+// out so it leaves without drawing attention.
+.notification-enter {
+  animation: notification-enter 260ms cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+.notification-leave {
+  animation: notification-leave 200ms cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-enter {
+    animation: notification-fade-in 120ms linear;
+  }
+
+  .notification-leave {
+    animation: notification-fade-out 120ms linear;
+  }
 }
 
 .notification {
