@@ -19,6 +19,7 @@ import { SidebarComponent } from '../components/sidebar-component/sidebar.compon
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
 import { QuoteEditDialogComponent } from '../components/quote-edit-dialog-component/quote-edit-dialog.component';
+import { ConfirmActionDialogComponent } from '../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
 import { UserComponentsModule } from '../components/user-components.module';
 
@@ -41,6 +42,7 @@ const components: any[] = [
   RoleManagementComponent,
   QuoteManagementComponent,
   QuoteEditDialogComponent,
+  ConfirmActionDialogComponent,
   BotManageComponent
 ];
 

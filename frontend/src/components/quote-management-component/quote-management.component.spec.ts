@@ -125,6 +125,17 @@ describe('QuoteManagementComponent', () => {
     await settle();
   }
 
+  // Closes the confirmation through its dialog ref rather than by clicking. The button can be
+  // disabled behind a timeout, and that behaviour belongs to the dialog's own spec — here only the
+  // component's reaction to the answer matters.
+  async function answerConfirm(result: boolean): Promise<void> {
+    const open = dialog.openDialogs;
+    if (open.length === 0) throw new Error('No confirmation dialog is open.');
+
+    open[open.length - 1].close(result);
+    await settle();
+  }
+
   function answerDialogWith(value: string | undefined): void {
     vi.spyOn(dialog, 'open').mockReturnValue({ afterClosed: () => of(value) } as never);
   }
@@ -202,6 +213,30 @@ describe('QuoteManagementComponent', () => {
     expect(quotes.addQuote).not.toHaveBeenCalled();
   });
 
+  // A bare mat-dialog-close attribute closes with the empty string rather than undefined, which
+  // used to reach the backend as a blank quote and come back as "Could not add the quote."
+  it('should treat an empty dialog result as a cancellation, not a blank quote', async () => {
+    await render();
+    answerDialogWith('');
+
+    addButton().click();
+    await settle();
+
+    expect(quotes.addQuote).not.toHaveBeenCalled();
+    expect(notifications.failures).toEqual([]);
+  });
+
+  it('should not report a failure when an edit is cancelled', async () => {
+    await render();
+    answerDialogWith('');
+
+    buttonLabelled('Edit quote 2').click();
+    await settle();
+
+    expect(quotes.updateQuote).not.toHaveBeenCalled();
+    expect(notifications.failures).toEqual([]);
+  });
+
   it('should update the quote whose edit button was pressed', async () => {
     await render();
     answerDialogWith('Rewritten');
@@ -218,6 +253,7 @@ describe('QuoteManagementComponent', () => {
 
     buttonLabelled('Delete quote 3').click();
     await settle();
+    await answerConfirm(true);
 
     expect(quotes.deleteQuote).toHaveBeenCalledWith(CHANNEL, 3);
     expect(notifications.successes[0]).toContain('Deleted quote 3');
@@ -229,6 +265,7 @@ describe('QuoteManagementComponent', () => {
 
     buttonLabelled('Delete quote 1').click();
     await settle();
+    await answerConfirm(true);
 
     expect(quotes.getQuotes).toHaveBeenCalledTimes(2);
   });
@@ -386,6 +423,7 @@ describe('QuoteManagementComponent', () => {
     expect(quotes.getQuotes).toHaveBeenCalledTimes(1);
 
     await pickFile(new File(['x'], 'quotes.xlsx'));
+    await answerConfirm(true);
 
     expect(quotes.importQuotes).toHaveBeenCalledWith(CHANNEL, expect.any(File));
     expect(rows()).toHaveLength(2);
@@ -406,6 +444,7 @@ describe('QuoteManagementComponent', () => {
   it('should clear the picker so the same file can be chosen again', async () => {
     await render();
     await pickFile(new File(['x'], 'quotes.xlsx'));
+    await answerConfirm(true);
 
     expect(picker().value).toBe('');
   });
@@ -418,6 +457,7 @@ describe('QuoteManagementComponent', () => {
     );
 
     await pickFile(new File(['x'], 'broken.xlsx'));
+    await answerConfirm(true);
 
     expect(notifications.failures[0]).toBe('Row 7: the message is 812 characters, the limit is 500.');
   });
@@ -427,6 +467,7 @@ describe('QuoteManagementComponent', () => {
     quotes.importQuotes.mockRejectedValueOnce(new HttpErrorResponse({ status: 500 }));
 
     await pickFile(new File(['x'], 'broken.xlsx'));
+    await answerConfirm(true);
 
     expect(notifications.failures[0]).toBe('Could not import the file.');
   });
@@ -437,6 +478,7 @@ describe('QuoteManagementComponent', () => {
 
     buttonLabelled('Delete quote 1').click();
     await settle();
+    await answerConfirm(true);
 
     expect(notifications.successes).toEqual([]);
     expect(notifications.failures[0]).toContain('Could not delete quote 1');

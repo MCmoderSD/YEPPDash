@@ -1,0 +1,27 @@
+.confirm-action-message {
+  margin: 0;
+
+  // A confirmation usually spells out what is about to be lost, so long text has to stay readable
+  // rather than run to the dialog's edge.
+  overflow-wrap: anywhere;
+}
+
+.confirm-action-hint {
+  margin: 0.75rem 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// Carries the announcement for screen readers only; there is nothing to show once the button
+// itself becomes usable again.
+.confirm-action-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

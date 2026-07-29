@@ -38,6 +38,13 @@ export class QuoteEditDialogComponent {
     return trimmed.length > 0 && trimmed.length <= QUOTE_MAX_LENGTH;
   });
 
+  // Compared trimmed, because the text is saved trimmed — adding a trailing space is not an edit.
+  protected readonly changed: Signal<boolean> = computed((): boolean => {
+    return this.text().trim() !== (this.data.quote?.quote ?? '').trim();
+  });
+
+  protected readonly canSave: Signal<boolean> = computed((): boolean => this.valid() && this.changed());
+
   static open(dialog: MatDialog, quote: Quote | null): MatDialogRef<QuoteEditDialogComponent, string> {
     return dialog.open<QuoteEditDialogComponent, QuoteEditDialogData, string>(QuoteEditDialogComponent, {
       data: { quote },
@@ -52,6 +59,12 @@ export class QuoteEditDialogComponent {
   }
 
   protected save(): void {
-    if (this.valid()) this.dialogRef.close(this.text().trim());
+    if (this.canSave()) this.dialogRef.close(this.text().trim());
+  }
+
+  // Closes with undefined rather than through the mat-dialog-close attribute: as a bare attribute
+  // that binds the empty string, which the caller cannot tell apart from a quote it should save.
+  protected cancel(): void {
+    this.dialogRef.close();
   }
 }

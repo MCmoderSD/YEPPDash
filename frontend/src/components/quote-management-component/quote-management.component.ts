@@ -6,6 +6,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { firstValueFrom } from 'rxjs';
 import { QuoteEditDialogComponent } from '../quote-edit-dialog-component/quote-edit-dialog.component';
+import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { QuoteService } from '../../services/quote.service';
 import { NotificationService } from '../../services/notification.service';
@@ -86,7 +87,7 @@ export class QuoteManagementComponent {
 
   protected async add(): Promise<void> {
     const text: string | undefined = await this.ask(null);
-    if (text === undefined) return;
+    if (!text) return;
 
     await this.run(
       async (channelId: string): Promise<void> => {
@@ -99,7 +100,7 @@ export class QuoteManagementComponent {
 
   protected async edit(quote: Quote): Promise<void> {
     const text: string | undefined = await this.ask(quote);
-    if (text === undefined) return;
+    if (!text) return;
 
     await this.run(
       async (channelId: string): Promise<void> => {
@@ -111,6 +112,14 @@ export class QuoteManagementComponent {
   }
 
   protected async remove(quote: Quote): Promise<void> {
+    const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
+      title: `Delete quote ${quote.id}?`,
+      message: `“${quote.quote}” will be deleted, and the quotes after it move up a number. This cannot be undone.`,
+      confirmLabel: 'Delete',
+    });
+
+    if (!confirmed) return;
+
     await this.run(
       async (channelId: string): Promise<void> => {
         await this.quotes.deleteQuote(channelId, quote.id);
@@ -159,6 +168,19 @@ export class QuoteManagementComponent {
 
     const channelId: string | undefined = this.auth.currentUser()?.id;
     if (!channelId) return;
+
+    // The only action here that throws away every quote at once, so it gets the timeout as well —
+    // long enough that a click already on its way cannot land on Confirm.
+    const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
+      title: 'Replace all quotes?',
+      message: this.count() === 0
+        ? `The quotes in “${file.name}” will be imported.`
+        : `All ${this.count()} quotes in your channel will be deleted and replaced by the contents of “${file.name}”. This cannot be undone — export them first if you want a copy.`,
+      confirmLabel: 'Replace',
+      timeoutMs: this.count() === 0 ? 0 : 3000,
+    });
+
+    if (!confirmed) return;
 
     this.isBusy.set(true);
     try {
