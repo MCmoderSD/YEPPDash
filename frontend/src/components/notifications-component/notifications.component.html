@@ -1,0 +1,24 @@
+<div class="notifications-viewport">
+  <div class="notifications-stack">
+    @for (notification of notifications(); track notification.id) {
+      <div
+        class="notification"
+        [class.notification-failure]="notification.kind === 'failure'"
+        [attr.role]="notification.kind === 'failure' ? 'alert' : 'status'"
+        animate.enter="notification-enter"
+        animate.leave="notification-leave"
+      >
+        <span class="notification-message">{{ notification.message }}</span>
+
+        <button
+          type="button"
+          class="notification-dismiss"
+          [attr.aria-label]="'Dismiss: ' + notification.message"
+          (click)="dismiss(notification.id)"
+        >
+          Dismiss
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,113 @@
+@use '../../styles/chat-color' as chat;
+
+.bot-manage {
+  width: 100%;
+  max-width: 34rem;
+  overflow: hidden;
+}
+
+// Kept in the layout even when idle so showing it does not shift the card contents down.
+.bot-manage-progress {
+  visibility: hidden;
+}
+
+.bot-manage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block: 1.25rem;
+}
+
+.bot-manage-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bot-manage-avatar {
+  flex: none;
+  width: 4rem;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.bot-manage-names {
+  min-width: 0;
+}
+
+.bot-manage-name {
+  @include chat.chat-color;
+
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  overflow-wrap: anywhere;
+}
+
+.bot-manage-heading {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+
+  // Only focusable so an action can hand focus back here; it should not draw a ring on click.
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+.bot-manage-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bot-manage-issue,
+.bot-manage-healthy,
+.bot-manage-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.bot-manage-issue {
+  padding: 0.75rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+
+  // Below this the icon, sentence and button stop fitting on one line without the text going ragged.
+  @media (width < 30rem) {
+    flex-wrap: wrap;
+  }
+}
+
+.bot-manage-text {
+  flex: 1;
+  min-width: 12rem;
+  font: var(--mat-sys-body-medium);
+}
+
+.bot-manage-icon {
+  flex: none;
+}
+
+.bot-manage-icon-warn {
+  color: var(--mat-sys-error);
+}
+
+.bot-manage-icon-ok {
+  color: var(--mat-sys-primary);
+}
+
+.bot-manage-healthy,
+.bot-manage-empty {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.bot-manage-retry {
+  align-self: flex-start;
+}

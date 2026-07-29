@@ -14,7 +14,10 @@ public static class DatabaseServiceCollectionExtensions
                 $"Missing connection string 'ConnectionStrings:{connectionStringKey}' for DbTarget '{dbTarget}'.");
 
         services.AddTransient<MySqlConnection>(_ => new MySqlConnection(connectionString));
-        services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
+
+        // Tagged "ready" so the liveness endpoint can exclude it: a database blip means this
+        // instance cannot serve requests, not that the process needs restarting.
+        services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
 
         SqlMapper.AddTypeHandler(new BitBoolTypeHandler());
 

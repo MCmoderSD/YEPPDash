@@ -1,0 +1,141 @@
+// A zero-height sticky anchor sitting between the page and the footer. While the page is scrolled
+// it pins to the bottom of the viewport, and once the bottom is reached it settles at its place in
+// the flow — which is directly above the footer, so the stack can never cover it. Height stays 0
+// so a visible message never pushes the footer down.
+:host {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  height: 0;
+  pointer-events: none;
+}
+
+// Spans the page and clips it. A message sliding in starts past the right edge, which without
+// this widens the document and flashes a horizontal scrollbar on every notification. Nothing in
+// here is interactive on its own, so covering the area costs nothing.
+.notifications-viewport {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// Anchored by its bottom edge, so adding a message grows the stack upwards: the new one appears
+// at the bottom and shifts the older ones up instead of replacing them.
+.notifications-stack {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(28rem, calc(100vw - 2rem));
+}
+
+// Slides in past its own right edge plus the stack's inset, so it starts fully off screen rather
+// than appearing to peel out of the viewport border.
+@keyframes notification-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes notification-leave {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+}
+
+// Movement is the part that causes trouble for motion sensitivity, so the reduced-motion variant
+// keeps the fade and drops the travel rather than removing the transition altogether.
+@keyframes notification-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes notification-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+// Material 3's emphasized easing: decelerate on the way in so it settles, accelerate on the way
+// out so it leaves without drawing attention.
+.notification-enter {
+  animation: notification-enter 260ms cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+.notification-leave {
+  animation: notification-leave 200ms cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-enter {
+    animation: notification-fade-in 120ms linear;
+  }
+
+  .notification-leave {
+    animation: notification-fade-out 120ms linear;
+  }
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+
+  // The neutral inverse surface is what MatSnackBar used, and a confirmation should not shout.
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  box-shadow: var(--mat-sys-level3);
+  font: var(--mat-sys-body-medium);
+  pointer-events: auto;
+}
+
+// Failures are the one case worth interrupting for, so they take the error colours.
+.notification-failure {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.notification-message {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.notification-dismiss {
+  flex: none;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: none;
+
+  // Inheriting the colour is what keeps this readable on both the neutral and the error surface.
+  color: inherit;
+  font: var(--mat-sys-label-large);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}

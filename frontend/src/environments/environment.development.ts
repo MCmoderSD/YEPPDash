@@ -3,4 +3,5 @@ export const environment = {
   apiBaseUrl: 'https://localhost:7218',
   frontendBaseUrl: 'https://localhost:4200',
   marketingBaseUrl: 'https://localhost:4200',
+  botUserId: '644984959',
 };

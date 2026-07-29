@@ -56,6 +56,39 @@ describe('TwitchService', () => {
     expect(service.moderators()).toBeNull();
   });
 
+  // Chatters are never cached, so two reads have to hit the network twice.
+  it('should refetch the chatters on every call', async () => {
+    const first = service.getChatters();
+    http.expectOne(`${API}/twitch/chatters`).flush([channelUser(1)]);
+    expect(await first).toHaveLength(1);
+
+    const second = service.getChatters();
+    http.expectOne(`${API}/twitch/chatters`).flush([channelUser(1), channelUser(2)]);
+    expect(await second).toHaveLength(2);
+  });
+
+  it('should publish the loaded blocked list as a signal', async () => {
+    const loading = service.loadBlocked();
+    http.expectOne(`${API}/twitch/blocked`).flush([channelUser(7)]);
+
+    expect(await loading).toHaveLength(1);
+    expect(service.blocked()?.map((user) => user.login)).toEqual(['user7']);
+  });
+
+  it('should unban a user', async () => {
+    const unbanning = service.unbanUser('3');
+    http.expectOne(`${API}/twitch/banned/3`).flush(null, { status: 204, statusText: 'No Content' });
+    await unbanning;
+  });
+
+  // "Not banned" is a normal answer, not an error, so it arrives as a 200 with a false flag.
+  it('should report an unbanned user without treating it as a failure', async () => {
+    const checking = service.isBanned('42');
+    http.expectOne(`${API}/twitch/banned/42`).flush({ banned: false, ban: null });
+
+    expect(await checking).toBe(false);
+  });
+
   it('should not touch the network when nothing was asked for', async () => {
     expect(await service.getUsers()).toEqual([]);
   });

@@ -6,7 +6,8 @@ namespace YEPPDash.Api.Services;
 public enum ChannelRole
 {
     Moderator,
-    Vip
+    Vip,
+    Blocked
 }
 
 public sealed class TwitchChannelCache

@@ -46,8 +46,7 @@ public sealed class TwitchController(
         var total = userIds.Count + logins.Count;
         if (total is 0 or > TwitchApiClient.MaxBatchSize)
         {
-            return BadRequest(
-                $"Pass between 1 and {TwitchApiClient.MaxBatchSize} id and login values in total, got {total}.");
+            return BadRequest($"Pass between 1 and {TwitchApiClient.MaxBatchSize} id and login values in total, got {total}.");
         }
 
         try
@@ -75,6 +74,55 @@ public sealed class TwitchController(
         return ListChannelUsersAsync(
             broadcasterId => channelService.GetVipsAsync(broadcasterId, cancellationToken),
             "list the VIPs");
+    }
+
+    [HttpGet("chatters")]
+    public Task<IActionResult> GetChatters(CancellationToken cancellationToken)
+    {
+        return ListChannelUsersAsync(
+            broadcasterId => channelService.GetChattersAsync(broadcasterId, cancellationToken),
+            "list the chatters");
+    }
+
+    [HttpGet("blocked")]
+    public Task<IActionResult> GetBlockedUsers(CancellationToken cancellationToken)
+    {
+        return ListChannelUsersAsync(
+            broadcasterId => channelService.GetBlockedUsersAsync(broadcasterId, cancellationToken),
+            "list the blocked users");
+    }
+
+    [HttpGet("banned/{userId}")]
+    public async Task<IActionResult> GetBanStatus(string userId, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var ban = await channelService.GetBannedUserAsync(twitchId, userId, cancellationToken);
+            return Ok(BanStatusResponse.From(ban));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"check whether {userId} is banned");
+        }
+    }
+
+    [HttpDelete("banned/{userId}")]
+    public Task<IActionResult> UnbanUser(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.UnbanUserAsync(broadcasterId, userId, cancellationToken),
+            $"unban {userId}");
+    }
+
+    [HttpDelete("blocked/{userId}")]
+    public Task<IActionResult> UnblockUser(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.UnblockUserAsync(broadcasterId, userId, cancellationToken),
+            $"unblock {userId}");
     }
 
     [HttpPost("moderators/{userId}")]
