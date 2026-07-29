@@ -13,19 +13,16 @@ const otherHostMatch: CanMatchFn = () => !isDashHost();
 const devOnlyMatch: CanMatchFn = () => !environment.production;
 
 const routes: Routes = [
-  // Production: dash.yeppbot.com serves the dashboard at its own root.
   {
     path: '',
     canActivate: [authGuard],
     canMatch: [dashHostMatch],
     loadChildren: () => import('../pages/dash.module').then((module) => module.DashModule),
   },
-  // Production: every other host (www / apex) serves the marketing site.
   { path: '', component: LandingPageComponent, title: 'YEPPDash', canMatch: [otherHostMatch] },
   { path: 'imprint', component: ImprintPageComponent, title: 'Imprint', canMatch: [otherHostMatch] },
   { path: 'privacy', component: PrivacyPageComponent, title: 'Privacy Policy', canMatch: [otherHostMatch] },
   { path: 'terms', component: TermsPageComponent, title: 'Terms of Service', canMatch: [otherHostMatch] },
-  // Dev convenience: no separate dash hostname exists locally, so the dashboard stays reachable under /dash.
   {
     path: 'dash',
     canActivate: [authGuard],

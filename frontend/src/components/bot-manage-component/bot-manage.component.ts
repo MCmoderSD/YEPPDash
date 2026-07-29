@@ -1,16 +1,4 @@
-import {
-  Component,
-  computed,
-  effect,
-  ElementRef,
-  inject,
-  input,
-  InputSignal,
-  Signal,
-  signal,
-  viewChild,
-  WritableSignal,
-} from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
@@ -34,10 +22,7 @@ export class BotManageComponent {
 
   readonly botUserId: InputSignal<string> = input.required<string>();
 
-  // Acting on a status makes its row disappear, which would drop focus to the body. Moving it to
-  // the status heading instead keeps keyboard and screen reader users where they were working.
-  private readonly statusHeading: Signal<ElementRef<HTMLElement> | undefined> =
-    viewChild<ElementRef<HTMLElement>>('statusHeading');
+  private readonly statusHeading: Signal<ElementRef<HTMLElement> | undefined> = viewChild<ElementRef<HTMLElement>>('statusHeading');
 
   protected readonly bot: WritableSignal<TwitchUser | null> = signal<TwitchUser | null>(null);
 
@@ -91,8 +76,6 @@ export class BotManageComponent {
     );
   }
 
-  // Joining and leaving chat is not part of the Twitch API — it needs YEPPBot itself to act, and
-  // there is no endpoint for that yet. The buttons say so rather than failing silently.
   protected notWiredUp(action: string): void {
     this.notifications.failure(`${action} is not wired up yet.`);
   }

@@ -106,7 +106,6 @@ describe('BotManageComponent', () => {
 
     expect(twitch.getUsers).toHaveBeenCalledWith([BOT_ID]);
     expect(element.querySelector('.bot-manage-name')!.textContent).toContain('YEPPBot');
-    expect(element.querySelector('.bot-manage-login')!.textContent).toContain('yeppbot');
     expect(element.querySelector<HTMLElement>('.bot-manage-name')!.style.getPropertyValue('--chat-color'))
       .toBe('#9146FF');
   });

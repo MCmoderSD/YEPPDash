@@ -8,7 +8,5 @@ import { environment } from '../../environments/environment';
   standalone: false,
 })
 export class DashHomePageComponent {
-
-  // Templates cannot reach the environment directly, so it is surfaced as a field here.
   protected readonly botUserId: string = environment.botUserId;
 }

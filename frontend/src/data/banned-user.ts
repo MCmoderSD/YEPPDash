@@ -4,8 +4,7 @@ export interface BannedUser {
   id: string;
   login: string;
   displayName: string;
-  // Null for a permanent ban — only a timeout ever runs out.
-  expiresAt: string | null;
+  expiresAt: string | null; // null means permanent ban
   createdAt: string;
   reason: string | null;
   moderator: ChannelUser;

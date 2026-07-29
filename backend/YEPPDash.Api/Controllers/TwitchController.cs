@@ -46,8 +46,7 @@ public sealed class TwitchController(
         var total = userIds.Count + logins.Count;
         if (total is 0 or > TwitchApiClient.MaxBatchSize)
         {
-            return BadRequest(
-                $"Pass between 1 and {TwitchApiClient.MaxBatchSize} id and login values in total, got {total}.");
+            return BadRequest($"Pass between 1 and {TwitchApiClient.MaxBatchSize} id and login values in total, got {total}.");
         }
 
         try
