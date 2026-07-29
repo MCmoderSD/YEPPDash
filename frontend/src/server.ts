@@ -17,6 +17,22 @@ const dashHost = new URL(environment.frontendBaseUrl).hostname;
 const isProd = process.env['NODE_ENV'] === 'production';
 
 /**
+ * Serve static files from /browser
+ *
+ * This has to stay ahead of the host rewrite below: bundles and assets live at real paths in
+ * the browser folder and are requested that way from every host, so rewriting them to /dash/*
+ * would turn every script tag into a 404 that falls through to the Angular handler and comes
+ * back as HTML - which the browser refuses to execute, leaving the app dead on arrival.
+ */
+app.use(
+  express.static(browserDistFolder, {
+    maxAge: '1y',
+    index: false,
+    redirect: false,
+  }),
+);
+
+/**
  * Only in production do www/dash actually mean different domains: locally there is just one
  * hostname, so the dashboard keeps living under /dash and none of this applies.
  *
@@ -36,7 +52,13 @@ app.use((req, res, next) => {
       const queryIndex = req.url.indexOf('?');
       const path = queryIndex === -1 ? req.url : req.url.slice(0, queryIndex);
       const query = queryIndex === -1 ? '' : req.url.slice(queryIndex);
-      req.url = `/dash${path === '/' ? '' : path}${query}`;
+      const rewritten = `/dash${path === '/' ? '' : path}${query}`;
+
+      // Angular's Node adapter builds the request URL from `originalUrl ?? url`, so rewriting
+      // only `url` leaves it resolving the untouched path and serving the prerendered landing
+      // page at the dashboard's root. Both have to move for the rewrite to be honoured.
+      req.url = rewritten;
+      req.originalUrl = rewritten;
     }
   } else if (targetsDash) {
     res.status(404).end();
@@ -45,17 +67,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-/**
- * Serve static files from /browser
- */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
 
 /**
  * Handle all other requests by rendering the Angular application.
