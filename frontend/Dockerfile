@@ -29,6 +29,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NG_ALLOWED_HOSTS=www.yeppbot.com,yeppbot.com,dash.yeppbot.com
+ENV NG_TRUST_PROXY_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto
 
 RUN addgroup -S angular && adduser -S angular -G angular
 
