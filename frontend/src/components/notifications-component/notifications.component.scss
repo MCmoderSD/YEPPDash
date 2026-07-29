@@ -1,0 +1,71 @@
+// A zero-height sticky anchor sitting between the page and the footer. While the page is scrolled
+// it pins to the bottom of the viewport, and once the bottom is reached it settles at its place in
+// the flow — which is directly above the footer, so the stack can never cover it. Height stays 0
+// so a visible message never pushes the footer down.
+:host {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  height: 0;
+  pointer-events: none;
+}
+
+// Anchored by its bottom edge, so adding a message grows the stack upwards: the new one appears
+// at the bottom and shifts the older ones up instead of replacing them.
+.notifications-stack {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(28rem, calc(100vw - 2rem));
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+
+  // The neutral inverse surface is what MatSnackBar used, and a confirmation should not shout.
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  box-shadow: var(--mat-sys-level3);
+  font: var(--mat-sys-body-medium);
+  pointer-events: auto;
+}
+
+// Failures are the one case worth interrupting for, so they take the error colours.
+.notification-failure {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.notification-message {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.notification-dismiss {
+  flex: none;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: none;
+
+  // Inheriting the colour is what keeps this readable on both the neutral and the error surface.
+  color: inherit;
+  font: var(--mat-sys-label-large);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}

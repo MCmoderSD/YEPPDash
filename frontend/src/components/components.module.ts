@@ -9,11 +9,13 @@ import { MatMenuModule } from '@angular/material/menu';
 import { NavbarComponent } from './navbar-component/navbar.component';
 import { FooterComponent } from './footer-component/footer.component';
 import { UserMenuComponent } from './user-menu-component/user-menu.component';
+import { NotificationsComponent } from './notifications-component/notifications.component';
 
 const components: any[] = [
   NavbarComponent,
   FooterComponent,
-  UserMenuComponent
+  UserMenuComponent,
+  NotificationsComponent
 ];
 
 @NgModule({

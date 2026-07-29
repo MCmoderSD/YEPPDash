@@ -46,12 +46,3 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
-
-// Snack bars render into the CDK overlay, outside every component's scoped styles, so the only
-// place these can live is here. Success stays on the neutral surface — a confirmation should not
-// shout; failures take the error colours, which is the one case worth interrupting for.
-.notification-failure {
-  --mat-snack-bar-container-color: var(--mat-sys-error-container);
-  --mat-snack-bar-supporting-text-color: var(--mat-sys-on-error-container);
-  --mat-snack-bar-button-color: var(--mat-sys-on-error-container);
-}
