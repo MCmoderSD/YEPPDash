@@ -1,0 +1,96 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using YEPPDash.Api.Data;
+using YEPPDash.Api.Helpers;
+using YEPPDash.Api.Services;
+
+namespace YEPPDash.Api.Controllers;
+
+[ApiController]
+[Authorize]
+[Route("quotes")]
+public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController> logger) : ControllerBase
+{
+    [HttpGet("{userId}")]
+    public async Task<IActionResult> GetQuotes(string userId, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+
+        var found = await quotes.GetAsync(userId, cancellationToken);
+        return Ok(found.Select(QuoteResponse.From));
+    }
+
+    [HttpPost("{userId}")]
+    public async Task<IActionResult> AddQuote(
+        string userId, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+        if (Blank(request.Quote)) return BadRequest("A quote cannot be blank.");
+
+        try
+        {
+            var quote = await quotes.AddAsync(userId, request.Quote, cancellationToken);
+            return CreatedAtAction(nameof(GetQuotes), new { userId }, QuoteResponse.From(quote));
+        }
+        catch (UnknownQuoteChannelException exception)
+        {
+            logger.LogWarning(exception, "Cannot add a quote for channel {UserId}", userId);
+            return Conflict("YEPPBot does not know this channel yet, so it cannot store quotes for it.");
+        }
+    }
+
+    [HttpPatch("{userId}/{id:int}")]
+    public async Task<IActionResult> UpdateQuote(
+        string userId, int id, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+        if (Blank(request.Quote)) return BadRequest("A quote cannot be blank.");
+
+        var quote = await quotes.UpdateAsync(userId, id, request.Quote, cancellationToken);
+        return quote is null ? NotFound() : Ok(QuoteResponse.From(quote));
+    }
+
+    [HttpDelete("{userId}/{id:int}")]
+    public async Task<IActionResult> DeleteQuote(string userId, int id, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+
+        return await quotes.DeleteAsync(userId, id, cancellationToken) ? NoContent() : NotFound();
+    }
+
+    /// <summary>
+    /// Moves one quote to a new position, shifting the quotes it passes. Answers with the whole
+    /// renumbered list, because a move changes the id of every quote between the two positions.
+    /// </summary>
+    [HttpPatch("{userId}/{id:int}/position")]
+    public async Task<IActionResult> MoveQuote(
+        string userId, int id, [FromBody] QuotePositionRequest request, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+
+        var reordered = await quotes.MoveAsync(userId, id, request.Position, cancellationToken);
+        return reordered is null ? NotFound() : Ok(reordered.Select(QuoteResponse.From));
+    }
+
+    /// <returns>The result to return, or <c>null</c> when the caller may proceed.</returns>
+    private IActionResult? Denied(string userId)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        // Quotes belong to a channel, and a session only ever speaks for its own. Without this the
+        // route would let any logged-in user rewrite any channel's quotes.
+        if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
+        {
+            logger.LogWarning("User {TwitchId} tried to reach the quotes of channel {UserId}", twitchId, userId);
+            return Forbid();
+        }
+
+        return null;
+    }
+
+    private static bool Blank(string quote)
+    {
+        return string.IsNullOrWhiteSpace(quote);
+    }
+}

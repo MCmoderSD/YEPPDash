@@ -26,4 +26,16 @@
     <mat-icon matListItemIcon aria-hidden="true">star</mat-icon>
     <span matListItemTitle>VIP Management</span>
   </a>
+
+  <a
+    mat-list-item
+    [routerLink]="quoteManagementPath"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">format_quote</mat-icon>
+    <span matListItemTitle>Quote Management</span>
+  </a>
 </mat-nav-list>

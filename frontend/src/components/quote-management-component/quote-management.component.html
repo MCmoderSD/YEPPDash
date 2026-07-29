@@ -1,0 +1,114 @@
+<section class="quote-management">
+
+  <header class="quote-management-header">
+    <h1 class="quote-management-title">Quote Management</h1>
+    <p class="quote-management-count">
+      {{ count() }} quote{{ count() === 1 ? '' : 's' }} in your channel
+    </p>
+  </header>
+
+  <button
+    mat-flat-button
+    type="button"
+    class="quote-management-add"
+    [disabled]="busy() || loading()"
+    (click)="add()"
+  >
+    <mat-icon aria-hidden="true">add</mat-icon>
+    <span>Add quote</span>
+  </button>
+
+  <mat-progress-bar
+    class="quote-management-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!(loading() || busy())"
+    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+  />
+
+  <div class="quote-management-scroll">
+    <table mat-table [dataSource]="quoteList()" class="quote-management-grid">
+
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef scope="col" class="quote-management-id">#</th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-id">{{ quote.id }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="quote">
+        <th mat-header-cell *matHeaderCellDef scope="col">Message</th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-text">{{ quote.quote }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="timestamp">
+        <th mat-header-cell *matHeaderCellDef scope="col">Date</th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-date">
+          <!-- The title carries the full timestamp so the short form stays readable in the cell. -->
+          <time [attr.datetime]="quote.timestamp" [title]="quote.timestamp | date: 'medium'">
+            {{ quote.timestamp | date: 'mediumDate' }}
+          </time>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef scope="col">
+          <span class="quote-management-hidden-label">Actions</span>
+        </th>
+        <td mat-cell *matCellDef="let quote; let index = index" class="quote-management-actions">
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Move quote ' + quote.id + ' up'"
+            [disabled]="busy() || index === 0"
+            (click)="move(quote, -1)"
+          >
+            <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Move quote ' + quote.id + ' down'"
+            [disabled]="busy() || index === count() - 1"
+            (click)="move(quote, 1)"
+          >
+            <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Edit quote ' + quote.id"
+            [disabled]="busy()"
+            (click)="edit(quote)"
+          >
+            <mat-icon aria-hidden="true">edit</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Delete quote ' + quote.id"
+            [disabled]="busy()"
+            (click)="remove(quote)"
+          >
+            <mat-icon aria-hidden="true">delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let quote; columns: columns"></tr>
+
+      <tr class="quote-management-empty-row" *matNoDataRow>
+        <td class="quote-management-empty" [attr.colspan]="columns.length">
+          @if (loading()) {
+            Loading your quotes…
+          } @else if (unreachable()) {
+            Could not load your quotes. Please try again.
+          } @else {
+            No quotes yet. Add your first one above.
+          }
+        </td>
+      </tr>
+    </table>
+  </div>
+</section>

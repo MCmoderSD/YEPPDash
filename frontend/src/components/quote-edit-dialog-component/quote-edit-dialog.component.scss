@@ -1,0 +1,12 @@
+.quote-edit {
+  display: flex;
+  flex-direction: column;
+
+  // Dialog content clips its own overflow, and without this the outlined field's border sits flush
+  // against that edge.
+  padding-block-start: 0.5rem;
+}
+
+.quote-edit-field {
+  width: 100%;
+}
