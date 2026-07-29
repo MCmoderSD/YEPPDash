@@ -5,7 +5,6 @@ import { environment } from '../environments/environment';
 import { ChatColor } from '../data/chat-color';
 import { ChannelUser } from '../data/channel-user';
 import { TwitchUser } from '../data/twitch-user';
-import { BannedUser } from '../data/banned-user';
 import { BanStatus } from '../data/ban-status';
 
 // Twitch resolves at most 100 ids/logins per Get Users call, and the backend rejects anything
@@ -25,8 +24,6 @@ export class TwitchService {
 
   private readonly blockedList: WritableSignal<ChannelUser[] | null> = signal<ChannelUser[] | null>(null);
 
-  private readonly bannedList: WritableSignal<BannedUser[] | null> = signal<BannedUser[] | null>(null);
-
   private readonly colorsByUser: Map<string,string | null> = new Map<string, string | null>();
 
   readonly chatColor: Signal<string | null> = this.color.asReadonly();
@@ -36,8 +33,6 @@ export class TwitchService {
   readonly vips: Signal<ChannelUser[] | null> = this.vipList.asReadonly();
 
   readonly blocked: Signal<ChannelUser[] | null> = this.blockedList.asReadonly();
-
-  readonly banned: Signal<BannedUser[] | null> = this.bannedList.asReadonly();
 
   async loadChatColor(): Promise<void> {
     try {
@@ -89,16 +84,6 @@ export class TwitchService {
     return blocked;
   }
 
-  async loadBanned(): Promise<BannedUser[]> {
-    const banned: BannedUser[] = await firstValueFrom(
-      this.http.get<BannedUser[]>(`${environment.apiBaseUrl}/twitch/banned`, { withCredentials: true }),
-    );
-    this.bannedList.set(banned);
-    return banned;
-  }
-
-  // Asks the backend rather than filtering the loaded list, so the answer stays right even when
-  // the list was never loaded or has gone stale since.
   getBanStatus(userId: string): Promise<BanStatus> {
     return firstValueFrom(
       this.http.get<BanStatus>(
@@ -151,7 +136,6 @@ export class TwitchService {
     await firstValueFrom(
       this.http.delete(`${environment.apiBaseUrl}/twitch/banned/${encodeURIComponent(userId)}`, { withCredentials: true }),
     );
-    this.bannedList.set(null);
   }
 
   async unblockUser(userId: string): Promise<void> {

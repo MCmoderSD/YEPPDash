@@ -57,13 +57,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             PagedQuery("channels/vips", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
-    public Task<HelixPage<TwitchBannedUser>> GetBannedUsersAsync(
-        string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
-    {
-        return GetPageAsync<TwitchBannedUser>(
-            PagedQuery("moderation/banned", broadcasterId, cursor), accessToken, cancellationToken);
-    }
-
     // Get Banned Users doubles as a lookup: filtering by user_id returns the ban if there is one and
     // an empty page if there is not, which beats paging the whole list to answer one question.
     public async Task<TwitchBannedUser?> GetBannedUserAsync(

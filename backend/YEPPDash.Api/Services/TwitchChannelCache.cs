@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using YEPPDash.Api.Data;
 
 namespace YEPPDash.Api.Services;
 
@@ -6,22 +7,19 @@ public enum ChannelRole
 {
     Moderator,
     Vip,
-    Blocked,
-    Banned
+    Blocked
 }
 
 public sealed class TwitchChannelCache
 {
-    // Each entry is the IReadOnlyList<T> belonging to its role: bans carry an expiry, a reason and
-    // the moderator who issued them, so they cannot share a list type with the other three.
-    private readonly ConcurrentDictionary<(ChannelRole Role, string BroadcasterId), object> _entries = new();
+    private readonly ConcurrentDictionary<(ChannelRole Role, string BroadcasterId), IReadOnlyList<TwitchChannelUser>> _entries = new();
 
-    public IReadOnlyList<T>? Get<T>(ChannelRole role, string broadcasterId)
+    public IReadOnlyList<TwitchChannelUser>? Get(ChannelRole role, string broadcasterId)
     {
-        return _entries.GetValueOrDefault((role, broadcasterId)) as IReadOnlyList<T>;
+        return _entries.GetValueOrDefault((role, broadcasterId));
     }
 
-    public void Set<T>(ChannelRole role, string broadcasterId, IReadOnlyList<T> users)
+    public void Set(ChannelRole role, string broadcasterId, IReadOnlyList<TwitchChannelUser> users)
     {
         _entries[(role, broadcasterId)] = users;
     }

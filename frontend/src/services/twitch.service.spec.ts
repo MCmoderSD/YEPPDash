@@ -64,18 +64,10 @@ describe('TwitchService', () => {
     expect(service.blocked()?.map((user) => user.login)).toEqual(['user7']);
   });
 
-  it('should drop the cached ban list after an unban so the next read refetches', async () => {
-    const loading = service.loadBanned();
-    http.expectOne(`${API}/twitch/banned`).flush([{ ...channelUser(3), expiresAt: null }]);
-    await loading;
-
-    expect(service.banned()).toHaveLength(1);
-
+  it('should unban a user', async () => {
     const unbanning = service.unbanUser('3');
     http.expectOne(`${API}/twitch/banned/3`).flush(null, { status: 204, statusText: 'No Content' });
     await unbanning;
-
-    expect(service.banned()).toBeNull();
   });
 
   // "Not banned" is a normal answer, not an error, so it arrives as a 200 with a false flag.

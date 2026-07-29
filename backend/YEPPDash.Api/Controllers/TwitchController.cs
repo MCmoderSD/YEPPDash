@@ -85,23 +85,6 @@ public sealed class TwitchController(
             "list the blocked users");
     }
 
-    [HttpGet("banned")]
-    public async Task<IActionResult> GetBannedUsers(CancellationToken cancellationToken)
-    {
-        var twitchId = User.GetTwitchId();
-        if (twitchId is null) return Unauthorized();
-
-        try
-        {
-            var users = await channelService.GetBannedUsersAsync(twitchId, cancellationToken);
-            return Ok(users.Select(BannedUserResponse.From));
-        }
-        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
-        {
-            return HandleTwitchFailure(exception, "list the banned users");
-        }
-    }
-
     [HttpGet("banned/{userId}")]
     public async Task<IActionResult> GetBanStatus(string userId, CancellationToken cancellationToken)
     {
