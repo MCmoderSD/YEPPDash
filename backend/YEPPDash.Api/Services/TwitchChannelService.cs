@@ -30,13 +30,54 @@ public sealed class TwitchChannelService(
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsAsync(
         string broadcasterId, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync(ChannelRole.Moderator, broadcasterId, cancellationToken);
+        return GetChannelListAsync(
+            ChannelRole.Moderator,
+            broadcasterId,
+            (token, cursor) => apiClient.GetModeratorsAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
+            cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetVipsAsync(
         string broadcasterId, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync(ChannelRole.Vip, broadcasterId, cancellationToken);
+        return GetChannelListAsync(
+            ChannelRole.Vip,
+            broadcasterId,
+            (token, cursor) => apiClient.GetVipsAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
+            cancellationToken);
+    }
+
+    public Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersAsync(
+        string broadcasterId, CancellationToken cancellationToken)
+    {
+        return GetChannelListAsync(
+            ChannelRole.Blocked,
+            broadcasterId,
+            (token, cursor) => apiClient.GetBlockedUsersAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
+            cancellationToken);
+    }
+
+    public Task<IReadOnlyList<TwitchBannedUser>> GetBannedUsersAsync(
+        string broadcasterId, CancellationToken cancellationToken)
+    {
+        return GetChannelListAsync(
+            ChannelRole.Banned,
+            broadcasterId,
+            (token, cursor) => apiClient.GetBannedUsersAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
+            cancellationToken);
+    }
+
+    // Deliberately asks Twitch instead of reading the cached list: a single filtered call is cheap,
+    // and a stale "not banned" is a worse answer than a slightly slower one.
+    public async Task<TwitchBannedUser?> GetBannedUserAsync(
+        string broadcasterId, string userId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetBannedUserAsync(broadcasterId, userId, accessToken, cancellationToken);
     }
 
     public async Task AddModeratorAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -75,11 +116,35 @@ public sealed class TwitchChannelService(
         logger.LogInformation("Removed {UserId} as VIP in channel {BroadcasterId}", userId, broadcasterId);
     }
 
-    private async Task<IReadOnlyList<TwitchChannelUser>> GetChannelUsersAsync(
-        ChannelRole role, string broadcasterId, CancellationToken cancellationToken)
+    public async Task UnbanUserAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
-        var page = await FetchPageAsync(role, broadcasterId, accessToken, cursor: null, cancellationToken);
+
+        // The token belongs to the broadcaster, so they are their own moderator of record here.
+        await apiClient.UnbanUserAsync(broadcasterId, broadcasterId, userId, accessToken, cancellationToken);
+        cache.Invalidate(ChannelRole.Banned, broadcasterId);
+
+        logger.LogInformation("Unbanned {UserId} in channel {BroadcasterId}", userId, broadcasterId);
+    }
+
+    public async Task UnblockUserAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        await apiClient.UnblockUserAsync(userId, accessToken, cancellationToken);
+        cache.Invalidate(ChannelRole.Blocked, broadcasterId);
+
+        logger.LogInformation("Unblocked {UserId} for user {BroadcasterId}", userId, broadcasterId);
+    }
+
+    private async Task<IReadOnlyList<T>> GetChannelListAsync<T>(
+        ChannelRole role,
+        string broadcasterId,
+        Func<string, string?, Task<HelixPage<T>>> fetchPage,
+        Func<T, string> userId,
+        CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var page = await fetchPage(accessToken, null);
 
         if (page.Cursor is null)
         {
@@ -87,8 +152,8 @@ public sealed class TwitchChannelService(
             return page.Items;
         }
 
-        var cached = cache.Get(role, broadcasterId);
-        if (cached is not null && IsCoveredBy(page.Items, cached))
+        var cached = cache.Get<T>(role, broadcasterId);
+        if (cached is not null && IsCoveredBy(page.Items, cached, userId))
         {
             logger.LogDebug(
                 "Cache for {Role}s of {BroadcasterId} still current ({Count} entries)",
@@ -97,14 +162,14 @@ public sealed class TwitchChannelService(
             return cached;
         }
 
-        var all = new List<TwitchChannelUser>(page.Items);
+        var all = new List<T>(page.Items);
         var pages = 1;
 
         while (page.Cursor is not null)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            page = await FetchPageAsync(role, broadcasterId, accessToken, page.Cursor, cancellationToken);
+            page = await fetchPage(accessToken, page.Cursor);
             all.AddRange(page.Items);
             pages++;
         }
@@ -117,22 +182,11 @@ public sealed class TwitchChannelService(
         return all;
     }
 
-    private Task<HelixPage<TwitchChannelUser>> FetchPageAsync(
-        ChannelRole role,
-        string broadcasterId,
-        string accessToken,
-        string? cursor,
-        CancellationToken cancellationToken)
+    private static bool IsCoveredBy<T>(
+        IReadOnlyList<T> page, IReadOnlyList<T> cached, Func<T, string> userId)
     {
-        return role is ChannelRole.Moderator
-            ? apiClient.GetModeratorsAsync(broadcasterId, accessToken, cursor, cancellationToken)
-            : apiClient.GetVipsAsync(broadcasterId, accessToken, cursor, cancellationToken);
-    }
-
-    private static bool IsCoveredBy(IReadOnlyList<TwitchChannelUser> page, IReadOnlyList<TwitchChannelUser> cached)
-    {
-        var known = cached.Select(user => user.UserId).ToHashSet(StringComparer.Ordinal);
-        return page.All(user => known.Contains(user.UserId));
+        var known = cached.Select(userId).ToHashSet(StringComparer.Ordinal);
+        return page.All(user => known.Contains(userId(user)));
     }
 
     private async Task<string> GetAccessTokenAsync(string twitchUserId, CancellationToken cancellationToken)

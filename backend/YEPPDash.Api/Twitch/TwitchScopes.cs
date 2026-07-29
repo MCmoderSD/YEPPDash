@@ -21,7 +21,10 @@ public static class TwitchScopes
         "moderator:manage:chat_messages",
         "channel:read:editors",
         "channel:manage:raids",
-        "moderator:manage:shoutouts"
+        "moderator:manage:shoutouts",
+        "user:read:blocked_users",
+        "user:manage:blocked_users",
+        "moderator:manage:banned_users"
     ];
 
     private static readonly string[] Dev =

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using YEPPDash.Api.Data;
 
 namespace YEPPDash.Api.Twitch;
@@ -47,35 +46,63 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     public Task<HelixPage<TwitchChannelUser>> GetModeratorsAsync(
         string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync("moderation/moderators", broadcasterId, accessToken, cursor, cancellationToken);
+        return GetPageAsync<TwitchChannelUser>(
+            PagedQuery("moderation/moderators", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
     public Task<HelixPage<TwitchChannelUser>> GetVipsAsync(
         string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync("channels/vips", broadcasterId, accessToken, cursor, cancellationToken);
+        return GetPageAsync<TwitchChannelUser>(
+            PagedQuery("channels/vips", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
-    private async Task<HelixPage<TwitchChannelUser>> GetChannelUsersAsync(
-        string path,
-        string broadcasterId,
-        string accessToken,
-        string? cursor,
-        CancellationToken cancellationToken)
+    public Task<HelixPage<TwitchBannedUser>> GetBannedUsersAsync(
+        string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
+    {
+        return GetPageAsync<TwitchBannedUser>(
+            PagedQuery("moderation/banned", broadcasterId, cursor), accessToken, cancellationToken);
+    }
+
+    // Get Banned Users doubles as a lookup: filtering by user_id returns the ban if there is one and
+    // an empty page if there is not, which beats paging the whole list to answer one question.
+    public async Task<TwitchBannedUser?> GetBannedUserAsync(
+        string broadcasterId, string userId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"moderation/banned?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
+                    $"&user_id={Uri.EscapeDataString(userId)}";
+
+        var page = await GetPageAsync<TwitchBannedUser>(query, accessToken, cancellationToken);
+        return page.Items.FirstOrDefault();
+    }
+
+    public async Task<HelixPage<TwitchChannelUser>> GetBlockedUsersAsync(
+        string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
+    {
+        var page = await GetPageAsync<TwitchBlockedUser>(
+            PagedQuery("users/blocks", broadcasterId, cursor), accessToken, cancellationToken);
+
+        return new HelixPage<TwitchChannelUser>(
+            page.Items.Select(blocked => blocked.ToChannelUser()).ToArray(), page.Cursor);
+    }
+
+    private static string PagedQuery(string path, string broadcasterId, string? cursor)
     {
         var query = $"{path}?broadcaster_id={Uri.EscapeDataString(broadcasterId)}&first={MaxBatchSize}";
-        if (cursor is not null)
-        {
-            query += $"&after={Uri.EscapeDataString(cursor)}";
-        }
 
+        return cursor is null ? query : $"{query}&after={Uri.EscapeDataString(cursor)}";
+    }
+
+    private async Task<HelixPage<T>> GetPageAsync<T>(
+        string query, string accessToken, CancellationToken cancellationToken)
+    {
         using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
 
-        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchChannelUser>>(
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<T>>(
             TwitchJson.Options, cancellationToken);
 
         var items = payload?.Data ?? [];
-        return new HelixPage<TwitchChannelUser>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
+        return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
     }
 
     public async Task<TwitchChatColor?> GetChatColorAsync(
@@ -112,6 +139,30 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         string broadcasterId, string userId, string accessToken, CancellationToken cancellationToken)
     {
         return EditChannelAsync(HttpMethod.Delete, "channels/vips", broadcasterId, userId, accessToken, cancellationToken);
+    }
+
+    // Unban User needs a moderator_id on top of the usual pair — it is the moderator the token
+    // belongs to, which here is always the broadcaster acting on their own channel.
+    public async Task UnbanUserAsync(
+        string broadcasterId,
+        string moderatorId,
+        string userId,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        var query = $"moderation/bans?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
+                    $"&moderator_id={Uri.EscapeDataString(moderatorId)}" +
+                    $"&user_id={Uri.EscapeDataString(userId)}";
+
+        using var response = await SendAsync(HttpMethod.Delete, query, accessToken, cancellationToken);
+    }
+
+    // Blocks live on the account rather than the channel, so Unblock User takes only the target and
+    // works out whose list to touch from the token.
+    public async Task UnblockUserAsync(string userId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"users/blocks?target_user_id={Uri.EscapeDataString(userId)}";
+        using var response = await SendAsync(HttpMethod.Delete, query, accessToken, cancellationToken);
     }
 
     private async Task EditChannelAsync(

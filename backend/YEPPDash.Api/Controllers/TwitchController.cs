@@ -77,6 +77,64 @@ public sealed class TwitchController(
             "list the VIPs");
     }
 
+    [HttpGet("blocked")]
+    public Task<IActionResult> GetBlockedUsers(CancellationToken cancellationToken)
+    {
+        return ListChannelUsersAsync(
+            broadcasterId => channelService.GetBlockedUsersAsync(broadcasterId, cancellationToken),
+            "list the blocked users");
+    }
+
+    [HttpGet("banned")]
+    public async Task<IActionResult> GetBannedUsers(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var users = await channelService.GetBannedUsersAsync(twitchId, cancellationToken);
+            return Ok(users.Select(BannedUserResponse.From));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "list the banned users");
+        }
+    }
+
+    [HttpGet("banned/{userId}")]
+    public async Task<IActionResult> GetBanStatus(string userId, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var ban = await channelService.GetBannedUserAsync(twitchId, userId, cancellationToken);
+            return Ok(BanStatusResponse.From(ban));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"check whether {userId} is banned");
+        }
+    }
+
+    [HttpDelete("banned/{userId}")]
+    public Task<IActionResult> UnbanUser(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.UnbanUserAsync(broadcasterId, userId, cancellationToken),
+            $"unban {userId}");
+    }
+
+    [HttpDelete("blocked/{userId}")]
+    public Task<IActionResult> UnblockUser(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.UnblockUserAsync(broadcasterId, userId, cancellationToken),
+            $"unblock {userId}");
+    }
+
     [HttpPost("moderators/{userId}")]
     public Task<IActionResult> AddModerator(string userId, CancellationToken cancellationToken)
     {
