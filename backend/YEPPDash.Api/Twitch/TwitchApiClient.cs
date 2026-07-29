@@ -69,6 +69,17 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return page.Items.FirstOrDefault();
     }
 
+    // Get Chatters insists on a moderator_id, but the dashboard only ever reads its own channel, so
+    // the broadcaster stands in as their own moderator rather than the caller passing one.
+    public Task<HelixPage<TwitchChannelUser>> GetChattersAsync(
+        string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
+    {
+        var query = PagedQuery("chat/chatters", broadcasterId, cursor) +
+                    $"&moderator_id={Uri.EscapeDataString(broadcasterId)}";
+
+        return GetPageAsync<TwitchChannelUser>(query, accessToken, cancellationToken);
+    }
+
     public async Task<HelixPage<TwitchChannelUser>> GetBlockedUsersAsync(
         string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {

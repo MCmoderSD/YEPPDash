@@ -77,6 +77,14 @@ public sealed class TwitchController(
             "list the VIPs");
     }
 
+    [HttpGet("chatters")]
+    public Task<IActionResult> GetChatters(CancellationToken cancellationToken)
+    {
+        return ListChannelUsersAsync(
+            broadcasterId => channelService.GetChattersAsync(broadcasterId, cancellationToken),
+            "list the chatters");
+    }
+
     [HttpGet("blocked")]
     public Task<IActionResult> GetBlockedUsers(CancellationToken cancellationToken)
     {

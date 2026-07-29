@@ -57,6 +57,36 @@ public sealed class TwitchChannelService(
             cancellationToken);
     }
 
+    // Deliberately uncached: who is in chat turns over constantly, so a remembered list would be
+    // wrong almost immediately. Every call pages the live roster from scratch.
+    public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersAsync(
+        string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var all = new List<TwitchChannelUser>();
+        string? cursor = null;
+        var pages = 0;
+
+        do
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var page = await apiClient.GetChattersAsync(broadcasterId, accessToken, cursor, cancellationToken);
+            all.AddRange(page.Items);
+
+            cursor = page.Cursor;
+            pages++;
+        }
+        while (cursor is not null);
+
+        logger.LogInformation(
+            "Paginated {Count} chatters of channel {BroadcasterId} across {Pages} pages",
+            all.Count, broadcasterId, pages);
+
+        return all;
+    }
+
     public async Task<TwitchBannedUser?> GetBannedUserAsync(
         string broadcasterId, string userId, CancellationToken cancellationToken)
     {

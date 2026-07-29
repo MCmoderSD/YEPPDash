@@ -78,6 +78,12 @@ export class TwitchService {
     return vips;
   }
 
+  // No signal to back this one: who is in chat turns over constantly, so a remembered list would
+  // go stale immediately. Callers get a fresh roster every time and decide when to ask.
+  getChatters(): Promise<ChannelUser[]> {
+    return this.getChannelUsers('chatters');
+  }
+
   async loadBlocked(): Promise<ChannelUser[]> {
     const blocked: ChannelUser[] = await this.getChannelUsers('blocked');
     this.blockedList.set(blocked);

@@ -56,6 +56,17 @@ describe('TwitchService', () => {
     expect(service.moderators()).toBeNull();
   });
 
+  // Chatters are never cached, so two reads have to hit the network twice.
+  it('should refetch the chatters on every call', async () => {
+    const first = service.getChatters();
+    http.expectOne(`${API}/twitch/chatters`).flush([channelUser(1)]);
+    expect(await first).toHaveLength(1);
+
+    const second = service.getChatters();
+    http.expectOne(`${API}/twitch/chatters`).flush([channelUser(1), channelUser(2)]);
+    expect(await second).toHaveLength(2);
+  });
+
   it('should publish the loaded blocked list as a signal', async () => {
     const loading = service.loadBlocked();
     http.expectOne(`${API}/twitch/blocked`).flush([channelUser(7)]);
