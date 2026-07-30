@@ -21,13 +21,14 @@ public sealed class BirthdayService(
     }
 
     /// <summary>
-    /// The birthdays of everyone following the given channel.
+    /// The birthdays of everyone following the given channel, plus the channel owner's own.
     /// </summary>
     /// <remarks>
-    /// Every stored birthday is read first and then narrowed to the channel's followers, rather than
-    /// the other way round. The Birthday table holds at most one row per user YEPPBot knows, while a
-    /// follower list is unbounded — handing the database a few hundred thousand ids to filter on
-    /// would be the worse half of the join to push down.
+    /// Every stored birthday is read first and then checked one by one against Twitch, rather than
+    /// pulling the channel's whole follower list and intersecting it. The Birthday table holds at most
+    /// one row per user YEPPBot knows, and there will almost always be far fewer of those than a
+    /// channel has followers — walking a follower list that can run into the hundreds of thousands to
+    /// answer a question about a handful of stored rows would be the more expensive way round.
     /// </remarks>
     public async Task<IReadOnlyList<Birthday>> GetForFollowersAsync(
         string broadcasterId, CancellationToken cancellationToken)
@@ -35,21 +36,29 @@ public sealed class BirthdayService(
         var birthdays = await repository.GetAllAsync(cancellationToken);
         if (birthdays.Count is 0) return [];
 
-        var followers = await channels.GetFollowersAsync(broadcasterId, cancellationToken);
+        var matched = new List<Birthday>(birthdays.Count);
 
-        // Matched as ints because that is what the Birthday column is: a follower id too large to be
-        // one cannot have a row there anyway, so failing to parse is the same answer as not matching.
-        var following = new HashSet<int>();
-        foreach (var follower in followers)
+        // Sequential rather than in parallel: Twitch bills every call against the same rate limit, and
+        // a wide fan-out here only trades one slow request for a throttled one — the same tradeoff
+        // TwitchChannelService makes for its own batched membership checks.
+        foreach (var birthday in birthdays)
         {
-            if (int.TryParse(follower.UserId, out var id)) following.Add(id);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var userId = birthday.UserId.ToString();
+
+            // Twitch has no notion of following your own channel, so the owner is taken on their id
+            // alone rather than a follow check that could never come back true.
+            var isOwner = string.Equals(userId, broadcasterId, StringComparison.Ordinal);
+            if (isOwner || await channels.GetFollowerAsync(broadcasterId, userId, cancellationToken) is not null)
+            {
+                matched.Add(birthday);
+            }
         }
 
-        var matched = birthdays.Where(birthday => following.Contains(birthday.UserId)).ToList();
-
         logger.LogInformation(
-            "{Matched} of {Stored} stored birthdays belong to the {Followers} followers of channel {BroadcasterId}",
-            matched.Count, birthdays.Count, followers.Count, broadcasterId);
+            "{Matched} of {Stored} stored birthdays belong to channel {BroadcasterId} or its followers",
+            matched.Count, birthdays.Count, broadcasterId);
 
         return matched;
     }

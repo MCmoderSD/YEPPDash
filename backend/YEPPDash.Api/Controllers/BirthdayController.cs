@@ -23,7 +23,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
     : ControllerBase
 {
     /// <summary>
-    /// The birthdays of everyone following the channel.
+    /// The birthdays of everyone following the channel, plus the channel owner's own.
     /// </summary>
     /// <remarks>
     /// Owner-only, unlike the single birthday below, and the one place in here where that is about
