@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<mat-dialog-content>
+  <form class="quote-edit" (submit)="$event.preventDefault(); save()">
+    <mat-form-field appearance="outline" class="quote-edit-field">
+      <mat-label>Quote</mat-label>
+      <textarea
+        matInput
+        #message
+        rows="5"
+        autocomplete="off"
+        [attr.maxlength]="maxLength"
+        [value]="text()"
+        (input)="edit(message.value)"
+      ></textarea>
+
+      <mat-hint>
+        <!-- aria-live so the count is announced as it changes rather than only on focus. -->
+        <span aria-live="polite">{{ length() }} of {{ maxLength }} characters</span>
+      </mat-hint>
+    </mat-form-field>
+
+    <!-- Outside the form field rather than in it, so nothing about Material's own layout has to be
+         worked around; the bar is positioned from the textarea it is pointed at. -->
+    <app-scroll-bar [target]="message"/>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button type="button" [disabled]="!canSave()" (click)="save()">
+    {{ editing ? 'Save' : 'Add quote' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,86 @@
+// Laid over the element it belongs to, sized to it from the component. Consumers can retune the
+// bar by setting --scroll-bar-size or --scroll-bar-inset on the <app-scroll-bar> element.
+:host {
+  position: absolute;
+
+  // Above the content it covers, but nowhere near overlay-level: a dialog or a menu still wins.
+  z-index: 2;
+
+  // Only the bars themselves take the pointer — the rest of this box belongs to the content
+  // underneath, which must stay clickable.
+  pointer-events: none;
+}
+
+.scroll-bar-track {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: auto;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 120ms var(--mat-sys-easing-standard, ease);
+
+  // Hidden rather than removed from the layout: the component reads the thickness back off this
+  // element, and display:none would measure as zero.
+  &.scroll-bar-shown {
+    visibility: visible;
+  }
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+.scroll-bar-track-vertical {
+  top: 0;
+  right: 0;
+  width: var(--scroll-bar-size, 0.625rem);
+}
+
+.scroll-bar-track-horizontal {
+  bottom: 0;
+  left: 0;
+  height: var(--scroll-bar-size, 0.625rem);
+}
+
+.scroll-bar-thumb {
+  position: absolute;
+  border-radius: 999px;
+  background: var(--mat-sys-outline);
+  transition: background-color 120ms var(--mat-sys-easing-standard, ease);
+}
+
+// Inset from the track's long edges so the bar reads slimmer than the strip it can be grabbed by.
+.scroll-bar-track-vertical .scroll-bar-thumb {
+  left: var(--scroll-bar-inset, 3px);
+  right: var(--scroll-bar-inset, 3px);
+}
+
+.scroll-bar-track-horizontal .scroll-bar-thumb {
+  top: var(--scroll-bar-inset, 3px);
+  bottom: var(--scroll-bar-inset, 3px);
+}
+
+.scroll-bar-track:hover .scroll-bar-thumb {
+  background: var(--mat-sys-on-surface-variant);
+}
+
+// Stays lit for the whole drag: the pointer spends most of it well away from the bar, where the
+// hover rule above no longer holds.
+:host(.scroll-bar-dragging) .scroll-bar-thumb {
+  background: var(--mat-sys-on-surface);
+}
+
+// A touch screen scrolls the content directly and has no hover to reveal anything, so the bars
+// stay purely as an indicator and hand every gesture through to what is underneath.
+@media (hover: none) {
+  .scroll-bar-track {
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-bar-track,
+  .scroll-bar-thumb {
+    transition: none;
+  }
+}

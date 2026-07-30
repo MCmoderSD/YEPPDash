@@ -27,6 +27,8 @@ export class SidebarComponent {
 
   protected readonly roleManagementPath: string = isDashHost() ? '/role-management' : '/dash/role-management';
 
+  protected readonly quoteManagementPath: string = isDashHost() ? '/quotes' : '/dash/quotes';
+
   protected close(): void {
     this.sidebar.close();
   }

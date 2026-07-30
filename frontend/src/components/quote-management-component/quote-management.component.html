@@ -1,0 +1,175 @@
+<section class="quote-management">
+
+  <header class="quote-management-header">
+    <h1 class="quote-management-title">Quote Management</h1>
+    <p class="quote-management-count">
+      {{ count() }} quote{{ count() === 1 ? '' : 's' }} in your channel
+    </p>
+  </header>
+
+  <div class="quote-management-toolbar">
+    <button
+      mat-flat-button
+      type="button"
+      class="quote-management-add"
+      [disabled]="busy() || loading()"
+      (click)="add()"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      <span>Add quote</span>
+    </button>
+
+    <button
+      mat-stroked-button
+      type="button"
+      class="quote-management-export"
+      [disabled]="busy() || loading() || count() === 0"
+      (click)="export()"
+    >
+      <mat-icon aria-hidden="true">download</mat-icon>
+      <span>Export</span>
+    </button>
+
+    <!-- The file input is what actually opens the picker; the button in front of it is only there
+         so the control matches the others. Hidden with a clip rather than display:none so it can
+         still be reached and labelled by a screen reader. -->
+    <button
+      mat-stroked-button
+      type="button"
+      class="quote-management-import"
+      [disabled]="busy() || loading()"
+      (click)="picker.click()"
+    >
+      <mat-icon aria-hidden="true">upload</mat-icon>
+      <span>Import</span>
+    </button>
+
+    <input
+      #picker
+      type="file"
+      class="quote-management-picker"
+      accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      aria-label="Import quotes from an Excel file, replacing the current list"
+      [disabled]="busy() || loading()"
+      (change)="import(picker)"
+    />
+  </div>
+
+  <mat-progress-bar
+    class="quote-management-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!(loading() || busy())"
+    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+  />
+
+  <mat-form-field appearance="outline" class="quote-management-search">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      #search
+      type="search"
+      autocomplete="off"
+      placeholder="Message or number"
+      (input)="filter(search.value)"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+  </mat-form-field>
+
+  <div #scroll class="quote-management-scroll">
+    <table mat-table matSort [dataSource]="dataSource" class="quote-management-grid">
+
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="quote-management-id">#</th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-id">{{ quote.id }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="quote">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Message</th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-text">
+          <!-- The row is clickable for the mouse, but the button is what makes editing reachable
+               by keyboard and gives screen readers something to announce. -->
+          <button
+            type="button"
+            class="quote-management-edit"
+            [attr.aria-label]="'Edit quote ' + quote.id"
+            [disabled]="busy()"
+            (click)="edit(quote); $event.stopPropagation()"
+          >{{ quote.quote }}</button>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="timestamp">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Date</th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-date">
+          <!-- The title carries the full timestamp so the short form stays readable in the cell. -->
+          <time [attr.datetime]="quote.timestamp" [title]="quote.timestamp | date: 'medium'">
+            {{ quote.timestamp | date: 'mediumDate' }}
+          </time>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef scope="col">
+          <span class="quote-management-hidden-label">Actions</span>
+        </th>
+        <td mat-cell *matCellDef="let quote" class="quote-management-actions">
+          <!-- Keyed off the quote's own number rather than its row index: sorting or filtering
+               reorders the rows, and then the top row is no longer quote 1. -->
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Move quote ' + quote.id + ' up'"
+            [disabled]="busy() || quote.id === 1"
+            (click)="move(quote, -1); $event.stopPropagation()"
+          >
+            <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Move quote ' + quote.id + ' down'"
+            [disabled]="busy() || quote.id === count()"
+            (click)="move(quote, 1); $event.stopPropagation()"
+          >
+            <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="'Delete quote ' + quote.id"
+            [disabled]="busy()"
+            (click)="remove(quote); $event.stopPropagation()"
+          >
+            <mat-icon aria-hidden="true">delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let quote; columns: columns"
+        class="quote-management-row"
+        (click)="edit(quote)"
+      ></tr>
+
+      <tr class="quote-management-empty-row" *matNoDataRow>
+        <td class="quote-management-empty" [attr.colspan]="columns.length">
+          @if (loading()) {
+            Loading your quotes…
+          } @else if (unreachable()) {
+            Could not load your quotes. Please try again.
+          } @else if (query()) {
+            No quote matches “{{ query() }}”.
+          } @else {
+            No quotes yet. Add your first one above.
+          }
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <app-scroll-bar [target]="scroll"/>
+</section>

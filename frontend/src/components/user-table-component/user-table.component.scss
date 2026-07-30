@@ -1,6 +1,10 @@
 .user-table {
   display: flex;
   flex-direction: column;
+
+  // The containing block for the scroll bar drawn over the table below.
+  position: relative;
+
   // A user list is a small side task, not the page's main content — it should read as a
   // compact panel, not stretch across the full width available to it.
   max-width: 26rem;
@@ -21,15 +25,10 @@
 }
 
 table.user-table-grid {
-  // Hugging its content means the table is usually narrower than the outline around it, so it is
-  // centred inside that outline instead of hanging off the left edge.
-  margin-inline: auto;
-
-  // Material's own base style sets min-width: 100%, forcing the table to fill its wrapper
-  // regardless of content — with only two or three narrow columns that hands all the slack to
-  // whichever one is flexible, prying name and id apart. Overridden so the table hugs its own
-  // content instead, with any leftover width sitting quietly to its right.
-  min-width: 0;
+  // Fills the outline drawn around it, the way the quote table does: the fixed columns below keep
+  // their width and the name column takes whatever is left, so the row reads as one band of
+  // content instead of a small table floating in a wide box.
+  width: 100%;
   background: transparent;
 
   // Material's default 16px inline padding on every cell adds up fast across three columns —
@@ -49,11 +48,14 @@ table.user-table-grid {
   }
 }
 
-// Avatar and name sit in the same button so they read as one unit instead of two table cells.
+// Avatar and name sit in the same button so they read as one unit instead of two table cells, and
+// it fills its cell so the whole column is the click target — the row itself is the mouse path, so
+// this is what carries the keyboard path to the details dialog.
 .user-table-name {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
   padding: 0;
   border: none;
   background: none;
@@ -62,8 +64,9 @@ table.user-table-grid {
   text-align: start;
   cursor: pointer;
 
-  &:hover {
-    text-decoration: underline;
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -74,13 +77,44 @@ table.user-table-grid {
   object-fit: cover;
 }
 
+// A fixed, quieter column, like the date column in the quote table: it is there to be read off
+// when needed, not to compete with the name for attention or for width.
 .user-table-id {
+  width: 7rem;
+  color: var(--mat-sys-on-surface-variant);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .user-table-actions {
+  width: 3.5rem;
   text-align: end;
+  white-space: nowrap;
+}
+
+// Same as the quote table: the row's control stays out of the way until the row is actually pointed
+// at. Faded rather than removed from the layout, so the rows keep their width as the pointer
+// travels down the table, and focus-within covers the keyboard so nobody has to aim at a control
+// they cannot see.
+//
+// Gated behind `hover: hover` because a touch screen never reports a hover state — there the button
+// simply stays visible, otherwise it would be unreachable.
+@media (hover: hover) {
+  .user-table-actions .mat-mdc-icon-button {
+    opacity: 0;
+    transition: opacity 120ms var(--mat-sys-easing-standard, ease);
+  }
+
+  .user-table-row:hover .mat-mdc-icon-button,
+  .user-table-row:focus-within .mat-mdc-icon-button {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .user-table-actions .mat-mdc-icon-button {
+      transition: none;
+    }
+  }
 }
 
 .user-table-empty {

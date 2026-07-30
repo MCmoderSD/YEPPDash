@@ -27,6 +27,8 @@ builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
 builder.Services.AddSingleton(new UptimeTracker());
 builder.Services.AddSingleton<TwitchChannelCache>();
 builder.Services.AddScoped<TwitchChannelService>();
+builder.Services.AddScoped<QuoteRepository>();
+builder.Services.AddScoped<QuoteService>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

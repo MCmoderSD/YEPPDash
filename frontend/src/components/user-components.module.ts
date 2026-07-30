@@ -12,6 +12,7 @@ import { MatTableModule } from '@angular/material/table';
 import { UserInfoDialogComponent } from './user-info-dialog-component/user-info-dialog.component';
 import { UserAddDialogComponent } from './user-add-dialog-component/user-add-dialog.component';
 import { UserTableComponent } from './user-table-component/user-table.component';
+import { ScrollBarComponent } from './scroll-bar-component/scroll-bar.component';
 
 const components: any[] = [
   UserInfoDialogComponent,
@@ -25,6 +26,7 @@ const components: any[] = [
 @NgModule({
   declarations: [components],
   imports: [
+    ScrollBarComponent,
     NgOptimizedImage,
     MatButtonModule,
     MatDialogModule,

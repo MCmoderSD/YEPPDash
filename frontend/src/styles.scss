@@ -45,4 +45,19 @@ body {
   margin: 0;
   height: 100%;
 }
+
+// Takes the platform's own scroll bar out of the picture, leaving the element scrollable. Added
+// and removed by ScrollBarComponent, which draws the app's bar over the element instead — this
+// class is only global because the element it applies to lives outside that component.
+//
+// Both styling models are covered on purpose: `scrollbar-width` is the standard property and the
+// only one Firefox has, `::-webkit-scrollbar` the older WebKit/Blink one. Declaring only one of
+// them would leave the other engine showing its native bar underneath ours.
+.app-native-scrollbar-hidden {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 /* You can add global styles to this file, and also import other style files */

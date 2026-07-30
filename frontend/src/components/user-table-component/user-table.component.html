@@ -13,7 +13,7 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div class="user-table-scroll">
+  <div #scroll class="user-table-scroll">
     <table mat-table matSort [dataSource]="dataSource" class="user-table-grid">
 
       <ng-container matColumnDef="user">
@@ -76,4 +76,6 @@
       </tr>
     </table>
   </div>
+
+  <app-scroll-bar [target]="scroll"/>
 </div>
