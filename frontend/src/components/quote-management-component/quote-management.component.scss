@@ -92,56 +92,10 @@ table.quote-management-grid {
 }
 
 .quote-management-id {
-  width: 4rem;
+  width: 3rem;
   font-variant-numeric: tabular-nums;
   text-align: end;
   white-space: nowrap;
-}
-
-// Looks like the plain number it replaces until you approach it, so the column stays quiet while
-// still admitting that it does something.
-.quote-management-position-button {
-  width: 100%;
-  padding: 0.25rem;
-  border: 1px solid transparent;
-  border-radius: var(--mat-sys-corner-extra-small);
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-  cursor: text;
-
-  &:hover:not(:disabled) {
-    border-color: var(--mat-sys-outline-variant);
-    background: var(--mat-sys-surface-container-highest);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 1px;
-  }
-}
-
-.quote-management-position {
-  width: 100%;
-  padding: 0.25rem;
-  border: 1px solid var(--mat-sys-primary);
-  border-radius: var(--mat-sys-corner-extra-small);
-  background: var(--mat-sys-surface);
-  color: inherit;
-  font: inherit;
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-
-  // The spinners would not fit the cell and the value is typed anyway.
-  appearance: textfield;
-
-  &::-webkit-inner-spin-button,
-  &::-webkit-outer-spin-button {
-    margin: 0;
-    appearance: none;
-  }
 }
 
 // The message is the one column allowed to grow, so the fixed ones keep their width and it takes
@@ -177,12 +131,35 @@ table.quote-management-grid {
   white-space: nowrap;
 }
 
-// Just the delete button now that editing happens by clicking the row and reordering by typing
-// the number, so the column gives the message its width back.
 .quote-management-actions {
-  width: 3.5rem;
+  width: 8.5rem;
   text-align: end;
   white-space: nowrap;
+}
+
+// The row's controls stay out of the way until the row is actually pointed at. Faded rather than
+// removed from the layout, so the rows do not shift width as the pointer travels down the table.
+//
+// Gated behind `hover: hover` because a touch screen never reports a hover state — there the
+// buttons simply stay visible, otherwise they would be unreachable.
+@media (hover: hover) {
+  .quote-management-actions .mat-mdc-icon-button {
+    opacity: 0;
+    transition: opacity 120ms var(--mat-sys-easing-standard, ease);
+  }
+
+  // focus-within covers the keyboard: tabbing into a button reveals the whole set, so nobody has
+  // to aim at a control they cannot see.
+  .quote-management-row:hover .mat-mdc-icon-button,
+  .quote-management-row:focus-within .mat-mdc-icon-button {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .quote-management-actions .mat-mdc-icon-button {
+      transition: none;
+    }
+  }
 }
 
 .quote-management-empty {

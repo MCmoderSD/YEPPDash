@@ -1,8 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-  afterNextRender, Component, computed, effect, ElementRef, inject, Injector, Signal, signal, viewChild, WritableSignal,
-} from '@angular/core';
+import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -35,8 +33,6 @@ export class QuoteManagementComponent {
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
   private readonly document: Document = inject(DOCUMENT);
-  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
-  private readonly injector: Injector = inject(Injector);
 
   private readonly entries: WritableSignal<Quote[]> = signal<Quote[]>([]);
   private readonly isLoading: WritableSignal<boolean> = signal(false);
@@ -55,11 +51,6 @@ export class QuoteManagementComponent {
   protected readonly dataSource: MatTableDataSource<Quote> = new MatTableDataSource<Quote>([]);
 
   protected readonly query: WritableSignal<string> = signal('');
-
-  // The number of the quote whose position is currently being typed, or null when none is.
-  private readonly positionEdit: WritableSignal<number | null> = signal<number | null>(null);
-
-  protected readonly editingPosition: Signal<number | null> = this.positionEdit.asReadonly();
 
   private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
 
@@ -138,44 +129,9 @@ export class QuoteManagementComponent {
     );
   }
 
-  /// Opens the number cell of a quote for editing, so its position can be typed directly.
-  protected startPositionEdit(quote: Quote, event: Event): void {
-    // The row itself opens the edit dialog, which is not what a click on the number means.
-    event.stopPropagation();
-    this.positionEdit.set(quote.id);
+  protected async move(quote: Quote, offset: number): Promise<void> {
+    const position: number = quote.id + offset;
 
-    afterNextRender({
-      write: (): void => {
-        const input: HTMLInputElement | null =
-          this.host.nativeElement.querySelector<HTMLInputElement>('.quote-management-position');
-
-        // Selected rather than just focused: the common case is replacing the number outright.
-        input?.select();
-      },
-    }, { injector: this.injector });
-  }
-
-  protected cancelPositionEdit(): void {
-    this.positionEdit.set(null);
-  }
-
-  protected commitPositionEdit(quote: Quote, value: string): void {
-    // Enter commits and then blurs, so without this the same edit would be applied twice.
-    if (this.positionEdit() !== quote.id) return;
-    this.positionEdit.set(null);
-
-    const typed: number = Number.parseInt(value, 10);
-    if (!Number.isFinite(typed)) return;
-
-    // The server clamps too, but doing it here keeps an out-of-range number from looking like it
-    // was accepted verbatim.
-    const target: number = Math.min(Math.max(typed, 1), this.count());
-    if (target === quote.id) return;
-
-    void this.moveTo(quote, target);
-  }
-
-  private async moveTo(quote: Quote, position: number): Promise<void> {
     await this.run(
       async (channelId: string): Promise<void> => {
         // The server answers with the renumbered list, so this is the one action that does not

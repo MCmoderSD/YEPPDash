@@ -45,4 +45,51 @@ body {
   margin: 0;
   height: 100%;
 }
+
+// A scrollbar in the app's own colours rather than the operating system's, for scroll containers
+// that sit inside a themed surface where the platform default reads as a foreign element.
+//
+// Built from the two scrollbar styling standards on purpose:
+//   * `scrollbar-width`/`scrollbar-color` is the standard property, and the only one Firefox has.
+//   * `::-webkit-scrollbar` is the older WebKit/Blink model, and the only one that can carry a
+//     border or a margin, so it stays for the finer look in Chrome and Safari.
+// Declaring both means neither engine falls back to the platform bar. The two never conflict:
+// each engine ignores the other's syntax.
+//
+// Deliberately not a JS scrollbar: replacing the real one costs keyboard scrolling, momentum,
+// text-selection auto-scroll and the platform's own accessibility affordances.
+.app-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mat-sys-outline) transparent;
+
+  &::-webkit-scrollbar {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+
+    // Painting the thumb through the border box is what insets it from the track, so the bar looks
+    // slimmer than the area it can be grabbed by.
+    background: var(--mat-sys-outline);
+    background-clip: content-box;
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--mat-sys-on-surface-variant);
+    background-clip: content-box;
+  }
+
+  // Both bars meeting in the corner would otherwise show the platform's own filler square.
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
 /* You can add global styles to this file, and also import other style files */
