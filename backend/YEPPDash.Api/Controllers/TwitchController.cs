@@ -43,11 +43,10 @@ public sealed class TwitchController(
         var userIds = Clean(id);
         var logins = Clean(login);
 
+        // No upper bound: the service splits whatever arrives into the batches Helix accepts. Only an
+        // empty request is refused, because there is nothing to look up.
         var total = userIds.Count + logins.Count;
-        if (total is 0 or > TwitchApiClient.MaxBatchSize)
-        {
-            return BadRequest($"Pass between 1 and {TwitchApiClient.MaxBatchSize} id and login values in total, got {total}.");
-        }
+        if (total is 0) return BadRequest("Pass at least one id or login value.");
 
         try
         {
@@ -68,12 +67,144 @@ public sealed class TwitchController(
             "list the moderators");
     }
 
+    /// <summary>
+    /// Which of the given users moderate the channel. Answers with only the ones that do.
+    /// </summary>
+    [HttpGet("moderators/check")]
+    public Task<IActionResult> CheckModerators(
+        [FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        return CheckChannelUsersAsync(
+            id,
+            (broadcasterId, userIds) =>
+                channelService.GetModeratorsByIdAsync(broadcasterId, userIds, cancellationToken),
+            ChannelUserResponse.From,
+            "are moderators");
+    }
+
+    [HttpPost("moderators/{userId}")]
+    public Task<IActionResult> AddModerator(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.AddModeratorAsync(broadcasterId, userId, cancellationToken),
+            $"add {userId} as moderator");
+    }
+
+    [HttpDelete("moderators/{userId}")]
+    public Task<IActionResult> RemoveModerator(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.RemoveModeratorAsync(broadcasterId, userId, cancellationToken),
+            $"remove {userId} as moderator");
+    }
+
     [HttpGet("vips")]
     public Task<IActionResult> GetVips(CancellationToken cancellationToken)
     {
         return ListChannelUsersAsync(
             broadcasterId => channelService.GetVipsAsync(broadcasterId, cancellationToken),
             "list the VIPs");
+    }
+
+    /// <summary>
+    /// Which of the given users are VIPs of the channel. Answers with only the ones that are.
+    /// </summary>
+    [HttpGet("vips/check")]
+    public Task<IActionResult> CheckVips(
+        [FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        return CheckChannelUsersAsync(
+            id,
+            (broadcasterId, userIds) =>
+                channelService.GetVipsByIdAsync(broadcasterId, userIds, cancellationToken),
+            ChannelUserResponse.From,
+            "are VIPs");
+    }
+
+    [HttpPost("vips/{userId}")]
+    public Task<IActionResult> AddVip(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.AddVipAsync(broadcasterId, userId, cancellationToken),
+            $"add {userId} as VIP");
+    }
+
+    [HttpDelete("vips/{userId}")]
+    public Task<IActionResult> RemoveVip(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.RemoveVipAsync(broadcasterId, userId, cancellationToken),
+            $"remove {userId} as VIP");
+    }
+
+    [HttpGet("editors")]
+    public async Task<IActionResult> GetEditors(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var editors = await channelService.GetEditorsAsync(twitchId, cancellationToken);
+            return Ok(editors.Select(ChannelEditorResponse.From));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "list the editors");
+        }
+    }
+
+    /// <summary>
+    /// Which of the given users are editors of the channel. Answers with only the ones that are.
+    /// </summary>
+    /// <remarks>
+    /// Twitch has no filtered form of Get Channel Editors, so the service matches against the full
+    /// list. The ids never leave this side, which is why this check has no batch limit at all.
+    /// </remarks>
+    [HttpGet("editors/check")]
+    public Task<IActionResult> CheckEditors(
+        [FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        return CheckChannelUsersAsync(
+            id,
+            (broadcasterId, userIds) =>
+                channelService.GetEditorsByIdAsync(broadcasterId, userIds, cancellationToken),
+            ChannelEditorResponse.From,
+            "are editors");
+    }
+
+    [HttpGet("followers")]
+    public async Task<IActionResult> GetFollowers(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var followers = await channelService.GetFollowersAsync(twitchId, cancellationToken);
+            return Ok(followers.Select(FollowerResponse.From));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "list the followers");
+        }
+    }
+
+    [HttpGet("followers/{userId}")]
+    public async Task<IActionResult> GetFollowStatus(string userId, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var follow = await channelService.GetFollowerAsync(twitchId, userId, cancellationToken);
+            return Ok(FollowStatusResponse.From(follow));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"check whether {userId} follows the channel");
+        }
     }
 
     [HttpGet("chatters")]
@@ -90,6 +221,14 @@ public sealed class TwitchController(
         return ListChannelUsersAsync(
             broadcasterId => channelService.GetBlockedUsersAsync(broadcasterId, cancellationToken),
             "list the blocked users");
+    }
+
+    [HttpDelete("blocked/{userId}")]
+    public Task<IActionResult> UnblockUser(string userId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.UnblockUserAsync(broadcasterId, userId, cancellationToken),
+            $"unblock {userId}");
     }
 
     [HttpGet("banned/{userId}")]
@@ -117,44 +256,34 @@ public sealed class TwitchController(
             $"unban {userId}");
     }
 
-    [HttpDelete("blocked/{userId}")]
-    public Task<IActionResult> UnblockUser(string userId, CancellationToken cancellationToken)
+    /// <param name="toResponse">
+    /// How one match is shaped for the wire — editors carry different fields from the rest.
+    /// </param>
+    /// <param name="role">
+    /// How the check reads in a log line, e.g. "are moderators".
+    /// </param>
+    private async Task<IActionResult> CheckChannelUsersAsync<T>(
+        string[]? id,
+        Func<string, IReadOnlyCollection<string>, Task<IReadOnlyList<T>>> check,
+        Func<T, object> toResponse,
+        string role)
     {
-        return EditChannelAsync(
-            broadcasterId => channelService.UnblockUserAsync(broadcasterId, userId, cancellationToken),
-            $"unblock {userId}");
-    }
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
 
-    [HttpPost("moderators/{userId}")]
-    public Task<IActionResult> AddModerator(string userId, CancellationToken cancellationToken)
-    {
-        return EditChannelAsync(
-            broadcasterId => channelService.AddModeratorAsync(broadcasterId, userId, cancellationToken),
-            $"add {userId} as moderator");
-    }
+        // No upper bound here either — the service batches for Helix, the caller just asks.
+        var userIds = Clean(id);
+        if (userIds.Count is 0) return BadRequest("Pass at least one id value.");
 
-    [HttpDelete("moderators/{userId}")]
-    public Task<IActionResult> RemoveModerator(string userId, CancellationToken cancellationToken)
-    {
-        return EditChannelAsync(
-            broadcasterId => channelService.RemoveModeratorAsync(broadcasterId, userId, cancellationToken),
-            $"remove {userId} as moderator");
-    }
-
-    [HttpPost("vips/{userId}")]
-    public Task<IActionResult> AddVip(string userId, CancellationToken cancellationToken)
-    {
-        return EditChannelAsync(
-            broadcasterId => channelService.AddVipAsync(broadcasterId, userId, cancellationToken),
-            $"add {userId} as VIP");
-    }
-
-    [HttpDelete("vips/{userId}")]
-    public Task<IActionResult> RemoveVip(string userId, CancellationToken cancellationToken)
-    {
-        return EditChannelAsync(
-            broadcasterId => channelService.RemoveVipAsync(broadcasterId, userId, cancellationToken),
-            $"remove {userId} as VIP");
+        try
+        {
+            var found = await check(twitchId, userIds);
+            return Ok(found.Select(toResponse));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"check whether {userIds.Count} users {role}");
+        }
     }
 
     private async Task<IActionResult> ListChannelUsersAsync(

@@ -50,11 +50,108 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             PagedQuery("moderation/moderators", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
+    /// <summary>
+    /// Which of the given users moderate the channel, for one to <see cref="MaxBatchSize"/> of them.
+    /// </summary>
+    public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsByIdAsync(
+        string broadcasterId,
+        IReadOnlyCollection<string> userIds,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        return GetFilteredChannelUsersAsync(
+            "moderation/moderators", broadcasterId, userIds, accessToken, cancellationToken);
+    }
+
     public Task<HelixPage<TwitchChannelUser>> GetVipsAsync(
         string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
         return GetPageAsync<TwitchChannelUser>(
             PagedQuery("channels/vips", broadcasterId, cursor), accessToken, cancellationToken);
+    }
+
+    /// <summary>
+    /// Which of the given users are VIPs of the channel, for one to <see cref="MaxBatchSize"/> of them.
+    /// </summary>
+    public Task<IReadOnlyList<TwitchChannelUser>> GetVipsByIdAsync(
+        string broadcasterId,
+        IReadOnlyCollection<string> userIds,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        return GetFilteredChannelUsersAsync(
+            "channels/vips", broadcasterId, userIds, accessToken, cancellationToken);
+    }
+
+    /// <remarks>
+    /// Get Moderators and Get VIPs both take repeated user_id filters and answer with only the users
+    /// that really hold the role, so both double as a membership check without paging the whole list.
+    /// No cursor is needed: at most 100 ids can match, which is exactly what one page holds.
+    /// </remarks>
+    private async Task<IReadOnlyList<TwitchChannelUser>> GetFilteredChannelUsersAsync(
+        string path,
+        string broadcasterId,
+        IReadOnlyCollection<string> userIds,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0 or > MaxBatchSize)
+        {
+            throw new ArgumentException(
+                $"Filtering {path} takes between 1 and {MaxBatchSize} user ids.", nameof(userIds));
+        }
+
+        var filters = string.Join('&', userIds.Select(id => $"user_id={Uri.EscapeDataString(id)}"));
+        var query = $"{PagedQuery(path, broadcasterId, cursor: null)}&{filters}";
+
+        var page = await GetPageAsync<TwitchChannelUser>(query, accessToken, cancellationToken);
+        return page.Items;
+    }
+
+    /// <summary>
+    /// The users the broadcaster has given editor permissions.
+    /// </summary>
+    /// <remarks>
+    /// The one channel list Helix does not paginate, so it answers with everything at once rather
+    /// than a page and a cursor.
+    /// </remarks>
+    public async Task<IReadOnlyList<TwitchChannelEditor>> GetEditorsAsync(
+        string broadcasterId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channels/editors?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchChannelEditor>>(
+            TwitchJson.Options, cancellationToken);
+
+        return payload?.Data ?? [];
+    }
+
+    // Paged like the other channel lists; the service walks it to the end and caches the result.
+    public Task<HelixPage<TwitchFollower>> GetFollowersAsync(
+        string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
+    {
+        return GetPageAsync<TwitchFollower>(
+            PagedQuery("channels/followers", broadcasterId, cursor), accessToken, cancellationToken);
+    }
+
+    /// <summary>
+    /// The follow of a single user, or <c>null</c> when that user does not follow the channel.
+    /// </summary>
+    /// <remarks>
+    /// The same trick Get Banned Users allows: filtering by user_id answers with the follow if there
+    /// is one and an empty page if there is not, which beats paging a large channel's whole follower
+    /// list to answer one question. Note that Helix also empties the page when the token is missing
+    /// the moderator:read:followers scope, so a null here trusts that the scope was granted.
+    /// </remarks>
+    public async Task<TwitchFollower?> GetFollowerAsync(
+        string broadcasterId, string userId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channels/followers?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
+                    $"&user_id={Uri.EscapeDataString(userId)}";
+
+        var page = await GetPageAsync<TwitchFollower>(query, accessToken, cancellationToken);
+        return page.Items.FirstOrDefault();
     }
 
     // Get Banned Users doubles as a lookup: filtering by user_id returns the ban if there is one and
