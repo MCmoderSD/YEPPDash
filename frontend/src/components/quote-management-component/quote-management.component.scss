@@ -4,6 +4,10 @@
   align-items: center;
   gap: 1rem;
 
+  // The containing block for the scroll bar drawn over the table below, so its geometry stays a
+  // local matter instead of depending on whatever ancestor happens to be positioned.
+  position: relative;
+
   // Wider than the role management panel: a quote is a sentence, not a name, so the message column
   // needs the room to avoid wrapping every row into three lines.
   width: min(60rem, 100%);

@@ -75,7 +75,7 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div class="quote-management-scroll app-scrollbar">
+  <div #scroll class="quote-management-scroll">
     <table mat-table matSort [dataSource]="dataSource" class="quote-management-grid">
 
       <ng-container matColumnDef="id">
@@ -170,4 +170,6 @@
       </tr>
     </table>
   </div>
+
+  <app-scroll-bar [target]="scroll"/>
 </section>

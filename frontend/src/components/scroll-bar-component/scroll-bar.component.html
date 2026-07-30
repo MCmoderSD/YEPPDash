@@ -1,0 +1,29 @@
+<!-- Position and length are measured from the element that actually scrolls; CSS owns nothing but
+     the thickness, which the component reads back so there is only ever one source of truth. -->
+<div
+  #verticalTrack
+  class="scroll-bar-track scroll-bar-track-vertical"
+  [class.scroll-bar-shown]="vertical().visible"
+  [style.height.px]="vertical().trackSize"
+  (pointerdown)="grab($event, 'y')"
+>
+  <div
+    class="scroll-bar-thumb"
+    [style.height.px]="vertical().thumbSize"
+    [style.top.px]="vertical().thumbOffset"
+  ></div>
+</div>
+
+<div
+  #horizontalTrack
+  class="scroll-bar-track scroll-bar-track-horizontal"
+  [class.scroll-bar-shown]="horizontal().visible"
+  [style.width.px]="horizontal().trackSize"
+  (pointerdown)="grab($event, 'x')"
+>
+  <div
+    class="scroll-bar-thumb"
+    [style.width.px]="horizontal().thumbSize"
+    [style.left.px]="horizontal().thumbOffset"
+  ></div>
+</div>

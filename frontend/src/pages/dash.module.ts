@@ -21,6 +21,7 @@ import { QuoteManagementComponent } from '../components/quote-management-compone
 import { QuoteEditDialogComponent } from '../components/quote-edit-dialog-component/quote-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
+import { ScrollBarComponent } from '../components/scroll-bar-component/scroll-bar.component';
 import { UserComponentsModule } from '../components/user-components.module';
 
 const routes: Routes = [
@@ -53,6 +54,7 @@ const components: any[] = [
   imports: [
     RouterModule.forChild(routes),
     UserComponentsModule,
+    ScrollBarComponent,
     DatePipe,
     NgOptimizedImage,
     MatButtonModule,

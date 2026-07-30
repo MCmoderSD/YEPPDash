@@ -5,8 +5,18 @@
   // Dialog content clips its own overflow, and without this the outlined field's border sits flush
   // against that edge.
   padding-block-start: 0.5rem;
+
+  // The containing block for the scroll bar drawn over the textarea.
+  position: relative;
 }
 
 .quote-edit-field {
   width: 100%;
+
+  // Keeps the text clear of the scroll bar laid over the field's inner edge. Reserved at all times
+  // rather than only while the bar shows, because this padding is what decides where the text
+  // wraps — and where it wraps is what decides whether the bar is needed at all.
+  textarea {
+    padding-inline-end: 0.75rem;
+  }
 }
