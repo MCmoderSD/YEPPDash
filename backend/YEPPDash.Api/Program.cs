@@ -31,6 +31,8 @@ builder.Services.AddScoped<QuoteRepository>();
 builder.Services.AddScoped<QuoteService>();
 builder.Services.AddScoped<BirthdayRepository>();
 builder.Services.AddScoped<BirthdayService>();
+builder.Services.AddScoped<BdsmRepository>();
+builder.Services.AddScoped<BdsmService>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
