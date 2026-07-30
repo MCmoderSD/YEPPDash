@@ -1,14 +1,16 @@
-import { HttpClient } from "@angular/common/http";
 import { Injectable, computed, inject, signal, Signal, WritableSignal } from "@angular/core";
-import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
 import { TwitchUser } from '../data/twitch-user';
 import { TwitchService } from './twitch.service';
+import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
-export class AuthService {
+export class AuthService extends ApiService {
 
-  private readonly http: HttpClient = inject(HttpClient);
+  constructor() {
+    super('auth');
+  }
+
   private readonly twitch: TwitchService = inject(TwitchService);
 
   private readonly user: WritableSignal<TwitchUser | null> = signal<TwitchUser | null>(null);
@@ -19,13 +21,11 @@ export class AuthService {
 
   loginUrl(returnPath: string): string {
     const returnUrl = `${environment.frontendBaseUrl}${returnPath}`;
-    return `${environment.apiBaseUrl}/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+    return `${this.url('login')}?returnUrl=${encodeURIComponent(returnUrl)}`;
   }
 
   async logout(): Promise<void> {
-    await firstValueFrom(
-      this.http.post(`${environment.apiBaseUrl}/auth/logout`, null, { withCredentials: true }),
-    );
+    await this.post('logout');
     this.user.set(null);
   }
 
@@ -34,9 +34,7 @@ export class AuthService {
     void this.twitch.loadChatColor();
 
     try {
-      const info: TwitchUser = await firstValueFrom(
-        this.http.get<TwitchUser>(`${environment.apiBaseUrl}/auth/me`, { withCredentials: true }),
-      );
+      const info: TwitchUser = await this.get<TwitchUser>('me');
       this.user.set(info);
     } catch {
       this.user.set(null);

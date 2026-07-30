@@ -34,6 +34,7 @@ Reverse proxying (Caddy) is not part of this repo — it's handled by the operat
 - [`PLAN.md`](PLAN.md) — architecture, design decisions and their rationale, API contracts, deployment approach
 - [`ROADMAP.md`](ROADMAP.md) — ordered, checkable implementation steps
 - [`docs/diagrams/`](docs/diagrams) — architecture overview, auth flow, and channel join/leave flow as editable [Excalidraw](https://excalidraw.com) scenes
+- [`docs/twitch-api-client.md`](docs/twitch-api-client.md) — endpoints and features of the two Twitch API wrappers (Helix + OAuth)
 
 ## Relationship to YEPPBot
 

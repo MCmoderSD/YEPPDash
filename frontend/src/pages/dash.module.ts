@@ -18,10 +18,12 @@ import { DashHomePageComponent } from './dash-home-page/dash-home-page.component
 import { SidebarComponent } from '../components/sidebar-component/sidebar.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
+import { BirthdayListComponent } from '../components/birthday-list-component/birthday-list.component';
 import { QuoteEditDialogComponent } from '../components/quote-edit-dialog-component/quote-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
 import { ScrollBarComponent } from '../components/scroll-bar-component/scroll-bar.component';
+import { LocaleDatePipe } from '../pipes/locale-date.pipe';
 import { UserComponentsModule } from '../components/user-components.module';
 
 const routes: Routes = [
@@ -31,7 +33,8 @@ const routes: Routes = [
     children: [
       { path: '', component: DashHomePageComponent, title: 'Dashboard' },
       { path: 'role-management', component: RoleManagementComponent, title: 'Role Management' },
-      { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' }
+      { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
+      { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' }
     ]
   }
 ];
@@ -42,6 +45,7 @@ const components: any[] = [
   SidebarComponent,
   RoleManagementComponent,
   QuoteManagementComponent,
+  BirthdayListComponent,
   QuoteEditDialogComponent,
   ConfirmActionDialogComponent,
   BotManageComponent
@@ -55,6 +59,7 @@ const components: any[] = [
     RouterModule.forChild(routes),
     UserComponentsModule,
     ScrollBarComponent,
+    LocaleDatePipe,
     DatePipe,
     NgOptimizedImage,
     MatButtonModule,

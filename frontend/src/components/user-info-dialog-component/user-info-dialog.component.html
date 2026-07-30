@@ -26,6 +26,15 @@
         <dd class="user-info-value">{{ user.email }}</dd>
       </div>
     }
+
+    <!-- Left out entirely rather than shown as unset, matching the email above: a detail this user
+         never shared is not worth a row of its own. -->
+    @if (birthdayDate(); as date) {
+      <div class="user-info-detail">
+        <dt class="user-info-label">Birthday</dt>
+        <dd class="user-info-value">{{ date | localeDate }}</dd>
+      </div>
+    }
   </dl>
 </mat-dialog-content>
 

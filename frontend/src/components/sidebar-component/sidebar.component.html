@@ -38,4 +38,16 @@
     <mat-icon matListItemIcon aria-hidden="true">format_quote</mat-icon>
     <span matListItemTitle>Quote Management</span>
   </a>
+
+  <a
+    mat-list-item
+    [routerLink]="birthdayListPath"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">cake</mat-icon>
+    <span matListItemTitle>Follower Birthdays</span>
+  </a>
 </mat-nav-list>

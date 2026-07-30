@@ -29,6 +29,8 @@ builder.Services.AddSingleton<TwitchChannelCache>();
 builder.Services.AddScoped<TwitchChannelService>();
 builder.Services.AddScoped<QuoteRepository>();
 builder.Services.AddScoped<QuoteService>();
+builder.Services.AddScoped<BirthdayRepository>();
+builder.Services.AddScoped<BirthdayService>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

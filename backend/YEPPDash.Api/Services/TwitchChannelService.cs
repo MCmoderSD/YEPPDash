@@ -17,43 +17,164 @@ public sealed class TwitchChannelService(
         return await apiClient.GetChatColorAsync(targetUserId, accessToken, cancellationToken);
     }
 
+    /// <summary>
+    /// Looks up as many users as asked for, by id or login, in one call.
+    /// </summary>
+    /// <remarks>
+    /// Helix caps Get Users at 100 per request and counts ids and logins against that one limit, so
+    /// the two are split together here rather than separately. Callers — and the frontend behind them —
+    /// ask for what they want and get it back as one list.
+    /// </remarks>
     public async Task<IReadOnlyList<TwitchUser>> GetUsersAsync(
         string twitchUserId,
         IReadOnlyCollection<string> userIds,
         IReadOnlyCollection<string> logins,
         CancellationToken cancellationToken)
     {
+        if (userIds.Count + logins.Count is 0) return [];
+
         var accessToken = await GetAccessTokenAsync(twitchUserId, cancellationToken);
-        return await apiClient.GetUsersAsync(userIds, logins, accessToken, cancellationToken);
+
+        var keyed = userIds.Select(value => (IsId: true, Value: value))
+            .Concat(logins.Select(value => (IsId: false, Value: value)))
+            .ToArray();
+
+        var users = new List<TwitchUser>(keyed.Length);
+
+        // Sequential rather than in parallel: Twitch bills every call against the same rate limit,
+        // and a wide fan-out only trades one slow request for a throttled one.
+        foreach (var batch in keyed.Chunk(TwitchApiClient.MaxBatchSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            users.AddRange(await apiClient.GetUsersAsync(
+                batch.Where(entry => entry.IsId).Select(entry => entry.Value).ToArray(),
+                batch.Where(entry => !entry.IsId).Select(entry => entry.Value).ToArray(),
+                accessToken,
+                cancellationToken));
+        }
+
+        return users;
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsAsync(
         string broadcasterId, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync(
+        return GetChannelListAsync(
             ChannelRole.Moderator,
             broadcasterId,
             (token, cursor) => apiClient.GetModeratorsAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
             cancellationToken);
+    }
+
+    /// <summary>
+    /// Which of the given users moderate the channel, however many are asked about.
+    /// </summary>
+    /// <remarks>
+    /// Not served from the cache, and neither is the VIP equivalent below: these exist to answer a
+    /// question about specific users, and the cached list is only known to be complete after a full
+    /// walk — which is exactly what they avoid.
+    /// </remarks>
+    public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsByIdAsync(
+        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        return CheckInBatchesAsync(
+            broadcasterId,
+            userIds,
+            (batch, token) => apiClient.GetModeratorsByIdAsync(broadcasterId, batch, token, cancellationToken),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Which of the given users are VIPs of the channel, however many are asked about.
+    /// </summary>
+    public Task<IReadOnlyList<TwitchChannelUser>> GetVipsByIdAsync(
+        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        return CheckInBatchesAsync(
+            broadcasterId,
+            userIds,
+            (batch, token) => apiClient.GetVipsByIdAsync(broadcasterId, batch, token, cancellationToken),
+            cancellationToken);
+    }
+
+    // Unpaginated by Helix and never changed through this API — editors are managed on Twitch's own
+    // site — so there is one request to make and nothing to invalidate.
+    public async Task<IReadOnlyList<TwitchChannelEditor>> GetEditorsAsync(
+        string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetEditorsAsync(broadcasterId, accessToken, cancellationToken);
+    }
+
+    /// <summary>
+    /// Which of the given users are editors of the channel.
+    /// </summary>
+    /// <remarks>
+    /// Twitch offers no filtered form of Get Channel Editors, so the whole list is fetched and matched
+    /// here. Two consequences: this is the one membership check with no batch limit, because the ids
+    /// never reach Twitch at all — and it is the one that cannot be answered without pulling the full
+    /// list. It is still not cached, since an editor added on Twitch's own site has nothing here that
+    /// would notice.
+    /// </remarks>
+    public async Task<IReadOnlyList<TwitchChannelEditor>> GetEditorsByIdAsync(
+        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0) return [];
+
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        var editors = await GetEditorsAsync(broadcasterId, cancellationToken);
+
+        return editors.Where(editor => wanted.Contains(editor.UserId)).ToList();
+    }
+
+    /// <summary>
+    /// Everyone following the channel, walked and cached like the moderator and VIP lists.
+    /// </summary>
+    /// <remarks>
+    /// Nothing here can add a follower, so unlike the other roles there is no write to invalidate the
+    /// cache on. Keeping it current rests entirely on the first-page check in
+    /// <see cref="GetChannelListAsync{T}"/>, which is worth knowing about: it only notices new entries
+    /// that Helix puts on the first page.
+    /// </remarks>
+    public Task<IReadOnlyList<TwitchFollower>> GetFollowersAsync(
+        string broadcasterId, CancellationToken cancellationToken)
+    {
+        return GetChannelListAsync(
+            ChannelRole.Follower,
+            broadcasterId,
+            (token, cursor) => apiClient.GetFollowersAsync(broadcasterId, token, cursor, cancellationToken),
+            follower => follower.UserId,
+            cancellationToken);
+    }
+
+    public async Task<TwitchFollower?> GetFollowerAsync(
+        string broadcasterId, string userId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetFollowerAsync(broadcasterId, userId, accessToken, cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetVipsAsync(
         string broadcasterId, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync(
+        return GetChannelListAsync(
             ChannelRole.Vip,
             broadcasterId,
             (token, cursor) => apiClient.GetVipsAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
             cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersAsync(
         string broadcasterId, CancellationToken cancellationToken)
     {
-        return GetChannelUsersAsync(
+        return GetChannelListAsync(
             ChannelRole.Blocked,
             broadcasterId,
             (token, cursor) => apiClient.GetBlockedUsersAsync(broadcasterId, token, cursor, cancellationToken),
+            user => user.UserId,
             cancellationToken);
     }
 
@@ -149,10 +270,42 @@ public sealed class TwitchChannelService(
         logger.LogInformation("Unblocked {UserId} for user {BroadcasterId}", userId, broadcasterId);
     }
 
-    private async Task<IReadOnlyList<TwitchChannelUser>> GetChannelUsersAsync(
+    /// <summary>
+    /// Runs a role membership check over as many users as asked about, 100 per Helix call.
+    /// </summary>
+    private async Task<IReadOnlyList<TwitchChannelUser>> CheckInBatchesAsync(
+        string broadcasterId,
+        IReadOnlyCollection<string> userIds,
+        Func<IReadOnlyCollection<string>, string, Task<IReadOnlyList<TwitchChannelUser>>> check,
+        CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0) return [];
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var found = new List<TwitchChannelUser>();
+
+        // Sequential for the same reason as Get Users above: the rate limit is shared, so fanning out
+        // buys nothing.
+        foreach (var batch in userIds.Chunk(TwitchApiClient.MaxBatchSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            found.AddRange(await check(batch, accessToken));
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    /// Walks a paged channel list to the end, serving the cached one while it is still current.
+    /// </summary>
+    /// <param name="idOf">
+    /// How to read an entry's user id, which is what the freshness check below compares on.
+    /// </param>
+    private async Task<IReadOnlyList<T>> GetChannelListAsync<T>(
         ChannelRole role,
         string broadcasterId,
-        Func<string, string?, Task<HelixPage<TwitchChannelUser>>> fetchPage,
+        Func<string, string?, Task<HelixPage<T>>> fetchPage,
+        Func<T, string> idOf,
         CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
@@ -164,8 +317,8 @@ public sealed class TwitchChannelService(
             return page.Items;
         }
 
-        var cached = cache.Get(role, broadcasterId);
-        if (cached is not null && IsCoveredBy(page.Items, cached))
+        var cached = cache.Get<T>(role, broadcasterId);
+        if (cached is not null && IsCoveredBy(page.Items, cached, idOf))
         {
             logger.LogDebug(
                 "Cache for {Role}s of {BroadcasterId} still current ({Count} entries)",
@@ -174,7 +327,7 @@ public sealed class TwitchChannelService(
             return cached;
         }
 
-        var all = new List<TwitchChannelUser>(page.Items);
+        var all = new List<T>(page.Items);
         var pages = 1;
 
         while (page.Cursor is not null)
@@ -194,10 +347,19 @@ public sealed class TwitchChannelService(
         return all;
     }
 
-    private static bool IsCoveredBy(IReadOnlyList<TwitchChannelUser> page, IReadOnlyList<TwitchChannelUser> cached)
+    /// <summary>
+    /// Whether the freshly fetched first page holds nothing the cached list does not already know.
+    /// </summary>
+    /// <remarks>
+    /// This is what saves the whole walk on a warm cache: one page in, and if every entry on it is
+    /// familiar the rest is assumed unchanged. It rests on Helix putting new entries on the first
+    /// page — something added further in would be missed until the cache is dropped another way.
+    /// </remarks>
+    private static bool IsCoveredBy<T>(
+        IReadOnlyList<T> page, IReadOnlyList<T> cached, Func<T, string> idOf)
     {
-        var known = cached.Select(user => user.UserId).ToHashSet(StringComparer.Ordinal);
-        return page.All(user => known.Contains(user.UserId));
+        var known = cached.Select(idOf).ToHashSet(StringComparer.Ordinal);
+        return page.All(entry => known.Contains(idOf(entry)));
     }
 
     private async Task<string> GetAccessTokenAsync(string twitchUserId, CancellationToken cancellationToken)

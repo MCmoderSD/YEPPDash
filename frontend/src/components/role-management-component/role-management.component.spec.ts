@@ -35,8 +35,8 @@ const VIPS: ChannelUser[] = [{ id: '42', login: 'alice', displayName: 'AliceInCh
 class FakeTwitchService {
   readonly calls: string[] = [];
 
-  loadModerators = vi.fn(async () => { this.calls.push('loadModerators'); return MODS; });
-  loadVips = vi.fn(async () => { this.calls.push('loadVips'); return VIPS; });
+  getModerators = vi.fn(async () => { this.calls.push('getModerators'); return MODS; });
+  getVips = vi.fn(async () => { this.calls.push('getVips'); return VIPS; });
   getUsers = vi.fn(async (ids: readonly string[] = [], logins: readonly string[] = []) => {
     this.calls.push(`getUsers(${ids.join(',')}|${logins.join(',')})`);
     return [...ids, ...logins].map((key, index) => twitchUser(`${key}`, `User${index}`));
@@ -100,7 +100,7 @@ describe('RoleManagementComponent', () => {
   it('should load the moderator list and resolve avatars in one batch', async () => {
     await render(RoleManagementMode.Moderator);
 
-    expect(twitch.calls).toEqual(['loadModerators', 'getUsers(9|)']);
+    expect(twitch.calls).toEqual(['getModerators', 'getUsers(9|)']);
     expect(element.querySelector('.role-management-title')!.textContent).toContain('Moderator Management');
     expect(element.querySelectorAll('.user-table-name')).toHaveLength(1);
   });
@@ -108,7 +108,7 @@ describe('RoleManagementComponent', () => {
   it('should load VIPs instead when asked for that mode', async () => {
     await render(RoleManagementMode.Vip);
 
-    expect(twitch.calls).toEqual(['loadVips', 'getUsers(42|)']);
+    expect(twitch.calls).toEqual(['getVips', 'getUsers(42|)']);
     expect(element.querySelector('.role-management-title')!.textContent).toContain('VIP Management');
   });
 
@@ -138,7 +138,7 @@ describe('RoleManagementComponent', () => {
     expect(twitch.removeModerator).not.toHaveBeenCalled();
     expect(notifications.successes[0]).toContain('no longer a VIP');
     // The list is re-read so the row disappears without a manual refresh.
-    expect(twitch.calls).toContain('loadVips');
+    expect(twitch.calls).toContain('getVips');
   });
 
   it('should remove a moderator through the moderator endpoint', async () => {
@@ -195,7 +195,7 @@ describe('RoleManagementComponent', () => {
     expect(twitch.addModerator).not.toHaveBeenCalled();
     expect(notifications.successes[0]).toContain('Newbie is now a VIP');
     // The list is re-read so the new row shows up without a manual refresh.
-    expect(twitch.calls).toContain('loadVips');
+    expect(twitch.calls).toContain('getVips');
   });
 
   it('should add through the moderator endpoint in moderator mode', async () => {
