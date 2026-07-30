@@ -10,6 +10,7 @@ import { NavbarComponent } from './navbar-component/navbar.component';
 import { FooterComponent } from './footer-component/footer.component';
 import { UserMenuComponent } from './user-menu-component/user-menu.component';
 import { NotificationsComponent } from './notifications-component/notifications.component';
+import { LocaleDatePipe } from '../pipes/locale-date.pipe';
 
 const components: any[] = [
   NavbarComponent,
@@ -22,6 +23,7 @@ const components: any[] = [
   declarations: [components],
   imports: [
     RouterModule,
+    LocaleDatePipe,
     NgOptimizedImage,
     MatButtonModule,
     MatDividerModule,

@@ -3,7 +3,7 @@ import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
 import { TwitchUser } from '../../data/twitch-user';
-import { BanStatus } from '../../data/ban-status';
+import { BanStatus } from '../../data/banned-user';
 
 function contains(users: readonly ChannelUser[], userId: string): boolean {
   return users.some((user: ChannelUser): boolean => user.id === userId);
@@ -113,8 +113,8 @@ export class BotManageComponent {
           this.twitch.getUsers([botUserId]),
           this.twitch.getChatColor(botUserId),
           this.twitch.getBanStatus(botUserId),
-          this.twitch.loadBlocked(),
-          this.twitch.loadModerators(),
+          this.twitch.getBlocked(),
+          this.twitch.getModerators(),
           this.twitch.getChatters(),
         ]);
 

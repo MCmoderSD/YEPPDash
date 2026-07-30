@@ -29,6 +29,8 @@ export class SidebarComponent {
 
   protected readonly quoteManagementPath: string = isDashHost() ? '/quotes' : '/dash/quotes';
 
+  protected readonly birthdayListPath: string = isDashHost() ? '/birthdays' : '/dash/birthdays';
+
   protected close(): void {
     this.sidebar.close();
   }

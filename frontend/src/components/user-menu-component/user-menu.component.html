@@ -31,9 +31,24 @@
       <span class="user-menu-label">Email:</span>
       <span class="user-menu-value">{{ user().email ?? 'Not shared' }}</span>
     </p>
+    <p class="user-menu-detail">
+      <span class="user-menu-label">Birthday:</span>
+      <span class="user-menu-value">
+        @if (birthdayDate(); as date) {
+          {{ date | localeDate }}
+        } @else {
+          Not set
+        }
+      </span>
+    </p>
   </div>
 
   <mat-divider/>
+
+  <button mat-menu-item type="button" (click)="editBirthday()">
+    <mat-icon aria-hidden="true">cake</mat-icon>
+    <span>{{ birthday() ? 'Change birthday' : 'Set birthday' }}</span>
+  </button>
 
   <button mat-menu-item type="button" (click)="logout()">
     <mat-icon aria-hidden="true">logout</mat-icon>

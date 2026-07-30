@@ -9,3 +9,8 @@ export interface BannedUser {
   reason: string | null;
   moderator: ChannelUser;
 }
+
+export interface BanStatus {
+  banned: boolean;
+  ban: BannedUser | null;
+}

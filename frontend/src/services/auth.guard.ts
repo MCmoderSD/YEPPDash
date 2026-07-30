@@ -12,8 +12,6 @@ export const authGuard: CanActivateFn = async (): Promise<boolean | UrlTree> => 
   const user: TwitchUser | null = await auth.ensureLoaded();
   if (user !== null) return true;
 
-  // On the dash host, '/' is this very guarded route - redirecting there again would loop.
-  // The marketing site is a different origin, so this has to be a real navigation, not a UrlTree.
   if (isDashHost()) {
     window.location.href = environment.marketingBaseUrl;
     return false;

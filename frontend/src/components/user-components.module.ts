@@ -13,6 +13,7 @@ import { UserInfoDialogComponent } from './user-info-dialog-component/user-info-
 import { UserAddDialogComponent } from './user-add-dialog-component/user-add-dialog.component';
 import { UserTableComponent } from './user-table-component/user-table.component';
 import { ScrollBarComponent } from './scroll-bar-component/scroll-bar.component';
+import { LocaleDatePipe } from '../pipes/locale-date.pipe';
 
 const components: any[] = [
   UserInfoDialogComponent,
@@ -27,6 +28,7 @@ const components: any[] = [
   declarations: [components],
   imports: [
     ScrollBarComponent,
+    LocaleDatePipe,
     NgOptimizedImage,
     MatButtonModule,
     MatDialogModule,

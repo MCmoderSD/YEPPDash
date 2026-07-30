@@ -34,26 +34,29 @@ describe('TwitchService', () => {
     expect(service.chatColor()).toBeNull();
   });
 
-  it('should publish the loaded moderator list as a signal', async () => {
-    expect(service.moderators()).toBeNull();
-
-    const loading = service.loadModerators();
+  it('should list the moderators', async () => {
+    const loading = service.getModerators();
     http.expectOne(`${API}/twitch/moderators`).flush([channelUser(1), channelUser(2)]);
 
-    expect(await loading).toHaveLength(2);
-    expect(service.moderators()?.map((user) => user.login)).toEqual(['user1', 'user2']);
+    expect((await loading).map((user) => user.login)).toEqual(['user1', 'user2']);
   });
 
-  it('should drop the cached list after a moderator change so the next read refetches', async () => {
-    const loading = service.loadModerators();
-    http.expectOne(`${API}/twitch/moderators`).flush([channelUser(1)]);
-    await loading;
-
+  it('should add a moderator', async () => {
     const adding = service.addModerator('42');
-    http.expectOne(`${API}/twitch/moderators/42`).flush(null, { status: 204, statusText: 'No Content' });
-    await adding;
+    const request = http.expectOne(`${API}/twitch/moderators/42`);
+    expect(request.request.method).toBe('POST');
+    request.flush(null, { status: 204, statusText: 'No Content' });
 
-    expect(service.moderators()).toBeNull();
+    await adding;
+  });
+
+  it('should remove a moderator', async () => {
+    const removing = service.removeModerator('42');
+    const request = http.expectOne(`${API}/twitch/moderators/42`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    await removing;
   });
 
   // Chatters are never cached, so two reads have to hit the network twice.
@@ -67,12 +70,11 @@ describe('TwitchService', () => {
     expect(await second).toHaveLength(2);
   });
 
-  it('should publish the loaded blocked list as a signal', async () => {
-    const loading = service.loadBlocked();
+  it('should list the blocked users', async () => {
+    const loading = service.getBlocked();
     http.expectOne(`${API}/twitch/blocked`).flush([channelUser(7)]);
 
-    expect(await loading).toHaveLength(1);
-    expect(service.blocked()?.map((user) => user.login)).toEqual(['user7']);
+    expect((await loading).map((user) => user.login)).toEqual(['user7']);
   });
 
   it('should unban a user', async () => {
@@ -104,17 +106,209 @@ describe('TwitchService', () => {
     await loading;
   });
 
-  // Helix caps Get Users at 100 ids/logins, so anything longer has to be split — the caller
-  // still gets one flat list back.
-  it('should split more than 100 users into batches and merge the results', async () => {
+  // Splitting for Helix is the backend's job now, so however long the list, this asks once.
+  it('should ask for more than 100 users in a single request', async () => {
     const ids = Array.from({ length: 250 }, (_, index) => `${index}`);
     const loading = service.getUsers(ids);
 
     const requests = http.match((candidate) => candidate.url === `${API}/twitch/users`);
-    expect(requests.map((request) => request.request.params.getAll('id')?.length)).toEqual([100, 100, 50]);
+    expect(requests).toHaveLength(1);
+    expect(requests[0].request.params.getAll('id')).toHaveLength(250);
 
-    requests.forEach((request, batch) => request.flush([{ id: `batch${batch}` }]));
+    requests[0].flush([{ id: 'whatever' }]);
+    await loading;
+  });
 
-    expect((await loading).map((user) => user.id)).toEqual(['batch0', 'batch1', 'batch2']);
+  it('should list the editors', async () => {
+    const loading = service.getEditors();
+    http.expectOne(`${API}/twitch/editors`)
+      .flush([{ id: '1', displayName: 'Editor', createdAt: '2019-02-15T04:40:59Z' }]);
+
+    expect((await loading).map((editor) => editor.displayName)).toEqual(['Editor']);
+  });
+
+  it('should check moderators as repeated id parameters', async () => {
+    const checking = service.getModeratorsById(['1', '2']);
+
+    const request = http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`);
+    expect(request.request.params.getAll('id')).toEqual(['1', '2']);
+
+    request.flush([channelUser(1)]);
+
+    // Only the ids that really are moderators come back, which is what makes this a membership check.
+    expect((await checking).map((user) => user.id)).toEqual(['1']);
+  });
+
+  it('should check more than 100 moderators in a single request', async () => {
+    const ids = Array.from({ length: 150 }, (_, index) => `${index}`);
+    const checking = service.getModeratorsById(ids);
+
+    const requests = http.match((candidate) => candidate.url === `${API}/twitch/moderators/check`);
+    expect(requests).toHaveLength(1);
+    expect(requests[0].request.params.getAll('id')).toHaveLength(150);
+
+    requests[0].flush([channelUser(1)]);
+    await checking;
+  });
+
+  // The endpoint rejects an empty list, and the answer is knowable without asking.
+  it('should not touch the network for a moderator check of nobody', async () => {
+    expect(await service.getModeratorsById([])).toEqual([]);
+  });
+
+  it('should report a user who does not moderate', async () => {
+    const checking = service.isModerator('42');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`).flush([]);
+
+    expect(await checking).toBe(false);
+  });
+
+  it('should report a user who does moderate', async () => {
+    const checking = service.isModerator('1');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`).flush([channelUser(1)]);
+
+    expect(await checking).toBe(true);
+  });
+
+  it('should check VIPs as repeated id parameters', async () => {
+    const checking = service.getVipsById(['1', '2']);
+
+    const request = http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`);
+    expect(request.request.params.getAll('id')).toEqual(['1', '2']);
+
+    request.flush([channelUser(2)]);
+
+    expect((await checking).map((user) => user.id)).toEqual(['2']);
+  });
+
+  it('should check more than 100 VIPs in a single request', async () => {
+    const ids = Array.from({ length: 150 }, (_, index) => `${index}`);
+    const checking = service.getVipsById(ids);
+
+    const requests = http.match((candidate) => candidate.url === `${API}/twitch/vips/check`);
+    expect(requests).toHaveLength(1);
+    expect(requests[0].request.params.getAll('id')).toHaveLength(150);
+
+    requests[0].flush([channelUser(2)]);
+    await checking;
+  });
+
+  it('should not touch the network for a VIP check of nobody', async () => {
+    expect(await service.getVipsById([])).toEqual([]);
+  });
+
+  it('should report a user who is not a VIP', async () => {
+    const checking = service.isVip('42');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([]);
+
+    expect(await checking).toBe(false);
+  });
+
+  it('should report a user who is a VIP', async () => {
+    const checking = service.isVip('2');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([channelUser(2)]);
+
+    expect(await checking).toBe(true);
+  });
+
+  // The two checks are different endpoints, so a VIP must not be reported as a moderator.
+  it('should keep the moderator and VIP checks on separate endpoints', async () => {
+    const moderators = service.isModerator('1');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`).flush([]);
+
+    const vips = service.isVip('1');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([channelUser(1)]);
+
+    expect([await moderators, await vips]).toEqual([false, true]);
+  });
+
+  it('should check editors as repeated id parameters', async () => {
+    const checking = service.getEditorsById(['1', '2']);
+
+    const request = http.expectOne((candidate) => candidate.url === `${API}/twitch/editors/check`);
+    expect(request.request.params.getAll('id')).toEqual(['1', '2']);
+
+    request.flush([{ id: '2', displayName: 'Editor', createdAt: '2019-02-15T04:40:59Z' }]);
+
+    expect((await checking).map((editor) => editor.id)).toEqual(['2']);
+  });
+
+  // Twitch has no filtered form of Get Channel Editors, so the backend matches the whole list — the
+  // ids never reach Twitch and nothing here has to be split.
+  it('should check any number of editors in a single request', async () => {
+    const ids = Array.from({ length: 150 }, (_, index) => `${index}`);
+    const checking = service.getEditorsById(ids);
+
+    const requests = http.match((candidate) => candidate.url === `${API}/twitch/editors/check`);
+    expect(requests).toHaveLength(1);
+    expect(requests[0].request.params.getAll('id')).toHaveLength(150);
+
+    requests[0].flush([]);
+    await checking;
+  });
+
+  it('should not touch the network for an editor check of nobody', async () => {
+    expect(await service.getEditorsById([])).toEqual([]);
+  });
+
+  it('should report a user who is not an editor', async () => {
+    const checking = service.isEditor('42');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/editors/check`).flush([]);
+
+    expect(await checking).toBe(false);
+  });
+
+  it('should report a user who is an editor', async () => {
+    const checking = service.isEditor('1');
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/editors/check`)
+      .flush([{ id: '1', displayName: 'Editor', createdAt: '2019-02-15T04:40:59Z' }]);
+
+    expect(await checking).toBe(true);
+  });
+
+  // The check must not collide with the full editor list on the neighbouring route.
+  it('should keep the editor check off the plain editors route', async () => {
+    const checking = service.isEditor('1');
+
+    http.expectNone(`${API}/twitch/editors`);
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/editors/check`).flush([]);
+
+    await checking;
+  });
+
+  it('should list the followers', async () => {
+    const loading = service.getFollowers();
+    http.expectOne(`${API}/twitch/followers`).flush([
+      { id: '1', login: 'user1', displayName: 'User1', followedAt: '2022-05-24T22:22:08Z' },
+    ]);
+
+    expect((await loading).map((follower) => follower.login)).toEqual(['user1']);
+  });
+
+  // "Does not follow" is a normal answer, not an error, so it arrives as a 200 with a false flag.
+  it('should report a user who does not follow without treating it as a failure', async () => {
+    const checking = service.isFollower('42');
+    http.expectOne(`${API}/twitch/followers/42`).flush({ following: false, follow: null });
+
+    expect(await checking).toBe(false);
+  });
+
+  it('should report a user who does follow', async () => {
+    const checking = service.getFollowStatus('1');
+    http.expectOne(`${API}/twitch/followers/1`).flush({
+      following: true,
+      follow: { id: '1', login: 'user1', displayName: 'User1', followedAt: '2022-05-24T22:22:08Z' },
+    });
+
+    const status = await checking;
+    expect([status.following, status.follow?.followedAt]).toEqual([true, '2022-05-24T22:22:08Z']);
+  });
+
+  // The id goes into the path, so one that is not plain digits must not break out of it.
+  it('should escape the user id in a follow check', async () => {
+    const checking = service.getFollowStatus('a/b');
+    http.expectOne(`${API}/twitch/followers/a%2Fb`).flush({ following: false, follow: null });
+
+    await checking;
   });
 });

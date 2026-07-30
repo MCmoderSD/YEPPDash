@@ -102,8 +102,8 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Date</th>
         <td mat-cell *matCellDef="let quote" class="quote-management-date">
           <!-- The title carries the full timestamp so the short form stays readable in the cell. -->
-          <time [attr.datetime]="quote.timestamp" [title]="quote.timestamp | date: 'medium'">
-            {{ quote.timestamp | date: 'mediumDate' }}
+          <time [attr.datetime]="quote.timestamp" [title]="quote.timestamp | localeDate: 'medium' : 'short'">
+            {{ quote.timestamp | localeDate: 'medium' }}
           </time>
         </td>
       </ng-container>

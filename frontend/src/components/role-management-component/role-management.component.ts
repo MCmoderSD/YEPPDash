@@ -117,8 +117,8 @@ export class RoleManagementComponent {
     this.loading.set(true);
     try {
       const entries: ChannelUser[] = mode === RoleManagementMode.Vip
-        ? await this.twitch.loadVips()
-        : await this.twitch.loadModerators();
+        ? await this.twitch.getVips()
+        : await this.twitch.getModerators();
 
       this.users.set(await this.twitch.getUsers(entries.map((entry) => entry.id)));
     } catch {

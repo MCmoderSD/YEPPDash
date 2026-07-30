@@ -34,8 +34,8 @@ class FakeTwitchService {
   getUsers = vi.fn(async () => [BOT]);
   getChatColor = vi.fn(async () => '#9146FF');
   getBanStatus = vi.fn(async () => ({ banned: false, ban: null }));
-  loadBlocked = vi.fn(async (): Promise<ChannelUser[]> => []);
-  loadModerators = vi.fn(async (): Promise<ChannelUser[]> => [channelUser(BOT_ID)]);
+  getBlocked = vi.fn(async (): Promise<ChannelUser[]> => []);
+  getModerators = vi.fn(async (): Promise<ChannelUser[]> => [channelUser(BOT_ID)]);
   getChatters = vi.fn(async (): Promise<ChannelUser[]> => [channelUser(BOT_ID)]);
   unbanUser = vi.fn(async () => undefined);
   unblockUser = vi.fn(async () => undefined);
@@ -133,7 +133,7 @@ describe('BotManageComponent', () => {
   });
 
   it('should offer an unblock when the bot is on the block list', async () => {
-    twitch.loadBlocked.mockResolvedValueOnce([channelUser(BOT_ID)]);
+    twitch.getBlocked.mockResolvedValueOnce([channelUser(BOT_ID)]);
     await render();
 
     expect(issues().join(' ')).toContain('You have blocked');
@@ -146,7 +146,7 @@ describe('BotManageComponent', () => {
   });
 
   it('should offer moderator promotion when the bot is not a moderator', async () => {
-    twitch.loadModerators.mockResolvedValueOnce([]);
+    twitch.getModerators.mockResolvedValueOnce([]);
     await render();
 
     expect(issues().join(' ')).toContain('is not a moderator');

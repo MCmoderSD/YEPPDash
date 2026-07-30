@@ -1,0 +1,133 @@
+<section class="birthday-list">
+
+  <header class="birthday-list-header">
+    <h1 class="birthday-list-title">Follower Birthdays</h1>
+    <p class="birthday-list-count">
+      {{ count() }} follower{{ count() === 1 ? '' : 's' }} shared a birthday
+    </p>
+  </header>
+
+  <div class="birthday-list-toolbar">
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="loading()"
+      (click)="reload()"
+    >
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+      <span>Refresh</span>
+    </button>
+  </div>
+
+  <mat-progress-bar
+    class="birthday-list-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!loading()"
+    [style.visibility]="loading() ? 'visible' : 'hidden'"
+  />
+
+  <mat-form-field appearance="outline" class="birthday-list-search">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      #search
+      type="search"
+      autocomplete="off"
+      placeholder="Name or user ID"
+      (input)="filter(search.value)"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+  </mat-form-field>
+
+  <div #scroll class="birthday-list-scroll">
+    <!-- Sorted by what is coming up rather than alphabetically: the reason to open this page is to
+         see whose birthday is next. -->
+    <table
+      mat-table
+      matSort
+      matSortActive="next"
+      matSortDirection="asc"
+      matSortDisableClear
+      [dataSource]="dataSource"
+      class="birthday-list-grid"
+    >
+
+      <ng-container matColumnDef="user">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Follower</th>
+        <td mat-cell *matCellDef="let entry">
+          <!-- The flex lives on this button rather than on the cell: a td set to display:flex stops
+               being a table cell, which takes the column widths and the row's border with it. -->
+          @if (entry.user) {
+            <button
+              type="button"
+              class="birthday-list-user"
+              [attr.aria-label]="'Details for ' + entry.name"
+              (click)="showDetails(entry, $event)"
+            >
+              <img
+                class="birthday-list-avatar"
+                [ngSrc]="entry.user.profileImageUrl"
+                [width]=32
+                [height]=32
+                alt=""
+              />
+              <span class="birthday-list-name">{{ entry.name }}</span>
+            </button>
+          } @else {
+            <!-- Nothing to open a dialog with, so this one stays plain text. -->
+            <span class="birthday-list-name">{{ entry.name }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Birthday</th>
+        <td mat-cell *matCellDef="let entry" class="birthday-list-date">
+          <!-- The attribute stays ISO for machines; only the text follows the reader's locale. -->
+          <time [attr.datetime]="entry.date | date: 'yyyy-MM-dd'">
+            {{ entry.date | localeDate }}
+          </time>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="age">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="birthday-list-age">Age</th>
+        <td mat-cell *matCellDef="let entry" class="birthday-list-age">{{ entry.age }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="next">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Next</th>
+        <td mat-cell *matCellDef="let entry" class="birthday-list-next">
+          <span [class.birthday-list-today]="entry.daysUntil === 0">{{ entry.nextLabel }}</span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <!-- The row is the mouse path into the details; the button in the first cell is the keyboard
+           one. A row whose account no longer resolves has no user to show, so it stays inert. -->
+      <tr
+        mat-row
+        *matRowDef="let entry; columns: columns"
+        class="birthday-list-row"
+        [class.birthday-list-clickable]="entry.user"
+        (click)="showDetails(entry)"
+      ></tr>
+
+      <tr class="birthday-list-empty-row" *matNoDataRow>
+        <td class="birthday-list-empty" [attr.colspan]="columns.length">
+          @if (loading()) {
+            Loading birthdays…
+          } @else if (unreachable()) {
+            Could not load the birthdays. Please try again.
+          } @else if (query()) {
+            No follower matches “{{ query() }}”.
+          } @else {
+            None of your followers has shared a birthday with YEPPBot yet.
+          }
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <app-scroll-bar [target]="scroll"/>
+</section>

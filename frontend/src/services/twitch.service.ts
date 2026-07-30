@@ -1,44 +1,29 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Service, signal, Signal, WritableSignal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { environment } from '../environments/environment';
+import { HttpParams } from '@angular/common/http';
+import { Service, signal, Signal, WritableSignal } from '@angular/core';
 import { ChatColor } from '../data/chat-color';
 import { ChannelUser } from '../data/channel-user';
+import { ChannelEditor } from '../data/channel-editor';
 import { TwitchUser } from '../data/twitch-user';
-import { BanStatus } from '../data/ban-status';
-
-// Twitch resolves at most 100 ids/logins per Get Users call, and the backend rejects anything
-// beyond that, so longer lists are split up here instead of at every call site.
-const BATCH_SIZE = 100;
+import { Follower, FollowStatus } from '../data/follower';
+import { BanStatus } from '../data/banned-user';
+import { ApiService } from './api.service';
 
 @Service()
-export class TwitchService {
+export class TwitchService extends ApiService {
 
-  private readonly http: HttpClient = inject(HttpClient);
+  constructor() {
+    super('twitch');
+  }
 
   private readonly color: WritableSignal<string | null> = signal<string | null>(null);
 
-  private readonly moderatorList: WritableSignal<ChannelUser[] | null> = signal<ChannelUser[] | null>(null);
-
-  private readonly vipList: WritableSignal<ChannelUser[] | null> = signal<ChannelUser[] | null>(null);
-
-  private readonly blockedList: WritableSignal<ChannelUser[] | null> = signal<ChannelUser[] | null>(null);
-
-  private readonly colorsByUser: Map<string,string | null> = new Map<string, string | null>();
+  private readonly colorsByUser: Map<string, string | null> = new Map<string, string | null>();
 
   readonly chatColor: Signal<string | null> = this.color.asReadonly();
 
-  readonly moderators: Signal<ChannelUser[] | null> = this.moderatorList.asReadonly();
-
-  readonly vips: Signal<ChannelUser[] | null> = this.vipList.asReadonly();
-
-  readonly blocked: Signal<ChannelUser[] | null> = this.blockedList.asReadonly();
-
   async loadChatColor(): Promise<void> {
     try {
-      const response: ChatColor = await firstValueFrom(
-        this.http.get<ChatColor>(`${environment.apiBaseUrl}/twitch/chat-color`, { withCredentials: true }),
-      );
+      const response: ChatColor = await this.get<ChatColor>('chat-color');
       this.color.set(response.color);
     } catch {
       this.color.set(null);
@@ -51,12 +36,7 @@ export class TwitchService {
 
     let color: string | null = null;
     try {
-      const response: ChatColor = await firstValueFrom(
-        this.http.get<ChatColor>(
-          `${environment.apiBaseUrl}/twitch/chat-color/${encodeURIComponent(userId)}`,
-          { withCredentials: true },
-        ),
-      );
+      const response: ChatColor = await this.get<ChatColor>(`chat-color/${encodeURIComponent(userId)}`);
       color = response.color;
     } catch {
       color = null;
@@ -66,117 +46,110 @@ export class TwitchService {
     return color;
   }
 
-  async loadModerators(): Promise<ChannelUser[]> {
-    const moderators: ChannelUser[] = await this.getChannelUsers('moderators');
-    this.moderatorList.set(moderators);
-    return moderators;
+  getUsers(userIds: readonly string[] = [], logins: readonly string[] = []): Promise<TwitchUser[]> {
+    if (userIds.length + logins.length === 0) return Promise.resolve([]);
+
+    return this.get<TwitchUser[]>('users', this.repeated({ id: userIds, login: logins }));
   }
 
-  async loadVips(): Promise<ChannelUser[]> {
-    const vips: ChannelUser[] = await this.getChannelUsers('vips');
-    this.vipList.set(vips);
-    return vips;
+  getModerators(): Promise<ChannelUser[]> {
+    return this.get<ChannelUser[]>('moderators');
   }
 
-  // No signal to back this one: who is in chat turns over constantly, so a remembered list would
-  // go stale immediately. Callers get a fresh roster every time and decide when to ask.
+  getModeratorsById(userIds: readonly string[]): Promise<ChannelUser[]> {
+    return this.checkChannelRole<ChannelUser>('moderators', userIds);
+  }
+
+  async isModerator(userId: string): Promise<boolean> {
+    return (await this.getModeratorsById([userId])).length > 0;
+  }
+
+  addModerator(userId: string): Promise<void> {
+    return this.post(`moderators/${encodeURIComponent(userId)}`);
+  }
+
+  removeModerator(userId: string): Promise<void> {
+    return this.delete(`moderators/${encodeURIComponent(userId)}`);
+  }
+
+  getVips(): Promise<ChannelUser[]> {
+    return this.get<ChannelUser[]>('vips');
+  }
+
+  getVipsById(userIds: readonly string[]): Promise<ChannelUser[]> {
+    return this.checkChannelRole<ChannelUser>('vips', userIds);
+  }
+
+  async isVip(userId: string): Promise<boolean> {
+    return (await this.getVipsById([userId])).length > 0;
+  }
+
+  addVip(userId: string): Promise<void> {
+    return this.post(`vips/${encodeURIComponent(userId)}`);
+  }
+
+  removeVip(userId: string): Promise<void> {
+    return this.delete(`vips/${encodeURIComponent(userId)}`);
+  }
+
+  getEditors(): Promise<ChannelEditor[]> {
+    return this.get<ChannelEditor[]>('editors');
+  }
+
+  getEditorsById(userIds: readonly string[]): Promise<ChannelEditor[]> {
+    return this.checkChannelRole<ChannelEditor>('editors', userIds);
+  }
+
+  async isEditor(userId: string): Promise<boolean> {
+    return (await this.getEditorsById([userId])).length > 0;
+  }
+
+  getFollowers(): Promise<Follower[]> {
+    return this.get<Follower[]>('followers');
+  }
+
+  getFollowStatus(userId: string): Promise<FollowStatus> {
+    return this.get<FollowStatus>(`followers/${encodeURIComponent(userId)}`);
+  }
+
+  async isFollower(userId: string): Promise<boolean> {
+    return (await this.getFollowStatus(userId)).following;
+  }
+
   getChatters(): Promise<ChannelUser[]> {
-    return this.getChannelUsers('chatters');
+    return this.get<ChannelUser[]>('chatters');
   }
 
-  async loadBlocked(): Promise<ChannelUser[]> {
-    const blocked: ChannelUser[] = await this.getChannelUsers('blocked');
-    this.blockedList.set(blocked);
-    return blocked;
+  getBlocked(): Promise<ChannelUser[]> {
+    return this.get<ChannelUser[]>('blocked');
+  }
+
+  unblockUser(userId: string): Promise<void> {
+    return this.delete(`blocked/${encodeURIComponent(userId)}`);
   }
 
   getBanStatus(userId: string): Promise<BanStatus> {
-    return firstValueFrom(
-      this.http.get<BanStatus>(
-        `${environment.apiBaseUrl}/twitch/banned/${encodeURIComponent(userId)}`,
-        { withCredentials: true },
-      ),
-    );
+    return this.get<BanStatus>(`banned/${encodeURIComponent(userId)}`);
   }
 
   async isBanned(userId: string): Promise<boolean> {
     return (await this.getBanStatus(userId)).banned;
   }
 
-  async getUsers(userIds: readonly string[] = [], logins: readonly string[] = []): Promise<TwitchUser[]> {
-    const batches: Promise<TwitchUser[]>[] = this.toBatches(userIds, logins).map(batch => this.getUserBatch(batch));
-    const results: TwitchUser[][] = await Promise.all(batches);
-
-    return results.flat();
+  unbanUser(userId: string): Promise<void> {
+    return this.delete(`banned/${encodeURIComponent(userId)}`);
   }
 
-  async addModerator(userId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post(`${environment.apiBaseUrl}/twitch/moderators/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
+  private checkChannelRole<T>(path: string, userIds: readonly string[]): Promise<T[]> {
+    if (userIds.length === 0) return Promise.resolve([]);
+    return this.get<T[]>(`${path}/check`, this.repeated({ id: userIds }));
+  }
+
+  private repeated(values: Record<string, readonly string[]>): HttpParams {
+    return Object.entries(values).reduce(
+      (params: HttpParams, [key, list]: [string, readonly string[]]): HttpParams =>
+        list.reduce((carried: HttpParams, value: string): HttpParams => carried.append(key, value), params),
+      new HttpParams(),
     );
-    this.moderatorList.set(null);
-  }
-
-  async removeModerator(userId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete(`${environment.apiBaseUrl}/twitch/moderators/${encodeURIComponent(userId)}`, { withCredentials: true }),
-    );
-    this.moderatorList.set(null);
-  }
-
-  async addVip(userId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post(`${environment.apiBaseUrl}/twitch/vips/${encodeURIComponent(userId)}`, null, { withCredentials: true }),
-    );
-    this.vipList.set(null);
-  }
-
-  async removeVip(userId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete(`${environment.apiBaseUrl}/twitch/vips/${encodeURIComponent(userId)}`, { withCredentials: true }),
-    );
-    this.vipList.set(null);
-  }
-
-  async unbanUser(userId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete(`${environment.apiBaseUrl}/twitch/banned/${encodeURIComponent(userId)}`, { withCredentials: true }),
-    );
-  }
-
-  async unblockUser(userId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete(`${environment.apiBaseUrl}/twitch/blocked/${encodeURIComponent(userId)}`, { withCredentials: true }),
-    );
-    this.blockedList.set(null);
-  }
-
-  private getChannelUsers(path: string): Promise<ChannelUser[]> {
-    return firstValueFrom(
-      this.http.get<ChannelUser[]>(`${environment.apiBaseUrl}/twitch/${path}`, { withCredentials: true }),
-    );
-  }
-
-  private getUserBatch(params: HttpParams): Promise<TwitchUser[]> {
-    return firstValueFrom(
-      this.http.get<TwitchUser[]>(`${environment.apiBaseUrl}/twitch/users`, { params, withCredentials: true }),
-    );
-  }
-
-  private toBatches(userIds: readonly string[], logins: readonly string[]): HttpParams[] {
-    const keyed: [string, string][] = [
-      ...userIds.map((id: string): [string, string] => ['id', id]),
-      ...logins.map((login: string): [string, string] => ['login', login]),
-    ];
-
-    const batches: HttpParams[] = [];
-    for (let start: number = 0; start < keyed.length; start += BATCH_SIZE) {
-      batches.push(keyed.slice(start, start + BATCH_SIZE).reduce(
-        (params: HttpParams, [key, value]: [string, string]): HttpParams => params.append(key, value),
-        new HttpParams(),
-      ));
-    }
-
-    return batches;
   }
 }

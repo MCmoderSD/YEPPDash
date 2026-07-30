@@ -77,6 +77,36 @@ describe('UserInfoDialogComponent', () => {
     expect(name.style.getPropertyValue('--chat-color')).toBe('#9146FF');
   });
 
+  it('should show the birthday of the user it is showing', async () => {
+    const fixture = await open(USER);
+
+    http.expectOne(`${environment.apiBaseUrl}/birthday/164284617`)
+      .flush({ userId: USER.id, day: 17, month: 5, year: 2000 });
+
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    // Built the way the localeDate pipe builds it: spelling a format out would pin the very thing
+    // the pipe exists to leave to the reader's browser.
+    const shown: string = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' })
+      .format(new Date(2000, 4, 17));
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(shown);
+  });
+
+  // Dropped rather than shown as unset, matching how the email row behaves.
+  it('should drop the birthday row when the user has not set one', async () => {
+    const fixture = await open(USER);
+
+    http.expectOne(`${environment.apiBaseUrl}/birthday/164284617`)
+      .flush(null, { status: 404, statusText: 'Not Found' });
+
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Birthday');
+  });
+
   it('should leave the name at the default colour when the user has none', async () => {
     const fixture = await open(USER);
 

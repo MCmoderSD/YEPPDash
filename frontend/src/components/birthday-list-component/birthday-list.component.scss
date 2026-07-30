@@ -1,0 +1,157 @@
+.birthday-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  // The containing block for the scroll bar drawn over the table below.
+  position: relative;
+
+  // Sized off the follower column, which takes whatever the fixed columns below leave. A Twitch name
+  // is at most 25 characters, so this is wide enough for the longest one that can exist to sit on a
+  // single line next to its avatar — and no wider, since nothing can fill the space.
+  width: min(39rem, 100%);
+  margin-inline: auto;
+}
+
+.birthday-list-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.birthday-list-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.birthday-list-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.birthday-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.birthday-list-search {
+  align-self: stretch;
+
+  // Material reserves room under the field for a hint or error; there is neither here, so it would
+  // only push the table away from the search box.
+  margin-block-end: -1.25rem;
+}
+
+// Kept in the layout while idle so the table does not jump every time a request starts.
+.birthday-list-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+.birthday-list-scroll {
+  align-self: stretch;
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+table.birthday-list-grid {
+  width: 100%;
+  background: transparent;
+
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 0.5rem;
+  }
+}
+
+.birthday-list-row {
+  &:hover,
+  &:focus-within {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+// Only the rows that actually open something say so.
+.birthday-list-clickable {
+  cursor: pointer;
+}
+
+// Fills its cell so the whole column reads as the click target, and carries the keyboard path to
+// the details dialog now that the row itself is the mouse path.
+.birthday-list-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.birthday-list-avatar {
+  flex: none;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+// min-width: 0 so a long name wraps inside the column instead of widening it — a flex item refuses
+// to shrink below its content otherwise, which is exactly how one long name pushes a table around.
+.birthday-list-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.birthday-list-date {
+  width: 10rem;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+
+.birthday-list-age {
+  width: 4rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+// The sort header lays its label and arrow out with flex, so text-align alone leaves the heading
+// hanging to the left of the numbers it belongs to.
+//
+// Needs ::ng-deep because that flex container is a div out of MatSortHeader's own template: it never
+// carries this component's encapsulation attribute, so a plain descendant selector cannot reach it.
+// Kept behind :host so the reach stops at this component.
+:host ::ng-deep .birthday-list-age .mat-sort-header-container {
+  justify-content: center;
+}
+
+.birthday-list-next {
+  width: 7rem;
+  white-space: nowrap;
+}
+
+// The whole point of the page, so the one row it applies to should not read like the rest.
+.birthday-list-today {
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+}
+
+.birthday-list-empty {
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
