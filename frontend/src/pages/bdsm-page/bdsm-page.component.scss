@@ -1,0 +1,73 @@
+.bdsm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  // Wide enough for the bars to be worth reading, and capped so a full-width monitor does not
+  // stretch a twenty-five row chart across two feet of screen.
+  width: min(44rem, 100%);
+  margin-inline: auto;
+}
+
+.bdsm-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.bdsm-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.bdsm-page-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.bdsm-page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.bdsm-page-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+.bdsm-page-results {
+  display: block;
+}
+
+// The header lays its title and description out with flex and gives the description all the room
+// left over; right-aligning it keeps the summary off the title of a short date.
+.bdsm-page-summary {
+  justify-content: flex-end;
+
+  // Material's own margin here assumes a description that runs on; this one is a single figure.
+  margin: 0;
+}
+
+.bdsm-page-dominant {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.bdsm-page-meta {
+  margin: 0 0 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.bdsm-page-empty {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}

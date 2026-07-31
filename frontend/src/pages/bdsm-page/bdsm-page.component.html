@@ -1,0 +1,83 @@
+<section class="bdsm-page">
+
+  <header class="bdsm-page-header">
+    <h1 class="bdsm-page-title">BDSM Test</h1>
+    <p class="bdsm-page-count">
+      @if (count() === 1) {
+        You have taken the test once
+      } @else {
+        You have taken the test {{ count() }} times
+      }
+    </p>
+  </header>
+
+  <div class="bdsm-page-toolbar">
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="loading()"
+      (click)="reload()"
+    >
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+      <span>Refresh</span>
+    </button>
+  </div>
+
+  <!-- Kept in the layout while idle so the panels below do not jump every time a request starts. -->
+  <mat-progress-bar
+    class="bdsm-page-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!loading()"
+    [style.visibility]="loading() ? 'visible' : 'hidden'"
+  />
+
+  @if (entries().length) {
+    <!-- Newest first, and the newest one open: the reason to come here is almost always the result
+         just taken, so it should already be on screen. -->
+    <mat-accordion class="bdsm-page-results">
+      @for (entry of entries(); track entry.result.id) {
+        <mat-expansion-panel [expanded]="$first">
+
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
+                {{ entry.takenAt | localeDate }}
+              </time>
+            </mat-panel-title>
+
+            <mat-panel-description class="bdsm-page-summary">
+              @if (entry.dominant; as dominant) {
+                <span class="bdsm-page-dominant" [style.color]="dominant.color">
+                  {{ dominant.percent }}% {{ dominant.label }}
+                </span>
+              }
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <!-- Rendered only once its panel is first opened. A result is twenty-five rows, and a page
+               of them would otherwise all be built to show one. -->
+          <ng-template matExpansionPanelContent>
+            <p class="bdsm-page-meta">
+              Version {{ entry.result.version }}
+              <span aria-hidden="true">·</span> {{ entry.result.gender }}
+              <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+            </p>
+
+            <app-bdsm-result [result]="entry.result"/>
+          </ng-template>
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  } @else {
+    <p class="bdsm-page-empty">
+      @if (loading()) {
+        Loading your results…
+      } @else if (unreachable()) {
+        Could not load your results. Please try again.
+      } @else {
+        You have not taken the BDSM test yet. Take it through YEPPBot and your results will show up
+        here.
+      }
+    </p>
+  }
+</section>

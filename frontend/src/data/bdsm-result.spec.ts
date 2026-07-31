@@ -3,11 +3,18 @@ import {
   BdsmResult,
   BdsmTraitKey,
   dominantTrait,
+  rankedTraits,
   resultTakenAt,
   topTraits,
+  traitColor,
   traitLabel,
   traitScores,
 } from './bdsm-result';
+
+/** The hue out of an `hsl(H S% L%)` string, which is what carries the red-to-green sweep. */
+function hueOf(color: string): number {
+  return Number(/^hsl\((\d+)/.exec(color)![1]);
+}
 
 function result(scores: Partial<Record<BdsmTraitKey, number>> = {}): BdsmResult {
   const traits = Object.fromEntries(
@@ -60,6 +67,13 @@ describe('traitScores', () => {
     expect([brat?.score, brat?.percent]).toEqual([0.42, 42]);
   });
 
+  it('should colour each trait by its own score', () => {
+    const scores = traitScores(result({ brat: 1, vanilla: 0 }));
+
+    expect(scores.find((trait) => trait.key === 'brat')?.color).toBe(traitColor(1));
+    expect(scores.find((trait) => trait.key === 'vanilla')?.color).toBe(traitColor(0));
+  });
+
   it('should keep the bounds the table enforces', () => {
     const scores = traitScores(result({ switch: 1, vanilla: 0 }));
 
@@ -96,6 +110,35 @@ describe('topTraits', () => {
     const tied = topTraits(result({ dominant: 0.5, brat: 0.5, sadist: 0.5 }), 3);
 
     expect(tied.map((trait) => trait.key)).toEqual(['brat', 'dominant', 'sadist']);
+  });
+});
+
+describe('traitColor', () => {
+  it('should run red at nothing and green at everything', () => {
+    expect(hueOf(traitColor(0))).toBe(0);
+    expect(hueOf(traitColor(1))).toBe(120);
+  });
+
+  it('should sweep the hue in step with the score', () => {
+    expect(hueOf(traitColor(0.5))).toBe(60);
+    expect(hueOf(traitColor(0.25))).toBeLessThan(hueOf(traitColor(0.75)));
+  });
+
+  // A hue past green wraps into blue and would read as a perfectly ordinary colour rather than as
+  // the bad data it came from.
+  it('should not wrap past either end of the sweep', () => {
+    expect(hueOf(traitColor(1.5))).toBe(120);
+    expect(hueOf(traitColor(-1))).toBe(0);
+  });
+});
+
+describe('rankedTraits', () => {
+  it('should list every trait, strongest first', () => {
+    const ranked = rankedTraits(result({ vanilla: 0.9, brat: 0.1 }));
+
+    expect(ranked).toHaveLength(BDSM_TRAITS.length);
+    expect(ranked[0].key).toBe('vanilla');
+    expect(ranked.at(-1)?.key).not.toBe('vanilla');
   });
 });
 

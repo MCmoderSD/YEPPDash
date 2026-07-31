@@ -31,6 +31,8 @@ export class SidebarComponent {
 
   protected readonly birthdayListPath: string = isDashHost() ? '/birthdays' : '/dash/birthdays';
 
+  protected readonly bdsmPath: string = isDashHost() ? '/bdsm' : '/dash/bdsm';
+
   protected close(): void {
     this.sidebar.close();
   }

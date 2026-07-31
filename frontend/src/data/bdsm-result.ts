@@ -40,6 +40,7 @@ export interface BdsmTraitScore {
   label: string;
   score: number;
   percent: number;
+  color: string;
 }
 
 /**
@@ -67,6 +68,22 @@ export function traitLabel(key: BdsmTraitKey): string {
   return LABELS.get(key) ?? key;
 }
 
+/**
+ * The colour a score is shown in: red at nothing, green at everything.
+ *
+ * A straight sweep along the hue circle from 0 to 120 degrees. Lightness is held high enough that
+ * every hue on that sweep clears WCAG AA against the dashboard's dark surfaces — the darkest of them
+ * is the red end, so that is the one worth re-measuring if these numbers are ever touched. The score
+ * is never the only thing carrying a value on screen; the percentage sits next to it as text.
+ */
+export function traitColor(score: number): string {
+  // The table's CHECK constraints keep scores inside 0–1, but a hue is silently wrong rather than
+  // obviously wrong if one ever escapes: 1.5 would come out blue and read as a perfectly good colour.
+  const bounded: number = Math.min(1, Math.max(0, score));
+
+  return `hsl(${Math.round(bounded * 120)} 80% 66%)`;
+}
+
 /** A result's scores as a list, in the order {@link BDSM_TRAITS} declares them. */
 export function traitScores(result: BdsmResult): BdsmTraitScore[] {
   return BDSM_TRAITS.map((trait): BdsmTraitScore => {
@@ -79,6 +96,7 @@ export function traitScores(result: BdsmResult): BdsmTraitScore[] {
       // Rounded here rather than at the template, so the number a caller sorts on is the same one it
       // shows — 0.615 and 0.62 must not swap places between the two.
       percent: Math.round(score * 100),
+      color: traitColor(score),
     };
   });
 }
@@ -95,6 +113,11 @@ export function topTraits(result: BdsmResult, count: number): BdsmTraitScore[] {
     .sort(([left, leftIndex], [right, rightIndex]) => right.score - left.score || leftIndex - rightIndex)
     .slice(0, count)
     .map(([trait]) => trait);
+}
+
+/** Every trait a result scores, strongest first. */
+export function rankedTraits(result: BdsmResult): BdsmTraitScore[] {
+  return topTraits(result, BDSM_TRAITS.length);
 }
 
 /** The single trait a result scores highest, or `null` for a result with no traits at all. */

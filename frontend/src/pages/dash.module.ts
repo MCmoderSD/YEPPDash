@@ -4,6 +4,7 @@ import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -15,6 +16,8 @@ import { MatTableModule } from '@angular/material/table';
 
 import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
+import { BdsmPageComponent } from './bdsm-page/bdsm-page.component';
+import { BdsmResultComponent } from '../components/bdsm-result-component/bdsm-result.component';
 import { SidebarComponent } from '../components/sidebar-component/sidebar.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
@@ -34,7 +37,8 @@ const routes: Routes = [
       { path: '', component: DashHomePageComponent, title: 'Dashboard' },
       { path: 'role-management', component: RoleManagementComponent, title: 'Role Management' },
       { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
-      { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' }
+      { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
+      { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }
 ];
@@ -42,6 +46,8 @@ const routes: Routes = [
 const components: any[] = [
   DashPageComponent,
   DashHomePageComponent,
+  BdsmPageComponent,
+  BdsmResultComponent,
   SidebarComponent,
   RoleManagementComponent,
   QuoteManagementComponent,
@@ -65,6 +71,7 @@ const components: any[] = [
     MatButtonModule,
     MatCardModule,
     MatDialogModule,
+    MatExpansionModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
