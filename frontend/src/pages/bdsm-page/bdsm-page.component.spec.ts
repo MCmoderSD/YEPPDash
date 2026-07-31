@@ -182,6 +182,28 @@ describe('BdsmPageComponent', () => {
     expect(summary).toBe('Version 3 · Female · 23-25');
   });
 
+  // Not an accordion in the exclusive sense: opening an older result to compare it must not close
+  // the newest one that was already open.
+  it('should allow more than one result open at once', async () => {
+    bdsm.entries = [
+      result('a', '2026-07-31T12:00:00Z'),
+      result('b', '2024-01-01T12:00:00Z'),
+      result('c', '2020-01-01T12:00:00Z'),
+    ];
+
+    const fixture = await render();
+    panels(fixture)[1].querySelector<HTMLElement>('.mat-expansion-panel-header')!.click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    const expanded = panels(fixture).map(
+      (panel) => panel.querySelector('.mat-expansion-panel-header')!.getAttribute('aria-expanded'),
+    );
+
+    expect(expanded).toEqual(['true', 'true', 'false']);
+  });
+
   it('should say so when the user never took the test', async () => {
     const fixture = await render();
 
@@ -291,6 +313,30 @@ describe('BdsmPageComponent', () => {
 
       expect(expanded).toEqual(['false', 'false']);
       expect((fixture.nativeElement as HTMLElement).querySelectorAll('app-bdsm-result')).toHaveLength(0);
+    });
+
+    // Comparing two people's results is the point of a community list, and that means both of their
+    // panels have to be able to stay open together.
+    it('should allow more than one community result open at once', async () => {
+      bdsm.followers = [
+        result('a', '2026-07-31T12:00:00Z', {}, '1'),
+        result('b', '2024-01-01T12:00:00Z', {}, '2'),
+      ];
+      twitch.users = [twitchUser('1', 'Zoe'), twitchUser('2', 'Alice')];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      panels(fixture).forEach((panel) => panel.querySelector<HTMLElement>('.mat-expansion-panel-header')!.click());
+      fixture.detectChanges();
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+
+      const expanded = panels(fixture).map(
+        (panel) => panel.querySelector('.mat-expansion-panel-header')!.getAttribute('aria-expanded'),
+      );
+
+      expect(expanded).toEqual(['true', 'true']);
     });
 
     it('should say so when nobody shared a result', async () => {

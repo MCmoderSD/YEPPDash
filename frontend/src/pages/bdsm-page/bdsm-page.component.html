@@ -42,8 +42,9 @@
 
         @if (entries().length) {
           <!-- Newest first, and the newest one open: the reason to come here is almost always the
-               result just taken, so it should already be on screen. -->
-          <mat-accordion class="bdsm-page-results">
+               result just taken, so it should already be on screen. Not exclusive: opening an older
+               result to compare it should not close that one. -->
+          <mat-accordion class="bdsm-page-results" multi>
             @for (entry of entries(); track entry.result.id) {
               <mat-expansion-panel [expanded]="$first">
 
@@ -57,9 +58,11 @@
                   <!-- Lives in the header rather than the lazy content below, so it reads on a
                        collapsed panel too instead of only after it is opened. -->
                   <mat-panel-description class="bdsm-page-summary">
-                    Version {{ entry.result.version }}
-                    <span aria-hidden="true">·</span> {{ entry.result.gender }}
-                    <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+                    <p class="bdsm-page-meta">
+                      Version {{ entry.result.version }}
+                      <span aria-hidden="true">·</span> {{ entry.result.gender }}
+                      <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+                    </p>
                   </mat-panel-description>
                 </mat-expansion-panel-header>
 
@@ -98,8 +101,9 @@
 
         @if (community().length) {
           <!-- One panel per person, holding their most recent test, newest test first. None opens by
-               itself: this is a list to browse rather than a single result to read. -->
-          <mat-accordion class="bdsm-page-results">
+               itself: this is a list to browse rather than a single result to read. Not exclusive,
+               so more than one can be open to compare at once. -->
+          <mat-accordion class="bdsm-page-results" multi>
             @for (entry of community(); track entry.result.id) {
               <mat-expansion-panel>
 

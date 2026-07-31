@@ -22,7 +22,7 @@
 }
 
 .bdsm-page-count {
-  margin: 0 0 1rem;
+  margin-top: 1rem;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
   text-align: center;
@@ -72,7 +72,6 @@
 }
 
 .bdsm-page-meta {
-  margin: 0 0 1rem;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
 }
@@ -83,7 +82,7 @@
   justify-content: flex-end;
 
   // Material's own margin here assumes a description that runs on; this one is three short figures.
-  margin: 0;
+  margin-right: 1rem;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
 }
