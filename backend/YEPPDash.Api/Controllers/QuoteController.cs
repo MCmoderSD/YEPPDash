@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Quote;
+using YEPPDash.Api.Exceptions.Quote;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Services;
 

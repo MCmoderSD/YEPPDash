@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Twitch;
+using YEPPDash.Api.Exceptions.Twitch;
 
 namespace YEPPDash.Api.Twitch;
 

@@ -1,7 +1,7 @@
 using System.Globalization;
 using Dapper;
 using MySqlConnector;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Bdsm;
 
 namespace YEPPDash.Api.Repositories;
 

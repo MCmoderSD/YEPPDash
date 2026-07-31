@@ -1,6 +1,6 @@
 using Dapper;
 using YEPPDash.Api.Auth;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Twitch;
 
 namespace YEPPDash.Api.Repositories;
 

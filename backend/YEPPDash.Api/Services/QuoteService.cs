@@ -1,15 +1,10 @@
 using MySqlConnector;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Quote;
+using YEPPDash.Api.Exceptions.Quote;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 
 namespace YEPPDash.Api.Services;
-
-/// <summary>
-/// Thrown when the channel has no row in YEPPBot's Channel table, so a quote cannot reference it.
-/// </summary>
-public sealed class UnknownQuoteChannelException(int channelId, Exception inner)
-    : Exception($"Channel {channelId} is not known to YEPPBot.", inner);
 
 public sealed class QuoteService(QuoteRepository repository, ILogger<QuoteService> logger)
 {
@@ -41,17 +36,10 @@ public sealed class QuoteService(QuoteRepository repository, ILogger<QuoteServic
         return QuoteWorkbook.Write(quotes);
     }
 
-    /// <summary>
-    /// Replaces the channel's quotes with the contents of an uploaded workbook.
-    /// </summary>
-    /// <exception cref="QuoteWorkbookException">The workbook could not be read.</exception>
-    public async Task<IReadOnlyList<Quote>> ImportAsync(
-        string channelId, Stream workbook, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Quote>> ImportAsync(string channelId, Stream workbook, CancellationToken cancellationToken)
     {
         var id = ParseChannelId(channelId);
 
-        // Parsed before anything is deleted, so a workbook that turns out to be unreadable leaves
-        // the existing quotes alone.
         var drafts = QuoteWorkbook.Read(workbook);
 
         try
@@ -93,8 +81,7 @@ public sealed class QuoteService(QuoteRepository repository, ILogger<QuoteServic
 
         if (quotes is not null)
         {
-            logger.LogInformation(
-                "Moved quote {QuoteId} of channel {ChannelId} to position {Position}", quoteId, id, position);
+            logger.LogInformation("Moved quote {QuoteId} of channel {ChannelId} to position {Position}", quoteId, id, position);
         }
 
         return quotes;

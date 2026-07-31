@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Controllers;

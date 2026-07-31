@@ -1,6 +1,6 @@
 using Dapper;
 using MySqlConnector;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.CustomCommand;
 
 namespace YEPPDash.Api.Repositories;
 

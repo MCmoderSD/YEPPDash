@@ -1,7 +1,8 @@
 using System.Net;
 using System.Security.Claims;
 using YEPPDash.Api.Auth;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Twitch;
+using YEPPDash.Api.Exceptions.Twitch;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Twitch;
 

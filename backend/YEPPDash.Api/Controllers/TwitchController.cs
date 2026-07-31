@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Twitch;
+using YEPPDash.Api.Exceptions.Twitch;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Services;
-using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Controllers;
 

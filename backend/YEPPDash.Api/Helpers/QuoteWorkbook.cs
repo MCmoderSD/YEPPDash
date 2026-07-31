@@ -1,13 +1,8 @@
 using ClosedXML.Excel;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Quote;
+using YEPPDash.Api.Exceptions.Quote;
 
 namespace YEPPDash.Api.Helpers;
-
-/// <summary>
-/// Raised when an uploaded workbook cannot be read as a quote list. The message is meant to be
-/// shown to the user, so it names the row that is wrong rather than the internal failure.
-/// </summary>
-public sealed class QuoteWorkbookException(string message) : Exception(message);
 
 /// <summary>
 /// Reads and writes the .xlsx shape used by the quote import and export: one header row, then

@@ -1,4 +1,4 @@
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Twitch;
 
 namespace YEPPDash.Api.Repositories;
 

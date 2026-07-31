@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 using MySqlConnector;
-using YEPPDash.Api.Data;
+using YEPPDash.Api.Data.Quote;
 
 namespace YEPPDash.Api.Repositories;
 
