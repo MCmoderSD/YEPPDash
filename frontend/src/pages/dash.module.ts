@@ -3,6 +3,7 @@ import { RouterModule, type Routes } from '@angular/router';
 import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,7 +11,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -19,6 +22,9 @@ import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
 import { BdsmPageComponent } from './bdsm-page/bdsm-page.component';
 import { BdsmResultComponent } from '../components/bdsm-result-component/bdsm-result.component';
+import { CommandPageComponent } from './command-page/command-page.component';
+import { CommandTableComponent } from '../components/command-table-component/command-table.component';
+import { CommandEditComponent } from '../components/command-edit-component/command-edit.component';
 import { SidebarComponent } from '../components/sidebar-component/sidebar.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
@@ -38,6 +44,7 @@ const routes: Routes = [
       { path: '', component: DashHomePageComponent, title: 'Dashboard' },
       { path: 'role-management', component: RoleManagementComponent, title: 'Role Management' },
       { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
+      { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
@@ -52,6 +59,9 @@ const components: any[] = [
   SidebarComponent,
   RoleManagementComponent,
   QuoteManagementComponent,
+  CommandPageComponent,
+  CommandTableComponent,
+  CommandEditComponent,
   BirthdayListComponent,
   QuoteEditDialogComponent,
   ConfirmActionDialogComponent,
@@ -71,6 +81,7 @@ const components: any[] = [
     NgOptimizedImage,
     MatButtonModule,
     MatCardModule,
+    MatChipsModule,
     MatDialogModule,
     MatExpansionModule,
     MatFormFieldModule,
@@ -78,7 +89,9 @@ const components: any[] = [
     MatInputModule,
     MatListModule,
     MatProgressBarModule,
+    MatSelectModule,
     MatSidenavModule,
+    MatSlideToggleModule,
     MatSortModule,
     MatTableModule,
     MatTabsModule

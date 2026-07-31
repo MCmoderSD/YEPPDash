@@ -1,4 +1,7 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, ElementRef, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
+import { BotResult, BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
@@ -7,6 +10,15 @@ import { BanStatus } from '../../data/banned-user';
 
 function contains(users: readonly ChannelUser[], userId: string): boolean {
   return users.some((user: ChannelUser): boolean => user.id === userId);
+}
+
+// A refused bot call answers with the bot's own words, which say more than anything this page could
+// write — whether it is down, unconfigured, or turned the request down itself.
+function reasonFor(error: unknown): string | null {
+  if (!(error instanceof HttpErrorResponse)) return null;
+
+  const message: unknown = (error.error as BotResult | null)?.message;
+  return typeof message === 'string' && message.trim() ? message.trim() : null;
 }
 
 @Component({
@@ -18,6 +30,9 @@ function contains(users: readonly ChannelUser[], userId: string): boolean {
 export class BotManageComponent {
 
   private readonly twitch: TwitchService = inject(TwitchService);
+  // Not `bot`: that name already belongs to the signal holding the bot's Twitch account below.
+  private readonly botApi: BotService = inject(BotService);
+  private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
 
   readonly botUserId: InputSignal<string> = input.required<string>();
@@ -54,7 +69,7 @@ export class BotManageComponent {
 
   protected unban(): Promise<void> {
     return this.act(
-      (botUserId: string): Promise<void> => this.twitch.unbanUser(botUserId),
+      (): Promise<void> => this.twitch.unbanUser(this.botUserId()),
       `${this.botName()} is no longer banned.`,
       `Could not unban ${this.botName()}.`,
     );
@@ -62,7 +77,7 @@ export class BotManageComponent {
 
   protected unblock(): Promise<void> {
     return this.act(
-      (botUserId: string): Promise<void> => this.twitch.unblockUser(botUserId),
+      (): Promise<void> => this.twitch.unblockUser(this.botUserId()),
       `${this.botName()} is no longer blocked.`,
       `Could not unblock ${this.botName()}.`,
     );
@@ -70,35 +85,54 @@ export class BotManageComponent {
 
   protected makeModerator(): Promise<void> {
     return this.act(
-      (botUserId: string): Promise<void> => this.twitch.addModerator(botUserId),
+      (): Promise<void> => this.twitch.addModerator(this.botUserId()),
       `${this.botName()} is now a moderator.`,
       `Could not make ${this.botName()} a moderator.`,
     );
   }
 
-  protected notWiredUp(action: string): void {
-    this.notifications.failure(`${action} is not wired up yet.`);
+  // Join and leave name the channel rather than the bot: it is this channel the bot is being asked
+  // to come to, and the id the bot's API keys on is the channel owner's.
+  protected join(): Promise<void> {
+    return this.act(
+      async (channelId: string): Promise<void> => void await this.botApi.joinChannel(channelId),
+      `${this.botName()} was asked to join your chat.`,
+      `Could not bring ${this.botName()} into your chat.`,
+    );
+  }
+
+  protected leave(): Promise<void> {
+    return this.act(
+      async (channelId: string): Promise<void> => void await this.botApi.leaveChannel(channelId),
+      `${this.botName()} was asked to leave your chat.`,
+      `Could not send ${this.botName()} out of your chat.`,
+    );
   }
 
   protected reload(): Promise<void> {
     return this.load(this.botUserId());
   }
 
+  /**
+   * @param action Handed the signed-in channel's id, which is what the bot's own routes key on.
+   *               Anything acting on the bot's Twitch account reads {@link botUserId} instead.
+   */
   private async act(
-    action: (botUserId: string) => Promise<void>,
+    action: (channelId: string) => Promise<void>,
     success: string,
     failure: string,
   ): Promise<void> {
-    const botUserId: string = this.botUserId();
+    const channelId: string | undefined = this.auth.currentUser()?.id;
+    if (!channelId) return;
 
     this.busy.set(true);
     try {
-      await action(botUserId);
+      await action(channelId);
       this.notifications.success(success);
-      await this.load(botUserId);
+      await this.load(this.botUserId());
       this.statusHeading()?.nativeElement.focus();
-    } catch {
-      this.notifications.failure(failure);
+    } catch (error: unknown) {
+      this.notifications.failure(reasonFor(error) ?? failure);
     } finally {
       this.busy.set(false);
     }

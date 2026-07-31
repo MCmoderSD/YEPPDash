@@ -76,13 +76,13 @@
           @if (inChat()) {
             <mat-icon class="bot-manage-icon bot-manage-icon-ok" aria-hidden="true">chat</mat-icon>
             <span class="bot-manage-text">{{ bot.displayName }} is currently in your chat.</span>
-            <button mat-stroked-button type="button" [disabled]="busy()" (click)="notWiredUp('Leaving chat')">
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="leave()">
               Leave
             </button>
           } @else {
             <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">chat_bubble_outline</mat-icon>
             <span class="bot-manage-text">{{ bot.displayName }} is not in your chat right now.</span>
-            <button mat-flat-button type="button" [disabled]="busy()" (click)="notWiredUp('Joining chat')">
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="join()">
               Join
             </button>
           }

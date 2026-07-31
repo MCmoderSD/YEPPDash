@@ -46,6 +46,29 @@ body {
   height: 100%;
 }
 
+// A select renders its dropdown in the CDK overlay, outside the component that declared it, so its
+// styling cannot live with that component. Opted into per select through `panelClass` rather than
+// applied to every overlay in the app.
+//
+// Three class names deep on purpose: Material rounds only the two corners away from the field it
+// opened from, through `.mat-mdc-select-panel-above div.mat-mdc-select-panel`. Out-specifying that
+// is what lets the radius below stick whichever way the panel opens, without reaching for
+// !important.
+.mat-mdc-select-panel.mdc-menu-surface.app-select-panel {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  padding: 0.25rem;
+  background-color: var(--mat-sys-surface-container-high);
+  box-shadow: var(--mat-sys-level3);
+
+  // Inset by the panel's own padding, so a highlighted option is a rounded block inside the panel
+  // rather than a square edge running into its rounded corner.
+  .mat-mdc-option {
+    min-height: 2.5rem;
+    border-radius: var(--mat-sys-corner-small);
+  }
+}
+
 // Takes the platform's own scroll bar out of the picture, leaving the element scrollable. Added
 // and removed by ScrollBarComponent, which draws the app's bar over the element instead — this
 // class is only global because the element it applies to lives outside that component.

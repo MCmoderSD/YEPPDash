@@ -1,0 +1,51 @@
+// The fields size their own hint space rather than sharing Material's fixed reserve, so the gap
+// here is what separates them — a hint that wraps grows its field instead of running into the
+// label of the next one.
+.command-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1rem 0.5rem;
+}
+
+// The four short fields pair off two to a line where there is room, and stack once there is not,
+// keeping the message — the long one — near the top either way. Two columns rather than as many as
+// fit: a wide panel would otherwise leave the last field alone on a line of its own.
+//
+// align-items so neither field of a pair is stretched to the height of the other: a stretched form
+// field grows its outlined box rather than the gap under it, which swallows the hint.
+.command-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 1rem;
+}
+
+// Measured against the table's visible width rather than the viewport's — the form is only ever as
+// wide as the table it opens inside.
+@container (min-width: 34rem) {
+  .command-edit-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.command-edit-field {
+  width: 100%;
+}
+
+// Set apart from the four short fields above it rather than spaced like one more of them: the
+// message is the body of the command, and the pickers are settings on it.
+.command-edit-message {
+  margin-block-start: 0.75rem;
+}
+
+.command-edit-error {
+  color: var(--mat-sys-error);
+}
+
+.command-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

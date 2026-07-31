@@ -1,0 +1,284 @@
+// A custom element is inline until it is told otherwise, which lets the table inside push the host
+// wider than the column it sits in instead of scrolling within it. min-width lets it shrink below
+// the width of its own content, which is what makes the scroll container below do its job.
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.command-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  // The containing block for the scroll bar drawn over the table below, so its geometry stays a
+  // local matter instead of depending on whatever ancestor happens to be positioned.
+  position: relative;
+  width: 100%;
+}
+
+.command-table-search {
+  align-self: stretch;
+
+  // Material reserves room under the field for a hint or error; there is neither here, so it would
+  // only push the table away from the search box.
+  margin-block-end: -1.25rem;
+}
+
+// The outline sits on the scroll container so it spans the full width, and narrow viewports scroll
+// the columns instead of squashing them.
+.command-table-scroll {
+  align-self: stretch;
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+
+  // Named so the form below can be sized against what is on screen rather than against the table,
+  // which on a narrow viewport is the wider of the two.
+  container-type: inline-size;
+}
+
+table.command-table-grid {
+  width: 100%;
+  background: transparent;
+
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 0.5rem;
+  }
+}
+
+.command-table-row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-within {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+// The row whose form is open reads as the heading of that form rather than as one row among the
+// rest, and loses its bottom rule so the two read as one block.
+.command-table-row-open {
+  background: var(--mat-sys-surface-container-high);
+
+  .mdc-data-table__cell {
+    border-bottom-color: transparent;
+  }
+}
+
+// A command that is switched off is still listed, but it is not what the eye should land on.
+// Dimmed rather than greyed to a fixed colour, so it follows the theme both ways.
+//
+// 0.7 rather than a heavier fade: the alias chips are the faintest thing in the row to begin with,
+// and dimming them further puts them under the 4.5:1 they need.
+.command-table-row-inactive {
+  .command-table-name,
+  .command-table-aliases,
+  .command-table-message {
+    opacity: 0.7;
+  }
+}
+
+.command-table-name {
+  width: 12rem;
+  white-space: nowrap;
+}
+
+// Fills its cell so the whole name reads as the click target, and carries the keyboard path to the
+// editor now that the row itself is the mouse path.
+.command-table-edit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.command-table-placeholder {
+  color: var(--mat-sys-on-surface-variant);
+  font-style: italic;
+}
+
+.command-table-aliases {
+  width: 14rem;
+  padding-block: 0.5rem !important;
+}
+
+.command-table-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.command-table-alias {
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  white-space: nowrap;
+}
+
+.command-table-none {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// The one column allowed to grow: the fixed ones keep their width and the reply takes what is left.
+.command-table-message {
+  padding-block: 0.75rem !important;
+}
+
+// Cut to two lines so a 500 character reply cannot make one row as tall as the rest of the table.
+// The whole text stays on the cell's title.
+.command-table-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+// Left rather than centered: mat-sort-header lays its own label out flush with the cell's start
+// edge (the sort arrow is reserved space appended after it, not a centering spacer), so a centered
+// switch sits 12px right of where the "Active" label above it actually is. Matching that edge is
+// what makes the two line up, and it happens for free — this is the column's natural alignment,
+// nothing has to be overridden on the header.
+.command-table-active {
+  width: 5rem;
+
+  // M3's switch is 52x32 with a 24px handle, which beside a row of 14px text is the loudest thing
+  // in the table. Scaled through Material's own tokens rather than a transform, so the handle, the
+  // focus ring and the state layer all shrink together instead of being drawn small and hit large.
+  //
+  // The touch target token is deliberately left alone: it is a separate overlay that keeps the tap
+  // area at its full size, which is what holds the control above the 24x24 minimum.
+  --mat-slide-toggle-track-width: 36px;
+  --mat-slide-toggle-track-height: 20px;
+
+  // Not the drawn size — the travel budget. Material moves the handle by
+  // `track-width - handle-width`, so this has to be the handle plus the inset it should keep at
+  // each end (14 + 3 + 3). Leaving it unset makes that calc() invalid, which collapses the travel
+  // to zero and leaves the handle sitting wherever the margins below put it.
+  --mat-slide-toggle-handle-width: 20px;
+  --mat-slide-toggle-handle-height: 14px;
+
+  // One size in both states rather than M3's grow-on-select: at this scale the change reads as the
+  // handle jittering rather than as feedback. The margins are what set the 3px inset — equal on
+  // both, so the handle sits the same distance from each end of the track.
+  --mat-slide-toggle-unselected-handle-size: 14px;
+  --mat-slide-toggle-selected-handle-size: 14px;
+  --mat-slide-toggle-with-icon-handle-size: 14px;
+  --mat-slide-toggle-unselected-handle-horizontal-margin: 0 3px;
+  --mat-slide-toggle-selected-handle-horizontal-margin: 0 3px;
+
+  // Held down: the handle grows into its inset by a pixel at each end and stays centred.
+  --mat-slide-toggle-pressed-handle-size: 16px;
+  --mat-slide-toggle-unselected-pressed-handle-horizontal-margin: 0 2px;
+  --mat-slide-toggle-selected-pressed-handle-horizontal-margin: 0 2px;
+
+  --mat-slide-toggle-state-layer-size: 32px;
+
+  // A 2px outline on a 20px track is most of the gap between track and handle. The on state carries
+  // none at all: it is a filled pill, and an outline only muddies its edge.
+  --mat-slide-toggle-track-outline-width: 1px;
+  --mat-slide-toggle-selected-track-outline-width: 0;
+  --mat-slide-toggle-disabled-unselected-track-outline-width: 1px;
+}
+
+.command-table-actions {
+  width: 6.5rem;
+  text-align: end;
+  white-space: nowrap;
+}
+
+// The row holding a command's form. Closed, it holds nothing — so it has to take up nothing either,
+// or every command would sit on a second empty row. Material gives every row a fixed height, which
+// is what the zero here is overriding; an open row is sized by the form inside it.
+.command-table-editor-row {
+  height: 0;
+}
+
+.command-table-editor {
+  padding: 0 !important;
+  border-bottom: none !important;
+
+  // Material clips its cells, which would make this one the scroll box the form below sticks to
+  // instead of the table's — and a cell does not scroll, so the form would never stick at all.
+  overflow: visible !important;
+}
+
+.command-table-editor-row-open .command-table-editor {
+  border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+}
+
+// The form fills the width that is on screen and stays there while the columns above it scroll
+// sideways. Without this it would be as wide as the table, which on a phone puts its buttons off
+// the edge and behind a horizontal scroll.
+.command-table-panel {
+  position: sticky;
+  left: 0;
+  width: 100cqi;
+  background: var(--mat-sys-surface-container-high);
+}
+
+// The delete button stays out of the way until the row is actually pointed at. Faded rather than
+// removed from the layout, so the rows do not shift width as the pointer travels down the table.
+// The expand control is always visible: it is what says the row opens at all.
+//
+// Gated behind `hover: hover` because a touch screen never reports a hover state — there the button
+// simply stays visible, otherwise it would be unreachable.
+@media (hover: hover) {
+  .command-table-delete {
+    opacity: 0;
+    transition: opacity 120ms var(--mat-sys-easing-standard, ease);
+  }
+
+  // focus-within covers the keyboard: tabbing into the row reveals it, so nobody has to aim at a
+  // control they cannot see. An open row keeps it out, since the form below is about that command.
+  .command-table-row:hover .command-table-delete,
+  .command-table-row:focus-within .command-table-delete,
+  .command-table-row-open .command-table-delete {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .command-table-delete {
+      transition: none;
+    }
+  }
+}
+
+.command-table-empty {
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+// Header text the table needs for screen readers but that would only add noise on screen.
+.command-table-hidden-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
