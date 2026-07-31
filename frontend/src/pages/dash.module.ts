@@ -13,6 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
@@ -79,7 +80,8 @@ const components: any[] = [
     MatProgressBarModule,
     MatSidenavModule,
     MatSortModule,
-    MatTableModule
+    MatTableModule,
+    MatTabsModule
   ]
 })
 export class DashModule { }

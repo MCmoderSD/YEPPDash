@@ -2,13 +2,6 @@
 
   <header class="bdsm-page-header">
     <h1 class="bdsm-page-title">BDSM Test</h1>
-    <p class="bdsm-page-count">
-      @if (count() === 1) {
-        You have taken the test once
-      } @else {
-        You have taken the test {{ count() }} times
-      }
-    </p>
   </header>
 
   <div class="bdsm-page-toolbar">
@@ -31,53 +24,130 @@
     [style.visibility]="loading() ? 'visible' : 'hidden'"
   />
 
-  @if (entries().length) {
-    <!-- Newest first, and the newest one open: the reason to come here is almost always the result
-         just taken, so it should already be on screen. -->
-    <mat-accordion class="bdsm-page-results">
-      @for (entry of entries(); track entry.result.id) {
-        <mat-expansion-panel [expanded]="$first">
+  <mat-tab-group
+    class="bdsm-page-tabs"
+    [selectedIndex]="selected()"
+    (selectedIndexChange)="select($event)"
+  >
 
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
-                {{ entry.takenAt | localeDate }}
-              </time>
-            </mat-panel-title>
+    <mat-tab label="Your results">
+      <ng-template matTabContent>
+        <p class="bdsm-page-count">
+          @if (count() === 1) {
+            You have taken the test once
+          } @else {
+            You have taken the test {{ count() }} times
+          }
+        </p>
 
-            <mat-panel-description class="bdsm-page-summary">
-              @if (entry.dominant; as dominant) {
-                <span class="bdsm-page-dominant" [style.color]="dominant.color">
-                  {{ dominant.percent }}% {{ dominant.label }}
-                </span>
-              }
-            </mat-panel-description>
-          </mat-expansion-panel-header>
+        @if (entries().length) {
+          <!-- Newest first, and the newest one open: the reason to come here is almost always the
+               result just taken, so it should already be on screen. -->
+          <mat-accordion class="bdsm-page-results">
+            @for (entry of entries(); track entry.result.id) {
+              <mat-expansion-panel [expanded]="$first">
 
-          <!-- Rendered only once its panel is first opened. A result is twenty-five rows, and a page
-               of them would otherwise all be built to show one. -->
-          <ng-template matExpansionPanelContent>
-            <p class="bdsm-page-meta">
-              Version {{ entry.result.version }}
-              <span aria-hidden="true">·</span> {{ entry.result.gender }}
-              <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
-            </p>
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
+                      {{ entry.takenAt | localeDate }}
+                    </time>
+                  </mat-panel-title>
 
-            <app-bdsm-result [result]="entry.result"/>
-          </ng-template>
-        </mat-expansion-panel>
-      }
-    </mat-accordion>
-  } @else {
-    <p class="bdsm-page-empty">
-      @if (loading()) {
-        Loading your results…
-      } @else if (unreachable()) {
-        Could not load your results. Please try again.
-      } @else {
-        You have not taken the BDSM test yet. Take it through YEPPBot and your results will show up
-        here.
-      }
-    </p>
-  }
+                  <!-- Lives in the header rather than the lazy content below, so it reads on a
+                       collapsed panel too instead of only after it is opened. -->
+                  <mat-panel-description class="bdsm-page-summary">
+                    Version {{ entry.result.version }}
+                    <span aria-hidden="true">·</span> {{ entry.result.gender }}
+                    <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <!-- Rendered only once its panel is first opened. A result is twenty-five rows, and
+                     a page of them would otherwise all be built to show one. -->
+                <ng-template matExpansionPanelContent>
+                  <app-bdsm-result [result]="entry.result"/>
+                </ng-template>
+              </mat-expansion-panel>
+            }
+          </mat-accordion>
+        } @else {
+          <p class="bdsm-page-empty">
+            @if (loading()) {
+              Loading your results…
+            } @else if (unreachable()) {
+              Could not load your results. Please try again.
+            } @else {
+              You have not taken the BDSM test yet. Take it through YEPPBot and your results will
+              show up here.
+            }
+          </p>
+        }
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab label="Community">
+      <ng-template matTabContent>
+        <p class="bdsm-page-count">
+          @if (communityCount() === 1) {
+            1 person in your channel shared a result
+          } @else {
+            {{ communityCount() }} people in your channel shared a result
+          }
+        </p>
+
+        @if (community().length) {
+          <!-- One panel per person, holding their most recent test, newest test first. None opens by
+               itself: this is a list to browse rather than a single result to read. -->
+          <mat-accordion class="bdsm-page-results">
+            @for (entry of community(); track entry.result.id) {
+              <mat-expansion-panel>
+
+                <mat-expansion-panel-header>
+                  <mat-panel-title class="bdsm-page-user">
+                    @if (entry.user) {
+                      <img
+                        class="bdsm-page-avatar"
+                        [ngSrc]="entry.user.profileImageUrl"
+                        [width]="24"
+                        [height]="24"
+                        alt=""
+                      />
+                    }
+                    <span class="bdsm-page-name">{{ entry.name }}</span>
+                  </mat-panel-title>
+
+                  <mat-panel-description class="bdsm-page-summary">
+                    <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
+                      {{ entry.takenAt | localeDate }}
+                    </time>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <ng-template matExpansionPanelContent>
+                  <p class="bdsm-page-meta">
+                    Version {{ entry.result.version }}
+                    <span aria-hidden="true">·</span> {{ entry.result.gender }}
+                    <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+                  </p>
+
+                  <app-bdsm-result [result]="entry.result"/>
+                </ng-template>
+              </mat-expansion-panel>
+            }
+          </mat-accordion>
+        } @else {
+          <p class="bdsm-page-empty">
+            @if (loading()) {
+              Loading the results of your followers…
+            } @else if (communityUnreachable()) {
+              Could not load the results of your followers. Please try again.
+            } @else {
+              Nobody in your channel has shared a BDSM test result with YEPPBot yet.
+            }
+          </p>
+        }
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
 </section>

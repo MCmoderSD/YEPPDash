@@ -10,6 +10,7 @@ import { BdsmPageComponent } from './bdsm-page.component';
 import { AuthService } from '../../services/auth.service';
 import { BdsmService } from '../../services/bdsm.service';
 import { NotificationService } from '../../services/notification.service';
+import { TwitchService } from '../../services/twitch.service';
 import { BDSM_TRAITS, BdsmResult, BdsmTraitKey } from '../../data/bdsm-result';
 import { TwitchUser } from '../../data/twitch-user';
 
@@ -34,22 +35,31 @@ function result(
   id: string,
   timestamp: string,
   scores: Partial<Record<BdsmTraitKey, number>> = {},
+  userId: string = USER,
 ): BdsmResult {
   const traits = Object.fromEntries(
     BDSM_TRAITS.map((trait) => [trait.key, scores[trait.key] ?? 0]),
   ) as Record<BdsmTraitKey, number>;
 
-  return { id, userId: USER, timestamp, version: 3, gender: 'Female', ageGroup: '23-25', traits };
+  return { id, userId, timestamp, version: 3, gender: 'Female', ageGroup: '23-25', traits };
 }
 
 class FakeBdsmService {
   entries: BdsmResult[] = [];
+  followers: BdsmResult[] = [];
   getResults = vi.fn(async (): Promise<BdsmResult[]> => this.entries);
-  getFollowerResults = vi.fn(async (): Promise<BdsmResult[]> => []);
+  getFollowerResults = vi.fn(async (): Promise<BdsmResult[]> => this.followers);
+}
+
+class FakeTwitchService {
+  users: TwitchUser[] = [];
+  getUsers = vi.fn(async (): Promise<TwitchUser[]> => this.users);
+  getChatColor = vi.fn(async (): Promise<string | null> => null);
 }
 
 describe('BdsmPageComponent', () => {
   let bdsm: FakeBdsmService;
+  let twitch: FakeTwitchService;
   let notifications: NotificationService;
 
   beforeEach(async () => {
@@ -57,6 +67,7 @@ describe('BdsmPageComponent', () => {
       imports: [DashModule, RouterModule.forRoot([])],
       providers: [
         { provide: BdsmService, useClass: FakeBdsmService },
+        { provide: TwitchService, useClass: FakeTwitchService },
         { provide: AuthService, useValue: { currentUser: signal(twitchUser(USER, 'MCmoderSD')) } },
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -65,23 +76,48 @@ describe('BdsmPageComponent', () => {
     }).compileComponents();
 
     bdsm = TestBed.inject(BdsmService) as unknown as FakeBdsmService;
+    twitch = TestBed.inject(TwitchService) as unknown as FakeTwitchService;
     notifications = TestBed.inject(NotificationService);
   });
 
+  async function settle(fixture: ComponentFixture<BdsmPageComponent>): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    // The community tab resolves names in a second request, so one turn is not always enough.
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+  }
+
   async function render(): Promise<ComponentFixture<BdsmPageComponent>> {
-    // The component loads in its constructor, so the fixture is only built once the fake is set up.
+    // The component loads in its constructor, so the fixture is only built once the fakes are set up.
     const fixture = TestBed.createComponent(BdsmPageComponent);
     fixture.detectChanges();
 
-    await new Promise((resolve) => setTimeout(resolve));
+    await settle(fixture);
+    return fixture;
+  }
+
+  /** Opens the community tab the way a reader would, by clicking its label. */
+  async function openCommunity(fixture: ComponentFixture<BdsmPageComponent>): Promise<void> {
+    const labels = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.mat-mdc-tab')];
+    labels[1].click();
     fixture.detectChanges();
 
-    return fixture;
+    await settle(fixture);
   }
 
   function panels(fixture: ComponentFixture<BdsmPageComponent>): HTMLElement[] {
     return [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('mat-expansion-panel')];
   }
+
+  function tabLabels(fixture: ComponentFixture<BdsmPageComponent>): string[] {
+    return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.mat-mdc-tab')]
+      .map((tab) => tab.textContent!.trim());
+  }
+
+  it('should offer a tab for your own results and one for the community', async () => {
+    expect(tabLabels(await render())).toEqual(['Your results', 'Community']);
+  });
 
   it('should ask for the results of the signed-in user', async () => {
     await render();
@@ -104,9 +140,9 @@ describe('BdsmPageComponent', () => {
     ];
 
     const fixture = await render();
-    const years = panels(fixture).map((panel) => panel.querySelector('time')!.getAttribute('datetime'));
+    const dates = panels(fixture).map((panel) => panel.querySelector('time')!.getAttribute('datetime'));
 
-    expect(years).toEqual(['2026-07-31', '2024-01-01', '2020-01-01']);
+    expect(dates).toEqual(['2026-07-31', '2024-01-01', '2020-01-01']);
   });
 
   it('should open the newest result and leave the rest closed', async () => {
@@ -134,24 +170,16 @@ describe('BdsmPageComponent', () => {
     expect(charts[0].querySelector('.bdsm-result-label')!.textContent!.trim()).toBe('Switch');
   });
 
-  it('should summarise a collapsed result by its strongest trait', async () => {
-    bdsm.entries = [result('a', '2026-07-31T12:00:00Z', { switch: 0.84 })];
+  // In the header rather than the body, so it reads without opening the panel.
+  it('should show the version and demographics on the collapsed header', async () => {
+    bdsm.entries = [result('a', '2026-07-31T12:00:00Z'), result('b', '2024-01-01T12:00:00Z')];
 
     const fixture = await render();
+    const collapsed = panels(fixture)[1];
 
-    expect(panels(fixture)[0].querySelector('.bdsm-page-dominant')!.textContent!.trim())
-      .toBe('84% Switch');
-  });
-
-  it('should show the version and demographics of an open result', async () => {
-    bdsm.entries = [result('a', '2026-07-31T12:00:00Z')];
-
-    const fixture = await render();
-    const meta = (fixture.nativeElement as HTMLElement).querySelector('.bdsm-page-meta')!.textContent!;
-
-    expect(meta).toContain('Version 3');
-    expect(meta).toContain('Female');
-    expect(meta).toContain('23-25');
+    expect(collapsed.querySelector('.mat-expansion-panel-header')!.getAttribute('aria-expanded')).toBe('false');
+    const summary = collapsed.querySelector('.bdsm-page-summary')!.textContent!.replace(/\s+/g, ' ').trim();
+    expect(summary).toBe('Version 3 · Female · 23-25');
   });
 
   it('should say so when the user never took the test', async () => {
@@ -176,5 +204,133 @@ describe('BdsmPageComponent', () => {
 
     bdsm.entries = [result('a', '2026-07-31T12:00:00Z'), result('b', '2024-01-01T12:00:00Z')];
     expect((await render()).nativeElement.textContent).toContain('You have taken the test 2 times');
+  });
+
+  describe('community tab', () => {
+    // It costs a follow check per stored result, so it must not run for somebody who never opens it.
+    it('should not fetch the community until its tab is opened', async () => {
+      await render();
+
+      expect(bdsm.getFollowerResults).not.toHaveBeenCalled();
+    });
+
+    it('should fetch the community once its tab is opened', async () => {
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      expect(bdsm.getFollowerResults).toHaveBeenCalledWith(USER);
+    });
+
+    it('should not fetch the community twice when the tab is revisited', async () => {
+      bdsm.followers = [result('a', '2026-07-31T12:00:00Z', {}, '1')];
+      twitch.users = [twitchUser('1', 'Zoe')];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+      await openCommunity(fixture);
+
+      expect(bdsm.getFollowerResults).toHaveBeenCalledTimes(1);
+    });
+
+    // The endpoint answers with ids only, so the names come from a second lookup.
+    it('should resolve the names of the people it was given ids for', async () => {
+      bdsm.followers = [
+        result('a', '2026-07-31T12:00:00Z', {}, '1'),
+        result('b', '2024-01-01T12:00:00Z', {}, '2'),
+      ];
+      twitch.users = [twitchUser('1', 'Zoe'), twitchUser('2', 'Alice')];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      expect(twitch.getUsers).toHaveBeenCalledWith(['1', '2']);
+      expect(panels(fixture).map((panel) => panel.querySelector('.bdsm-page-name')!.textContent!.trim()))
+        .toEqual(['Zoe', 'Alice']);
+    });
+
+    // A row whose account Twitch no longer resolves still belongs in the list.
+    it('should fall back to the raw id when a user cannot be resolved', async () => {
+      bdsm.followers = [result('a', '2026-07-31T12:00:00Z', {}, '999')];
+      twitch.users = [];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      expect(panels(fixture)[0].querySelector('.bdsm-page-name')!.textContent!.trim()).toBe('999');
+      expect(panels(fixture)[0].querySelector('.bdsm-page-avatar')).toBeNull();
+    });
+
+    it('should put the newest test at the top', async () => {
+      bdsm.followers = [
+        result('older', '2020-01-01T12:00:00Z', {}, '1'),
+        result('newer', '2026-07-31T12:00:00Z', {}, '2'),
+      ];
+      twitch.users = [twitchUser('1', 'Zoe'), twitchUser('2', 'Alice')];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      expect(panels(fixture).map((panel) => panel.querySelector('time')!.getAttribute('datetime')))
+        .toEqual(['2026-07-31', '2020-01-01']);
+    });
+
+    // A list to browse rather than a single result to read, so nothing opens by itself.
+    it('should leave every community panel closed', async () => {
+      bdsm.followers = [
+        result('a', '2026-07-31T12:00:00Z', {}, '1'),
+        result('b', '2024-01-01T12:00:00Z', {}, '2'),
+      ];
+      twitch.users = [twitchUser('1', 'Zoe'), twitchUser('2', 'Alice')];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      const expanded = panels(fixture).map(
+        (panel) => panel.querySelector('.mat-expansion-panel-header')!.getAttribute('aria-expanded'),
+      );
+
+      expect(expanded).toEqual(['false', 'false']);
+      expect((fixture.nativeElement as HTMLElement).querySelectorAll('app-bdsm-result')).toHaveLength(0);
+    });
+
+    it('should say so when nobody shared a result', async () => {
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      expect((fixture.nativeElement as HTMLElement).textContent)
+        .toContain('Nobody in your channel has shared a BDSM test result');
+    });
+
+    it('should report a failure instead of showing an empty community as success', async () => {
+      bdsm.getFollowerResults.mockRejectedValueOnce(new Error('nope'));
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      expect((fixture.nativeElement as HTMLElement).textContent)
+        .toContain('Could not load the results of your followers');
+      expect(notifications.notifications()[0].kind).toBe('failure');
+    });
+
+    // A failed load leaves nothing to show, so the tab has to be allowed to try again.
+    it('should retry after a failure rather than staying empty', async () => {
+      bdsm.getFollowerResults.mockRejectedValueOnce(new Error('nope'));
+
+      const fixture = await render();
+      await openCommunity(fixture);
+      expect(bdsm.getFollowerResults).toHaveBeenCalledTimes(1);
+
+      bdsm.followers = [result('a', '2026-07-31T12:00:00Z', {}, '1')];
+      twitch.users = [twitchUser('1', 'Zoe')];
+
+      // Back to the first tab and out again, which is the reader's own way of retrying.
+      const labels = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.mat-mdc-tab')];
+      labels[0].click();
+      fixture.detectChanges();
+      await openCommunity(fixture);
+
+      expect(bdsm.getFollowerResults).toHaveBeenCalledTimes(2);
+      expect(panels(fixture)[0].querySelector('.bdsm-page-name')!.textContent!.trim()).toBe('Zoe');
+    });
   });
 });
