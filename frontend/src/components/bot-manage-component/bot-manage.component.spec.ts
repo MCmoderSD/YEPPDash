@@ -1,17 +1,23 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { signal } from '@angular/core';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { vi } from 'vitest';
 import { DashModule } from '../../pages/dash.module';
 import { BotManageComponent } from './bot-manage.component';
+import { AuthService } from '../../services/auth.service';
+import { BotResult, BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { ChannelUser } from '../../data/channel-user';
 import { TwitchUser } from '../../data/twitch-user';
 
 const BOT_ID = '644984959';
+
+// The channel the reader is signed in as — not the bot. Join and leave key on this one.
+const CHANNEL_ID = '123456789';
 
 const BOT: TwitchUser = {
   id: BOT_ID,
@@ -42,6 +48,15 @@ class FakeTwitchService {
   addModerator = vi.fn(async () => undefined);
 }
 
+function botResult(message: string): BotResult {
+  return { success: true, status: 200, message };
+}
+
+class FakeBotService {
+  joinChannel = vi.fn(async (): Promise<BotResult> => botResult('Joined channel: SomeChannel'));
+  leaveChannel = vi.fn(async (): Promise<BotResult> => botResult('Left channel: SomeChannel'));
+}
+
 class FakeNotificationService {
   readonly successes: string[] = [];
   readonly failures: string[] = [];
@@ -54,6 +69,7 @@ describe('BotManageComponent', () => {
   let fixture: ComponentFixture<BotManageComponent>;
   let element: HTMLElement;
   let twitch: FakeTwitchService;
+  let bot: FakeBotService;
   let notifications: FakeNotificationService;
 
   async function render(): Promise<void> {
@@ -87,7 +103,9 @@ describe('BotManageComponent', () => {
       imports: [DashModule, RouterModule.forRoot([])],
       providers: [
         { provide: TwitchService, useClass: FakeTwitchService },
+        { provide: BotService, useClass: FakeBotService },
         { provide: NotificationService, useClass: FakeNotificationService },
+        { provide: AuthService, useValue: { currentUser: signal({ ...BOT, id: CHANNEL_ID }) } },
         provideHttpClient(),
         provideHttpClientTesting(),
         provideNoopAnimations(),
@@ -95,6 +113,7 @@ describe('BotManageComponent', () => {
     }).compileComponents();
 
     twitch = TestBed.inject(TwitchService) as unknown as FakeTwitchService;
+    bot = TestBed.inject(BotService) as unknown as FakeBotService;
     notifications = TestBed.inject(NotificationService) as unknown as FakeNotificationService;
 
     fixture = TestBed.createComponent(BotManageComponent);
@@ -164,6 +183,67 @@ describe('BotManageComponent', () => {
 
     expect(issues().join(' ')).toContain('is not in your chat');
     expect(buttonLabelled('Join')).toBeTruthy();
+  });
+
+  // The bot's own API keys on the channel being joined, not on the bot's account — handing it the
+  // bot id would ask the bot to join its own chat.
+  it('should ask the bot to join the signed-in channel', async () => {
+    twitch.getChatters.mockResolvedValueOnce([]);
+    await render();
+
+    buttonLabelled('Join').click();
+    await settle();
+
+    expect(bot.joinChannel).toHaveBeenCalledWith(CHANNEL_ID);
+    expect(notifications.successes[0]).toContain('join your chat');
+  });
+
+  it('should ask the bot to leave the signed-in channel', async () => {
+    await render();
+
+    buttonLabelled('Leave').click();
+    await settle();
+
+    expect(bot.leaveChannel).toHaveBeenCalledWith(CHANNEL_ID);
+    expect(notifications.successes[0]).toContain('leave your chat');
+  });
+
+  it('should re-read the status after the bot is asked to move', async () => {
+    twitch.getChatters.mockResolvedValueOnce([]);
+    await render();
+
+    buttonLabelled('Join').click();
+    await settle();
+
+    expect(twitch.getChatters).toHaveBeenCalledTimes(2);
+  });
+
+  // The bot explains itself in its own words — down, unconfigured, or refusing — and that beats
+  // anything this page could write.
+  it('should report the reason the bot gave for refusing', async () => {
+    await render();
+
+    bot.leaveChannel.mockRejectedValueOnce(new HttpErrorResponse({
+      status: 502,
+      error: { success: false, status: 0, message: 'Could not reach YEPPBot.' },
+    }));
+
+    buttonLabelled('Leave').click();
+    await settle();
+
+    expect(notifications.successes).toEqual([]);
+    expect(notifications.failures[0]).toBe('Could not reach YEPPBot.');
+  });
+
+  it('should fall back to its own words when the bot explains nothing', async () => {
+    await render();
+
+    bot.leaveChannel.mockRejectedValueOnce(new Error('offline'));
+
+    buttonLabelled('Leave').click();
+    await settle();
+
+    expect(notifications.failures[0]).toContain('out of your chat');
   });
 
   // The bot only appears among the chatters under its own id, so a busy chat must not read as

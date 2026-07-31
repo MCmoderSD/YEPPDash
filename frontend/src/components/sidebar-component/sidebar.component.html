@@ -41,6 +41,18 @@
 
   <a
     mat-list-item
+    [routerLink]="commandPath"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">terminal</mat-icon>
+    <span matListItemTitle>Custom Commands</span>
+  </a>
+
+  <a
+    mat-list-item
     [routerLink]="birthdayListPath"
     routerLinkActive="sidebar-entry-active"
     [routerLinkActiveOptions]="activeMatch"

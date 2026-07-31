@@ -1,0 +1,47 @@
+<section class="command-page">
+
+  <header class="command-page-header">
+    <h1 class="command-page-title">Custom Commands</h1>
+    <p class="command-page-count">
+      @if (count() === 0) {
+        No commands in your channel yet
+      } @else if (count() === activeCount()) {
+        {{ count() }} command{{ count() === 1 ? '' : 's' }} in your channel
+      } @else {
+        {{ count() }} command{{ count() === 1 ? '' : 's' }} in your channel, {{ activeCount() }} active
+      }
+    </p>
+  </header>
+
+  <div class="command-page-toolbar">
+    <button
+      mat-flat-button
+      type="button"
+      [disabled]="busy() || loading() || adding()"
+      (click)="add()"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      <span>Add command</span>
+    </button>
+  </div>
+
+  <!-- Kept in the layout while idle so the table does not jump every time a request starts. -->
+  <mat-progress-bar
+    class="command-page-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!(loading() || busy())"
+    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+  />
+
+  <app-command-table
+    [commands]="commandList()"
+    [busy]="busy()"
+    [loading]="loading()"
+    [unreachable]="unreachable()"
+    [(editing)]="editing"
+    [(adding)]="adding"
+    (save)="submit($event)"
+    (remove)="remove($event)"
+    (setActive)="setActive($event)"
+  />
+</section>

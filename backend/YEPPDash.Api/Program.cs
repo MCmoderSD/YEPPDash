@@ -1,4 +1,5 @@
 using YEPPDash.Api.Auth;
+using YEPPDash.Api.Bot;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services;
@@ -22,6 +23,7 @@ builder.Services.AddCors(options => options.AddPolicy(frontendCorsPolicy, policy
 
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
 builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
+builder.Services.AddYeppBot(builder.Configuration, dbTarget);
 // Constructed here rather than by the container so uptime is measured from startup, not from the
 // first request that happens to ask for it.
 builder.Services.AddSingleton(new UptimeTracker());
@@ -33,6 +35,8 @@ builder.Services.AddScoped<BirthdayRepository>();
 builder.Services.AddScoped<BirthdayService>();
 builder.Services.AddScoped<BdsmRepository>();
 builder.Services.AddScoped<BdsmService>();
+builder.Services.AddScoped<CustomCommandRepository>();
+builder.Services.AddScoped<CustomCommandService>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

@@ -1,0 +1,41 @@
+.command-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  // Matches the quote table: a command's message is a sentence, so the column it sits in needs the
+  // room to avoid wrapping every row.
+  width: min(60rem, 100%);
+  margin-inline: auto;
+}
+
+.command-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.command-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.command-page-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.command-page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.command-page-progress {
+  flex: none;
+  align-self: stretch;
+}

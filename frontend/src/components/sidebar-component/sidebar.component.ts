@@ -29,6 +29,8 @@ export class SidebarComponent {
 
   protected readonly quoteManagementPath: string = isDashHost() ? '/quotes' : '/dash/quotes';
 
+  protected readonly commandPath: string = isDashHost() ? '/commands' : '/dash/commands';
+
   protected readonly birthdayListPath: string = isDashHost() ? '/birthdays' : '/dash/birthdays';
 
   protected readonly bdsmPath: string = isDashHost() ? '/bdsm' : '/dash/bdsm';

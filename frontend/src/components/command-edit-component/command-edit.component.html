@@ -1,0 +1,121 @@
+<form class="command-edit" (submit)="$event.preventDefault(); submit()">
+
+  <div class="command-edit-grid">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="command-edit-field">
+      <mat-label>Command name</mat-label>
+      <input
+        matInput
+        #trigger
+        type="text"
+        autocomplete="off"
+        [attr.maxlength]="maxLength"
+        [value]="name()"
+        [disabled]="busy()"
+        [attr.aria-invalid]="nameError() !== null"
+        (input)="name.set(trigger.value)"
+      />
+
+      <!-- The reason rides in the hint rather than a mat-error: without a form control the field
+           never enters an error state, so a mat-error would never be shown. The hint is wired into
+           the input's aria-describedby either way, and aria-live carries a change that happens
+           while the field already has focus. -->
+      <mat-hint>
+        @if (nameError(); as error) {
+          <span class="command-edit-error" aria-live="polite">{{ error }}</span>
+        } @else {
+          The word chat types to run this command.
+        }
+      </mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="command-edit-field">
+      <mat-label>Aliases</mat-label>
+
+      <mat-chip-grid #aliasGrid [disabled]="busy()" aria-label="Aliases for this command">
+        @for (alias of aliases(); track alias) {
+          <mat-chip-row (removed)="removeAlias(alias)">
+            {{ alias }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove alias ' + alias">
+              <mat-icon aria-hidden="true">cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        }
+
+        <input
+          placeholder="Add an alias…"
+          autocomplete="off"
+          [matChipInputFor]="aliasGrid"
+          [matChipInputSeparatorKeyCodes]="separators"
+          [matChipInputAddOnBlur]="true"
+          (matChipInputTokenEnd)="addAlias($event)"
+        />
+      </mat-chip-grid>
+
+      <mat-hint>
+        @if (aliasError(); as error) {
+          <span class="command-edit-error" aria-live="polite">{{ error }}</span>
+        } @else {
+          Other words that run the same command. Press Enter or Space after each.
+        }
+      </mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="command-edit-field">
+      <mat-label>Response type</mat-label>
+      <mat-select
+        panelClass="app-select-panel"
+        [value]="responseType()"
+        [disabled]="busy()"
+        (valueChange)="responseType.set($event)"
+      >
+        @for (option of responseTypes; track option) {
+          <mat-option [value]="option">{{ responseTypeLabels[option] }}</mat-option>
+        }
+      </mat-select>
+
+      <mat-hint>How the bot will answer this command.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="command-edit-field">
+      <mat-label>User level</mat-label>
+      <mat-select
+        panelClass="app-select-panel"
+        [value]="userLevel()"
+        [disabled]="busy()"
+        (valueChange)="userLevel.set($event)"
+      >
+        @for (option of userLevels; track option) {
+          <mat-option [value]="option">{{ userLevelLabels[option] }}</mat-option>
+        }
+      </mat-select>
+
+      <mat-hint>The lowest rank that may run it.</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="command-edit-field command-edit-message">
+    <mat-label>Message</mat-label>
+    <textarea
+      matInput
+      #reply
+      rows="4"
+      autocomplete="off"
+      [attr.maxlength]="maxLength"
+      [value]="message()"
+      [disabled]="busy()"
+      (input)="message.set(reply.value)"
+    ></textarea>
+
+    <mat-hint>
+      <!-- aria-live so the count is announced as it changes rather than only on focus. -->
+      <span aria-live="polite">{{ messageLength() }} of {{ maxLength }} characters</span>
+    </mat-hint>
+  </mat-form-field>
+
+  <div class="command-edit-actions">
+    <button mat-button type="button" [disabled]="busy()" (click)="cancel.emit()">Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="!canSave()">
+      {{ adding() ? 'Add command' : 'Save' }}
+    </button>
+  </div>
+</form>
