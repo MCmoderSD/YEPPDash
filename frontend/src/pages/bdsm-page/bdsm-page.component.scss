@@ -1,0 +1,97 @@
+.bdsm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  // Wide enough for the bars to be worth reading, and capped so a full-width monitor does not
+  // stretch a twenty-five row chart across two feet of screen.
+  width: min(44rem, 100%);
+  margin-inline: auto;
+}
+
+.bdsm-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.bdsm-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.bdsm-page-count {
+  margin-top: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  text-align: center;
+}
+
+.bdsm-page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.bdsm-page-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+.bdsm-page-results {
+  display: block;
+}
+
+// The tab body clips its content while a tab slides in, so the panels need a little room above them
+// or the first one's shadow is cut off mid-animation.
+.bdsm-page-tabs {
+  padding-block-start: 1rem;
+}
+
+// Flex so the avatar and the name sit on one line; min-width so a long name wraps inside the title
+// instead of pushing the date out of the header.
+.bdsm-page-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.bdsm-page-avatar {
+  flex: none;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.bdsm-page-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bdsm-page-meta {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// The header lays its title and description out with flex and gives the description all the room
+// left over; right-aligning it keeps the summary off the title of a short date.
+.bdsm-page-summary {
+  justify-content: flex-end;
+
+  // Material's own margin here assumes a description that runs on; this one is three short figures.
+  margin-right: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.bdsm-page-empty {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
