@@ -59,11 +59,8 @@ export class UserAddDialogComponent {
     this.state.set('searching');
 
     try {
-
-      // Search by name
       let [user] = await this.twitch.getUsers([], [term.toLowerCase()]);
 
-      // Search ID
       if (!user && /^\d+$/.test(term)) {
         [user] = await this.twitch.getUsers([term], []);
       }

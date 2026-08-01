@@ -5,15 +5,9 @@ using YEPPDash.Api.Data.Quote;
 
 namespace YEPPDash.Api.Repositories;
 
-/// <summary>
-/// Reads and writes YEPPBot's Quote table. The table is owned by the bot, so nothing here creates
-/// or migrates it — it is expected to exist already.
-/// </summary>
-/// <remarks>
-/// Quote ids are per-channel positions numbered from 1, not surrogate keys, so every write that
-/// removes or moves a row has to renumber the rows around it. Those run in a transaction: a half
-/// applied renumber would leave the list with duplicate or missing positions.
-/// </remarks>
+// Quote ids are per-channel positions, not surrogate keys, so a write that removes or moves a row
+// renumbers the rows around it inside a transaction — a half-applied renumber would leave the list
+// with duplicate or missing positions.
 public sealed class QuoteRepository(MySqlConnection connection)
 {
     // Ids start at 1 and the shift below parks rows in the negative range, so 0 is the one slot a
@@ -137,7 +131,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
             return false;
         }
 
-        // Close the gap so the list stays 1..n.
         await ShiftThroughNegativeSpaceAsync(
             channelId,
             "id > @id",
@@ -150,7 +143,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
         return true;
     }
 
-    /// <returns>The renumbered list, or <c>null</c> when the quote does not exist.</returns>
     public async Task<IReadOnlyList<Quote>?> MoveAsync(
         int channelId, int id, int position, CancellationToken cancellationToken)
     {
@@ -224,9 +216,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 cancellationToken: cancellationToken));
     }
 
-    /// <summary>
-    /// Adds <paramref name="step"/> to the id of every row matching <paramref name="range"/>.
-    /// </summary>
     /// <remarks>
     /// Done in two passes through negative ids rather than one <c>id = id ± 1</c> statement. A
     /// single pass overlaps its own source and target values, so it only works if the rows happen

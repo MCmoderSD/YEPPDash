@@ -113,10 +113,6 @@ export class BotManageComponent {
     return this.load(this.botUserId());
   }
 
-  /**
-   * @param action Handed the signed-in channel's id, which is what the bot's own routes key on.
-   *               Anything acting on the bot's Twitch account reads {@link botUserId} instead.
-   */
   private async act(
     action: (channelId: string) => Promise<void>,
     success: string,

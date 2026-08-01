@@ -17,12 +17,10 @@ const dashHost = new URL(environment.frontendBaseUrl).hostname;
 const isProd = process.env['NODE_ENV'] === 'production';
 
 /**
- * Serve static files from /browser
- *
- * This has to stay ahead of the host rewrite below: bundles and assets live at real paths in
- * the browser folder and are requested that way from every host, so rewriting them to /dash/*
- * would turn every script tag into a 404 that falls through to the Angular handler and comes
- * back as HTML - which the browser refuses to execute, leaving the app dead on arrival.
+ * Has to stay ahead of the host rewrite below: bundles and assets live at real paths in the
+ * browser folder and are requested that way from every host, so rewriting them to /dash/* would
+ * turn every script tag into a 404 that falls through to the Angular handler and comes back as
+ * HTML - which the browser refuses to execute, leaving the app dead on arrival.
  */
 app.use(
   express.static(browserDistFolder, {
@@ -68,9 +66,6 @@ app.use((req, res, next) => {
   next();
 });
 
-/**
- * Handle all other requests by rendering the Angular application.
- */
 app.use((req, res, next) => {
   angularApp
     .handle(req)

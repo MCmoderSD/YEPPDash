@@ -15,12 +15,8 @@ export interface BirthdayEditDialogData {
   birthday: Birthday | null;
 }
 
-/**
- * Picks a date of birth. Answers with the parts to send, or nothing when it was dismissed.
- *
- * Standalone so it can be imported on demand: it is the only thing in the app that needs Material's
- * datepicker, and it is opened from the app shell, which every page loads.
- */
+// Standalone so it can be imported on demand: it is the only thing in the app that needs
+// Material's datepicker, and it is opened from the app shell, which every page loads.
 @Component({
   selector: 'app-birthday-edit-dialog',
   templateUrl: './birthday-edit-dialog.component.html',

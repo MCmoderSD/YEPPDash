@@ -23,15 +23,12 @@ import {
   DEFAULT_USER_LEVEL,
 } from '../../data/custom-command';
 
-/** Emitted when the switch in a row is flipped. */
 export interface CommandActiveChange {
   command: CustomCommand;
   active: boolean;
 }
 
-/** Emitted when an open editor is saved. */
 export interface CommandSubmit {
-  /** The name the command is stored under, or null when it is a new one. */
   name: string | null;
   draft: CustomCommandDraft;
 }
@@ -68,10 +65,8 @@ export class CommandTableComponent {
 
   readonly unreachable: InputSignal<boolean> = input<boolean>(false);
 
-  /** The command whose editor is open, or null when none is. Owned above, so a save can close it. */
   readonly editing: ModelSignal<string | null> = model<string | null>(null);
 
-  /** Whether the row for a new command is showing. */
   readonly adding: ModelSignal<boolean> = model<boolean>(false);
 
   // Deliberately not called `submit`: the form inside an open row fires a native, bubbling submit
@@ -142,7 +137,6 @@ export class CommandTableComponent {
     return isDraft(command) ? this.adding() : this.editing() === command.name;
   }
 
-  /** The id of the panel a row's expand control points at. */
   protected panelId(command: CustomCommand): string {
     return `command-editor-${isDraft(command) ? 'new' : command.name}`;
   }
@@ -158,7 +152,6 @@ export class CommandTableComponent {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  /** Opens a row's editor, or closes it when it is the one already open. Only one is open at a time. */
   protected toggle(command: CustomCommand, event?: Event): void {
     event?.stopPropagation();
 

@@ -3,26 +3,15 @@ using System.Text.Json;
 
 namespace YEPPDash.Api.Bot;
 
-/// <summary>
-/// Talks to a running YEPPBot. Every endpoint is a POST that takes the channel's numeric Twitch id
-/// as the last path segment and no body, and answers <c>{ success, status, message }</c>.
-/// </summary>
-/// <remarks>
-/// Nothing here throws for a bot that is down, misconfigured or refusing the call: the dashboard's
-/// own work has already succeeded by the time most of these run, and a bot that cannot be reached
-/// is worth reporting rather than worth failing over.
-/// </remarks>
 public sealed class YeppBotClient(HttpClient httpClient, YeppBotOptions options, ILogger<YeppBotClient> logger)
 {
     public bool Configured => options.Configured;
 
-    /// <summary>Asks the bot to join the channel's chat.</summary>
     public Task<YeppBotResult> JoinChannelAsync(string userId, CancellationToken cancellationToken)
     {
         return PostAsync("JoinChannel", userId, cancellationToken);
     }
 
-    /// <summary>Asks the bot to leave the channel's chat.</summary>
     public Task<YeppBotResult> LeaveChannelAsync(string userId, CancellationToken cancellationToken)
     {
         return PostAsync("LeaveChannel", userId, cancellationToken);
@@ -55,8 +44,6 @@ public sealed class YeppBotClient(HttpClient httpClient, YeppBotOptions options,
 
             using var response = await httpClient.SendAsync(request, cancellationToken);
 
-            // Read the body before the status: the bot explains itself there even when it refuses,
-            // and its message is more use than the status alone.
             var payload = await ReadAsync(response, cancellationToken);
             var status = payload?.Status ?? (int)response.StatusCode;
             var success = payload?.Success ?? response.IsSuccessStatusCode;

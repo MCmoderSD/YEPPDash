@@ -1,7 +1,6 @@
 import { Service } from '@angular/core';
 import { ApiService } from './api.service';
 
-/** What YEPPBot answered, passed through by the dashboard's own bot routes. */
 export interface BotResult {
   success: boolean;
   status: number;
@@ -20,7 +19,6 @@ export class BotService extends ApiService {
     return this.post<BotResult>(`${encodeURIComponent(channelId)}/join`);
   }
 
-  /** Asks the bot to leave the channel's chat. */
   leaveChannel(channelId: string): Promise<BotResult> {
     return this.post<BotResult>(`${encodeURIComponent(channelId)}/leave`);
   }

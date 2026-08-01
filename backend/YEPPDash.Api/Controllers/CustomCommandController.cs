@@ -49,9 +49,6 @@ public sealed class CustomCommandController(
         }
     }
 
-    /// <summary>
-    /// Rewrites a command. The body carries the name as well, so this is also how one is renamed.
-    /// </summary>
     [HttpPatch("{userId}/{name}")]
     public async Task<IActionResult> UpdateCommand(
         string userId, string name, [FromBody] CustomCommandRequest request, CancellationToken cancellationToken)
@@ -79,7 +76,6 @@ public sealed class CustomCommandController(
         }
     }
 
-    /// <summary>Turns one command on or off, leaving everything else about it alone.</summary>
     [HttpPatch("{userId}/{name}/active")]
     public async Task<IActionResult> SetActive(
         string userId,
@@ -101,7 +97,6 @@ public sealed class CustomCommandController(
         return await commands.DeleteAsync(userId, name, cancellationToken) ? NoContent() : NotFound();
     }
 
-    /// <returns>The result to return, or <c>null</c> when the caller may proceed.</returns>
     private IActionResult? Denied(string userId)
     {
         var twitchId = User.GetTwitchId();

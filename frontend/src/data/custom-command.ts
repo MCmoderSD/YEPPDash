@@ -81,12 +81,10 @@ export function cleanTrigger(value: string): string {
   return value.trim().replace(/^!+/, '').trim().toLowerCase();
 }
 
-/** Whether a cleaned trigger is one the bot could actually match on. */
 export function isValidTrigger(trigger: string): boolean {
   return TRIGGER_PATTERN.test(trigger);
 }
 
-/** Whether two triggers would collide. Both are compared as they are stored. */
 export function sameTrigger(left: string, right: string): boolean {
   return left.toLowerCase() === right.toLowerCase();
 }

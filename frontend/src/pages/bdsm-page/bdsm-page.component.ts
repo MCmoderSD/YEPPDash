@@ -6,13 +6,11 @@ import { TwitchService } from '../../services/twitch.service';
 import { BdsmResult, resultTakenAt } from '../../data/bdsm-result';
 import { TwitchUser } from '../../data/twitch-user';
 
-/** One panel: the result, plus the date its header shows and sorts on. */
 export interface BdsmResultEntry {
   result: BdsmResult;
   takenAt: Date;
 }
 
-/** A community panel, which belongs to somebody the reader has to be told apart from the rest. */
 export interface BdsmCommunityEntry extends BdsmResultEntry {
 
   // Null when Twitch no longer resolves the id — a deleted or renamed account still has a row in

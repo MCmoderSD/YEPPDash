@@ -43,8 +43,6 @@ public sealed class TwitchController(
         var userIds = Clean(id);
         var logins = Clean(login);
 
-        // No upper bound: the service splits whatever arrives into the batches Helix accepts. Only an
-        // empty request is refused, because there is nothing to look up.
         var total = userIds.Count + logins.Count;
         if (total is 0) return BadRequest("Pass at least one id or login value.");
 
@@ -67,9 +65,6 @@ public sealed class TwitchController(
             "list the moderators");
     }
 
-    /// <summary>
-    /// Which of the given users moderate the channel. Answers with only the ones that do.
-    /// </summary>
     [HttpGet("moderators/check")]
     public Task<IActionResult> CheckModerators(
         [FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
@@ -106,9 +101,6 @@ public sealed class TwitchController(
             "list the VIPs");
     }
 
-    /// <summary>
-    /// Which of the given users are VIPs of the channel. Answers with only the ones that are.
-    /// </summary>
     [HttpGet("vips/check")]
     public Task<IActionResult> CheckVips(
         [FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
@@ -154,13 +146,8 @@ public sealed class TwitchController(
         }
     }
 
-    /// <summary>
-    /// Which of the given users are editors of the channel. Answers with only the ones that are.
-    /// </summary>
-    /// <remarks>
-    /// Twitch has no filtered form of Get Channel Editors, so the service matches against the full
-    /// list. The ids never leave this side, which is why this check has no batch limit at all.
-    /// </remarks>
+    // Twitch has no filtered form of Get Channel Editors, so the service matches against the full
+    // list. The ids never leave this side, which is why this check has no batch limit at all.
     [HttpGet("editors/check")]
     public Task<IActionResult> CheckEditors(
         [FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
@@ -256,12 +243,6 @@ public sealed class TwitchController(
             $"unban {userId}");
     }
 
-    /// <param name="toResponse">
-    /// How one match is shaped for the wire — editors carry different fields from the rest.
-    /// </param>
-    /// <param name="role">
-    /// How the check reads in a log line, e.g. "are moderators".
-    /// </param>
     private async Task<IActionResult> CheckChannelUsersAsync<T>(
         string[]? id,
         Func<string, IReadOnlyCollection<string>, Task<IReadOnlyList<T>>> check,
@@ -271,7 +252,6 @@ public sealed class TwitchController(
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        // No upper bound here either — the service batches for Helix, the caller just asks.
         var userIds = Clean(id);
         if (userIds.Count is 0) return BadRequest("Pass at least one id value.");
 

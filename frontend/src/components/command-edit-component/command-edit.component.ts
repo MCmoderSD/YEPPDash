@@ -29,11 +29,6 @@ import {
   USER_LEVELS,
 } from '../../data/custom-command';
 
-/**
- * The form for one command, shown inside the row it belongs to rather than over the page. Holds no
- * state of its own beyond what is being typed: the row above it decides when it is open, and the
- * page above that decides what happens to what it emits.
- */
 @Component({
   selector: 'app-command-edit',
   templateUrl: './command-edit.component.html',
@@ -42,7 +37,6 @@ import {
 })
 export class CommandEditComponent {
 
-  /** The command being rewritten, or null when this is a new one. */
   readonly command: InputSignal<CustomCommand | null> = input<CustomCommand | null>(null);
 
   // The triggers already taken in this channel, so a collision is shown while typing rather than
@@ -94,7 +88,6 @@ export class CommandEditComponent {
 
   private readonly cleanedName: Signal<string> = computed((): string => cleanTrigger(this.name()));
 
-  /** The reason the name cannot be used, or null while it can. */
   protected readonly nameError: Signal<string | null> = computed((): string | null => {
     const name: string = this.cleanedName();
 
@@ -110,10 +103,7 @@ export class CommandEditComponent {
     return null;
   });
 
-  /**
-   * The reason the aliases cannot be used, or null while they can. They share one column, so the
-   * ceiling is on the joined list rather than on any one of them.
-   */
+  // They share one column, so the ceiling is on the joined list rather than on any one of them.
   protected readonly aliasError: Signal<string | null> = computed((): string | null => {
     return joinAliases(this.aliases()).length > this.maxLength
       ? `The aliases together cannot be longer than ${this.maxLength} characters.`

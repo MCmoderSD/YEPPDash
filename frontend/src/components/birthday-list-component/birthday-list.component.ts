@@ -10,7 +10,6 @@ import { TwitchService } from '../../services/twitch.service';
 import { ageOn, Birthday, birthdayToDate, daysUntilNextBirthday } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
 
-/** One row: the stored birthday, whoever it belongs to, and what the table shows about it. */
 export interface BirthdayEntry {
   birthday: Birthday;
 

@@ -97,7 +97,6 @@ describe('BdsmPageComponent', () => {
     return fixture;
   }
 
-  /** Opens the community tab the way a reader would, by clicking its label. */
   async function openCommunity(fixture: ComponentFixture<BdsmPageComponent>): Promise<void> {
     const labels = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.mat-mdc-tab')];
     labels[1].click();

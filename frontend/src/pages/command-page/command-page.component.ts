@@ -138,13 +138,6 @@ export class CommandPageComponent {
         sameTrigger(entry.name, name) ? { ...entry, active } : entry));
   }
 
-  /**
-   * @param options.reload Whether to re-read the list after the write. On by default, because most
-   *                       writes change more than the row they were aimed at.
-   * @param options.revert Undoes a change already made to the table, for a write that moved it
-   *                       before the answer came back.
-   * @returns Whether the write went through.
-   */
   private async run(
     action: (channelId: string) => Promise<void>,
     failure: string,

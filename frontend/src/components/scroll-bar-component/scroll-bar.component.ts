@@ -44,10 +44,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-/**
- * Geometry for one axis. `track` is the room left for the bar once the other bar's corner is taken
- * out of it; `viewport` and `content` are the element's client and scroll size along the axis.
- */
 export function scrollBarAxis(
   track: number, viewport: number, content: number, scroll: number,
 ): ScrollBarAxis {
@@ -77,7 +73,6 @@ export function scrollBarAxis(
   };
 }
 
-/** The inverse of the above: how far to scroll for the thumb to come to rest at `offset`. */
 export function scrollForThumbOffset(
   offset: number, axis: ScrollBarAxis, viewport: number, content: number,
 ): number {
@@ -87,23 +82,7 @@ export function scrollForThumbOffset(
   return clamp(offset / room, 0, 1) * (content - viewport);
 }
 
-/**
- * A scroll bar in the app's own colours, drawn over an element that keeps scrolling natively.
- *
- * Only the bar is replaced, never the scrolling: the target keeps its own overflow, so the wheel,
- * the keyboard, touch momentum, auto-scroll while selecting text and the platform's accessibility
- * affordances all still come from the browser. That is the whole reason this sits on top of the
- * element instead of taking its content over.
- *
- * Place it as a sibling of the element it points at, inside an ancestor that establishes a
- * containing block:
- *
- *     <div #scroll class="panel"> … </div>
- *     <app-scroll-bar [target]="scroll"/>
- *
- * Standalone rather than declared in a module: it is used from two different NgModules and is not
- * worth a module of its own.
- */
+// Used from two different NgModules, so it has to be standalone rather than declared in either.
 @Component({
   selector: 'app-scroll-bar',
   templateUrl: './scroll-bar.component.html',
@@ -121,7 +100,6 @@ export function scrollForThumbOffset(
 })
 export class ScrollBarComponent {
 
-  /** The element that scrolls. Its native bar stays hidden for as long as this component lives. */
   readonly target: InputSignal<HTMLElement> = input.required<HTMLElement>();
 
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);

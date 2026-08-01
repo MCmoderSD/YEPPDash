@@ -84,7 +84,6 @@ export function traitColor(score: number): string {
   return `hsl(${Math.round(bounded * 120)} 80% 66%)`;
 }
 
-/** A result's scores as a list, in the order {@link BDSM_TRAITS} declares them. */
 export function traitScores(result: BdsmResult): BdsmTraitScore[] {
   return BDSM_TRAITS.map((trait): BdsmTraitScore => {
     const score: number = result.traits[trait.key];
@@ -115,12 +114,10 @@ export function topTraits(result: BdsmResult, count: number): BdsmTraitScore[] {
     .map(([trait]) => trait);
 }
 
-/** Every trait a result scores, strongest first. */
 export function rankedTraits(result: BdsmResult): BdsmTraitScore[] {
   return topTraits(result, BDSM_TRAITS.length);
 }
 
-/** The single trait a result scores highest, or `null` for a result with no traits at all. */
 export function dominantTrait(result: BdsmResult): BdsmTraitScore | null {
   return topTraits(result, 1)[0] ?? null;
 }

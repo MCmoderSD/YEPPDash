@@ -8,31 +8,12 @@ using YEPPDash.Api.Services;
 
 namespace YEPPDash.Api.Controllers;
 
-/// <summary>
-/// Birthdays out of YEPPBot's Birthday table. Any signed-in user may read a single birthday; writing
-/// one, and reading the whole list for a channel's followers, is limited to the owner.
-/// </summary>
-/// <remarks>
-/// Every route pins the id to an int. The column behind it is an INT primary key, so an id that is
-/// not one cannot name a row — and pinning it in the route means the id is never parsed anywhere
-/// that would have to answer for the failure.
-/// </remarks>
 [ApiController]
 [Authorize]
 [Route("birthday")]
 public sealed class BirthdayController(BirthdayService birthdays, ILogger<BirthdayController> logger)
     : ControllerBase
 {
-    /// <summary>
-    /// The birthdays of everyone following the channel.
-    /// </summary>
-    /// <remarks>
-    /// Owner-only, unlike the single birthday below, and the one place in here where that is about
-    /// more than write access: the follower list is fetched with the broadcaster's own stored Twitch
-    /// token, so letting a caller name somebody else would hand them a read of another channel's
-    /// followers. Sits on its own route rather than under this controller's, because the id names the
-    /// channel to look at rather than the person the birthday belongs to.
-    /// </remarks>
     [HttpGet("~/birthdays/{userId:int}")]
     public async Task<IActionResult> GetFollowerBirthdays(string userId, CancellationToken cancellationToken)
     {
@@ -45,8 +26,6 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            // Coarser than TwitchController's mapping on purpose: the only way to get here is a
-            // missing token or an unreachable Twitch, and neither is the caller's to fix.
             logger.LogWarning(exception, "Cannot read the followers of channel {UserId}", userId);
             return StatusCode(StatusCodes.Status502BadGateway);
         }
@@ -100,14 +79,8 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
         return birthday is null ? NotFound() : Ok(BirthdayResponse.From(birthday));
     }
 
-    /// <remarks>
-    /// UTC rather than local time: the server's zone is not the user's, and a birthday is a calendar
-    /// date rather than an instant, so the only thing this decides is how generous the "not in the
-    /// future" rule is by up to a day.
-    /// </remarks>
     private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
 
-    /// <returns>The result to return, or <c>null</c> when the caller may proceed.</returns>
     private IActionResult? Denied(string userId)
     {
         var twitchId = User.GetTwitchId();

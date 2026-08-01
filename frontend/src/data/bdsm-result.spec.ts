@@ -11,7 +11,6 @@ import {
   traitScores,
 } from './bdsm-result';
 
-/** The hue out of an `hsl(H S% L%)` string, which is what carries the red-to-green sweep. */
 function hueOf(color: string): number {
   return Number(/^hsl\((\d+)/.exec(color)![1]);
 }

@@ -17,7 +17,6 @@ public sealed class StatusController(UptimeTracker uptime) : ControllerBase
         return new UptimeResponse(
             uptime.StartedAt,
             Math.Round(elapsed.TotalSeconds, 3),
-            // Days stay separate from hours so a long-running instance does not read as "873:12:04".
             $"{elapsed.Days}d {elapsed.Hours:D2}h {elapsed.Minutes:D2}m {elapsed.Seconds:D2}s");
     }
 }

@@ -5,14 +5,6 @@ using YEPPDash.Api.Data.Bdsm;
 
 namespace YEPPDash.Api.Repositories;
 
-/// <summary>
-/// Reads YEPPBot's BDSM table. The table is owned by the bot, so nothing here creates or migrates it
-/// — it is expected to exist already.
-/// </summary>
-/// <remarks>
-/// Read-only on purpose: results are written by the bot when a user submits a test, and the dashboard
-/// only ever shows them back.
-/// </remarks>
 public sealed class BdsmRepository(MySqlConnection connection)
 {
     /// <remarks>
@@ -26,9 +18,6 @@ public sealed class BdsmRepository(MySqlConnection connection)
         new[] { "id", "`user`", "`timestamp`", "version", "gender", "ageGroup" }
             .Concat(BdsmTraits.All.Select(trait => $"`{trait}`")));
 
-    /// <summary>
-    /// Every test the given user has taken, newest first.
-    /// </summary>
     public async Task<IReadOnlyList<BdsmResult>> GetForUserAsync(int userId, CancellationToken cancellationToken)
     {
         var rows = await connection.QueryAsync(
@@ -40,15 +29,9 @@ public sealed class BdsmRepository(MySqlConnection connection)
         return ToResults(rows);
     }
 
-    /// <summary>
-    /// The most recent test of every user who has taken one, across all of YEPPBot's users — the
-    /// table has no channel column.
-    /// </summary>
-    /// <remarks>
-    /// One row per user rather than the whole history: this feeds a list of people, and a user who
-    /// retook the test five times would otherwise crowd out five others. The id breaks ties so that
-    /// two tests submitted in the same second still pick the same winner every time.
-    /// </remarks>
+    // One row per user rather than the whole history: this feeds a list of people, and a user who
+    // retook the test five times would otherwise crowd out five others. The id breaks ties so that
+    // two tests submitted in the same second still pick the same winner every time.
     public async Task<IReadOnlyList<BdsmResult>> GetLatestPerUserAsync(CancellationToken cancellationToken)
     {
         var rows = await connection.QueryAsync(

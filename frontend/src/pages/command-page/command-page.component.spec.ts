@@ -124,7 +124,6 @@ describe('CommandPageComponent', () => {
     await settle(fixture);
   }
 
-  /** Fills in whichever form is open and presses its save button. */
   async function fill(
     fixture: ComponentFixture<CommandPageComponent>,
     values: { name?: string; message?: string },

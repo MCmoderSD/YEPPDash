@@ -52,9 +52,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             PagedQuery("moderation/moderators", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
-    /// <summary>
-    /// Which of the given users moderate the channel, for one to <see cref="MaxBatchSize"/> of them.
-    /// </summary>
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsByIdAsync(
         string broadcasterId,
         IReadOnlyCollection<string> userIds,
@@ -72,9 +69,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             PagedQuery("channels/vips", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
-    /// <summary>
-    /// Which of the given users are VIPs of the channel, for one to <see cref="MaxBatchSize"/> of them.
-    /// </summary>
     public Task<IReadOnlyList<TwitchChannelUser>> GetVipsByIdAsync(
         string broadcasterId,
         IReadOnlyCollection<string> userIds,
@@ -110,13 +104,8 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return page.Items;
     }
 
-    /// <summary>
-    /// The users the broadcaster has given editor permissions.
-    /// </summary>
-    /// <remarks>
-    /// The one channel list Helix does not paginate, so it answers with everything at once rather
-    /// than a page and a cursor.
-    /// </remarks>
+    // The one channel list Helix does not paginate, so it answers with everything at once rather
+    // than a page and a cursor.
     public async Task<IReadOnlyList<TwitchChannelEditor>> GetEditorsAsync(
         string broadcasterId, string accessToken, CancellationToken cancellationToken)
     {
@@ -129,7 +118,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return payload?.Data ?? [];
     }
 
-    // Paged like the other channel lists; the service walks it to the end and caches the result.
     public Task<HelixPage<TwitchFollower>> GetFollowersAsync(
         string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
@@ -137,9 +125,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             PagedQuery("channels/followers", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
-    /// <summary>
-    /// The follow of a single user, or <c>null</c> when that user does not follow the channel.
-    /// </summary>
     /// <remarks>
     /// The same trick Get Banned Users allows: filtering by user_id answers with the follow if there
     /// is one and an empty page if there is not, which beats paging a large channel's whole follower

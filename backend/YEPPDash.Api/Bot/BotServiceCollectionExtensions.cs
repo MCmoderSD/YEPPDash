@@ -14,8 +14,6 @@ public static class BotServiceCollectionExtensions
     public static IServiceCollection AddYeppBot(
         this IServiceCollection services, IConfiguration configuration, string dbTarget)
     {
-        // Optional on purpose: the dashboard is useful without a reachable bot, and everything it
-        // does to the database still works. Only the "tell the bot" step goes quiet.
         var baseUrl = configuration[$"YeppBot:BaseUrl{dbTarget}"] ?? configuration["YeppBot:BaseUrl"];
 
         var options = new YeppBotOptions
@@ -47,9 +45,6 @@ public static class BotServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>
-    /// The key the bot expects: lower-case hex SHA-256 of the client secret both sides already hold.
-    /// </summary>
     private static string ApiKeyFor(string clientSecret)
     {
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(clientSecret)));

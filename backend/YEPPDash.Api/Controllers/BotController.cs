@@ -10,7 +10,6 @@ namespace YEPPDash.Api.Controllers;
 [Route("bot")]
 public sealed class BotController(YeppBotClient bot, ILogger<BotController> logger) : ControllerBase
 {
-    /// <summary>Asks the bot to join the channel's chat. Answering twice is not an error.</summary>
     [HttpPost("{userId}/join")]
     public async Task<IActionResult> Join(string userId, CancellationToken cancellationToken)
     {
@@ -19,7 +18,6 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         return Answer(await bot.JoinChannelAsync(userId, cancellationToken));
     }
 
-    /// <summary>Asks the bot to leave the channel's chat.</summary>
     [HttpPost("{userId}/leave")]
     public async Task<IActionResult> Leave(string userId, CancellationToken cancellationToken)
     {
@@ -28,11 +26,6 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         return Answer(await bot.LeaveChannelAsync(userId, cancellationToken));
     }
 
-    /// <summary>
-    /// Turns what the bot said into a response of our own. Its status travels where it is one the
-    /// caller can act on; anything else reads as "the thing behind us went wrong", which is what a
-    /// bot that is down or unconfigured is from the browser's point of view.
-    /// </summary>
     private IActionResult Answer(YeppBotResult result)
     {
         if (result.Success) return Ok(result);
@@ -50,7 +43,6 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         return StatusCode(status, result);
     }
 
-    /// <returns>The result to return, or <c>null</c> when the caller may proceed.</returns>
     private IActionResult? Denied(string userId)
     {
         var twitchId = User.GetTwitchId();

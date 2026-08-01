@@ -4,25 +4,9 @@ using YEPPDash.Api.Data.CustomCommand;
 
 namespace YEPPDash.Api.Repositories;
 
-/// <summary>
-/// Reads and writes YEPPBot's CustomCommands table. The table is owned by the bot, so nothing here
-/// creates or migrates it — it is expected to exist already.
-/// </summary>
-/// <remarks>
-/// <para>
-/// The key is (id, name), so a command is addressed by the word chat types rather than by a
-/// surrogate id, and renaming one rewrites part of its own key.
-/// </para>
-/// <para>
-/// The table collates <c>utf8mb4_bin</c>, which compares byte for byte — <c>Hug</c> and <c>hug</c>
-/// are two different keys to it. Everything written here is lower-cased first (by the service), so
-/// the equality the routes rely on is the equality the index gives them.
-/// </para>
-/// <para>
-/// A command's aliases share one <c>alias</c> column, comma-separated, so the 500 character ceiling
-/// on it applies to the whole list rather than to any one alias.
-/// </para>
-/// </remarks>
+// The table collates utf8mb4_bin, which compares byte for byte — Hug and hug are two different
+// keys to it. Everything written here is lower-cased first (by the service), so the equality the
+// routes rely on is the equality the index gives them.
 public sealed class CustomCommandRepository(MySqlConnection connection)
 {
     private const string Columns = "name, alias, message, active, type, userLevel";
@@ -74,8 +58,6 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
         }
     }
 
-    /// <param name="name">The name the command is stored under, which the update may change.</param>
-    /// <returns>The stored command, or <c>null</c> when there is nothing under that name.</returns>
     /// <exception cref="MySqlException">The new name is already taken by another command.</exception>
     public async Task<CustomCommand?> UpdateAsync(
         int channelId, string name, CustomCommand command, CancellationToken cancellationToken)
@@ -98,7 +80,6 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
         return await GetAsync(channelId, command.Name, cancellationToken);
     }
 
-    /// <returns>The stored command, or <c>null</c> when there is nothing under that name.</returns>
     public async Task<CustomCommand?> SetActiveAsync(
         int channelId, string name, bool active, CancellationToken cancellationToken)
     {
@@ -148,7 +129,6 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
         };
     }
 
-    /// <summary>The one column all of a command's aliases share.</summary>
     public static string JoinAliases(IEnumerable<string> aliases)
     {
         return string.Join(',', aliases);

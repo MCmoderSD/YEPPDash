@@ -4,15 +4,6 @@ using YEPPDash.Api.Data.Birthday;
 
 namespace YEPPDash.Api.Repositories;
 
-/// <summary>
-/// Reads and writes YEPPBot's Birthday table. The table is owned by the bot, so nothing here creates
-/// or migrates it — it is expected to exist already.
-/// </summary>
-/// <remarks>
-/// The primary key is the Twitch user id itself, so there is no surrogate key and no more than one
-/// row per user. Nothing in here validates the date: that belongs to the caller, which can turn a
-/// bad one into a readable response instead of a database error.
-/// </remarks>
 public sealed class BirthdayRepository(MySqlConnection connection)
 {
     public async Task<Birthday?> GetAsync(int userId, CancellationToken cancellationToken)
@@ -26,9 +17,6 @@ public sealed class BirthdayRepository(MySqlConnection connection)
         return row is null ? null : ToBirthday(row);
     }
 
-    /// <summary>
-    /// Every stored birthday, across all of YEPPBot's users — the table has no channel column.
-    /// </summary>
     public async Task<IReadOnlyList<Birthday>> GetAllAsync(CancellationToken cancellationToken)
     {
         var rows = await connection.QueryAsync<BirthdayRow>(

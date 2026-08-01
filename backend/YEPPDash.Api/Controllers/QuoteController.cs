@@ -56,9 +56,6 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return File(workbook, QuoteWorkbook.ContentType, name);
     }
 
-    /// <summary>
-    /// Replaces every quote of the channel with the contents of the uploaded workbook.
-    /// </summary>
     [HttpPost("{userId}/import")]
     [RequestSizeLimit(MaxUploadBytes)]
     public async Task<IActionResult> ImportQuotes(
@@ -119,7 +116,6 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return reordered is null ? NotFound() : Ok(reordered.Select(QuoteResponse.From));
     }
 
-    /// <returns>The result to return, or <c>null</c> when the caller may proceed.</returns>
     private IActionResult? Denied(string userId)
     {
         var twitchId = User.GetTwitchId();

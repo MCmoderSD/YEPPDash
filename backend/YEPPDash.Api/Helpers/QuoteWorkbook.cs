@@ -4,10 +4,6 @@ using YEPPDash.Api.Exceptions.Quote;
 
 namespace YEPPDash.Api.Helpers;
 
-/// <summary>
-/// Reads and writes the .xlsx shape used by the quote import and export: one header row, then
-/// <c>ID | Message | Date</c>.
-/// </summary>
 public static class QuoteWorkbook
 {
     public const string ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -52,9 +48,6 @@ public static class QuoteWorkbook
         return buffer.ToArray();
     }
 
-    /// <summary>
-    /// Reads the quotes from an uploaded workbook, ordered by the ID column when it is filled in.
-    /// </summary>
     public static IReadOnlyList<QuoteDraft> Read(Stream stream)
     {
         using var workbook = Open(stream);
