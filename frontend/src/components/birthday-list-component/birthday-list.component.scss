@@ -1,3 +1,5 @@
+@use '../../styles/chat-color' as chat;
+
 .birthday-list {
   display: flex;
   flex-direction: column;
@@ -9,8 +11,8 @@
 
   // Sized off the follower column, which takes whatever the fixed columns below leave. A Twitch name
   // is at most 25 characters, so this is wide enough for the longest one that can exist to sit on a
-  // single line next to its avatar — and no wider, since nothing can fill the space.
-  width: min(39rem, 100%);
+  // single line next to its avatar and badges — and no wider, since nothing can fill the space.
+  width: min(46rem, 100%);
   margin-inline: auto;
 }
 
@@ -82,13 +84,19 @@ table.birthday-list-grid {
   cursor: pointer;
 }
 
-// Fills its cell so the whole column reads as the click target, and carries the keyboard path to
-// the details dialog now that the row itself is the mouse path.
+.birthday-list-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Carries the keyboard path to the details dialog now that the row itself is the mouse path, and
+// hugs its content so the badges sit directly behind the name.
 .birthday-list-user {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: 100%;
+  flex: none;
   padding: 0;
   border: none;
   background: none;
@@ -110,11 +118,12 @@ table.birthday-list-grid {
   object-fit: cover;
 }
 
-// min-width: 0 so a long name wraps inside the column instead of widening it — a flex item refuses
-// to shrink below its content otherwise, which is exactly how one long name pushes a table around.
+// Never wrapped: a Twitch name is at most 25 characters, and letting the longest one break across
+// several lines would make its row tower over the rest. The table scrolls sideways instead.
 .birthday-list-name {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  @include chat.chat-color;
+
+  white-space: nowrap;
 }
 
 .birthday-list-date {

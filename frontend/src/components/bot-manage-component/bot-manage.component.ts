@@ -137,11 +137,10 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const [users, color, ban, blocked, moderators, chatters]:
-        [TwitchUser[], string | null, BanStatus, ChannelUser[], ChannelUser[], ChannelUser[]] =
+      const [users, ban, blocked, moderators, chatters]:
+        [TwitchUser[], BanStatus, ChannelUser[], TwitchUser[], ChannelUser[]] =
         await Promise.all([
           this.twitch.getUsers([botUserId]),
-          this.twitch.getChatColor(botUserId),
           this.twitch.getBanStatus(botUserId),
           this.twitch.getBlocked(),
           this.twitch.getModerators(),
@@ -149,7 +148,7 @@ export class BotManageComponent {
         ]);
 
       this.bot.set(users[0] ?? null);
-      this.chatColor.set(color);
+      this.chatColor.set(users[0]?.color ?? null);
       this.banned.set(ban.banned);
       this.blocked.set(contains(blocked, botUserId));
       this.moderator.set(contains(moderators, botUserId));

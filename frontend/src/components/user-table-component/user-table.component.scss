@@ -1,3 +1,5 @@
+@use '../../styles/chat-color' as chat;
+
 .user-table {
   display: flex;
   flex-direction: column;
@@ -6,8 +8,9 @@
   position: relative;
 
   // A user list is a small side task, not the page's main content — it should read as a
-  // compact panel, not stretch across the full width available to it.
-  max-width: 26rem;
+  // compact panel, not stretch across the full width available to it. Wide enough for a name with
+  // its badges plus the id and remove columns, which at 26rem were pushed behind a scroll.
+  max-width: 36rem;
 }
 
 .user-table-search {
@@ -48,14 +51,20 @@ table.user-table-grid {
   }
 }
 
-// Avatar and name sit in the same button so they read as one unit instead of two table cells, and
-// it fills its cell so the whole column is the click target — the row itself is the mouse path, so
-// this is what carries the keyboard path to the details dialog.
+.user-table-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Avatar and name sit in the same button so they read as one unit instead of two table cells. The
+// row itself is the mouse path, so this is what carries the keyboard path to the details dialog;
+// it hugs its content so the badges sit directly behind the name.
 .user-table-name {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  width: 100%;
+  flex: none;
   padding: 0;
   border: none;
   background: none;
@@ -68,6 +77,14 @@ table.user-table-grid {
     outline: 2px solid var(--mat-sys-primary);
     outline-offset: 2px;
   }
+}
+
+// Never wrapped: a Twitch name is at most 25 characters, and letting the longest one break across
+// several lines would make its row tower over the rest. The table scrolls sideways instead.
+.user-table-display-name {
+  @include chat.chat-color;
+
+  white-space: nowrap;
 }
 
 .user-table-avatar {

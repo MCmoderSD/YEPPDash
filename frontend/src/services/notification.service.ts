@@ -1,19 +1,13 @@
 import { Service, signal, Signal, WritableSignal } from '@angular/core';
 import { Notification, NotificationKind } from '../data/notification';
 
-// Failures stay up longer than confirmations: they usually need reading twice, and often name a
-// thing that went wrong rather than one that went right.
 const LIFETIME_MS: Record<NotificationKind, number> = {
   success: 4000,
   failure: 8000,
 };
 
-// Enough to see a short burst stack up, few enough that hammering a button cannot bury the page.
-// Past this the oldest fall off the top.
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE: number = 5;
 
-// Replaces MatSnackBar, which shows exactly one message at a time and dismisses the previous one
-// whenever a new arrives — so a burst of actions silently ate its own feedback.
 @Service()
 export class NotificationService {
 
@@ -42,8 +36,6 @@ export class NotificationService {
     const id: number = this.nextId++;
     const next: Notification[] = [...this.entries(), { id, kind, message }];
 
-    // Newest goes last so the stack grows upwards from its anchor: the new message appears at the
-    // bottom and pushes the older ones up rather than covering them.
     for (const dropped of next.slice(0, Math.max(0, next.length - MAX_VISIBLE))) {
       this.clearTimer(dropped.id);
     }

@@ -11,6 +11,22 @@ function channelUser(id: number): ChannelUser {
   return { id: `${id}`, login: `user${id}`, displayName: `User${id}` };
 }
 
+function twitchUser(id: number, color: string | null = null): object {
+  return {
+    id: `${id}`,
+    login: `user${id}`,
+    displayName: `User${id}`,
+    type: '',
+    broadcasterType: '',
+    description: '',
+    profileImageUrl: `https://static-cdn.jtvnw.net/user${id}.png`,
+    offlineImageUrl: null,
+    createdAt: '2020-01-01T00:00:00Z',
+    email: null,
+    color,
+  };
+}
+
 describe('TwitchService', () => {
   let service: TwitchService;
   let http: HttpTestingController;
@@ -34,11 +50,23 @@ describe('TwitchService', () => {
     expect(service.chatColor()).toBeNull();
   });
 
-  it('should list the moderators', async () => {
+  // A moderator arrives as a full user profile — avatar, colour, roles and all — so nothing has
+  // to be looked up a second time to draw one.
+  it('should list the moderators as ready-to-show user profiles', async () => {
     const loading = service.getModerators();
-    http.expectOne(`${API}/twitch/moderators`).flush([channelUser(1), channelUser(2)]);
+    http.expectOne(`${API}/twitch/moderators`).flush([
+      {
+        ...twitchUser(1, '#9146FF'),
+        roles: { broadcaster: false, moderator: true, vip: false, editor: false, verified: false },
+      },
+      twitchUser(2),
+    ]);
 
-    expect((await loading).map((user) => user.login)).toEqual(['user1', 'user2']);
+    const moderators = await loading;
+    expect(moderators.map((user) => user.login)).toEqual(['user1', 'user2']);
+    expect(moderators.map((user) => user.color)).toEqual(['#9146FF', null]);
+    expect(moderators[0].profileImageUrl).toContain('user1.png');
+    expect(moderators[0].roles?.moderator).toBe(true);
   });
 
   it('should add a moderator', async () => {
@@ -119,12 +147,14 @@ describe('TwitchService', () => {
     await loading;
   });
 
-  it('should list the editors', async () => {
+  it('should list the editors with the date they were granted the role', async () => {
     const loading = service.getEditors();
     http.expectOne(`${API}/twitch/editors`)
-      .flush([{ id: '1', displayName: 'Editor', createdAt: '2019-02-15T04:40:59Z' }]);
+      .flush([{ ...twitchUser(1), editorSince: '2019-02-15T04:40:59Z' }]);
 
-    expect((await loading).map((editor) => editor.displayName)).toEqual(['Editor']);
+    const editors = await loading;
+    expect(editors.map((editor) => editor.displayName)).toEqual(['User1']);
+    expect(editors[0].editorSince).toBe('2019-02-15T04:40:59Z');
   });
 
   it('should check moderators as repeated id parameters', async () => {
@@ -311,4 +341,5 @@ describe('TwitchService', () => {
 
     await checking;
   });
+
 });

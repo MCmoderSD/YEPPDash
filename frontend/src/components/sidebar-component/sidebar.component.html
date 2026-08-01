@@ -53,6 +53,18 @@
 
   <a
     mat-list-item
+    [routerLink]="communityPath"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">group</mat-icon>
+    <span matListItemTitle>Community</span>
+  </a>
+
+  <a
+    mat-list-item
     [routerLink]="birthdayListPath"
     routerLinkActive="sidebar-entry-active"
     [routerLinkActiveOptions]="activeMatch"

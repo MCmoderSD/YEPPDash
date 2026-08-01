@@ -32,6 +32,7 @@ describe('SidebarComponent', () => {
         'starVIP Management',
         'format_quoteQuote Management',
         'terminalCustom Commands',
+        'groupCommunity',
         'cakeFollower Birthdays',
         'psychologyBDSM Test',
       ]);
@@ -44,6 +45,7 @@ describe('SidebarComponent', () => {
         '/dash/role-management?mode=1',
         '/dash/quotes',
         '/dash/commands',
+        '/dash/community',
         '/dash/birthdays',
         '/dash/bdsm',
       ]);
@@ -67,7 +69,7 @@ describe('SidebarComponent', () => {
 
     // The two role entries share a path and differ only in ?mode=, so query params have to be
     // compared — matching on the path alone would light up both.
-    expect(active).toEqual([null, 'page', null, null, null, null]);
+    expect(active).toEqual([null, 'page', null, null, null, null, null]);
   });
 
   it('should minimize the drawer once an entry is picked', () => {

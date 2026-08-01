@@ -21,6 +21,7 @@ function twitchUser(id: string, displayName: string): TwitchUser {
     offlineImageUrl: null,
     createdAt: '2017-05-01T00:00:00Z',
     email: null,
+    color: '#9146FF',
   };
 }
 
@@ -28,7 +29,6 @@ const USER: TwitchUser = twitchUser('164284617', 'MCmoderSD');
 
 class FakeTwitchService {
   getUsers = vi.fn(async (_ids: readonly string[] = [], _logins: readonly string[] = []) => [] as TwitchUser[]);
-  getChatColor = vi.fn(async () => '#9146FF' as string | null);
 }
 
 describe('UserAddDialogComponent', () => {
@@ -90,12 +90,14 @@ describe('UserAddDialogComponent', () => {
     expect(element.querySelector<HTMLImageElement>('.user-add-avatar')!.src).toContain('avatar-300x300.png');
   });
 
+  // The colour rides on the user object itself, so no second lookup happens after the search.
   it('should paint the found name in that user’s chat colour', async () => {
     twitch.getUsers.mockResolvedValueOnce([USER]);
     await search('mcmodersd');
 
     const name = element.querySelector<HTMLElement>('.user-add-name')!;
     expect(name.style.getPropertyValue('--chat-color')).toBe('#9146FF');
+    expect(twitch.getUsers).toHaveBeenCalledTimes(1);
   });
 
   it('should retry a numeric term as a user id when no login matches', async () => {

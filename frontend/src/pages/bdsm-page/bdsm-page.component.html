@@ -115,10 +115,16 @@
                         [ngSrc]="entry.user.profileImageUrl"
                         [width]="24"
                         [height]="24"
+                        loading="eager"
                         alt=""
                       />
                     }
-                    <span class="bdsm-page-name">{{ entry.name }}</span>
+                    <span class="bdsm-page-name" [style.--chat-color]="entry.user?.color">
+                      {{ entry.name }}
+                    </span>
+                    @if (entry.user) {
+                      <app-user-badges [user]="entry.user" />
+                    }
                   </mat-panel-title>
 
                   <mat-panel-description class="bdsm-page-summary">

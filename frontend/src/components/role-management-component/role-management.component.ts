@@ -5,7 +5,6 @@ import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-di
 import { UserTableMode } from '../user-table-component/user-table.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
-import { ChannelUser } from '../../data/channel-user';
 import { TwitchUser } from '../../data/twitch-user';
 
 export enum RoleManagementMode {
@@ -116,11 +115,9 @@ export class RoleManagementComponent {
   private async load(mode: RoleManagementMode): Promise<void> {
     this.loading.set(true);
     try {
-      const entries: ChannelUser[] = mode === RoleManagementMode.Vip
+      this.users.set(mode === RoleManagementMode.Vip
         ? await this.twitch.getVips()
-        : await this.twitch.getModerators();
-
-      this.users.set(await this.twitch.getUsers(entries.map((entry) => entry.id)));
+        : await this.twitch.getModerators());
     } catch {
       this.users.set([]);
       this.notifications.failure(`Could not load the ${roleNameFor(mode)} list.`);

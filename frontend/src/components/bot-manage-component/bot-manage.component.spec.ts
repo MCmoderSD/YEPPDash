@@ -30,6 +30,7 @@ const BOT: TwitchUser = {
   offlineImageUrl: null,
   createdAt: '2021-01-01T00:00:00Z',
   email: null,
+  color: '#9146FF',
 };
 
 function channelUser(id: string): ChannelUser {
@@ -38,7 +39,6 @@ function channelUser(id: string): ChannelUser {
 
 class FakeTwitchService {
   getUsers = vi.fn(async () => [BOT]);
-  getChatColor = vi.fn(async () => '#9146FF');
   getBanStatus = vi.fn(async () => ({ banned: false, ban: null }));
   getBlocked = vi.fn(async (): Promise<ChannelUser[]> => []);
   getModerators = vi.fn(async (): Promise<ChannelUser[]> => [channelUser(BOT_ID)]);

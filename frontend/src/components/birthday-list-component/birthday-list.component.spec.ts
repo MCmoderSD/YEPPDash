@@ -17,7 +17,7 @@ import { TwitchUser } from '../../data/twitch-user';
 
 const CHANNEL = '164284617';
 
-function twitchUser(id: string, displayName: string): TwitchUser {
+function twitchUser(id: string, displayName: string, extra: Partial<TwitchUser> = {}): TwitchUser {
   return {
     id,
     login: displayName.toLowerCase(),
@@ -29,6 +29,7 @@ function twitchUser(id: string, displayName: string): TwitchUser {
     offlineImageUrl: null,
     createdAt: '2017-05-01T00:00:00Z',
     email: null,
+    ...extra,
   };
 }
 
@@ -44,7 +45,6 @@ class FakeBirthdayService {
 class FakeTwitchService {
   users: TwitchUser[] = [];
   getUsers = vi.fn(async (): Promise<TwitchUser[]> => this.users);
-  getChatColor = vi.fn(async (): Promise<string | null> => null);
 }
 
 describe('BirthdayListComponent', () => {
@@ -109,6 +109,29 @@ describe('BirthdayListComponent', () => {
 
     expect(twitch.getUsers).toHaveBeenCalledWith(['1', '2']);
     expect(cells(fixture, '.birthday-list-name').sort()).toEqual(['Alice', 'Zoe']);
+  });
+
+  // Colour and roles ride on the resolved user objects, so both are drawn without a further lookup.
+  it('should paint each name in that follower’s chat colour', async () => {
+    birthdays.entries = [birthday('1', 17, 5)];
+    twitch.users = [twitchUser('1', 'Zoe', { color: '#9146FF' })];
+
+    const fixture = await render();
+
+    const name = rows(fixture)[0].querySelector<HTMLElement>('.birthday-list-name')!;
+    expect(name.style.getPropertyValue('--chat-color')).toBe('#9146FF');
+  });
+
+  it('should badge a follower for every role they hold', async () => {
+    birthdays.entries = [birthday('1', 17, 5)];
+    twitch.users = [twitchUser('1', 'Zoe', {
+      roles: { broadcaster: false, moderator: true, vip: false, editor: false, verified: true },
+    })];
+
+    const fixture = await render();
+
+    expect([...rows(fixture)[0].querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim()))
+      .toEqual(['Moderator', 'Verified']);
   });
 
   // A row whose account Twitch no longer resolves still belongs in the list.

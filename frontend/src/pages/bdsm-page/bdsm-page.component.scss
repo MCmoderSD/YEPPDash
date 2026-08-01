@@ -1,3 +1,5 @@
+@use '../../styles/chat-color' as chat;
+
 .bdsm-page {
   display: flex;
   flex-direction: column;
@@ -66,9 +68,16 @@
   object-fit: cover;
 }
 
+// Truncated rather than wrapped: this sits in a panel header of fixed height, so a long name has
+// to give way instead of pushing the row open. The floor keeps the badges beside it from squeezing
+// it away entirely — a row identified only by badges names nobody.
 .bdsm-page-name {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  @include chat.chat-color;
+
+  min-width: 4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bdsm-page-meta {
@@ -76,9 +85,10 @@
   font: var(--mat-sys-body-small);
 }
 
-// The header lays its title and description out with flex and gives the description all the room
-// left over; right-aligning it keeps the summary off the title of a short date.
+// Material splits the header one part title to two parts description, which for a date leaves the
+// title too narrow for a name and its badges. Sized to the date instead, so the rest is the name's.
 .bdsm-page-summary {
+  flex: none;
   justify-content: flex-end;
 
   // Material's own margin here assumes a description that runs on; this one is three short figures.

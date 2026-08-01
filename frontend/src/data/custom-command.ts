@@ -62,21 +62,12 @@ export type CustomCommandDraft = CustomCommand;
 
 export const COMMAND_MAX_LENGTH = 500;
 
-// Letters and numbers in any script, nothing else. A space would stop the command firing at all
-// (chat splits on those before it looks one up) and a comma would split it in two, since a
-// command's aliases share a single comma-separated column.
 const TRIGGER_PATTERN = /^[\p{L}\p{N}]+$/u;
 
 export function commandTriggers(command: CustomCommand): string[] {
   return [command.name, ...command.aliases];
 }
 
-/**
- * Cleans one trigger word into the exact form it is stored as. The prefix chat types is not part of
- * the name and is never asked for, but somebody typing it out of habit should get a command that
- * works. Lower case because the table collates binary — the case it is written in is the case it
- * has to be looked up in.
- */
 export function cleanTrigger(value: string): string {
   return value.trim().replace(/^!+/, '').trim().toLowerCase();
 }
@@ -89,7 +80,6 @@ export function sameTrigger(left: string, right: string): boolean {
   return left.toLowerCase() === right.toLowerCase();
 }
 
-/** How the aliases are packed into their one column, which is what the 500 cap applies to. */
 export function joinAliases(aliases: readonly string[]): string {
   return aliases.join(',');
 }

@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -22,6 +23,7 @@ import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
 import { BdsmPageComponent } from './bdsm-page/bdsm-page.component';
 import { BdsmResultComponent } from '../components/bdsm-result-component/bdsm-result.component';
+import { CommunityPageComponent } from './community-page/community-page.component';
 import { CommandPageComponent } from './command-page/command-page.component';
 import { CommandTableComponent } from '../components/command-table-component/command-table.component';
 import { CommandEditComponent } from '../components/command-edit-component/command-edit.component';
@@ -32,6 +34,8 @@ import { BirthdayListComponent } from '../components/birthday-list-component/bir
 import { QuoteEditDialogComponent } from '../components/quote-edit-dialog-component/quote-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
+import { BadgeComponent } from '../components/badge-component/badge.component';
+import { UserBadgesComponent } from '../components/user-badges-component/user-badges.component';
 import { ScrollBarComponent } from '../components/scroll-bar-component/scroll-bar.component';
 import { LocaleDatePipe } from '../pipes/locale-date.pipe';
 import { UserComponentsModule } from '../components/user-components.module';
@@ -46,6 +50,7 @@ const routes: Routes = [
       { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
       { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
+      { path: 'community', component: CommunityPageComponent, title: 'Community' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }
@@ -63,6 +68,7 @@ const components: any[] = [
   CommandTableComponent,
   CommandEditComponent,
   BirthdayListComponent,
+  CommunityPageComponent,
   QuoteEditDialogComponent,
   ConfirmActionDialogComponent,
   BotManageComponent
@@ -75,6 +81,8 @@ const components: any[] = [
   imports: [
     RouterModule.forChild(routes),
     UserComponentsModule,
+    BadgeComponent,
+    UserBadgesComponent,
     ScrollBarComponent,
     LocaleDatePipe,
     DatePipe,
@@ -88,6 +96,7 @@ const components: any[] = [
     MatIconModule,
     MatInputModule,
     MatListModule,
+    MatPaginatorModule,
     MatProgressBarModule,
     MatSelectModule,
     MatSidenavModule,

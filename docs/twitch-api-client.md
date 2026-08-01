@@ -24,7 +24,7 @@ turns any non-success response into a `TwitchOAuthException` carrying the status
 |---|---|---|---|---|
 | `GetCurrentUserAsync` | GET | `users` | `TwitchUser` | Throws `TwitchOAuthException(404)` if Helix returns no user for the token |
 | `GetUsersAsync` | GET | `users?id=…&login=…` | `IReadOnlyList<TwitchUser>` | Batch lookup, 1–100 ids/logins combined (`MaxBatchSize`); throws `ArgumentException` outside that range |
-| `GetChatColorAsync` | GET | `chat/color?user_id=…` | `TwitchChatColor?` | Single-user lookup. Grouped here rather than under Chat: a chat colour is a property of the user, not of the channel's chat room |
+| `GetChatColorsAsync` | GET | `chat/color?user_id=…` | `IReadOnlyList<TwitchChatColor>` | Batch lookup, 1–100 user ids. Grouped here rather than under Chat: a chat colour is a property of the user, not of the channel's chat room |
 
 ### Moderators
 
@@ -101,19 +101,19 @@ lookup, 100 rows per page — are the backend's problem: it splits and walks, th
 
 | Backend route | Frontend method | Returns | Notes |
 |---|---|---|---|
-| `GET twitch/chat-color/{userId?}` | `loadChatColor()` / `getChatColor(userId)` | `ChatColor` | Own colour when the id is omitted; `getChatColor` memoises per user |
-| `GET twitch/users?id=&login=` | `getUsers(userIds, logins)` | `TwitchUser[]` | Any number of ids and logins; the service splits them into batches of 100 and merges the answers |
-| `GET twitch/moderators` | `getModerators()` | `ChannelUser[]` | Full list, server-side paged and cached — no client-side cache on top: nothing reads a list more than once per call site |
+| `GET twitch/chat-color/{userId?}` | `loadChatColor()` | `ChatColor` | The signed-in user's own colour, shown in the navbar. Everything else reads `color` off the user objects below |
+| `GET twitch/users?id=&login=` | `getUsers(userIds, logins)` | `TwitchUser[]` | Any number of ids and logins; the service splits them into batches of 100 and merges the answers. Each user arrives complete — chat colour and channel roles (`roles`) already on it |
+| `GET twitch/moderators` | `getModerators()` | `Moderator[]` | Full user profiles — avatar, colour, roles and all — assembled server-side: one Get Users and one Get User Chat Color batch per 100 entries, and the role flags settled against the cached moderator/VIP lists plus one editors call |
 | `GET twitch/moderators/check?id=` | `getModeratorsById(ids)` / `isModerator(id)` | `ChannelUser[]` / `boolean` | Membership check for any number of users; batched server-side. Uncached — it asks about specific users rather than completing a list |
 | `POST twitch/moderators/{userId}` | `addModerator(id)` | – | Invalidates the cached moderator list |
 | `DELETE twitch/moderators/{userId}` | `removeModerator(id)` | – | Invalidates the cached moderator list |
-| `GET twitch/vips` | `getVips()` | `ChannelUser[]` | |
+| `GET twitch/vips` | `getVips()` | `Vip[]` | Full user profiles, assembled like the moderators |
 | `GET twitch/vips/check?id=` | `getVipsById(ids)` / `isVip(id)` | `ChannelUser[]` / `boolean` | Membership check for any number of users; batched server-side. Uncached, same reasoning as the moderator check |
 | `POST twitch/vips/{userId}` | `addVip(id)` | – | Invalidates the cached VIP list |
 | `DELETE twitch/vips/{userId}` | `removeVip(id)` | – | Invalidates the cached VIP list |
-| `GET twitch/editors` | `getEditors()` | `ChannelEditor[]` | Unpaginated by Helix |
+| `GET twitch/editors` | `getEditors()` | `Editor[]` | Full user profiles plus `editorSince`. Unpaginated by Helix |
 | `GET twitch/editors/check?id=` | `getEditorsById(ids)` / `isEditor(id)` | `ChannelEditor[]` / `boolean` | Twitch has no filtered form, so the service matches against the full list. The one check with no batch limit — the ids never reach Twitch. Uncached, so an editor added on Twitch's site shows up right away |
-| `GET twitch/followers` | `getFollowers()` | `Follower[]` | Paged and cached server-side like the moderators; nothing here can add a follower, so the first-page check is the only thing that refreshes it |
+| `GET twitch/followers` | `getFollowers()` | `FollowerProfile[]` | Full user profiles plus `followedAt`, feeding the community page. Paged and cached server-side like the moderators; nothing here can add a follower, so the first-page check is the only thing that refreshes it. Enrichment costs two Helix batches per 100 followers, so a very large channel wants paging before this |
 | `GET twitch/followers/{userId}` | `getFollowStatus(id)` / `isFollower(id)` | `FollowStatus` / `boolean` | 200 with a false flag rather than a 404, so "does not follow" is not a failed request |
 | `GET twitch/chatters` | `getChatters()` | `ChannelUser[]` | Deliberately uncached — who is in chat turns over constantly |
 | `GET twitch/blocked` | `getBlocked()` | `ChannelUser[]` | |

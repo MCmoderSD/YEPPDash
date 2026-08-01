@@ -15,7 +15,9 @@ public sealed class TwitchChannelService(
     public async Task<TwitchChatColor?> GetChatColorAsync(string twitchUserId, string targetUserId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(twitchUserId, cancellationToken);
-        return await apiClient.GetChatColorAsync(targetUserId, accessToken, cancellationToken);
+        var colors = await apiClient.GetChatColorsAsync([targetUserId], accessToken, cancellationToken);
+
+        return colors.FirstOrDefault();
     }
 
     public async Task<IReadOnlyList<TwitchUser>> GetUsersAsync(string twitchUserId, IReadOnlyCollection<string> userIds, IReadOnlyCollection<string> logins, CancellationToken cancellationToken)
@@ -42,6 +44,103 @@ public sealed class TwitchChannelService(
         }
 
         return users;
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetUserProfilesAsync(
+        string broadcasterId,
+        IReadOnlyCollection<string> userIds,
+        IReadOnlyCollection<string> logins,
+        CancellationToken cancellationToken)
+    {
+        var users = await GetUsersAsync(broadcasterId, userIds, logins, cancellationToken);
+        return await EnrichAsync(broadcasterId, users, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var moderators = await GetModeratorsAsync(broadcasterId, cancellationToken);
+        return await GetUserProfilesAsync(
+            broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetVipProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var vips = await GetVipsAsync(broadcasterId, cancellationToken);
+        return await GetUserProfilesAsync(
+            broadcasterId, vips.Select(vip => vip.UserId).ToArray(), [], cancellationToken);
+    }
+
+    // Costs two Helix batches per 100 followers on top of the list walk, so it scales with the
+    // channel rather than with the page — a very large channel wants paging before this.
+    public async Task<IReadOnlyList<TwitchFollowerProfile>> GetFollowerProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var followers = await GetFollowersAsync(broadcasterId, cancellationToken);
+        var users = await GetUserProfilesAsync(
+            broadcasterId, followers.Select(follower => follower.UserId).ToArray(), [], cancellationToken);
+
+        var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
+
+        return followers
+            .Where(follower => byId.ContainsKey(follower.UserId))
+            .Select(follower => new TwitchFollowerProfile(byId[follower.UserId], follower.FollowedAt))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<TwitchEditorProfile>> GetEditorProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var editors = await GetEditorsAsync(broadcasterId, cancellationToken);
+        var users = await GetUserProfilesAsync(
+            broadcasterId, editors.Select(editor => editor.UserId).ToArray(), [], cancellationToken);
+
+        var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
+
+        // An editor whose account Get Users no longer resolves has no profile to build, so the row
+        // is dropped rather than sent half-empty.
+        return editors
+            .Where(editor => byId.ContainsKey(editor.UserId))
+            .Select(editor => new TwitchEditorProfile(byId[editor.UserId], editor.CreatedAt))
+            .ToList();
+    }
+
+    // Everything a profile carries beyond Get Users — colour and roles — is settled here, so a
+    // user object leaves the backend complete and nothing has to be looked up after the fact.
+    private async Task<IReadOnlyList<TwitchUser>> EnrichAsync(
+        string broadcasterId, IReadOnlyList<TwitchUser> users, CancellationToken cancellationToken)
+    {
+        if (users.Count is 0) return users;
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var colors = new Dictionary<string, string?>(users.Count, StringComparer.Ordinal);
+
+        foreach (var batch in users.Chunk(TwitchApiClient.MaxBatchSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var found = await apiClient.GetChatColorsAsync(
+                batch.Select(user => user.Id).ToArray(), accessToken, cancellationToken);
+
+            foreach (var color in found) colors[color.UserId] = color.Color;
+        }
+
+        // Three lists however many users are asked about — moderators and VIPs come out of the
+        // channel cache on a warm read, editors are a single unpaginated call.
+        var moderators = (await GetModeratorsAsync(broadcasterId, cancellationToken))
+            .Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
+        var vips = (await GetVipsAsync(broadcasterId, cancellationToken))
+            .Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
+        var editors = (await GetEditorsAsync(broadcasterId, cancellationToken))
+            .Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
+
+        return users.Select(user => user with
+        {
+            Color = colors.GetValueOrDefault(user.Id),
+            Roles = new TwitchUserRoles(
+                Broadcaster: string.Equals(user.Id, broadcasterId, StringComparison.Ordinal),
+                Moderator: moderators.Contains(user.Id),
+                Vip: vips.Contains(user.Id),
+                Editor: editors.Contains(user.Id),
+                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase)),
+        }).ToList();
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsAsync(string broadcasterId, CancellationToken cancellationToken)

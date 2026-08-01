@@ -33,6 +33,8 @@ export class SidebarComponent {
 
   protected readonly birthdayListPath: string = isDashHost() ? '/birthdays' : '/dash/birthdays';
 
+  protected readonly communityPath: string = isDashHost() ? '/community' : '/dash/community';
+
   protected readonly bdsmPath: string = isDashHost() ? '/bdsm' : '/dash/bdsm';
 
   protected close(): void {

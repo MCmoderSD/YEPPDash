@@ -16,7 +16,7 @@ import { TwitchUser } from '../../data/twitch-user';
 
 const USER = '644984959';
 
-function twitchUser(id: string, displayName: string): TwitchUser {
+function twitchUser(id: string, displayName: string, extra: Partial<TwitchUser> = {}): TwitchUser {
   return {
     id,
     login: displayName.toLowerCase(),
@@ -28,6 +28,7 @@ function twitchUser(id: string, displayName: string): TwitchUser {
     offlineImageUrl: null,
     createdAt: '2017-05-01T00:00:00Z',
     email: null,
+    ...extra,
   };
 }
 
@@ -54,7 +55,6 @@ class FakeBdsmService {
 class FakeTwitchService {
   users: TwitchUser[] = [];
   getUsers = vi.fn(async (): Promise<TwitchUser[]> => this.users);
-  getChatColor = vi.fn(async (): Promise<string | null> => null);
 }
 
 describe('BdsmPageComponent', () => {
@@ -267,6 +267,25 @@ describe('BdsmPageComponent', () => {
       expect(twitch.getUsers).toHaveBeenCalledWith(['1', '2']);
       expect(panels(fixture).map((panel) => panel.querySelector('.bdsm-page-name')!.textContent!.trim()))
         .toEqual(['Zoe', 'Alice']);
+    });
+
+    // Colour and roles ride on the resolved user objects, so both are drawn without a further
+    // lookup.
+    it('should paint each name in that person’s chat colour and badge their roles', async () => {
+      bdsm.followers = [result('a', '2026-07-31T12:00:00Z', {}, '1')];
+      twitch.users = [twitchUser('1', 'Zoe', {
+        color: '#9146FF',
+        roles: { broadcaster: false, moderator: false, vip: true, editor: false, verified: false },
+      })];
+
+      const fixture = await render();
+      await openCommunity(fixture);
+
+      const panel = panels(fixture)[0];
+      expect(panel.querySelector<HTMLElement>('.bdsm-page-name')!.style.getPropertyValue('--chat-color'))
+        .toBe('#9146FF');
+      expect([...panel.querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim()))
+        .toEqual(['VIP']);
     });
 
     // A row whose account Twitch no longer resolves still belongs in the list.

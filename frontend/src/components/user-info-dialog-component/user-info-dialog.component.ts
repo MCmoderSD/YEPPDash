@@ -1,8 +1,8 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BirthdayService } from '../../services/birthday.service';
-import { TwitchService } from '../../services/twitch.service';
 import { Birthday, birthdayToDate } from '../../data/birthday';
+import { RoleBadge, roleBadges } from '../../data/user-roles';
 import { TwitchUser } from '../../data/twitch-user';
 
 @Component({
@@ -13,16 +13,15 @@ import { TwitchUser } from '../../data/twitch-user';
 })
 export class UserInfoDialogComponent {
 
-  private readonly twitch: TwitchService = inject(TwitchService);
   private readonly birthdays: BirthdayService = inject(BirthdayService);
 
   protected readonly user: TwitchUser = inject<TwitchUser>(MAT_DIALOG_DATA);
 
-  private readonly color: WritableSignal<string | null> = signal<string | null>(null);
-
   private readonly born: WritableSignal<Birthday | null> = signal<Birthday | null>(null);
 
-  protected readonly chatColor: Signal<string | null> = this.color.asReadonly();
+  protected readonly chatColor: string | null = this.user.color ?? null;
+
+  protected readonly badges: RoleBadge[] = this.user.roles ? roleBadges(this.user.roles) : [];
 
   protected readonly birthdayDate: Signal<Date | null> = computed((): Date | null => {
     const birthday: Birthday | null = this.born();
@@ -30,7 +29,6 @@ export class UserInfoDialogComponent {
   });
 
   constructor() {
-    void this.loadChatColor();
     void this.loadBirthday();
   }
 
@@ -41,10 +39,6 @@ export class UserInfoDialogComponent {
       minWidth: 'min(22rem, 92vw)',
       maxWidth: '92vw',
     });
-  }
-
-  private async loadChatColor(): Promise<void> {
-    this.color.set(await this.twitch.getChatColor(this.user.id));
   }
 
   // Read only here: anybody signed in may look a birthday up, but only its owner may change it, and

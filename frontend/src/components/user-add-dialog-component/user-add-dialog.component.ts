@@ -72,7 +72,7 @@ export class UserAddDialogComponent {
 
       this.found.set(user);
       this.state.set('idle');
-      this.color.set(await this.twitch.getChatColor(user.id));
+      this.color.set(user.color ?? null);
     } catch {
       this.state.set('failed');
     }

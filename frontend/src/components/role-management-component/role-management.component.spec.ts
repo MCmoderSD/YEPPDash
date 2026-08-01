@@ -11,7 +11,6 @@ import { RoleManagementComponent, RoleManagementMode } from "./role-management.c
 import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
-import { ChannelUser } from '../../data/channel-user';
 import { TwitchUser } from '../../data/twitch-user';
 
 function twitchUser(id: string, displayName: string): TwitchUser {
@@ -26,28 +25,22 @@ function twitchUser(id: string, displayName: string): TwitchUser {
     offlineImageUrl: null,
     createdAt: '2017-05-01T00:00:00Z',
     email: null,
+    color: '#9146FF',
   };
 }
 
-const MODS: ChannelUser[] = [{ id: '9', login: 'zoe', displayName: 'zoe' }];
-const VIPS: ChannelUser[] = [{ id: '42', login: 'alice', displayName: 'AliceInChains' }];
+const MODS: TwitchUser[] = [twitchUser('9', 'zoe')];
+const VIPS: TwitchUser[] = [twitchUser('42', 'AliceInChains')];
 
 class FakeTwitchService {
   readonly calls: string[] = [];
 
   getModerators = vi.fn(async () => { this.calls.push('getModerators'); return MODS; });
   getVips = vi.fn(async () => { this.calls.push('getVips'); return VIPS; });
-  getUsers = vi.fn(async (ids: readonly string[] = [], logins: readonly string[] = []) => {
-    this.calls.push(`getUsers(${ids.join(',')}|${logins.join(',')})`);
-    return [...ids, ...logins].map((key, index) => twitchUser(`${key}`, `User${index}`));
-  });
   addModerator = vi.fn(async () => { this.calls.push('addModerator'); });
   removeModerator = vi.fn(async () => { this.calls.push('removeModerator'); });
   addVip = vi.fn(async () => { this.calls.push('addVip'); });
   removeVip = vi.fn(async () => { this.calls.push('removeVip'); });
-  // The table prefetches every row's chat colour as soon as it renders, so the fake needs to
-  // answer this even though these tests are not about chat colours.
-  getChatColor = vi.fn(async () => null);
 }
 
 class FakeNotificationService {
@@ -97,10 +90,11 @@ describe('RoleManagementComponent', () => {
     element = fixture.nativeElement as HTMLElement;
   });
 
-  it('should load the moderator list and resolve avatars in one batch', async () => {
+  // One request per list: the profiles arrive complete, so nothing resolves avatars afterwards.
+  it('should load the moderator list in a single call', async () => {
     await render(RoleManagementMode.Moderator);
 
-    expect(twitch.calls).toEqual(['getModerators', 'getUsers(9|)']);
+    expect(twitch.calls).toEqual(['getModerators']);
     expect(element.querySelector('.role-management-title')!.textContent).toContain('Moderator Management');
     expect(element.querySelectorAll('.user-table-name')).toHaveLength(1);
   });
@@ -108,7 +102,7 @@ describe('RoleManagementComponent', () => {
   it('should load VIPs instead when asked for that mode', async () => {
     await render(RoleManagementMode.Vip);
 
-    expect(twitch.calls).toEqual(['getVips', 'getUsers(42|)']);
+    expect(twitch.calls).toEqual(['getVips']);
     expect(element.querySelector('.role-management-title')!.textContent).toContain('VIP Management');
   });
 

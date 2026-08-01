@@ -193,16 +193,22 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
     }
 
-    public async Task<TwitchChatColor?> GetChatColorAsync(
-        string userId, string accessToken, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TwitchChatColor>> GetChatColorsAsync(
+        IReadOnlyCollection<string> userIds, string accessToken, CancellationToken cancellationToken)
     {
-        var path = $"chat/color?user_id={Uri.EscapeDataString(userId)}";
-        using var response = await SendAsync(HttpMethod.Get, path, accessToken, cancellationToken);
+        if (userIds.Count is 0 or > MaxBatchSize)
+        {
+            throw new ArgumentException(
+                $"Get User Chat Color takes between 1 and {MaxBatchSize} user ids.", nameof(userIds));
+        }
+
+        var query = string.Join('&', userIds.Select(id => $"user_id={Uri.EscapeDataString(id)}"));
+        using var response = await SendAsync(HttpMethod.Get, $"chat/color?{query}", accessToken, cancellationToken);
 
         var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchChatColor>>(
             TwitchJson.Options, cancellationToken);
 
-        return payload?.Data.FirstOrDefault();
+        return payload?.Data ?? [];
     }
 
     public Task AddModeratorAsync(

@@ -3,8 +3,9 @@ import { Service, signal, Signal, WritableSignal } from '@angular/core';
 import { ChatColor } from '../data/chat-color';
 import { ChannelUser } from '../data/channel-user';
 import { ChannelEditor } from '../data/channel-editor';
+import { Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
-import { Follower, FollowStatus } from '../data/follower';
+import { FollowerProfile, FollowStatus } from '../data/follower';
 import { BanStatus } from '../data/banned-user';
 import { ApiService } from './api.service';
 
@@ -17,8 +18,6 @@ export class TwitchService extends ApiService {
 
   private readonly color: WritableSignal<string | null> = signal<string | null>(null);
 
-  private readonly colorsByUser: Map<string, string | null> = new Map<string, string | null>();
-
   readonly chatColor: Signal<string | null> = this.color.asReadonly();
 
   async loadChatColor(): Promise<void> {
@@ -30,30 +29,14 @@ export class TwitchService extends ApiService {
     }
   }
 
-  async getChatColor(userId: string): Promise<string | null> {
-    const remembered: string | null | undefined = this.colorsByUser.get(userId);
-    if (remembered !== undefined) return remembered;
-
-    let color: string | null = null;
-    try {
-      const response: ChatColor = await this.get<ChatColor>(`chat-color/${encodeURIComponent(userId)}`);
-      color = response.color;
-    } catch {
-      color = null;
-    }
-
-    this.colorsByUser.set(userId, color);
-    return color;
-  }
-
   getUsers(userIds: readonly string[] = [], logins: readonly string[] = []): Promise<TwitchUser[]> {
     if (userIds.length + logins.length === 0) return Promise.resolve([]);
 
     return this.get<TwitchUser[]>('users', this.repeated({ id: userIds, login: logins }));
   }
 
-  getModerators(): Promise<ChannelUser[]> {
-    return this.get<ChannelUser[]>('moderators');
+  getModerators(): Promise<Moderator[]> {
+    return this.get<Moderator[]>('moderators');
   }
 
   getModeratorsById(userIds: readonly string[]): Promise<ChannelUser[]> {
@@ -72,8 +55,8 @@ export class TwitchService extends ApiService {
     return this.delete(`moderators/${encodeURIComponent(userId)}`);
   }
 
-  getVips(): Promise<ChannelUser[]> {
-    return this.get<ChannelUser[]>('vips');
+  getVips(): Promise<Vip[]> {
+    return this.get<Vip[]>('vips');
   }
 
   getVipsById(userIds: readonly string[]): Promise<ChannelUser[]> {
@@ -92,8 +75,8 @@ export class TwitchService extends ApiService {
     return this.delete(`vips/${encodeURIComponent(userId)}`);
   }
 
-  getEditors(): Promise<ChannelEditor[]> {
-    return this.get<ChannelEditor[]>('editors');
+  getEditors(): Promise<Editor[]> {
+    return this.get<Editor[]>('editors');
   }
 
   getEditorsById(userIds: readonly string[]): Promise<ChannelEditor[]> {
@@ -104,8 +87,8 @@ export class TwitchService extends ApiService {
     return (await this.getEditorsById([userId])).length > 0;
   }
 
-  getFollowers(): Promise<Follower[]> {
-    return this.get<Follower[]>('followers');
+  getFollowers(): Promise<FollowerProfile[]> {
+    return this.get<FollowerProfile[]>('followers');
   }
 
   getFollowStatus(userId: string): Promise<FollowStatus> {

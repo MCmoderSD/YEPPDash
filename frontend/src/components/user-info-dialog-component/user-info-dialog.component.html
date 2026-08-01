@@ -10,7 +10,17 @@
       [height]=128
       alt=""
     />
-    <p class="user-info-name" [style.--chat-color]="chatColor()">{{ user.displayName }}</p>
+    <p class="user-info-name" [style.--chat-color]="chatColor">{{ user.displayName }}</p>
+
+    @if (badges.length > 0) {
+      <ul class="user-info-badges">
+        @for (badge of badges; track badge.label ?? badge.preset) {
+          <li>
+            <app-badge [preset]="badge.preset" [label]="badge.label" />
+          </li>
+        }
+      </ul>
+    }
   </div>
 
   <dl class="user-info-details">

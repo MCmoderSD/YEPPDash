@@ -3,7 +3,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
-import { TwitchService } from '../../services/twitch.service';
 import { TwitchUser } from '../../data/twitch-user';
 
 export type UserTableMode = 'user' | 'vip' | 'editor' | 'moderator';
@@ -24,7 +23,6 @@ const ROLE_LABELS: Record<UserTableMode, string> = {
 export class UserTableComponent {
 
   private readonly dialog: MatDialog = inject(MatDialog);
-  private readonly twitch: TwitchService = inject(TwitchService);
 
   readonly users: InputSignal<TwitchUser[]> = input.required<TwitchUser[]>();
 
@@ -65,10 +63,6 @@ export class UserTableComponent {
     effect((): void => {
       const sorter: MatSort | undefined = this.sorter();
       if (sorter) this.dataSource.sort = sorter;
-    });
-
-    effect((): void => {
-      for (const user of this.users()) void this.twitch.getChatColor(user.id);
     });
   }
 

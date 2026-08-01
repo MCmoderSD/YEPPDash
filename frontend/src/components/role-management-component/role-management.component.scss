@@ -5,8 +5,9 @@
   gap: 1rem;
 
   // The panel is a narrow column of content, so it sits in the middle of whatever width the
-  // dashboard hands it rather than clinging to the left edge.
-  width: min(26rem, 100%);
+  // dashboard hands it rather than clinging to the left edge. Wide enough for a name with its
+  // badges plus the id and remove columns, which at 26rem were pushed behind a scroll.
+  width: min(36rem, 100%);
   margin-inline: auto;
 }
 

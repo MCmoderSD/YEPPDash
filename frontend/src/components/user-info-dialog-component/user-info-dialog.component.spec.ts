@@ -7,6 +7,7 @@ import { UserComponentsModule } from '../user-components.module';
 import { UserInfoDialogComponent } from './user-info-dialog.component';
 import { environment } from '../../environments/environment';
 import { TwitchUser } from '../../data/twitch-user';
+import { UserRoles } from '../../data/user-roles';
 
 const USER: TwitchUser = {
   id: '164284617',
@@ -20,6 +21,17 @@ const USER: TwitchUser = {
   createdAt: '2017-05-01T00:00:00Z',
   email: 'mail@mcmodersd.de',
 };
+
+function roles(held: Partial<UserRoles> = {}): UserRoles {
+  return {
+    broadcaster: false,
+    moderator: false,
+    vip: false,
+    editor: false,
+    verified: false,
+    ...held,
+  };
+}
 
 describe('UserInfoDialogComponent', () => {
   let http: HttpTestingController;
@@ -62,16 +74,9 @@ describe('UserInfoDialogComponent', () => {
     expect(element.textContent).not.toContain('Email');
   });
 
-  it('should paint the name in the chat colour of that user', async () => {
-    const fixture = await open(USER);
-
-    http.expectOne(`${environment.apiBaseUrl}/twitch/chat-color/164284617`)
-      .flush({ id: USER.id, color: '#9146FF' });
-
-    // The colour arrives through a promise chain the fixture does not track, so let the
-    // microtask queue drain before looking at the DOM.
-    await new Promise((resolve) => setTimeout(resolve));
-    fixture.detectChanges();
+  // The colour rides on the user object itself now, so the dialog paints it without a request.
+  it('should paint the name in the chat colour the user arrived with', async () => {
+    const fixture = await open({ ...USER, color: '#9146FF' });
 
     const name = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.user-info-name')!;
     expect(name.style.getPropertyValue('--chat-color')).toBe('#9146FF');
@@ -107,16 +112,46 @@ describe('UserInfoDialogComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Birthday');
   });
 
-  it('should leave the name at the default colour when the user has none', async () => {
+  function badges(fixture: ComponentFixture<UserInfoDialogComponent>): string[] {
+    return [...(fixture.nativeElement as HTMLElement).querySelectorAll('app-badge')]
+      .map((badge) => badge.textContent!.trim());
+  }
+
+  // The roles ride on the user object itself, so the badges are there the moment the dialog opens
+  // instead of popping in after a request.
+  it('should show a badge for every role the user arrived with', async () => {
+    const fixture = await open({ ...USER, roles: roles({ moderator: true, vip: true }) });
+
+    expect(badges(fixture)).toEqual(['Moderator', 'VIP']);
+  });
+
+  // Strongest channel role first, so the list reads the way Twitch ranks them.
+  it('should lead with the strongest role it was given', async () => {
+    const fixture = await open({
+      ...USER,
+      roles: roles({ broadcaster: true, moderator: true, editor: true, vip: true, verified: true }),
+    });
+
+    expect(badges(fixture)).toEqual(['Broadcaster', 'Moderator', 'Editor', 'VIP', 'Verified']);
+  });
+
+  it('should show nothing at all for a user holding no roles', async () => {
+    const fixture = await open({ ...USER, roles: roles({}) });
+
+    expect(badges(fixture)).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.user-info-badges')).toBeNull();
+  });
+
+  // A badge the server never confirmed must not be drawn, so an object that was never enriched
+  // shows none rather than guessing.
+  it('should show no badges for a user that carries no role information', async () => {
     const fixture = await open(USER);
 
-    http.expectOne(`${environment.apiBaseUrl}/twitch/chat-color/164284617`)
-      .flush({ id: USER.id, color: null });
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('app-badge')).toHaveLength(0);
+  });
 
-    // The colour arrives through a promise chain the fixture does not track, so let the
-    // microtask queue drain before looking at the DOM.
-    await new Promise((resolve) => setTimeout(resolve));
-    fixture.detectChanges();
+  it('should leave the name at the default colour when the user has none', async () => {
+    const fixture = await open({ ...USER, color: null });
 
     // No inline custom property means the stylesheet's own --chat-color fallback wins.
     const name = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.user-info-name')!;

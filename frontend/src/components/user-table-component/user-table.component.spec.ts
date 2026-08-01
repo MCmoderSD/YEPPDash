@@ -7,10 +7,9 @@ import { vi } from 'vitest';
 import { UserComponentsModule } from '../user-components.module';
 import { UserTableComponent } from './user-table.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
-import { TwitchService } from '../../services/twitch.service';
 import { TwitchUser } from '../../data/twitch-user';
 
-function user(id: string, displayName: string): TwitchUser {
+function user(id: string, displayName: string, extra: Partial<TwitchUser> = {}): TwitchUser {
   return {
     id,
     login: displayName.toLowerCase(),
@@ -22,6 +21,7 @@ function user(id: string, displayName: string): TwitchUser {
     offlineImageUrl: null,
     createdAt: '2017-05-01T00:00:00Z',
     email: null,
+    ...extra,
   };
 }
 
@@ -100,13 +100,28 @@ describe('UserTableComponent', () => {
     expect(nameButton.textContent!.trim()).toBe('zoe');
   });
 
-  it('should warm the chat colour cache for every row as soon as the table gets its users', () => {
-    const getChatColor = vi.spyOn(TestBed.inject(TwitchService), 'getChatColor');
-
-    fixture.componentRef.setInput('users', [USERS[0]]);
+  // Colour and roles ride on the user objects the table is handed, so both are drawn without the
+  // table looking anything up.
+  it('should paint each name in that user’s chat colour', () => {
+    fixture.componentRef.setInput('users', [user('9', 'zoe', { color: '#9146FF' })]);
     fixture.detectChanges();
 
-    expect(getChatColor).toHaveBeenCalledWith('9');
+    const name = element.querySelector<HTMLElement>('.user-table-display-name')!;
+    expect(name.style.getPropertyValue('--chat-color')).toBe('#9146FF');
+  });
+
+  it('should badge a user for every role they hold', () => {
+    fixture.componentRef.setInput('users', [
+      user('9', 'zoe', { roles: { broadcaster: false, moderator: true, vip: true, editor: false, verified: false } }),
+    ]);
+    fixture.detectChanges();
+
+    expect([...element.querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim()))
+      .toEqual(['Moderator', 'VIP']);
+  });
+
+  it('should draw no badges for a user the server sent no roles for', () => {
+    expect(element.querySelectorAll('app-badge')).toHaveLength(0);
   });
 
   it('should name the role of the removal in the button label', () => {

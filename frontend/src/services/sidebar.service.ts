@@ -1,7 +1,5 @@
 import { Service, signal, Signal, WritableSignal } from '@angular/core';
 
-// The toggle button lives in the navbar (always rendered) while the drawer it controls only
-// exists inside the lazy dashboard module, so a shared singleton is what connects the two.
 @Service()
 export class SidebarService {
 

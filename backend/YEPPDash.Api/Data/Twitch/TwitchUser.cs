@@ -25,4 +25,10 @@ public sealed record TwitchUser
     public required DateTimeOffset CreatedAt { get; init; }
 
     public string? Email { get; init; }
+
+    // Not Helix fields: Get Users answers without them, so they stay null until the channel
+    // service fills them in from Get User Chat Color and the channel's role lists.
+    public string? Color { get; init; }
+
+    public TwitchUserRoles? Roles { get; init; }
 }

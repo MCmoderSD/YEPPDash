@@ -22,8 +22,12 @@ public sealed class BirthdayService(
 
         var followers = await channels.GetFollowersAsync(broadcasterId, cancellationToken);
 
-
         var following = new HashSet<int>();
+
+        // A channel never follows itself, so the owner has to be let in by hand or their own
+        // birthday is the one missing from their own list.
+        if (int.TryParse(broadcasterId, out var owner)) following.Add(owner);
+
         foreach (var follower in followers)
         {
             if (int.TryParse(follower.UserId, out var id)) following.Add(id);
@@ -32,8 +36,8 @@ public sealed class BirthdayService(
         var matched = birthdays.Where(birthday => following.Contains(birthday.UserId)).ToList();
 
         logger.LogInformation(
-            "{Matched} of {Stored} stored birthdays belong to the {Followers} followers of channel {BroadcasterId}",
-            matched.Count, birthdays.Count, followers.Count, broadcasterId);
+            "{Matched} of {Stored} stored birthdays belong to channel {BroadcasterId} or its {Followers} followers",
+            matched.Count, birthdays.Count, broadcasterId, followers.Count);
 
         return matched;
     }

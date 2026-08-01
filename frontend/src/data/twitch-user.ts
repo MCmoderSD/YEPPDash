@@ -1,3 +1,5 @@
+import { UserRoles } from './user-roles';
+
 export interface TwitchUser {
   id: string;
   login: string;
@@ -9,4 +11,6 @@ export interface TwitchUser {
   offlineImageUrl: string | null;
   createdAt: string;
   email: string | null;
+  color?: string | null;
+  roles?: UserRoles | null;
 }
