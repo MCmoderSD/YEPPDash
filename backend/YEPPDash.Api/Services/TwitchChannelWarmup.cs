@@ -32,7 +32,13 @@ public sealed class TwitchChannelWarmupWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await SeedAsync(stoppingToken);
+        var pendingSeed = await SeedAsync(stoppingToken);
+        var seedTotal = pendingSeed?.Count ?? 0;
+
+        if (pendingSeed is { Count: 0 })
+        {
+            logger.LogInformation("All caches loaded — no stored channels to warm up");
+        }
 
         await foreach (var broadcasterId in warmup.Reader.ReadAllAsync(stoppingToken))
         {
@@ -52,10 +58,15 @@ public sealed class TwitchChannelWarmupWorker(
             {
                 warmup.Release(broadcasterId);
             }
+
+            if (pendingSeed?.Remove(broadcasterId) == true && pendingSeed.Count == 0)
+            {
+                logger.LogInformation("All caches loaded — startup warm-up complete for {Count} channels", seedTotal);
+            }
         }
     }
-    
-    private async Task SeedAsync(CancellationToken cancellationToken)
+
+    private async Task<HashSet<string>?> SeedAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -66,14 +77,16 @@ public sealed class TwitchChannelWarmupWorker(
             foreach (var userId in userIds) warmup.Queue(userId);
 
             logger.LogInformation("Queued {Count} stored channels for a cache warm-up", userIds.Count);
+            return [.. userIds];
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Shutting down before the seed ran is not worth a word.
+            return null;
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Could not queue the stored channels for a cache warm-up");
+            return null;
         }
     }
 
@@ -86,8 +99,8 @@ public sealed class TwitchChannelWarmupWorker(
         var vips = await channels.GetVipsAsync(broadcasterId, cancellationToken);
         var followers = await channels.GetFollowersAsync(broadcasterId, cancellationToken);
 
-        logger.LogDebug(
-            "Warmed channel {BroadcasterId} with {Moderators} moderators, {Vips} VIPs and {Followers} followers",
+        logger.LogInformation(
+            "All caches loaded for channel {BroadcasterId}: {Moderators} moderators, {Vips} VIPs, {Followers} followers",
             broadcasterId, moderators.Count, vips.Count, followers.Count);
     }
 }
