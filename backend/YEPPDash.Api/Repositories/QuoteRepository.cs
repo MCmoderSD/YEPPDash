@@ -5,13 +5,8 @@ using YEPPDash.Api.Data.Quote;
 
 namespace YEPPDash.Api.Repositories;
 
-// Quote ids are per-channel positions, not surrogate keys, so a write that removes or moves a row
-// renumbers the rows around it inside a transaction — a half-applied renumber would leave the list
-// with duplicate or missing positions.
 public sealed class QuoteRepository(MySqlConnection connection)
 {
-    // Ids start at 1 and the shift below parks rows in the negative range, so 0 is the one slot a
-    // travelling row can wait in without colliding with either.
     private const int ParkedId = 0;
 
     public async Task<IReadOnlyList<Quote>> GetAllAsync(int channelId, CancellationToken cancellationToken)
@@ -20,9 +15,10 @@ public sealed class QuoteRepository(MySqlConnection connection)
             new CommandDefinition(
                 "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId ORDER BY id",
                 new { channelId },
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
-        return rows.Select(ToQuote).ToList();
+        return [.. rows.Select(ToQuote)];
     }
 
     public async Task<Quote> AddAsync(int channelId, string text, CancellationToken cancellationToken)
@@ -35,28 +31,30 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 "SELECT COALESCE(MAX(id), 0) + 1 FROM Quote WHERE channelId = @channelId FOR UPDATE",
                 new { channelId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         await connection.ExecuteAsync(
             new CommandDefinition(
                 "INSERT INTO Quote (channelId, id, quote) VALUES (@channelId, @id, @quote)",
                 new { channelId, id = nextId, quote = text },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         var row = await connection.QuerySingleAsync<QuoteRow>(
             new CommandDefinition(
                 "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId AND id = @id",
                 new { channelId, id = nextId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         await transaction.CommitAsync(cancellationToken);
         return ToQuote(row);
     }
 
-    public async Task<IReadOnlyList<Quote>> ReplaceAllAsync(
-        int channelId, IReadOnlyList<QuoteDraft> texts, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Quote>> ReplaceAllAsync(int channelId, IReadOnlyList<QuoteDraft> texts, CancellationToken cancellationToken)
     {
         await EnsureOpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
@@ -66,7 +64,8 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 "DELETE FROM Quote WHERE channelId = @channelId",
                 new { channelId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         if (texts.Count > 0)
         {
@@ -86,7 +85,8 @@ public sealed class QuoteRepository(MySqlConnection connection)
                     """,
                     rows,
                     transaction,
-                    cancellationToken: cancellationToken));
+                    cancellationToken: cancellationToken)
+                );
         }
 
         var written = await connection.QueryAsync<QuoteRow>(
@@ -94,10 +94,11 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId ORDER BY id",
                 new { channelId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         await transaction.CommitAsync(cancellationToken);
-        return written.Select(ToQuote).ToList();
+        return [.. written.Select(ToQuote)];
     }
 
     public async Task<Quote?> UpdateAsync(int channelId, int id, string text, CancellationToken cancellationToken)
@@ -106,7 +107,8 @@ public sealed class QuoteRepository(MySqlConnection connection)
             new CommandDefinition(
                 "UPDATE Quote SET quote = @quote WHERE channelId = @channelId AND id = @id",
                 new { channelId, id, quote = text },
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         if (affected is 0 && !await ExistsAsync(channelId, id, cancellationToken)) return null;
 
@@ -123,7 +125,8 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 "DELETE FROM Quote WHERE channelId = @channelId AND id = @id",
                 new { channelId, id },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         if (affected is 0)
         {
@@ -154,7 +157,8 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 "SELECT COALESCE(MAX(id), 0) FROM Quote WHERE channelId = @channelId FOR UPDATE",
                 new { channelId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         var exists = await connection.ExecuteScalarAsync<long>(
             new CommandDefinition(
@@ -169,8 +173,6 @@ public sealed class QuoteRepository(MySqlConnection connection)
             return null;
         }
 
-        // A caller nudging the first quote up or the last one down asks for a position outside the
-        // list; clamping makes that a no-op instead of an error the UI would have to special-case.
         var target = Math.Clamp(position, 1, max);
 
         if (target != id)
@@ -183,16 +185,15 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId ORDER BY id",
                 new { channelId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         await transaction.CommitAsync(cancellationToken);
-        return rows.Select(ToQuote).ToList();
+        return [.. rows.Select(ToQuote)];
     }
 
-    private async Task ShiftAsync(
-        int channelId, int id, int target, MySqlTransaction transaction, CancellationToken cancellationToken)
+    private async Task ShiftAsync(int channelId, int id, int target, MySqlTransaction transaction, CancellationToken cancellationToken)
     {
-        // Park the travelling row so its old slot is free for the rows it passes.
         await connection.ExecuteAsync(
             new CommandDefinition(
                 "UPDATE Quote SET id = @parked WHERE channelId = @channelId AND id = @id",
@@ -200,50 +201,39 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 transaction,
                 cancellationToken: cancellationToken));
 
-        // Everything between the old and the new slot moves one step towards the freed slot.
         var (range, step) = id < target
             ? ("id > @id AND id <= @target", -1)
             : ("id >= @target AND id < @id", 1);
 
-        await ShiftThroughNegativeSpaceAsync(
-            channelId, range, step, new { channelId, id, target }, transaction, cancellationToken);
+        await ShiftThroughNegativeSpaceAsync(channelId, range, step, new { channelId, id, target }, transaction, cancellationToken);
 
         await connection.ExecuteAsync(
             new CommandDefinition(
                 "UPDATE Quote SET id = @target WHERE channelId = @channelId AND id = @parked",
                 new { channelId, target, parked = ParkedId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
     }
 
-    /// <remarks>
-    /// Done in two passes through negative ids rather than one <c>id = id ± 1</c> statement. A
-    /// single pass overlaps its own source and target values, so it only works if the rows happen
-    /// to be visited in the right order — which MySQL does not promise when the ordering column is
-    /// the one being rewritten. Flipping the sign first parks the whole range where no live row can
-    /// sit, so neither pass can collide with the unique key whatever order the rows are visited in.
-    /// </remarks>
-    private async Task ShiftThroughNegativeSpaceAsync(
-        int channelId,
-        string range,
-        int step,
-        object parameters,
-        MySqlTransaction transaction,
-        CancellationToken cancellationToken)
+
+    private async Task ShiftThroughNegativeSpaceAsync(int channelId, string range, int step, object parameters, MySqlTransaction transaction, CancellationToken cancellationToken)
     {
         await connection.ExecuteAsync(
             new CommandDefinition(
                 $"UPDATE Quote SET id = -id WHERE channelId = @channelId AND {range}",
                 parameters,
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         await connection.ExecuteAsync(
             new CommandDefinition(
                 $"UPDATE Quote SET id = -id + ({step}) WHERE channelId = @channelId AND id < 0",
                 new { channelId },
                 transaction,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
     }
 
     private async Task<Quote?> GetAsync(int channelId, int id, CancellationToken cancellationToken)
@@ -252,7 +242,8 @@ public sealed class QuoteRepository(MySqlConnection connection)
             new CommandDefinition(
                 "SELECT id, quote, timestamp FROM Quote WHERE channelId = @channelId AND id = @id",
                 new { channelId, id },
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         return row is null ? null : ToQuote(row);
     }
@@ -268,15 +259,11 @@ public sealed class QuoteRepository(MySqlConnection connection)
 
     private async Task EnsureOpenAsync(CancellationToken cancellationToken)
     {
-        // Dapper opens and closes the connection per call, but a transaction has to span several,
-        // so it is opened here and left open for the lifetime of the injected connection.
         if (connection.State is not ConnectionState.Open) await connection.OpenAsync(cancellationToken);
     }
 
     private static Quote ToQuote(QuoteRow row)
     {
-        // The column is a TIMESTAMP, which MySQL hands back in the session time zone. Treating it
-        // as UTC matches how the rest of the app stores and reads its own timestamps.
         return new Quote(
             row.Id,
             row.Quote,

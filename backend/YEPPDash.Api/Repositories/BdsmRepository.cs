@@ -7,31 +7,21 @@ namespace YEPPDash.Api.Repositories;
 
 public sealed class BdsmRepository(MySqlConnection connection)
 {
-    /// <remarks>
-    /// Built from <see cref="BdsmTraits.All"/> rather than written out, so the trait set lives in one
-    /// place. Every name is quoted because several of them — <c>switch</c>, <c>owner</c>, <c>user</c>
-    /// — read as keywords, and the <c>data</c> blob is left out: it is the largest column in the table
-    /// and nothing in the dashboard shows it.
-    /// </remarks>
-    private static readonly string Columns = string.Join(
-        ", ",
-        new[] { "id", "`user`", "`timestamp`", "version", "gender", "ageGroup" }
-            .Concat(BdsmTraits.All.Select(trait => $"`{trait}`")));
+    private static readonly string Columns = string.Join(", ", new[] { "id", "`user`", "`timestamp`", "version", "gender", "ageGroup" }.Concat(BdsmTraits.All.Select(trait => $"`{trait}`")));
 
+    
     public async Task<IReadOnlyList<BdsmResult>> GetForUserAsync(int userId, CancellationToken cancellationToken)
     {
         var rows = await connection.QueryAsync(
             new CommandDefinition(
                 $"SELECT {Columns} FROM BDSM WHERE `user` = @userId ORDER BY `timestamp` DESC, id DESC",
                 new { userId },
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         return ToResults(rows);
     }
 
-    // One row per user rather than the whole history: this feeds a list of people, and a user who
-    // retook the test five times would otherwise crowd out five others. The id breaks ties so that
-    // two tests submitted in the same second still pick the same winner every time.
     public async Task<IReadOnlyList<BdsmResult>> GetLatestPerUserAsync(CancellationToken cancellationToken)
     {
         var rows = await connection.QueryAsync(
@@ -51,15 +41,9 @@ public sealed class BdsmRepository(MySqlConnection connection)
 
     private static IReadOnlyList<BdsmResult> ToResults(IEnumerable<dynamic> rows)
     {
-        return rows.Cast<IDictionary<string, object>>().Select(ToResult).ToList();
+        return [.. rows.Cast<IDictionary<string, object>>().Select(ToResult)];
     }
 
-    /// <remarks>
-    /// Mapped by hand off a dictionary row rather than through a row class, because a row class would
-    /// mean spelling all twenty-five traits out a second time. <see cref="Convert"/> rather than casts
-    /// for the numbers: the widths MySQL hands back are its own business, and a DOUBLE column that
-    /// happens to hold a whole number is not guaranteed to arrive boxed as one.
-    /// </remarks>
     private static BdsmResult ToResult(IDictionary<string, object> row)
     {
         var traits = new Dictionary<string, double>(BdsmTraits.All.Count, StringComparer.Ordinal);
@@ -68,10 +52,7 @@ public sealed class BdsmRepository(MySqlConnection connection)
             traits[trait] = Convert.ToDouble(row[trait], CultureInfo.InvariantCulture);
         }
 
-        // TIMESTAMP columns come back without a kind, and MySQL stores them in UTC, so saying so here
-        // keeps the offset off the wire instead of letting it be read as the server's local time.
-        var timestamp = DateTime.SpecifyKind(
-            Convert.ToDateTime(row["timestamp"], CultureInfo.InvariantCulture), DateTimeKind.Utc);
+        var timestamp = DateTime.SpecifyKind(Convert.ToDateTime(row["timestamp"], CultureInfo.InvariantCulture), DateTimeKind.Utc);
 
         return new BdsmResult(
             (string)row["id"],

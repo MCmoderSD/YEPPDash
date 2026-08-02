@@ -73,8 +73,7 @@ public sealed class QuoteService(QuoteRepository repository, ILogger<QuoteServic
         return deleted;
     }
 
-    public async Task<IReadOnlyList<Quote>?> MoveAsync(
-        string channelId, int quoteId, int position, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Quote>?> MoveAsync(string channelId, int quoteId, int position, CancellationToken cancellationToken)
     {
         var id = ParseChannelId(channelId);
         var quotes = await repository.MoveAsync(id, quoteId, position, cancellationToken);

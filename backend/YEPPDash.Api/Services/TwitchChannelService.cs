@@ -38,27 +38,23 @@ public sealed class TwitchChannelService(
             cancellationToken.ThrowIfCancellationRequested();
 
             users.AddRange(await apiClient.GetUsersAsync(
-                batch.Where(entry => entry.IsId).Select(entry => entry.Value).ToArray(),
-                batch.Where(entry => !entry.IsId).Select(entry => entry.Value).ToArray(),
+                [.. batch.Where(entry => entry.IsId).Select(entry => entry.Value)],
+                [.. batch.Where(entry => !entry.IsId).Select(entry => entry.Value)],
                 accessToken,
-                cancellationToken));
+                cancellationToken)
+            );
         }
 
         return users;
     }
 
-    public async Task<IReadOnlyList<TwitchUser>> GetUserProfilesAsync(
-        string broadcasterId,
-        IReadOnlyCollection<string> userIds,
-        IReadOnlyCollection<string> logins,
-        CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TwitchUser>> GetUserProfilesAsync(string broadcasterId, IReadOnlyCollection<string> userIds, IReadOnlyCollection<string> logins, CancellationToken cancellationToken)
     {
         var users = await GetUsersAsync(broadcasterId, userIds, logins, cancellationToken);
         return await EnrichAsync(broadcasterId, users, cancellationToken);
     }
 
-    private async Task<IReadOnlyList<TwitchUser>> EnrichAsync(
-        string broadcasterId, IReadOnlyList<TwitchUser> users, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<TwitchUser>> EnrichAsync(string broadcasterId, IReadOnlyList<TwitchUser> users, CancellationToken cancellationToken)
     {
         if (users.Count is 0) return users;
 
@@ -70,19 +66,14 @@ public sealed class TwitchChannelService(
             cancellationToken.ThrowIfCancellationRequested();
 
             var found = await apiClient.GetChatColorsAsync(
-                batch.Select(user => user.Id).ToArray(), accessToken, cancellationToken);
+                [.. batch.Select(user => user.Id)], accessToken, cancellationToken);
 
             foreach (var color in found) colors[color.UserId] = color.Color;
         }
 
-        // Three lists however many users are asked about — moderators and VIPs come out of the
-        // channel cache on a warm read, editors are a single unpaginated call.
-        var moderators = (await GetModeratorsAsync(broadcasterId, cancellationToken))
-            .Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
-        var vips = (await GetVipsAsync(broadcasterId, cancellationToken))
-            .Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
-        var editors = (await GetEditorsAsync(broadcasterId, cancellationToken))
-            .Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
+        var moderators = (await GetModeratorsAsync(broadcasterId, cancellationToken)).Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
+        var vips = (await GetVipsAsync(broadcasterId, cancellationToken)).Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
+        var editors = (await GetEditorsAsync(broadcasterId, cancellationToken)).Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
 
         return users.Select(user => user with
         {
@@ -155,16 +146,14 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchUser>> GetVipProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var vips = await GetVipsAsync(broadcasterId, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, vips.Select(vip => vip.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. vips.Select(vip => vip.UserId)], [], cancellationToken);
     }
 
     public async Task<IReadOnlyList<TwitchUser>> GetVipProfilesByIdAsync(
         string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var vips = await GetVipsByIdAsync(broadcasterId, userIds, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, vips.Select(vip => vip.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. vips.Select(vip => vip.UserId)], [], cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetVipsAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -212,8 +201,7 @@ public sealed class TwitchChannelService(
         return await ToEditorProfilesAsync(broadcasterId, editors, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<TwitchEditorProfile>> GetEditorProfilesByIdAsync(
-        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TwitchEditorProfile>> GetEditorProfilesByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var editors = await GetEditorsByIdAsync(broadcasterId, userIds, cancellationToken);
         return await ToEditorProfilesAsync(broadcasterId, editors, cancellationToken);
@@ -222,13 +210,9 @@ public sealed class TwitchChannelService(
     private async Task<IReadOnlyList<TwitchEditorProfile>> ToEditorProfilesAsync(
         string broadcasterId, IReadOnlyList<TwitchChannelEditor> editors, CancellationToken cancellationToken)
     {
-        var users = await GetUserProfilesAsync(
-            broadcasterId, editors.Select(editor => editor.UserId).ToArray(), [], cancellationToken);
-
+        var users = await GetUserProfilesAsync(broadcasterId, [.. editors.Select(editor => editor.UserId)], [], cancellationToken);
         var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
-
-        // An editor whose account Get Users no longer resolves has no profile to build, so the row
-        // is dropped rather than sent half-empty.
+        
         return editors
             .Where(editor => byId.ContainsKey(editor.UserId))
             .Select(editor => new TwitchEditorProfile(byId[editor.UserId], editor.CreatedAt))
@@ -248,7 +232,7 @@ public sealed class TwitchChannelService(
         var wanted = userIds.ToHashSet(StringComparer.Ordinal);
         var editors = await GetEditorsAsync(broadcasterId, cancellationToken);
 
-        return editors.Where(editor => wanted.Contains(editor.UserId)).ToList();
+        return [.. editors.Where(editor => wanted.Contains(editor.UserId))];
     }
     #endregion
 
@@ -256,9 +240,7 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchFollowerProfile>> GetFollowerProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var followers = await GetFollowersAsync(broadcasterId, cancellationToken);
-        var users = await GetUserProfilesAsync(
-            broadcasterId, followers.Select(follower => follower.UserId).ToArray(), [], cancellationToken);
-
+        var users = await GetUserProfilesAsync(broadcasterId, [.. followers.Select(follower => follower.UserId)], [], cancellationToken);
         var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
 
         return followers
@@ -301,14 +283,11 @@ public sealed class TwitchChannelService(
         var ban = await GetBannedUserAsync(broadcasterId, userId, cancellationToken);
         if (ban is null) return new BanStatusResponse(false, null);
 
-        var users = await GetUserProfilesAsync(
-            broadcasterId, [ban.UserId, ban.ModeratorId], [], cancellationToken);
-
+        var users = await GetUserProfilesAsync(broadcasterId, [ban.UserId, ban.ModeratorId], [], cancellationToken);
         var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
 
         return byId.TryGetValue(ban.UserId, out var banned)
-            ? new BanStatusResponse(true, new TwitchBanProfile(
-                banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason))
+            ? new BanStatusResponse(true, new TwitchBanProfile(banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason))
             : new BanStatusResponse(true, null);
     }
 
@@ -333,8 +312,7 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchUser>> GetBlockedProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var blocked = await GetBlockedUsersAsync(broadcasterId, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, blocked.Select(user => user.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. blocked.Select(user => user.UserId)], [], cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -361,7 +339,7 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchUser>> GetChatterProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var chatters = await GetChattersAsync(broadcasterId, cancellationToken);
-        return await GetUserProfilesAsync(broadcasterId, chatters.Select(chatter => chatter.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. chatters.Select(chatter => chatter.UserId)], [], cancellationToken);
     }
 
     public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -408,12 +386,7 @@ public sealed class TwitchChannelService(
         return found;
     }
 
-    private async Task<IReadOnlyList<T>> GetChannelListAsync<T>(
-        ChannelRole role,
-        string broadcasterId,
-        Func<string, string?, Task<HelixPage<T>>> fetchPage,
-        Func<T, string> idOf,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<T>> GetChannelListAsync<T>(ChannelRole role, string broadcasterId, Func<string, string?, Task<HelixPage<T>>> fetchPage, Func<T, string> idOf, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
         var page = await fetchPage(accessToken, null);
@@ -463,7 +436,6 @@ public sealed class TwitchChannelService(
     private async Task<string> GetAccessTokenAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var token = await authService.GetValidTokenAsync(twitchUserId, cancellationToken);
-
         return token?.AccessToken ?? throw new TwitchOAuthException($"No usable Twitch token stored for {twitchUserId}.", HttpStatusCode.Unauthorized);
     }
 }

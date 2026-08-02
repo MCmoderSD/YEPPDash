@@ -12,6 +12,7 @@ namespace YEPPDash.Api.Controllers;
 [Route("auth")]
 public sealed class AuthController(
     TwitchAuthService authService,
+    TwitchChannelWarmup warmup,
     IConfiguration configuration,
     ILogger<AuthController> logger) : ControllerBase
 {
@@ -54,8 +55,10 @@ public sealed class AuthController(
 
         try
         {
-            var (principal, _) = await authService.CompleteLoginAsync(code, cancellationToken);
+            var (principal, user) = await authService.CompleteLoginAsync(code, cancellationToken);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            warmup.Queue(user.Id);
         }
         catch (TwitchOAuthException exception)
         {

@@ -67,11 +67,12 @@ public static class AuthServiceCollectionExtensions
 
         if (string.IsNullOrEmpty(connectionString))
         {
-            services.AddSingleton<ITwitchTokenStore, InMemoryTwitchTokenStore>();
-            return;
+            throw new InvalidOperationException(
+                $"Missing connection string 'ConnectionStrings:YeppDash{dbTarget}' for DbTarget '{dbTarget}'. " +
+                "Twitch tokens are only ever persisted, so there is nothing to fall back to.");
         }
 
         services.AddSingleton(new YeppDashConnectionFactory(connectionString));
-        services.AddScoped<ITwitchTokenStore, DatabaseTwitchTokenStore>();
+        services.AddScoped<DatabaseTwitchTokenStore>();
     }
 }

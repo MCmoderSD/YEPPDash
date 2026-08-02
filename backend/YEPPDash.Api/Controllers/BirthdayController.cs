@@ -34,27 +34,21 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
     [HttpGet("{userId:int}")]
     public async Task<IActionResult> GetBirthday(string userId, CancellationToken cancellationToken)
     {
-        // No ownership check: a birthday is public within the dashboard, and [Authorize] has already
-        // established that there is a session behind the request.
         var birthday = await birthdays.GetAsync(userId, cancellationToken);
 
         return birthday is null ? NotFound() : Ok(BirthdayResponse.From(birthday));
     }
 
     [HttpPost("{userId:int}")]
-    public async Task<IActionResult> AddBirthday(
-        string userId, [FromBody] BirthdayRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> AddBirthday(string userId, [FromBody] BirthdayRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
         if (request.Problem(Today) is { } problem) return BadRequest(problem);
 
         try
         {
-            var birthday = await birthdays.AddAsync(
-                userId, request.Day, request.Month, request.Year, cancellationToken);
+            var birthday = await birthdays.AddAsync(userId, request.Day, request.Month, request.Year, cancellationToken);
 
-            // Adding over an existing birthday would quietly overwrite it, which is what PATCH is
-            // for — so it is refused here rather than guessed at.
             if (birthday is null) return Conflict("This user already has a birthday. Update it instead.");
 
             return CreatedAtAction(nameof(GetBirthday), new { userId }, BirthdayResponse.From(birthday));
@@ -67,8 +61,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
     }
 
     [HttpPatch("{userId:int}")]
-    public async Task<IActionResult> UpdateBirthday(
-        string userId, [FromBody] BirthdayRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateBirthday(string userId, [FromBody] BirthdayRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
         if (request.Problem(Today) is { } problem) return BadRequest(problem);
@@ -86,8 +79,6 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        // A birthday belongs to one user, and a session only ever speaks for its own. Without this
-        // the route would let any signed-in user rewrite anybody's date of birth.
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
             logger.LogWarning("User {TwitchId} tried to reach the birthdays of user {UserId}", twitchId, userId);

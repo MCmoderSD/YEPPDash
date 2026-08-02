@@ -11,7 +11,7 @@ namespace YEPPDash.Api.Services;
 public sealed class TwitchAuthService(
     TwitchOAuthClient oauthClient,
     TwitchApiClient apiClient,
-    ITwitchTokenStore tokenStore,
+    DatabaseTwitchTokenStore tokenStore,
     ILogger<TwitchAuthService> logger)
 {
     private static readonly TimeSpan RefreshMargin = TimeSpan.FromMinutes(5);

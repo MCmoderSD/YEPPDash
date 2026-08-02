@@ -10,17 +10,7 @@ public static class DatabaseInitializationExtensions
         using var scope = services.CreateScope();
 
         var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("YEPPDash.Api.Repositories");
-        var connections = scope.ServiceProvider.GetService<YeppDashConnectionFactory>();
-
-        if (connections is null)
-        {
-            logger.LogWarning(
-                "No connection string 'ConnectionStrings:YeppDash{DbTarget}' configured — Twitch tokens are kept " +
-                "in memory and are lost on restart. Configure it to persist them.",
-                dbTarget);
-
-            return;
-        }
+        var connections = scope.ServiceProvider.GetRequiredService<YeppDashConnectionFactory>();
 
         try
         {
@@ -31,8 +21,7 @@ public static class DatabaseInitializationExtensions
         {
             throw new InvalidOperationException(
                 $"Cannot use 'ConnectionStrings:YeppDash{dbTarget}': {exception.Message} " +
-                "The configured user needs CREATE, SELECT, INSERT, UPDATE and DELETE on the YEPPDash database. " +
-                "Remove the connection string to fall back to the in-memory token store.",
+                "The configured user needs CREATE, SELECT, INSERT, UPDATE and DELETE on the YEPPDash database.",
                 exception);
         }
 

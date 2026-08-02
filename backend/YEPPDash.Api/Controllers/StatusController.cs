@@ -4,8 +4,6 @@ using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Controllers;
 
-// Deliberately anonymous: this is what a reverse proxy or uptime monitor polls, and neither of
-// those carries a session cookie.
 [ApiController]
 public sealed class StatusController(UptimeTracker uptime) : ControllerBase
 {

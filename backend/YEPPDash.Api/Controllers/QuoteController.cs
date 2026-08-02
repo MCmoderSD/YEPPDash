@@ -12,8 +12,6 @@ namespace YEPPDash.Api.Controllers;
 [Route("quotes")]
 public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController> logger) : ControllerBase
 {
-    // A channel's quotes are a few hundred short strings, so anything this large is not a quote
-    // list — cap it rather than letting an arbitrary upload be parsed into memory.
     private const int MaxUploadBytes = 5 * 1024 * 1024;
 
 
@@ -27,8 +25,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
     }
 
     [HttpPost("{userId}")]
-    public async Task<IActionResult> AddQuote(
-        string userId, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> AddQuote(string userId, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
         if (Blank(request.Quote)) return BadRequest("A quote cannot be blank.");
@@ -58,8 +55,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
 
     [HttpPost("{userId}/import")]
     [RequestSizeLimit(MaxUploadBytes)]
-    public async Task<IActionResult> ImportQuotes(
-        string userId, IFormFile? file, CancellationToken cancellationToken)
+    public async Task<IActionResult> ImportQuotes(string userId, IFormFile? file, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
         if (file is null || file.Length is 0) return BadRequest("Attach an .xlsx file as 'file'.");
@@ -84,8 +80,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
     }
 
     [HttpPatch("{userId}/{id:int}")]
-    public async Task<IActionResult> UpdateQuote(
-        string userId, int id, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateQuote(string userId, int id, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
         if (Blank(request.Quote)) return BadRequest("A quote cannot be blank.");
@@ -102,13 +97,8 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return await quotes.DeleteAsync(userId, id, cancellationToken) ? NoContent() : NotFound();
     }
 
-    /// <summary>
-    /// Moves one quote to a new position, shifting the quotes it passes. Answers with the whole
-    /// renumbered list, because a move changes the id of every quote between the two positions.
-    /// </summary>
     [HttpPatch("{userId}/{id:int}/position")]
-    public async Task<IActionResult> MoveQuote(
-        string userId, int id, [FromBody] QuotePositionRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> MoveQuote(string userId, int id, [FromBody] QuotePositionRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
 
@@ -121,8 +111,6 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        // Quotes belong to a channel, and a session only ever speaks for its own. Without this the
-        // route would let any logged-in user rewrite any channel's quotes.
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
             logger.LogWarning("User {TwitchId} tried to reach the quotes of channel {UserId}", twitchId, userId);

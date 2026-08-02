@@ -12,7 +12,8 @@ public sealed class BirthdayRepository(MySqlConnection connection)
             new CommandDefinition(
                 "SELECT id, day, month, year FROM Birthday WHERE id = @userId",
                 new { userId },
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
         return row is null ? null : ToBirthday(row);
     }
@@ -22,12 +23,12 @@ public sealed class BirthdayRepository(MySqlConnection connection)
         var rows = await connection.QueryAsync<BirthdayRow>(
             new CommandDefinition(
                 "SELECT id, day, month, year FROM Birthday",
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
-        return rows.Select(ToBirthday).ToList();
+        return [.. rows.Select(ToBirthday)];
     }
 
-    /// <returns><c>false</c> when the user already has a birthday.</returns>
     public async Task<bool> InsertAsync(Birthday birthday, CancellationToken cancellationToken)
     {
         try
@@ -39,30 +40,26 @@ public sealed class BirthdayRepository(MySqlConnection connection)
                     VALUES (@UserId, @Day, @Month, @Year)
                     """,
                     birthday,
-                    cancellationToken: cancellationToken));
+                    cancellationToken: cancellationToken)
+                );
 
             return true;
         }
-        // Letting the insert fail is what makes this race-free — checking first and inserting after
-        // would leave a window for a second request. INSERT IGNORE would swallow the foreign key
-        // violation as well, and that one has to reach the caller.
         catch (MySqlException exception) when (exception.ErrorCode is MySqlErrorCode.DuplicateKeyEntry)
         {
             return false;
         }
     }
 
-    /// <returns><c>false</c> when the user has no birthday to update.</returns>
     public async Task<bool> UpdateAsync(Birthday birthday, CancellationToken cancellationToken)
     {
         var affected = await connection.ExecuteAsync(
             new CommandDefinition(
                 "UPDATE Birthday SET day = @Day, month = @Month, year = @Year WHERE id = @UserId",
                 birthday,
-                cancellationToken: cancellationToken));
+                cancellationToken: cancellationToken)
+            );
 
-        // Zero rows can mean the row is missing or that it already held this date, depending on how
-        // the connector counts, so existence is what decides between the two.
         return affected > 0 || await ExistsAsync(birthday.UserId, cancellationToken);
     }
 
@@ -80,10 +77,6 @@ public sealed class BirthdayRepository(MySqlConnection connection)
         return new Birthday(row.Id, row.Day, row.Month, row.Year);
     }
 
-    /// <remarks>
-    /// Typed the way MySQL hands the columns back — TINYINT is an <see cref="sbyte"/> and SMALLINT a
-    /// <see cref="short"/> — so the widening to int happens in C# rather than in Dapper's mapper.
-    /// </remarks>
     private sealed class BirthdayRow
     {
         public int Id { get; init; }

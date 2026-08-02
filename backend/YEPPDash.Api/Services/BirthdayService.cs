@@ -24,8 +24,6 @@ public sealed class BirthdayService(
 
         var following = new HashSet<int>();
 
-        // A channel never follows itself, so the owner has to be let in by hand or their own
-        // birthday is the one missing from their own list.
         if (int.TryParse(broadcasterId, out var owner)) following.Add(owner);
 
         foreach (var follower in followers)
@@ -50,8 +48,7 @@ public sealed class BirthdayService(
         {
             if (!await repository.InsertAsync(birthday, cancellationToken)) return null;
         }
-        catch (MySqlException exception)
-            when (exception.ErrorCode is MySqlErrorCode.NoReferencedRow or MySqlErrorCode.NoReferencedRow2)
+        catch (MySqlException exception) when (exception.ErrorCode is MySqlErrorCode.NoReferencedRow or MySqlErrorCode.NoReferencedRow2)
         {
             throw new UnknownBirthdayUserException(birthday.UserId, exception);
         }
