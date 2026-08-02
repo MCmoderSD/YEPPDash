@@ -362,7 +362,7 @@ public sealed class TwitchChannelService(
         }
         while (cursor is not null);
 
-        logger.LogInformation(
+        logger.LogDebug(
             "Paginated {Count} chatters of channel {BroadcasterId} across {Pages} pages",
             all.Count, broadcasterId, pages);
 
@@ -419,7 +419,7 @@ public sealed class TwitchChannelService(
             pages++;
         }
 
-        logger.LogInformation(
+        logger.LogDebug(
             "Paginated {Count} {Role}s of channel {BroadcasterId} across {Pages} pages",
             all.Count, role, broadcasterId, pages);
 

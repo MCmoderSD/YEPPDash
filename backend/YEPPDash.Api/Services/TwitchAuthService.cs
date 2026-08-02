@@ -72,7 +72,7 @@ public sealed class TwitchAuthService(
             var token = ToStoredToken(twitchUserId, refreshed);
 
             await tokenStore.SaveAsync(token, cancellationToken);
-            logger.LogInformation("Refreshed Twitch token for {TwitchId}", twitchUserId);
+            logger.LogDebug("Refreshed Twitch token for {TwitchId}", twitchUserId);
 
             return token;
         }

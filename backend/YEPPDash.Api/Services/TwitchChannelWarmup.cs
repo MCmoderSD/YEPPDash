@@ -61,7 +61,7 @@ public sealed class TwitchChannelWarmupWorker(
         var vips = await channels.GetVipsAsync(broadcasterId, cancellationToken);
         var followers = await channels.GetFollowersAsync(broadcasterId, cancellationToken);
 
-        logger.LogInformation(
+        logger.LogDebug(
             "Warmed channel {BroadcasterId} with {Moderators} moderators, {Vips} VIPs and {Followers} followers",
             broadcasterId, moderators.Count, vips.Count, followers.Count);
     }

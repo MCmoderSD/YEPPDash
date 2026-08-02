@@ -33,7 +33,7 @@ public sealed class BirthdayService(
 
         var matched = birthdays.Where(birthday => following.Contains(birthday.UserId)).ToList();
 
-        logger.LogInformation(
+        logger.LogDebug(
             "{Matched} of {Stored} stored birthdays belong to channel {BroadcasterId} or its {Followers} followers",
             matched.Count, birthdays.Count, broadcasterId, followers.Count);
 

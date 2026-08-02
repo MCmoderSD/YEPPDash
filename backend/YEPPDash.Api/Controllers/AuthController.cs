@@ -89,7 +89,9 @@ public sealed class AuthController(
         var twitchId = User.GetTwitchId();
         if (twitchId is null)
         {
-            logger.LogInformation(
+            // Every signed-out visitor hits this, so it is only worth a line when something is
+            // actually being debugged.
+            logger.LogDebug(
                 "Session check failed: no valid auth cookie (origin={Origin}, cookies=[{Cookies}])",
                 Request.Headers.Origin.ToString(),
                 string.Join(", ", Request.Cookies.Keys));
@@ -107,7 +109,7 @@ public sealed class AuthController(
                 return Unauthorized();
             }
 
-            logger.LogInformation("Session recognized via cookie for {TwitchId} ({Login})", twitchId, user.Login);
+            logger.LogDebug("Session recognized via cookie for {TwitchId} ({Login})", twitchId, user.Login);
             return Ok(user);
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)

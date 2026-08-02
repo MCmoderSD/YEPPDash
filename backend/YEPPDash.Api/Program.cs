@@ -46,6 +46,7 @@ var app = builder.Build();
 
 await app.Services.InitializeYeppDashDatabaseAsync(dbTarget);
 
+app.UseYeppDashRequestLogging();
 app.UseCors(frontendCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();

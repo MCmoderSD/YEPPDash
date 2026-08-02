@@ -32,7 +32,7 @@ public sealed class BdsmService(
 
         var matched = results.Where(result => following.Contains(result.UserId)).ToList();
 
-        logger.LogInformation(
+        logger.LogDebug(
             "{Matched} of {Stored} stored BDSM results belong to channel {BroadcasterId} or its {Followers} followers",
             matched.Count, results.Count, broadcasterId, followers.Count);
 
