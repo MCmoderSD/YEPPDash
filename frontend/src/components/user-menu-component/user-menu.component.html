@@ -22,7 +22,15 @@
 
 <mat-menu #menu="matMenu">
 
-  <div class="user-menu-details" role="group" aria-label="Account details">
+  <!-- Material closes the menu on any click inside the panel, which for a block of text meant that
+       selecting it shut the panel and dropped the selection. These are details to read and copy,
+       not a control, so the click stops here. The items below are outside and still close it. -->
+  <div
+    class="user-menu-details"
+    role="group"
+    aria-label="Account details"
+    (click)="$event.stopPropagation()"
+  >
     <p class="user-menu-detail">
       <span class="user-menu-label">User ID:</span>
       <span class="user-menu-value">{{ user().id }}</span>

@@ -12,6 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -34,7 +35,6 @@ import { BirthdayListComponent } from '../components/birthday-list-component/bir
 import { QuoteEditDialogComponent } from '../components/quote-edit-dialog-component/quote-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
-import { BadgeComponent } from '../components/badge-component/badge.component';
 import { UserBadgesComponent } from '../components/user-badges-component/user-badges.component';
 import { ScrollBarComponent } from '../components/scroll-bar-component/scroll-bar.component';
 import { LocaleDatePipe } from '../pipes/locale-date.pipe';
@@ -81,7 +81,6 @@ const components: any[] = [
   imports: [
     RouterModule.forChild(routes),
     UserComponentsModule,
-    BadgeComponent,
     UserBadgesComponent,
     ScrollBarComponent,
     LocaleDatePipe,
@@ -98,6 +97,7 @@ const components: any[] = [
     MatListModule,
     MatPaginatorModule,
     MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatSelectModule,
     MatSidenavModule,
     MatSlideToggleModule,

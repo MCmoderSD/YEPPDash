@@ -164,14 +164,11 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return GetPageAsync<TwitchChannelUser>(query, accessToken, cancellationToken);
     }
 
-    public async Task<HelixPage<TwitchChannelUser>> GetBlockedUsersAsync(
+    public Task<HelixPage<TwitchChannelUser>> GetBlockedUsersAsync(
         string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        var page = await GetPageAsync<TwitchBlockedUser>(
+        return GetPageAsync<TwitchChannelUser>(
             PagedQuery("users/blocks", broadcasterId, cursor), accessToken, cancellationToken);
-
-        return new HelixPage<TwitchChannelUser>(
-            page.Items.Select(blocked => blocked.ToChannelUser()).ToArray(), page.Cursor);
     }
 
     private static string PagedQuery(string path, string broadcasterId, string? cursor)

@@ -12,6 +12,7 @@ describe('BadgeComponent', () => {
     size?: BadgeSize;
     icon?: string;
     label?: string;
+    showName?: boolean;
   }): ComponentFixture<BadgeComponent> {
     const fixture = TestBed.createComponent(BadgeComponent);
 
@@ -32,8 +33,13 @@ describe('BadgeComponent', () => {
       .querySelector('.badge-label')?.textContent?.trim() ?? null;
   }
 
-  it('should name the preset it was given', () => {
-    expect(label(render({ preset: BadgePreset.Moderator }))).toBe('Moderator');
+  // The default is the icon on its own, which is how badges sit in front of a name in every list.
+  it('should keep the name to itself unless asked for it', () => {
+    expect(label(render({ preset: BadgePreset.Moderator }))).toBeNull();
+  });
+
+  it('should name the preset it was given when asked to', () => {
+    expect(label(render({ preset: BadgePreset.Moderator, showName: true }))).toBe('Moderator');
   });
 
   it('should show the preset icon at the small size without being asked for one', () => {
@@ -73,10 +79,11 @@ describe('BadgeComponent', () => {
       BadgePreset.Moderator,
       BadgePreset.LeadModerator,
       BadgePreset.Broadcaster,
+      BadgePreset.ChatBot,
     ];
 
-    expect(named.map((preset) => label(render({ preset })))).toEqual([
-      'Prime', 'Verified', 'Artist', 'VIP', 'Moderator', 'Lead Moderator', 'Broadcaster',
+    expect(named.map((preset) => label(render({ preset, showName: true })))).toEqual([
+      'Prime', 'Verified', 'Artist', 'VIP', 'Moderator', 'Lead Moderator', 'Broadcaster', 'Chat Bot',
     ]);
   });
 
@@ -95,10 +102,13 @@ describe('BadgeComponent', () => {
   });
 
   it('should take a custom label over the preset name', () => {
-    expect(label(render({ preset: BadgePreset.Moderator, label: 'Editor' }))).toBe('Editor');
+    expect(label(render({ preset: BadgePreset.Moderator, label: 'Editor', showName: true })))
+      .toBe('Editor');
   });
 
-  it('should carry a custom label on its own', () => {
+  // Hiding the name of a badge that has no icon would leave an empty element on the row, so this is
+  // the one case that writes the name out regardless.
+  it('should carry a custom label on its own even with the name hidden', () => {
     const fixture = render({ label: 'Editor' });
 
     expect(label(fixture)).toBe('Editor');
@@ -110,7 +120,6 @@ describe('BadgeComponent', () => {
 
     expect(label(fixture)).toBeNull();
     expect(image(fixture)!.getAttribute('src')).toBe('/custom.png');
-    expect((fixture.nativeElement as HTMLElement).classList).toContain('badge-icon-only');
   });
 
   // Lazy is NgOptimizedImage's default and it is what made the icons pop in a moment after the
@@ -119,9 +128,15 @@ describe('BadgeComponent', () => {
     expect(image(render({ preset: BadgePreset.Moderator }))!.getAttribute('loading')).toBe('eager');
   });
 
-  // The label beside it already says what the badge is, so the icon would only repeat it.
-  it('should keep the icon out of the accessibility tree', () => {
-    expect(image(render({ preset: BadgePreset.Moderator }))!.getAttribute('alt')).toBe('');
+  // With the name hidden the icon is the only thing left, so it has to say what the badge is or a
+  // screen reader hears an unlabelled row of images.
+  it('should name the role on the icon when the name is hidden', () => {
+    expect(image(render({ preset: BadgePreset.Moderator }))!.getAttribute('alt')).toBe('Moderator');
+  });
+
+  it('should keep the icon out of the accessibility tree once the name is written out', () => {
+    expect(image(render({ preset: BadgePreset.Moderator, showName: true }))!.getAttribute('alt'))
+      .toBe('');
   });
 
   it('should size itself from the size it was given', () => {
@@ -131,7 +146,7 @@ describe('BadgeComponent', () => {
   });
 
   it('should follow a preset it is handed later', () => {
-    const fixture = render({ preset: BadgePreset.Vip });
+    const fixture = render({ preset: BadgePreset.Vip, showName: true });
 
     fixture.componentRef.setInput('preset', BadgePreset.Broadcaster);
     fixture.detectChanges();

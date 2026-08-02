@@ -90,6 +90,31 @@ describe('UserMenuComponent', () => {
     await settle(fixture);
   });
 
+  // Material closes the panel on any click that reaches it, so a click landing on the account
+  // details — the end of dragging across an id or an address to copy it — used to shut the menu and
+  // drop the selection with it. The details swallow the click; the items below still let theirs by.
+  it('should keep a click on the account details from reaching the panel', async () => {
+    const fixture = render();
+    http.expectOne(`${API}/birthday/${USER.id}`).flush(BIRTHDAY);
+    await settle(fixture);
+
+    const overlay = menu(fixture);
+    const reachedPanel: string[] = [];
+    overlay.querySelector('.mat-mdc-menu-panel')!
+      .addEventListener('click', (event: Event) => reachedPanel.push(
+        (event.target as HTMLElement).className));
+
+    overlay.querySelector('.user-menu-value')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(reachedPanel).toEqual([]);
+
+    // Anywhere else in the panel still reaches it, so only the details are held back. Checked on the
+    // divider rather than an item: the items run real actions the moment they are clicked.
+    overlay.querySelector('mat-divider')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(reachedPanel).toHaveLength(1);
+  });
+
   it('should show the birthday it found', async () => {
     const fixture = render();
     http.expectOne(`${API}/birthday/${USER.id}`).flush(BIRTHDAY);

@@ -49,7 +49,7 @@ public sealed class TwitchController(
         try
         {
             var users = await channelService.GetUserProfilesAsync(twitchId, userIds, logins, cancellationToken);
-            return Ok(users.Select(TwitchUserResponse.From));
+            return Ok(users);
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -62,7 +62,6 @@ public sealed class TwitchController(
     {
         return ListUserProfilesAsync(
             broadcasterId => channelService.GetModeratorProfilesAsync(broadcasterId, cancellationToken),
-            user => new ModeratorResponse(user),
             "list the moderators");
     }
 
@@ -73,8 +72,7 @@ public sealed class TwitchController(
         return CheckChannelUsersAsync(
             id,
             (broadcasterId, userIds) =>
-                channelService.GetModeratorsByIdAsync(broadcasterId, userIds, cancellationToken),
-            ChannelUserResponse.From,
+                channelService.GetModeratorProfilesByIdAsync(broadcasterId, userIds, cancellationToken),
             "are moderators");
     }
 
@@ -99,7 +97,6 @@ public sealed class TwitchController(
     {
         return ListUserProfilesAsync(
             broadcasterId => channelService.GetVipProfilesAsync(broadcasterId, cancellationToken),
-            user => new VipResponse(user),
             "list the VIPs");
     }
 
@@ -110,8 +107,7 @@ public sealed class TwitchController(
         return CheckChannelUsersAsync(
             id,
             (broadcasterId, userIds) =>
-                channelService.GetVipsByIdAsync(broadcasterId, userIds, cancellationToken),
-            ChannelUserResponse.From,
+                channelService.GetVipProfilesByIdAsync(broadcasterId, userIds, cancellationToken),
             "are VIPs");
     }
 
@@ -140,7 +136,7 @@ public sealed class TwitchController(
         try
         {
             var editors = await channelService.GetEditorProfilesAsync(twitchId, cancellationToken);
-            return Ok(editors.Select(editor => new EditorResponse(editor.User, editor.EditorSince)));
+            return Ok(editors);
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -157,8 +153,7 @@ public sealed class TwitchController(
         return CheckChannelUsersAsync(
             id,
             (broadcasterId, userIds) =>
-                channelService.GetEditorsByIdAsync(broadcasterId, userIds, cancellationToken),
-            ChannelEditorResponse.From,
+                channelService.GetEditorProfilesByIdAsync(broadcasterId, userIds, cancellationToken),
             "are editors");
     }
 
@@ -171,7 +166,7 @@ public sealed class TwitchController(
         try
         {
             var followers = await channelService.GetFollowerProfilesAsync(twitchId, cancellationToken);
-            return Ok(followers.Select(follower => new FollowerProfileResponse(follower.User, follower.FollowedAt)));
+            return Ok(followers);
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -187,8 +182,7 @@ public sealed class TwitchController(
 
         try
         {
-            var follow = await channelService.GetFollowerAsync(twitchId, userId, cancellationToken);
-            return Ok(FollowStatusResponse.From(follow));
+            return Ok(await channelService.GetFollowStatusAsync(twitchId, userId, cancellationToken));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -199,16 +193,16 @@ public sealed class TwitchController(
     [HttpGet("chatters")]
     public Task<IActionResult> GetChatters(CancellationToken cancellationToken)
     {
-        return ListChannelUsersAsync(
-            broadcasterId => channelService.GetChattersAsync(broadcasterId, cancellationToken),
+        return ListUserProfilesAsync(
+            broadcasterId => channelService.GetChatterProfilesAsync(broadcasterId, cancellationToken),
             "list the chatters");
     }
 
     [HttpGet("blocked")]
     public Task<IActionResult> GetBlockedUsers(CancellationToken cancellationToken)
     {
-        return ListChannelUsersAsync(
-            broadcasterId => channelService.GetBlockedUsersAsync(broadcasterId, cancellationToken),
+        return ListUserProfilesAsync(
+            broadcasterId => channelService.GetBlockedProfilesAsync(broadcasterId, cancellationToken),
             "list the blocked users");
     }
 
@@ -228,8 +222,7 @@ public sealed class TwitchController(
 
         try
         {
-            var ban = await channelService.GetBannedUserAsync(twitchId, userId, cancellationToken);
-            return Ok(BanStatusResponse.From(ban));
+            return Ok(await channelService.GetBanStatusAsync(twitchId, userId, cancellationToken));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -248,7 +241,6 @@ public sealed class TwitchController(
     private async Task<IActionResult> CheckChannelUsersAsync<T>(
         string[]? id,
         Func<string, IReadOnlyCollection<string>, Task<IReadOnlyList<T>>> check,
-        Func<T, object> toResponse,
         string role)
     {
         var twitchId = User.GetTwitchId();
@@ -259,8 +251,7 @@ public sealed class TwitchController(
 
         try
         {
-            var found = await check(twitchId, userIds);
-            return Ok(found.Select(toResponse));
+            return Ok(await check(twitchId, userIds));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -268,35 +259,15 @@ public sealed class TwitchController(
         }
     }
 
-    private async Task<IActionResult> ListChannelUsersAsync(
-        Func<string, Task<IReadOnlyList<TwitchChannelUser>>> list, string description)
-    {
-        var twitchId = User.GetTwitchId();
-        if (twitchId is null) return Unauthorized();
-
-        try
-        {
-            var users = await list(twitchId);
-            return Ok(users.Select(ChannelUserResponse.From));
-        }
-        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
-        {
-            return HandleTwitchFailure(exception, description);
-        }
-    }
-
     private async Task<IActionResult> ListUserProfilesAsync(
-        Func<string, Task<IReadOnlyList<TwitchUser>>> list,
-        Func<TwitchUser, TwitchUserResponse> toResponse,
-        string description)
+        Func<string, Task<IReadOnlyList<TwitchUser>>> list, string description)
     {
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
         try
         {
-            var users = await list(twitchId);
-            return Ok(users.Select(toResponse));
+            return Ok(await list(twitchId));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {

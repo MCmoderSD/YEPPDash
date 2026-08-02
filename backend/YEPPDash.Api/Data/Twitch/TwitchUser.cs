@@ -3,7 +3,9 @@ using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Data.Twitch;
 
-public sealed record TwitchUser
+// Unsealed so the enriched profiles can inherit it and pick up every field through the record copy
+// constructor. Anything added here reaches the browser, so an internal-only field wants [JsonIgnore].
+public record TwitchUser
 {
     public required string Id { get; init; }
 

@@ -43,8 +43,6 @@ export class LandingPageComponent {
     const user: TwitchUser | null = await this.auth.ensureLoaded();
     if (!user) return;
 
-    // In production the dashboard lives on its own subdomain, so this is a real cross-origin
-    // navigation rather than an in-app route change.
     if (environment.production) window.location.href = environment.frontendBaseUrl;
     else await this.router.navigateByUrl('/dash');
   }

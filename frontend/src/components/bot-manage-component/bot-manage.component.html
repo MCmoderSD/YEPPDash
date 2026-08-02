@@ -3,8 +3,8 @@
   <mat-progress-bar
     class="bot-manage-progress"
     mode="indeterminate"
-    [attr.aria-hidden]="!(loading() || busy())"
-    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+    [attr.aria-hidden]="!working()"
+    [style.visibility]="working() ? 'visible' : 'hidden'"
   />
 
   <mat-card-content class="bot-manage-body">
@@ -89,7 +89,14 @@
         </li>
       </ul>
 
-    } @else if (!loading()) {
+    } @else if (loading()) {
+
+      <div class="bot-manage-loading">
+        <mat-spinner diameter="40" aria-label="Checking your bot" />
+        <p class="bot-manage-loading-text">Checking your bot…</p>
+      </div>
+
+    } @else {
 
       <p class="bot-manage-empty">
         <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">error_outline</mat-icon>

@@ -112,10 +112,31 @@ describe('UserInfoDialogComponent', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Birthday');
   });
 
-  function badges(fixture: ComponentFixture<UserInfoDialogComponent>): string[] {
-    return [...(fixture.nativeElement as HTMLElement).querySelectorAll('app-badge')]
-      .map((badge) => badge.textContent!.trim());
+  // The badges show their icon alone, so the role they stand for lives on the icon's alt text.
+  function badges(fixture: ComponentFixture<UserInfoDialogComponent>): (string | null)[] {
+    return [...(fixture.nativeElement as HTMLElement).querySelectorAll('app-badge img')]
+      .map((badge) => badge.getAttribute('alt'));
   }
+
+  // The identity block stacks, so badges dropped straight into it land above the name instead of in
+  // front of it. They share a row with the name for the same reading order every list has.
+  it('should put the badges in front of the name rather than above it', async () => {
+    const fixture = await open({ ...USER, roles: roles({ moderator: true }) });
+    const title = (fixture.nativeElement as HTMLElement).querySelector('.user-info-title')!;
+
+    expect([...title.children].map((child) => child.tagName.toLowerCase()))
+      .toEqual(['app-user-badges', 'p']);
+  });
+
+  // Larger here than in a list, and reaching for the artwork drawn at that size rather than
+  // stretching the small one.
+  it('should draw the badges at the medium size', async () => {
+    const fixture = await open({ ...USER, roles: roles({ moderator: true }) });
+    const icon = (fixture.nativeElement as HTMLElement).querySelector('app-badge img')!;
+
+    expect(icon.getAttribute('src')).toBe('/Moderator-36px.png');
+    expect(icon.getAttribute('width')).toBe('36');
+  });
 
   // The roles ride on the user object itself, so the badges are there the moment the dialog opens
   // instead of popping in after a request.
@@ -132,14 +153,45 @@ describe('UserInfoDialogComponent', () => {
       roles: roles({ broadcaster: true, moderator: true, editor: true, vip: true, verified: true }),
     });
 
-    expect(badges(fixture)).toEqual(['Broadcaster', 'Moderator', 'Editor', 'VIP', 'Verified']);
+    expect(badges(fixture)).toEqual(['Verified', 'Broadcaster', 'Moderator', 'VIP']);
+  });
+
+  // The bot marker sits last, behind whatever the account is in this channel.
+  it('should badge the configured bot account after its channel roles', async () => {
+    const fixture = await open({
+      ...USER,
+      id: environment.botUserId,
+      roles: roles({ moderator: true, verified: true }),
+    });
+
+    expect(badges(fixture)).toEqual(['Verified', 'Moderator', 'Chat Bot']);
+  });
+
+  // Being the bot is an identity rather than a channel role, so it does not wait on the enrichment.
+  it('should badge the bot even when no roles were looked up', async () => {
+    const fixture = await open({ ...USER, id: environment.botUserId });
+
+    expect(badges(fixture)).toEqual(['Chat Bot']);
+  });
+
+  it('should leave everyone else unbadged as a bot', async () => {
+    const fixture = await open({ ...USER, roles: roles({ moderator: true }) });
+
+    expect(badges(fixture)).not.toContain('Chat Bot');
+  });
+
+  // There is no editor artwork, so an editor would be a bare word among icons.
+  it('should leave the editor role unbadged', async () => {
+    const fixture = await open({ ...USER, roles: roles({ editor: true }) });
+
+    expect(badges(fixture)).toEqual([]);
   });
 
   it('should show nothing at all for a user holding no roles', async () => {
     const fixture = await open({ ...USER, roles: roles({}) });
 
     expect(badges(fixture)).toEqual([]);
-    expect((fixture.nativeElement as HTMLElement).querySelector('.user-info-badges')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.user-badges')).toBeNull();
   });
 
   // A badge the server never confirmed must not be drawn, so an object that was never enriched

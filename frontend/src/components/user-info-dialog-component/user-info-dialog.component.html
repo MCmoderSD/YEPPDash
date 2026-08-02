@@ -10,17 +10,13 @@
       [height]=128
       alt=""
     />
-    <p class="user-info-name" [style.--chat-color]="chatColor">{{ user.displayName }}</p>
+    <!-- Its own row: the identity above stacks, so the badges would sit over the name rather than
+         in front of it. -->
+    <div class="user-info-title">
+      <app-user-badges [user]="user" [size]="badgeSize" />
 
-    @if (badges.length > 0) {
-      <ul class="user-info-badges">
-        @for (badge of badges; track badge.label ?? badge.preset) {
-          <li>
-            <app-badge [preset]="badge.preset" [label]="badge.label" />
-          </li>
-        }
-      </ul>
-    }
+      <p class="user-info-name" [style.--chat-color]="chatColor">{{ user.displayName }}</p>
+    </div>
   </div>
 
   <dl class="user-info-details">

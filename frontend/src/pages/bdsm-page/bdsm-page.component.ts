@@ -12,9 +12,6 @@ export interface BdsmResultEntry {
 }
 
 export interface BdsmCommunityEntry extends BdsmResultEntry {
-
-  // Null when Twitch no longer resolves the id — a deleted or renamed account still has a row in
-  // YEPPBot's table, and dropping it would silently shorten the list.
   user: TwitchUser | null;
   name: string;
 }
@@ -43,8 +40,7 @@ export class BdsmPageComponent {
   private readonly communityLoading: WritableSignal<boolean> = signal(false);
   private readonly communityFailed: WritableSignal<boolean> = signal(false);
 
-  // The community list costs a follow check per stored result, so it is only fetched once somebody
-  // asks to see it rather than alongside the tab that opens by default.
+
   private communityRequested = false;
 
   protected readonly selected: WritableSignal<number> = signal(OWN_TAB);
@@ -58,8 +54,7 @@ export class BdsmPageComponent {
   protected readonly unreachable: Signal<boolean> = this.ownFailed.asReadonly();
   protected readonly communityUnreachable: Signal<boolean> = this.communityFailed.asReadonly();
 
-  // The toolbar above the tabs acts on whichever one is open, so both the spinner and the refresh
-  // button follow the selection rather than either list on its own.
+
   protected readonly loading: Signal<boolean> = computed((): boolean =>
     this.selected() === COMMUNITY_TAB ? this.communityLoading() : this.ownLoading());
 
@@ -88,10 +83,7 @@ export class BdsmPageComponent {
 
       this.ownRows.set(results
         .map((result: BdsmResult): BdsmResultEntry => ({ result, takenAt: resultTakenAt(result) }))
-        // The endpoint already answers newest first. Sorted again here because "the newest one is at
-        // the top, open" is this page's own promise, and it should not rest on the order a response
-        // happened to arrive in.
-        .sort((left, right) => right.takenAt.getTime() - left.takenAt.getTime()));
+        .sort((left: BdsmResultEntry, right: BdsmResultEntry): number => right.takenAt.getTime() - left.takenAt.getTime()));
     } catch {
       this.ownRows.set([]);
       this.ownFailed.set(true);
@@ -105,8 +97,6 @@ export class BdsmPageComponent {
     const channelId: string | undefined = this.auth.currentUser()?.id;
     if (!channelId) return;
 
-    // Marked before the request rather than after it, so opening the tab twice in quick succession
-    // cannot start the walk twice.
     this.communityRequested = true;
 
     this.communityLoading.set(true);
@@ -114,10 +104,8 @@ export class BdsmPageComponent {
     try {
       const results: BdsmResult[] = await this.bdsm.getFollowerResults(channelId);
 
-      // The endpoint answers with ids and scores only, so the names come from a second lookup — the
-      // same split the follower birthdays use.
-      const users: TwitchUser[] = await this.twitch.getUsers(results.map((entry) => entry.userId));
-      const byId: Map<string, TwitchUser> = new Map(users.map((user) => [user.id, user]));
+      const users: TwitchUser[] = await this.twitch.getUsers(results.map((entry: BdsmResult): string => entry.userId));
+      const byId: Map<string, TwitchUser> = new Map(users.map((user: TwitchUser): [string, TwitchUser] => [user.id, user]));
 
       this.communityRows.set(results
         .map((result: BdsmResult): BdsmCommunityEntry => {
@@ -130,7 +118,7 @@ export class BdsmPageComponent {
             name: user?.displayName ?? result.userId,
           };
         })
-        .sort((left, right) => right.takenAt.getTime() - left.takenAt.getTime()));
+        .sort((left: BdsmCommunityEntry, right: BdsmCommunityEntry): number => right.takenAt.getTime() - left.takenAt.getTime()));
     } catch {
       this.communityRows.set([]);
       this.communityFailed.set(true);

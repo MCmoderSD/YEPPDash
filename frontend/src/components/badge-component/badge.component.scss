@@ -7,10 +7,6 @@
   // mixing the two still lines up.
   min-height: var(--badge-size);
 
-  padding: calc(var(--badge-size) * 0.14) calc(var(--badge-size) * 0.28);
-  border-radius: min(calc(var(--badge-size) * 0.2), 0.75rem);
-
-  background-color: var(--mat-sys-surface-container-high);
   color: var(--mat-sys-on-surface);
 
   font-size: clamp(0.75rem, calc(var(--badge-size) * 0.4), 1.5rem);
@@ -18,11 +14,6 @@
   line-height: 1;
   white-space: nowrap;
   vertical-align: middle;
-}
-
-// Nothing but the icon to frame, so the padding is even rather than wider at the sides.
-:host(.badge-icon-only) {
-  padding: calc(var(--badge-size) * 0.14);
 }
 
 .badge-icon {

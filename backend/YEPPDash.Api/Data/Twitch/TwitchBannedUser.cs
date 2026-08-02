@@ -7,10 +7,6 @@ public sealed record TwitchBannedUser
 {
     public required string UserId { get; init; }
 
-    public required string UserLogin { get; init; }
-
-    public required string UserName { get; init; }
-
     // Empty for a permanent ban — only a timeout ever has an expiry.
     [JsonConverter(typeof(EmptyStringToNullDateTimeOffsetConverter))]
     public DateTimeOffset? ExpiresAt { get; init; }
@@ -21,8 +17,4 @@ public sealed record TwitchBannedUser
     public string? Reason { get; init; }
 
     public required string ModeratorId { get; init; }
-
-    public required string ModeratorLogin { get; init; }
-
-    public required string ModeratorName { get; init; }
 }

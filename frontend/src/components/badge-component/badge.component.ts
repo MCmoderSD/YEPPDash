@@ -9,7 +9,6 @@ import { BadgePreset, BadgeSize, badgeIconUrl, DEFAULT_BADGE_SIZE } from '../../
   imports: [NgOptimizedImage],
   host: {
     '[style.--badge-size]': 'sizePx()',
-    '[class.badge-icon-only]': '!text()',
   },
 })
 export class BadgeComponent {
@@ -22,9 +21,7 @@ export class BadgeComponent {
 
   readonly label: InputSignal<string | null> = input<string | null>(null);
 
-  protected readonly text: Signal<string> = computed(
-    (): string => this.label() ?? this.preset() ?? '',
-  );
+  readonly showName: InputSignal<boolean> = input(false);
 
   protected readonly source: Signal<string | null> = computed((): string | null => {
     const custom: string | null = this.icon();
@@ -33,6 +30,22 @@ export class BadgeComponent {
     const preset: BadgePreset | null = this.preset();
     return preset === null ? null : badgeIconUrl(preset, this.size());
   });
+
+  private readonly name: Signal<string> = computed(
+    (): string => this.label() ?? this.preset() ?? '',
+  );
+
+  // Written out when asked for, and whenever there is no icon — a badge that would otherwise render
+  // as an empty element is worse than one that ignores the setting.
+  protected readonly text: Signal<string> = computed(
+    (): string => this.showName() || !this.source() ? this.name() : '',
+  );
+
+  // The icon carries the role on its own once the name is hidden; alongside the name it would only
+  // repeat it, which is why this empties out then.
+  protected readonly iconAlt: Signal<string> = computed(
+    (): string => this.text() ? '' : this.name(),
+  );
 
   protected readonly sizePx: Signal<string> = computed((): string => `${this.size()}px`);
 }

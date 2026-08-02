@@ -118,13 +118,12 @@
                         loading="eager"
                         alt=""
                       />
+
+                      <app-user-badges [user]="entry.user" />
                     }
                     <span class="bdsm-page-name" [style.--chat-color]="entry.user?.color">
                       {{ entry.name }}
                     </span>
-                    @if (entry.user) {
-                      <app-user-badges [user]="entry.user" />
-                    }
                   </mat-panel-title>
 
                   <mat-panel-description class="bdsm-page-summary">

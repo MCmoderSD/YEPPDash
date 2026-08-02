@@ -284,7 +284,7 @@ describe('BdsmPageComponent', () => {
       const panel = panels(fixture)[0];
       expect(panel.querySelector<HTMLElement>('.bdsm-page-name')!.style.getPropertyValue('--chat-color'))
         .toBe('#9146FF');
-      expect([...panel.querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim()))
+      expect([...panel.querySelectorAll('app-badge img')].map((badge) => badge.getAttribute('alt')))
         .toEqual(['VIP']);
     });
 

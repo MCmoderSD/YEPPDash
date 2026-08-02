@@ -4,12 +4,11 @@ import { AuthService } from '../../services/auth.service';
 import { BotResult, BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
-import { ChannelUser } from '../../data/channel-user';
 import { TwitchUser } from '../../data/twitch-user';
 import { BanStatus } from '../../data/banned-user';
 
-function contains(users: readonly ChannelUser[], userId: string): boolean {
-  return users.some((user: ChannelUser): boolean => user.id === userId);
+function contains(users: readonly TwitchUser[], userId: string): boolean {
+  return users.some((user: TwitchUser): boolean => user.id === userId);
 }
 
 // A refused bot call answers with the bot's own words, which say more than anything this page could
@@ -61,6 +60,12 @@ export class BotManageComponent {
 
   protected readonly healthy: Signal<boolean> = computed(
     (): boolean => !this.banned() && !this.blocked() && this.moderator() && this.inChat(),
+  );
+
+  // The spinner covers the first load, which has nothing to show yet; a reload keeps the filled card
+  // on screen and runs the bar instead, so this skips the bar while the spinner is already up.
+  protected readonly working: Signal<boolean> = computed(
+    (): boolean => this.busy() || (this.loading() && this.bot() !== null),
   );
 
   constructor() {
@@ -138,7 +143,7 @@ export class BotManageComponent {
     this.loading.set(true);
     try {
       const [users, ban, blocked, moderators, chatters]:
-        [TwitchUser[], BanStatus, ChannelUser[], TwitchUser[], ChannelUser[]] =
+        [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[]] =
         await Promise.all([
           this.twitch.getUsers([botUserId]),
           this.twitch.getBanStatus(botUserId),

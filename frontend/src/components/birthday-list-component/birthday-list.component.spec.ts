@@ -130,8 +130,8 @@ describe('BirthdayListComponent', () => {
 
     const fixture = await render();
 
-    expect([...rows(fixture)[0].querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim()))
-      .toEqual(['Moderator', 'Verified']);
+    expect([...rows(fixture)[0].querySelectorAll('app-badge img')].map((badge) => badge.getAttribute('alt')))
+      .toEqual(['Verified', 'Moderator']);
   });
 
   // A row whose account Twitch no longer resolves still belongs in the list.

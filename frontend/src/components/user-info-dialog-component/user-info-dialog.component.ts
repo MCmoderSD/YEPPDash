@@ -2,8 +2,8 @@ import { Component, computed, inject, signal, Signal, WritableSignal } from '@an
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BirthdayService } from '../../services/birthday.service';
 import { Birthday, birthdayToDate } from '../../data/birthday';
-import { RoleBadge, roleBadges } from '../../data/user-roles';
 import { TwitchUser } from '../../data/twitch-user';
+import { BadgeSize } from '../../data/badge';
 
 @Component({
   selector: 'app-user-info-dialog',
@@ -21,7 +21,9 @@ export class UserInfoDialogComponent {
 
   protected readonly chatColor: string | null = this.user.color ?? null;
 
-  protected readonly badges: RoleBadge[] = this.user.roles ? roleBadges(this.user.roles) : [];
+  // Bigger than in a list: the dialog is where a profile is read rather than scanned, and the name
+  // beside them is a headline rather than a table row.
+  protected readonly badgeSize: BadgeSize = BadgeSize.Medium;
 
   protected readonly birthdayDate: Signal<Date | null> = computed((): Date | null => {
     const birthday: Birthday | null = this.born();

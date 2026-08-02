@@ -57,26 +57,27 @@
           <!-- The flex lives on this wrapper rather than on the cell: a td set to display:flex stops
                being a table cell, which takes the column widths and the row's border with it. -->
           <div class="community-page-identity">
+            <img
+              class="community-page-avatar"
+              [ngSrc]="entry.user.profileImageUrl"
+              [width]=32
+              [height]=32
+              loading="eager"
+              alt=""
+            />
+
+            <app-user-badges [user]="entry.user" />
+
             <button
               type="button"
               class="community-page-user"
               [attr.aria-label]="'Details for ' + entry.user.displayName"
               (click)="showDetails(entry, $event)"
             >
-              <img
-                class="community-page-avatar"
-                [ngSrc]="entry.user.profileImageUrl"
-                [width]=32
-                [height]=32
-                loading="eager"
-                alt=""
-              />
               <span class="community-page-name" [style.--chat-color]="entry.user.color">
                 {{ entry.user.displayName }}
               </span>
             </button>
-
-            <app-user-badges [user]="entry.user" />
           </div>
         </td>
       </ng-container>

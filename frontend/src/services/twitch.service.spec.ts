@@ -3,13 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TwitchService } from './twitch.service';
 import { environment } from '../environments/environment';
-import { ChannelUser } from '../data/channel-user';
 
 const API = environment.apiBaseUrl;
-
-function channelUser(id: number): ChannelUser {
-  return { id: `${id}`, login: `user${id}`, displayName: `User${id}` };
-}
 
 function twitchUser(id: number, color: string | null = null): object {
   return {
@@ -90,17 +85,17 @@ describe('TwitchService', () => {
   // Chatters are never cached, so two reads have to hit the network twice.
   it('should refetch the chatters on every call', async () => {
     const first = service.getChatters();
-    http.expectOne(`${API}/twitch/chatters`).flush([channelUser(1)]);
+    http.expectOne(`${API}/twitch/chatters`).flush([twitchUser(1)]);
     expect(await first).toHaveLength(1);
 
     const second = service.getChatters();
-    http.expectOne(`${API}/twitch/chatters`).flush([channelUser(1), channelUser(2)]);
+    http.expectOne(`${API}/twitch/chatters`).flush([twitchUser(1), twitchUser(2)]);
     expect(await second).toHaveLength(2);
   });
 
   it('should list the blocked users', async () => {
     const loading = service.getBlocked();
-    http.expectOne(`${API}/twitch/blocked`).flush([channelUser(7)]);
+    http.expectOne(`${API}/twitch/blocked`).flush([twitchUser(7)]);
 
     expect((await loading).map((user) => user.login)).toEqual(['user7']);
   });
@@ -163,7 +158,7 @@ describe('TwitchService', () => {
     const request = http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`);
     expect(request.request.params.getAll('id')).toEqual(['1', '2']);
 
-    request.flush([channelUser(1)]);
+    request.flush([twitchUser(1)]);
 
     // Only the ids that really are moderators come back, which is what makes this a membership check.
     expect((await checking).map((user) => user.id)).toEqual(['1']);
@@ -177,7 +172,7 @@ describe('TwitchService', () => {
     expect(requests).toHaveLength(1);
     expect(requests[0].request.params.getAll('id')).toHaveLength(150);
 
-    requests[0].flush([channelUser(1)]);
+    requests[0].flush([twitchUser(1)]);
     await checking;
   });
 
@@ -195,7 +190,7 @@ describe('TwitchService', () => {
 
   it('should report a user who does moderate', async () => {
     const checking = service.isModerator('1');
-    http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`).flush([channelUser(1)]);
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`).flush([twitchUser(1)]);
 
     expect(await checking).toBe(true);
   });
@@ -206,7 +201,7 @@ describe('TwitchService', () => {
     const request = http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`);
     expect(request.request.params.getAll('id')).toEqual(['1', '2']);
 
-    request.flush([channelUser(2)]);
+    request.flush([twitchUser(2)]);
 
     expect((await checking).map((user) => user.id)).toEqual(['2']);
   });
@@ -219,7 +214,7 @@ describe('TwitchService', () => {
     expect(requests).toHaveLength(1);
     expect(requests[0].request.params.getAll('id')).toHaveLength(150);
 
-    requests[0].flush([channelUser(2)]);
+    requests[0].flush([twitchUser(2)]);
     await checking;
   });
 
@@ -236,7 +231,7 @@ describe('TwitchService', () => {
 
   it('should report a user who is a VIP', async () => {
     const checking = service.isVip('2');
-    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([channelUser(2)]);
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([twitchUser(2)]);
 
     expect(await checking).toBe(true);
   });
@@ -247,7 +242,7 @@ describe('TwitchService', () => {
     http.expectOne((candidate) => candidate.url === `${API}/twitch/moderators/check`).flush([]);
 
     const vips = service.isVip('1');
-    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([channelUser(1)]);
+    http.expectOne((candidate) => candidate.url === `${API}/twitch/vips/check`).flush([twitchUser(1)]);
 
     expect([await moderators, await vips]).toEqual([false, true]);
   });

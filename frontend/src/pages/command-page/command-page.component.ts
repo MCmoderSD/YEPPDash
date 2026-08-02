@@ -8,8 +8,6 @@ import { CommandService } from '../../services/command.service';
 import { NotificationService } from '../../services/notification.service';
 import { CustomCommand, CustomCommandDraft, sameTrigger } from '../../data/custom-command';
 
-// A refused write explains itself in the body — which trigger is taken, or why a name is not usable.
-// That beats a generic message, so it is unwrapped and shown as it arrived.
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse)) return null;
   if (error.status !== 400 && error.status !== 409) return null;
@@ -40,8 +38,6 @@ export class CommandPageComponent {
   protected readonly busy: Signal<boolean> = this.isBusy.asReadonly();
   protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
 
-  // Which editor is open is held here rather than in the table, so a write that succeeds can close
-  // the form — and one that fails can leave it open with what was typed still in it.
   protected readonly editing: WritableSignal<string | null> = signal<string | null>(null);
   protected readonly adding: WritableSignal<boolean> = signal(false);
 
@@ -92,9 +88,6 @@ export class CommandPageComponent {
   }
 
   protected async setActive({ command, active }: CommandActiveChange): Promise<void> {
-    // Moved before the request rather than after it. The switch itself has already flipped, so the
-    // bound value has to follow it — otherwise the binding never changes, and putting the switch
-    // back after a refusal would write nothing.
     this.patchActive(command.name, active);
 
     await this.run(
@@ -104,8 +97,6 @@ export class CommandPageComponent {
       },
       `Could not turn ${command.name} ${active ? 'on' : 'off'}.`,
       {
-        // Patched in place rather than reloaded: re-reading the whole list would flick the switch
-        // back and forth on a slow connection.
         reload: false,
         revert: (): void => this.patchActive(command.name, command.active),
       },

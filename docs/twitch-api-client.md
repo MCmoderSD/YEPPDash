@@ -48,7 +48,7 @@ turns any non-success response into a `TwitchOAuthException` carrying the status
 
 | Method | HTTP | Endpoint | Returns | Notes |
 |---|---|---|---|---|
-| `GetEditorsAsync` | GET | `channels/editors` | `IReadOnlyList<TwitchChannelEditor>` | The one channel list Helix does not paginate. Carries no login, only id + display name + `created_at`, hence its own record |
+| `GetEditorsAsync` | GET | `channels/editors` | `IReadOnlyList<TwitchChannelEditor>` | The one channel list Helix does not paginate. Carries `created_at` alongside the id, hence its own record |
 
 Helix has no filtered form of this endpoint, so there is no `GetEditorsByIdAsync` on the client —
 `TwitchChannelService` fetches the full list and matches against it instead. See the
@@ -72,7 +72,7 @@ Helix has no filtered form of this endpoint, so there is no `GetEditorsByIdAsync
 
 | Method | HTTP | Endpoint | Returns | Notes |
 |---|---|---|---|---|
-| `GetBlockedUsersAsync` | GET | `users/blocks` | `HelixPage<TwitchChannelUser>` | Cursor-paginated; maps `TwitchBlockedUser` → `TwitchChannelUser` |
+| `GetBlockedUsersAsync` | GET | `users/blocks` | `HelixPage<TwitchChannelUser>` | Cursor-paginated |
 | `UnblockUserAsync` | DELETE | `users/blocks?target_user_id=…` | – | No `broadcaster_id` — blocks live on the account, not the channel |
 
 ### Chat
@@ -104,21 +104,21 @@ lookup, 100 rows per page — are the backend's problem: it splits and walks, th
 | `GET twitch/chat-color/{userId?}` | `loadChatColor()` | `ChatColor` | The signed-in user's own colour, shown in the navbar. Everything else reads `color` off the user objects below |
 | `GET twitch/users?id=&login=` | `getUsers(userIds, logins)` | `TwitchUser[]` | Any number of ids and logins; the service splits them into batches of 100 and merges the answers. Each user arrives complete — chat colour and channel roles (`roles`) already on it |
 | `GET twitch/moderators` | `getModerators()` | `Moderator[]` | Full user profiles — avatar, colour, roles and all — assembled server-side: one Get Users and one Get User Chat Color batch per 100 entries, and the role flags settled against the cached moderator/VIP lists plus one editors call |
-| `GET twitch/moderators/check?id=` | `getModeratorsById(ids)` / `isModerator(id)` | `ChannelUser[]` / `boolean` | Membership check for any number of users; batched server-side. Uncached — it asks about specific users rather than completing a list |
+| `GET twitch/moderators/check?id=` | `getModeratorsById(ids)` / `isModerator(id)` | `Moderator[]` / `boolean` | Membership check for any number of users; batched server-side. Answers with the same full profiles the list route does, so a check and a list are interchangeable to the caller. Uncached — it asks about specific users rather than completing a list |
 | `POST twitch/moderators/{userId}` | `addModerator(id)` | – | Invalidates the cached moderator list |
 | `DELETE twitch/moderators/{userId}` | `removeModerator(id)` | – | Invalidates the cached moderator list |
 | `GET twitch/vips` | `getVips()` | `Vip[]` | Full user profiles, assembled like the moderators |
-| `GET twitch/vips/check?id=` | `getVipsById(ids)` / `isVip(id)` | `ChannelUser[]` / `boolean` | Membership check for any number of users; batched server-side. Uncached, same reasoning as the moderator check |
+| `GET twitch/vips/check?id=` | `getVipsById(ids)` / `isVip(id)` | `Vip[]` / `boolean` | Membership check for any number of users; batched server-side. Full profiles, uncached, same reasoning as the moderator check |
 | `POST twitch/vips/{userId}` | `addVip(id)` | – | Invalidates the cached VIP list |
 | `DELETE twitch/vips/{userId}` | `removeVip(id)` | – | Invalidates the cached VIP list |
 | `GET twitch/editors` | `getEditors()` | `Editor[]` | Full user profiles plus `editorSince`. Unpaginated by Helix |
-| `GET twitch/editors/check?id=` | `getEditorsById(ids)` / `isEditor(id)` | `ChannelEditor[]` / `boolean` | Twitch has no filtered form, so the service matches against the full list. The one check with no batch limit — the ids never reach Twitch. Uncached, so an editor added on Twitch's site shows up right away |
+| `GET twitch/editors/check?id=` | `getEditorsById(ids)` / `isEditor(id)` | `Editor[]` / `boolean` | Twitch has no filtered form, so the service matches against the full list. The one check with no batch limit — the ids never reach Twitch. Uncached, so an editor added on Twitch's site shows up right away |
 | `GET twitch/followers` | `getFollowers()` | `FollowerProfile[]` | Full user profiles plus `followedAt`, feeding the community page. Paged and cached server-side like the moderators; nothing here can add a follower, so the first-page check is the only thing that refreshes it. Enrichment costs two Helix batches per 100 followers, so a very large channel wants paging before this |
-| `GET twitch/followers/{userId}` | `getFollowStatus(id)` / `isFollower(id)` | `FollowStatus` / `boolean` | 200 with a false flag rather than a 404, so "does not follow" is not a failed request |
-| `GET twitch/chatters` | `getChatters()` | `ChannelUser[]` | Deliberately uncached — who is in chat turns over constantly |
-| `GET twitch/blocked` | `getBlocked()` | `ChannelUser[]` | |
+| `GET twitch/followers/{userId}` | `getFollowStatus(id)` / `isFollower(id)` | `FollowStatus` / `boolean` | 200 with a false flag rather than a 404, so "does not follow" is not a failed request. `follow` is a full `FollowerProfile`; `following` stands on its own, so an account Get Users cannot resolve still reads as a follower |
+| `GET twitch/chatters` | `getChatters()` | `TwitchUser[]` | Deliberately uncached — who is in chat turns over constantly. **The costly one:** it walks every page of chat and then enriches all of it, so a busy channel spends a Get Users and a chat-colour batch per 100 people present. A caller that only needs to know whether one account is in chat is paying for the whole room |
+| `GET twitch/blocked` | `getBlocked()` | `TwitchUser[]` | |
 | `DELETE twitch/blocked/{userId}` | `unblockUser(id)` | – | Invalidates the cached blocked list |
-| `GET twitch/banned/{userId}` | `getBanStatus(id)` / `isBanned(id)` | `BanStatus` / `boolean` | 200 with a false flag rather than a 404 |
+| `GET twitch/banned/{userId}` | `getBanStatus(id)` / `isBanned(id)` | `BanStatus` / `boolean` | 200 with a false flag rather than a 404. `ban` carries the banned account and the moderator who issued it as full profiles, and dates the ban with `bannedAt` — `createdAt` on the same object is the account's own. Like `following`, `banned` stands on its own |
 | `DELETE twitch/banned/{userId}` | `unbanUser(id)` | – | |
 
 A Twitch failure becomes a `502` when Twitch is unreachable, or the upstream status when Twitch

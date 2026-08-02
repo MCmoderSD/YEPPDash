@@ -1,11 +1,12 @@
 import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Birthday, BirthdayDraft, birthdayToDate, dateToBirthdayDraft } from '../../data/birthday';
+import { LocaleDateAdapter } from './locale-date.adapter';
 
 // Mirrors the lower bound of the CHECK constraint on YEPPBot's Birthday table, so the picker cannot
 // offer a year the server is going to refuse.
@@ -28,7 +29,15 @@ export interface BirthdayEditDialogData {
     MatFormFieldModule,
     MatInputModule,
   ],
-  providers: [provideNativeDateAdapter()],
+  // MAT_DATE_LOCALE defaults to LOCALE_ID, which is fixed at build time and is en-US — the same
+  // thing that pinned every other date here to the American order, and what LocaleDatePipe exists
+  // to avoid. Handing it undefined lets Intl fall back to the platform's own locale instead, so the
+  // field is written the way the reader writes dates.
+  providers: [
+    provideNativeDateAdapter(),
+    { provide: MAT_DATE_LOCALE, useValue: undefined },
+    { provide: DateAdapter, useClass: LocaleDateAdapter },
+  ],
 })
 export class BirthdayEditDialogComponent {
 

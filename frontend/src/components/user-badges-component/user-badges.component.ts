@@ -1,19 +1,21 @@
 import { Component, computed, input, InputSignal, Signal } from '@angular/core';
 import { BadgeComponent } from '../badge-component/badge.component';
 import { TwitchUser } from '../../data/twitch-user';
-import { RoleBadge, roleBadges } from '../../data/user-roles';
+import { roleBadges } from '../../data/user-roles';
+import { BadgePreset, BadgeSize, DEFAULT_BADGE_SIZE } from '../../data/badge';
+import { environment } from '../../environments/environment';
 
-// Kept out of the button it usually sits next to: those carry an aria-label naming the whole
-// control, which would swallow every badge nested inside them.
+// Kept out of the button it sits beside: those carry an aria-label naming the whole control, which
+// would swallow every badge nested inside them.
 @Component({
   selector: 'app-user-badges',
   imports: [BadgeComponent],
   template: `
     @if (badges().length > 0) {
       <ul class="user-badges" [attr.aria-label]="'Roles of ' + user().displayName">
-        @for (badge of badges(); track badge.label ?? badge.preset) {
+        @for (preset of badges(); track preset) {
           <li>
-            <app-badge [preset]="badge.preset" [label]="badge.label" />
+            <app-badge [preset]="preset" [size]="size()" />
           </li>
         }
       </ul>
@@ -37,8 +39,10 @@ export class UserBadgesComponent {
 
   readonly user: InputSignal<TwitchUser> = input.required<TwitchUser>();
 
-  protected readonly badges: Signal<RoleBadge[]> = computed((): RoleBadge[] => {
+  readonly size: InputSignal<BadgeSize> = input<BadgeSize>(DEFAULT_BADGE_SIZE);
+
+  protected readonly badges: Signal<BadgePreset[]> = computed((): BadgePreset[] => {
     const user: TwitchUser = this.user();
-    return user.roles ? roleBadges(user.roles) : [];
+    return roleBadges(user.roles ?? null, user.id === environment.botUserId);
   });
 }

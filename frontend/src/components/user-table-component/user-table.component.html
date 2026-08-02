@@ -22,26 +22,27 @@
           <!-- The flex lives on this wrapper rather than on the cell: a td set to display:flex stops
                being a table cell, which takes the column widths and the row's border with it. -->
           <div class="user-table-identity">
+            <img
+              class="user-table-avatar"
+              [ngSrc]="user.profileImageUrl"
+              [width]=32
+              [height]=32
+              loading="eager"
+              alt=""
+            />
+
+            <app-user-badges [user]="user" />
+
             <button
               type="button"
               class="user-table-name"
               [attr.aria-label]="'Details for ' + user.displayName"
               (click)="showDetails(user, $event)"
             >
-              <img
-                class="user-table-avatar"
-                [ngSrc]="user.profileImageUrl"
-                [width]=32
-                [height]=32
-                loading="eager"
-                alt=""
-              />
               <span class="user-table-display-name" [style.--chat-color]="user.color">
                 {{ user.displayName }}
               </span>
             </button>
-
-            <app-user-badges [user]="user" />
           </div>
         </td>
       </ng-container>

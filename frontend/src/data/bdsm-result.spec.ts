@@ -2,12 +2,10 @@ import {
   BDSM_TRAITS,
   BdsmResult,
   BdsmTraitKey,
-  dominantTrait,
   rankedTraits,
   resultTakenAt,
   topTraits,
   traitColor,
-  traitLabel,
   traitScores,
 } from './bdsm-result';
 
@@ -44,12 +42,6 @@ describe('BDSM_TRAITS', () => {
 
   it('should label every trait it declares', () => {
     expect(BDSM_TRAITS.every((trait) => trait.label.length > 0)).toBe(true);
-  });
-});
-
-describe('traitLabel', () => {
-  it('should name a trait the way it is shown', () => {
-    expect(traitLabel('masterMistress')).toBe('Master/Mistress');
   });
 });
 
@@ -138,17 +130,6 @@ describe('rankedTraits', () => {
     expect(ranked).toHaveLength(BDSM_TRAITS.length);
     expect(ranked[0].key).toBe('vanilla');
     expect(ranked.at(-1)?.key).not.toBe('vanilla');
-  });
-});
-
-describe('dominantTrait', () => {
-  it('should name the single strongest trait', () => {
-    expect(dominantTrait(result({ brat: 0.4, ropeBunny: 0.95 }))?.key).toBe('ropeBunny');
-  });
-
-  // Everything at zero is a real result, not an absent one, so it still has a strongest trait.
-  it('should still answer for a result scored zero throughout', () => {
-    expect(dominantTrait(result())?.key).toBe('ageplayer');
   });
 });
 

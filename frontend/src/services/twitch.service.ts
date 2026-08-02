@@ -1,8 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import { Service, signal, Signal, WritableSignal } from '@angular/core';
 import { ChatColor } from '../data/chat-color';
-import { ChannelUser } from '../data/channel-user';
-import { ChannelEditor } from '../data/channel-editor';
 import { Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
@@ -31,7 +29,6 @@ export class TwitchService extends ApiService {
 
   getUsers(userIds: readonly string[] = [], logins: readonly string[] = []): Promise<TwitchUser[]> {
     if (userIds.length + logins.length === 0) return Promise.resolve([]);
-
     return this.get<TwitchUser[]>('users', this.repeated({ id: userIds, login: logins }));
   }
 
@@ -39,8 +36,8 @@ export class TwitchService extends ApiService {
     return this.get<Moderator[]>('moderators');
   }
 
-  getModeratorsById(userIds: readonly string[]): Promise<ChannelUser[]> {
-    return this.checkChannelRole<ChannelUser>('moderators', userIds);
+  getModeratorsById(userIds: readonly string[]): Promise<Moderator[]> {
+    return this.checkChannelRole<Moderator>('moderators', userIds);
   }
 
   async isModerator(userId: string): Promise<boolean> {
@@ -59,8 +56,8 @@ export class TwitchService extends ApiService {
     return this.get<Vip[]>('vips');
   }
 
-  getVipsById(userIds: readonly string[]): Promise<ChannelUser[]> {
-    return this.checkChannelRole<ChannelUser>('vips', userIds);
+  getVipsById(userIds: readonly string[]): Promise<Vip[]> {
+    return this.checkChannelRole<Vip>('vips', userIds);
   }
 
   async isVip(userId: string): Promise<boolean> {
@@ -79,8 +76,8 @@ export class TwitchService extends ApiService {
     return this.get<Editor[]>('editors');
   }
 
-  getEditorsById(userIds: readonly string[]): Promise<ChannelEditor[]> {
-    return this.checkChannelRole<ChannelEditor>('editors', userIds);
+  getEditorsById(userIds: readonly string[]): Promise<Editor[]> {
+    return this.checkChannelRole<Editor>('editors', userIds);
   }
 
   async isEditor(userId: string): Promise<boolean> {
@@ -99,12 +96,12 @@ export class TwitchService extends ApiService {
     return (await this.getFollowStatus(userId)).following;
   }
 
-  getChatters(): Promise<ChannelUser[]> {
-    return this.get<ChannelUser[]>('chatters');
+  getChatters(): Promise<TwitchUser[]> {
+    return this.get<TwitchUser[]>('chatters');
   }
 
-  getBlocked(): Promise<ChannelUser[]> {
-    return this.get<ChannelUser[]>('blocked');
+  getBlocked(): Promise<TwitchUser[]> {
+    return this.get<TwitchUser[]>('blocked');
   }
 
   unblockUser(userId: string): Promise<void> {

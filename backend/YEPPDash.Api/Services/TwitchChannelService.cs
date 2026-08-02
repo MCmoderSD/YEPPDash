@@ -86,9 +86,82 @@ public sealed class TwitchChannelService(
             .ToList();
     }
 
+    public async Task<FollowStatusResponse> GetFollowStatusAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
+    {
+        var follow = await GetFollowerAsync(broadcasterId, userId, cancellationToken);
+        if (follow is null) return new FollowStatusResponse(false, null);
+
+        var users = await GetUserProfilesAsync(broadcasterId, [follow.UserId], [], cancellationToken);
+
+        return new FollowStatusResponse(
+            true, users.Count is 0 ? null : new TwitchFollowerProfile(users[0], follow.FollowedAt));
+    }
+
     public async Task<IReadOnlyList<TwitchEditorProfile>> GetEditorProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var editors = await GetEditorsAsync(broadcasterId, cancellationToken);
+        return await ToEditorProfilesAsync(broadcasterId, editors, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchEditorProfile>> GetEditorProfilesByIdAsync(
+        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        var editors = await GetEditorsByIdAsync(broadcasterId, userIds, cancellationToken);
+        return await ToEditorProfilesAsync(broadcasterId, editors, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesByIdAsync(
+        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        var moderators = await GetModeratorsByIdAsync(broadcasterId, userIds, cancellationToken);
+        return await GetUserProfilesAsync(
+            broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetVipProfilesByIdAsync(
+        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        var vips = await GetVipsByIdAsync(broadcasterId, userIds, cancellationToken);
+        return await GetUserProfilesAsync(
+            broadcasterId, vips.Select(vip => vip.UserId).ToArray(), [], cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetBlockedProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var blocked = await GetBlockedUsersAsync(broadcasterId, cancellationToken);
+        return await GetUserProfilesAsync(
+            broadcasterId, blocked.Select(user => user.UserId).ToArray(), [], cancellationToken);
+    }
+
+    // Walks the whole chatter list and then enriches it, so it costs a Get Users and a chat colour
+    // batch per 100 people in chat. A caller that only wants to know whether one account is present
+    // is asking for far more work than it needs.
+    public async Task<IReadOnlyList<TwitchUser>> GetChatterProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var chatters = await GetChattersAsync(broadcasterId, cancellationToken);
+        return await GetUserProfilesAsync(
+            broadcasterId, chatters.Select(chatter => chatter.UserId).ToArray(), [], cancellationToken);
+    }
+
+    public async Task<BanStatusResponse> GetBanStatusAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
+    {
+        var ban = await GetBannedUserAsync(broadcasterId, userId, cancellationToken);
+        if (ban is null) return new BanStatusResponse(false, null);
+
+        var users = await GetUserProfilesAsync(
+            broadcasterId, [ban.UserId, ban.ModeratorId], [], cancellationToken);
+
+        var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
+
+        return byId.TryGetValue(ban.UserId, out var banned)
+            ? new BanStatusResponse(true, new TwitchBanProfile(
+                banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason))
+            : new BanStatusResponse(true, null);
+    }
+
+    private async Task<IReadOnlyList<TwitchEditorProfile>> ToEditorProfilesAsync(
+        string broadcasterId, IReadOnlyList<TwitchChannelEditor> editors, CancellationToken cancellationToken)
+    {
         var users = await GetUserProfilesAsync(
             broadcasterId, editors.Select(editor => editor.UserId).ToArray(), [], cancellationToken);
 

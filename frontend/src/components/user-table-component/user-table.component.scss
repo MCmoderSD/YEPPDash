@@ -57,13 +57,10 @@ table.user-table-grid {
   gap: 0.5rem;
 }
 
-// Avatar and name sit in the same button so they read as one unit instead of two table cells. The
-// row itself is the mouse path, so this is what carries the keyboard path to the details dialog;
-// it hugs its content so the badges sit directly behind the name.
+// The row itself is the mouse path, so this is what carries the keyboard path to the details
+// dialog. It wraps the name alone: the badges sit ahead of it, and nesting them in a control with
+// its own aria-label would hide them from a screen reader.
 .user-table-name {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   flex: none;
   padding: 0;
   border: none;

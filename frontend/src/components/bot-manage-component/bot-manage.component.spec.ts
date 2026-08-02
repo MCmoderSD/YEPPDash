@@ -11,7 +11,6 @@ import { AuthService } from '../../services/auth.service';
 import { BotResult, BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
-import { ChannelUser } from '../../data/channel-user';
 import { TwitchUser } from '../../data/twitch-user';
 
 const BOT_ID = '644984959';
@@ -33,16 +32,16 @@ const BOT: TwitchUser = {
   color: '#9146FF',
 };
 
-function channelUser(id: string): ChannelUser {
-  return { id, login: 'yeppbot', displayName: 'YEPPBot' };
+function channelUser(id: string): TwitchUser {
+  return { ...BOT, id };
 }
 
 class FakeTwitchService {
   getUsers = vi.fn(async () => [BOT]);
   getBanStatus = vi.fn(async () => ({ banned: false, ban: null }));
-  getBlocked = vi.fn(async (): Promise<ChannelUser[]> => []);
-  getModerators = vi.fn(async (): Promise<ChannelUser[]> => [channelUser(BOT_ID)]);
-  getChatters = vi.fn(async (): Promise<ChannelUser[]> => [channelUser(BOT_ID)]);
+  getBlocked = vi.fn(async (): Promise<TwitchUser[]> => []);
+  getModerators = vi.fn(async (): Promise<TwitchUser[]> => [channelUser(BOT_ID)]);
+  getChatters = vi.fn(async (): Promise<TwitchUser[]> => [channelUser(BOT_ID)]);
   unbanUser = vi.fn(async () => undefined);
   unblockUser = vi.fn(async () => undefined);
   addModerator = vi.fn(async () => undefined);
@@ -296,5 +295,26 @@ describe('BotManageComponent', () => {
 
   it('should require the bot id rather than rendering without one', () => {
     expect(() => fixture.detectChanges()).toThrow();
+  });
+
+  it('should spin while the first load runs rather than showing an empty card', () => {
+    twitch.getUsers.mockReturnValueOnce(new Promise(() => undefined));
+    fixture.componentRef.setInput('botUserId', BOT_ID);
+    fixture.detectChanges();
+
+    expect(element.querySelector('mat-spinner')).not.toBeNull();
+    expect(element.querySelector('.bot-manage-empty')).toBeNull();
+  });
+
+  // Emptying the card to spin again would take away what the reader is looking at.
+  it('should keep the loaded card on screen while it reloads', async () => {
+    await render();
+    twitch.getUsers.mockReturnValueOnce(new Promise(() => undefined));
+    fixture.componentRef.setInput('botUserId', '999');
+    fixture.detectChanges();
+
+    expect(element.querySelector('.bot-manage-progress')!.getAttribute('aria-hidden')).toBe('false');
+    expect(element.querySelector('mat-spinner')).toBeNull();
+    expect(element.querySelector('.bot-manage-identity')).not.toBeNull();
   });
 });

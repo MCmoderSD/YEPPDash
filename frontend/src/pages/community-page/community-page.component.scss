@@ -85,12 +85,10 @@ table.community-page-grid {
   gap: 0.5rem;
 }
 
-// Carries the keyboard path to the details dialog now that the row itself is the mouse path.
-// Sized to its content so the badges sit directly behind the name rather than a column apart.
+// Carries the keyboard path to the details dialog now that the row itself is the mouse path. It
+// wraps the name alone: the badges sit ahead of it, and nesting them in a control with its own
+// aria-label would hide them from a screen reader.
 .community-page-user {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   flex: none;
   padding: 0;
   border: none;

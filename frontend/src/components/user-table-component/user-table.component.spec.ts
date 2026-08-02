@@ -94,10 +94,24 @@ describe('UserTableComponent', () => {
     expect(element.textContent).not.toContain('164284617');
   });
 
-  it('should keep the avatar directly next to the name in the same cell', () => {
-    const nameButton = element.querySelector('.user-table-name')!;
-    expect(nameButton.querySelector('img.user-table-avatar')).toBeTruthy();
-    expect(nameButton.textContent!.trim()).toBe('zoe');
+  it('should read avatar, then badges, then name across the cell', () => {
+    fixture.componentRef.setInput('users', [user('9', 'zoe', { roles: { broadcaster: false, moderator: true, vip: false, editor: false, verified: false } })]);
+    fixture.detectChanges();
+
+    const identity = element.querySelector('.user-table-identity')!;
+    const order = [...identity.children].map((child) => child.tagName.toLowerCase());
+
+    expect(order).toEqual(['img', 'app-user-badges', 'button']);
+    expect(identity.querySelector('.user-table-name')!.textContent!.trim()).toBe('zoe');
+  });
+
+  // The button names itself for a screen reader, which would swallow anything nested inside it.
+  it('should keep the badges out of the details button', () => {
+    fixture.componentRef.setInput('users', [user('9', 'zoe', { roles: { broadcaster: false, moderator: true, vip: false, editor: false, verified: false } })]);
+    fixture.detectChanges();
+
+    expect(element.querySelector('.user-table-name')!.querySelectorAll('app-badge')).toHaveLength(0);
+    expect(element.querySelectorAll('app-badge')).toHaveLength(1);
   });
 
   // Colour and roles ride on the user objects the table is handed, so both are drawn without the
@@ -116,8 +130,18 @@ describe('UserTableComponent', () => {
     ]);
     fixture.detectChanges();
 
-    expect([...element.querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim()))
+    expect([...element.querySelectorAll('app-badge img')].map((badge) => badge.getAttribute('alt')))
       .toEqual(['Moderator', 'VIP']);
+  });
+
+  // A list stays on the small badges; only the details dialog asks for the larger ones.
+  it('should draw the badges at the small size', () => {
+    fixture.componentRef.setInput('users', [
+      user('9', 'zoe', { roles: { broadcaster: false, moderator: true, vip: false, editor: false, verified: false } }),
+    ]);
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-badge img')!.getAttribute('src')).toBe('/Moderator-18px.png');
   });
 
   it('should draw no badges for a user the server sent no roles for', () => {

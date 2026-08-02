@@ -8,19 +8,21 @@ export interface UserRoles {
   verified: boolean;
 }
 
-export interface RoleBadge {
-  preset: BadgePreset | null;
-  label: string | null;
-}
+// Verified first, then what the account is in this channel, then the bot marker last.
+//
+// Editor is left out on purpose: there is no editor artwork, so it could only ever be a word among
+// icons. The flag still arrives from the backend, so showing it again is a line in here.
+//
+// Being the bot is not a channel role and does not come from the enrichment, so it stands apart:
+// the account is the bot whether or not anybody looked its roles up.
+export function roleBadges(roles: UserRoles | null, isBot: boolean): BadgePreset[] {
+  const shown: BadgePreset[] = [];
 
-export function roleBadges(roles: UserRoles): RoleBadge[] {
-  const shown: RoleBadge[] = [];
-
-  if (roles.broadcaster) shown.push({ preset: BadgePreset.Broadcaster, label: null });
-  if (roles.moderator) shown.push({ preset: BadgePreset.Moderator, label: null });
-  if (roles.editor) shown.push({ preset: null, label: 'Editor' });
-  if (roles.vip) shown.push({ preset: BadgePreset.Vip, label: null });
-  if (roles.verified) shown.push({ preset: BadgePreset.Verified, label: null });
+  if (roles?.verified) shown.push(BadgePreset.Verified);
+  if (roles?.broadcaster) shown.push(BadgePreset.Broadcaster);
+  if (roles?.moderator) shown.push(BadgePreset.Moderator);
+  if (roles?.vip) shown.push(BadgePreset.Vip);
+  if (isBot) shown.push(BadgePreset.ChatBot);
 
   return shown;
 }

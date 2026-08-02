@@ -59,26 +59,27 @@
                being a table cell, which takes the column widths and the row's border with it. -->
           @if (entry.user) {
             <div class="birthday-list-identity">
+              <img
+                class="birthday-list-avatar"
+                [ngSrc]="entry.user.profileImageUrl"
+                [width]=32
+                [height]=32
+                loading="eager"
+                alt=""
+              />
+
+              <app-user-badges [user]="entry.user" />
+
               <button
                 type="button"
                 class="birthday-list-user"
                 [attr.aria-label]="'Details for ' + entry.name"
                 (click)="showDetails(entry, $event)"
               >
-                <img
-                  class="birthday-list-avatar"
-                  [ngSrc]="entry.user.profileImageUrl"
-                  [width]=32
-                  [height]=32
-                  loading="eager"
-                  alt=""
-                />
                 <span class="birthday-list-name" [style.--chat-color]="entry.user.color">
                   {{ entry.name }}
                 </span>
               </button>
-
-              <app-user-badges [user]="entry.user" />
             </div>
           } @else {
             <!-- Nothing to open a dialog with, so this one stays plain text. -->

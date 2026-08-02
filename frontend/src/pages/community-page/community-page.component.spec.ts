@@ -138,7 +138,7 @@ describe('CommunityPageComponent', () => {
   it('should badge a follower for every role they hold', async () => {
     await render();
 
-    const badges = [...rows()[0].querySelectorAll('app-badge')].map((badge) => badge.textContent!.trim());
+    const badges = [...rows()[0].querySelectorAll('app-badge img')].map((badge) => badge.getAttribute('alt'));
     expect(badges).toEqual(['Moderator', 'VIP']);
     expect(twitch.getFollowers).toHaveBeenCalledTimes(1);
   });

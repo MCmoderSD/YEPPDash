@@ -46,14 +46,6 @@ export interface BdsmResult {
   traits: Record<BdsmTraitKey, number>;
 }
 
-const LABELS: ReadonlyMap<BdsmTraitKey, string> = new Map(
-  BDSM_TRAITS.map((trait) => [trait.key, trait.label]),
-);
-
-export function traitLabel(key: BdsmTraitKey): string {
-  return LABELS.get(key) ?? key;
-}
-
 export function traitColor(score: number): string {
   const bounded: number = Math.min(1, Math.max(0, score));
   return `hsl(${Math.round(bounded * 120)} 80% 66%)`;
@@ -83,10 +75,6 @@ export function topTraits(result: BdsmResult, count: number): BdsmTraitScore[] {
 
 export function rankedTraits(result: BdsmResult): BdsmTraitScore[] {
   return topTraits(result, BDSM_TRAITS.length);
-}
-
-export function dominantTrait(result: BdsmResult): BdsmTraitScore | null {
-  return topTraits(result, 1)[0] ?? null;
 }
 
 export function resultTakenAt(result: BdsmResult): Date {

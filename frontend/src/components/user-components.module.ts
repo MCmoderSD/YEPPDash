@@ -12,7 +12,6 @@ import { MatTableModule } from '@angular/material/table';
 import { UserInfoDialogComponent } from './user-info-dialog-component/user-info-dialog.component';
 import { UserAddDialogComponent } from './user-add-dialog-component/user-add-dialog.component';
 import { UserTableComponent } from './user-table-component/user-table.component';
-import { BadgeComponent } from './badge-component/badge.component';
 import { UserBadgesComponent } from './user-badges-component/user-badges.component';
 import { ScrollBarComponent } from './scroll-bar-component/scroll-bar.component';
 import { LocaleDatePipe } from '../pipes/locale-date.pipe';
@@ -29,7 +28,6 @@ const components: any[] = [
 @NgModule({
   declarations: [components],
   imports: [
-    BadgeComponent,
     UserBadgesComponent,
     ScrollBarComponent,
     LocaleDatePipe,
