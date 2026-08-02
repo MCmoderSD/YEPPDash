@@ -38,6 +38,16 @@ public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connectio
             row.Scopes.Split(' ', StringSplitOptions.RemoveEmptyEntries),
             new DateTimeOffset(DateTime.SpecifyKind(row.ExpiresAt, DateTimeKind.Utc)));
     }
+    
+    public async Task<IReadOnlyList<string>> GetUserIdsAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = connections.Create();
+
+        var ids = await connection.QueryAsync<int>(
+            new CommandDefinition("SELECT userId FROM TwitchToken", cancellationToken: cancellationToken));
+
+        return ids.Select(id => id.ToString()).ToList();
+    }
 
     public async Task SaveAsync(StoredTwitchToken token, CancellationToken cancellationToken)
     {
