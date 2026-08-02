@@ -8,6 +8,7 @@ import { UserInfoDialogComponent } from './user-info-dialog.component';
 import { environment } from '../../environments/environment';
 import { TwitchUser } from '../../data/twitch-user';
 import { UserRoles } from '../../data/user-roles';
+import { BOT_USER_IDS } from '../../data/bot-users';
 
 const USER: TwitchUser = {
   id: '164284617',
@@ -157,21 +158,35 @@ describe('UserInfoDialogComponent', () => {
   });
 
   // The bot marker sits last, behind whatever the account is in this channel.
-  it('should badge the configured bot account after its channel roles', async () => {
+  it('should badge a bot account after its channel roles', async () => {
     const fixture = await open({
       ...USER,
-      id: environment.botUserId,
+      id: BOT_USER_IDS[0],
       roles: roles({ moderator: true, verified: true }),
     });
 
     expect(badges(fixture)).toEqual(['Verified', 'Moderator', 'Chat Bot']);
   });
 
-  // Being the bot is an identity rather than a channel role, so it does not wait on the enrichment.
-  it('should badge the bot even when no roles were looked up', async () => {
-    const fixture = await open({ ...USER, id: environment.botUserId });
+  // Being a bot is an identity rather than a channel role, so it does not wait on the enrichment.
+  it('should badge a bot even when no roles were looked up', async () => {
+    const fixture = await open({ ...USER, id: BOT_USER_IDS[0] });
 
     expect(badges(fixture)).toEqual(['Chat Bot']);
+  });
+
+  // The list is what decides, not the bot this build happens to manage — otherwise the dev bot would
+  // read as an ordinary account in a production build and the other way round.
+  it('should badge every account on the bot list, not just the configured one', async () => {
+    expect(BOT_USER_IDS).toContain(environment.botUserId);
+
+    for (const id of BOT_USER_IDS) {
+      // open() configures the testing module, which only one fixture per module may do.
+      TestBed.resetTestingModule();
+      const fixture = await open({ ...USER, id });
+
+      expect(badges(fixture)).toEqual(['Chat Bot']);
+    }
   });
 
   it('should leave everyone else unbadged as a bot', async () => {

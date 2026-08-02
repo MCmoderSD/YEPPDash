@@ -13,18 +13,29 @@
     See the <a href="/imprint">Imprint</a> for full details.
   </p>
 
+  <h2>YEPPDash and YEPPBot</h2>
+  <p>
+    YEPPDash is the web dashboard for YEPPBot. Both are operated by the same person and share one
+    database: YEPPDash mostly reads and edits data that YEPPBot already collected in your channel, and
+    tells YEPPBot when to join or leave a channel or to reload its custom commands. Where this policy
+    says data is "stored", it is stored in that shared database.
+  </p>
+
   <h2>What data is processed</h2>
+
+  <h3>Your own account</h3>
   <ul>
     <li>
       <strong>Twitch account data.</strong> When you log in, YEPPDash receives your Twitch user ID,
-      login name, display name, profile image and (if granted) email address from Twitch via OAuth.
-      This is used only to identify you and to display your account in the dashboard.
+      login name, display name, account type, description, profile and offline images, account
+      creation date and (because the <code>user:read:email</code> scope is granted) your email
+      address. This identifies you and fills in your account view in the dashboard. It is read fresh
+      from Twitch on each session check rather than kept in a profile of our own.
     </li>
     <li>
-      <strong>Twitch access &amp; refresh tokens.</strong> Stored encrypted at rest, keyed to your
-      Twitch user ID, and used solely to act on your behalf against the Twitch API for the features
-      you use (e.g. managing your channel's bot, moderators, or VIPs). Tokens are never shared with
-      anyone other than Twitch's own API.
+      <strong>Twitch access &amp; refresh tokens.</strong> Stored encrypted at rest (AES-256-GCM),
+      keyed to your Twitch user ID, and used solely to act on your behalf against the Twitch API for
+      the features you use. Tokens are never shared with anyone other than Twitch's own API.
     </li>
     <li>
       <strong>Session cookie.</strong> A single <code>yeppdash.session</code> cookie
@@ -36,25 +47,84 @@
       status code) are kept briefly for security and debugging purposes, then rotated out.
     </li>
   </ul>
-  <p>No other tracking, analytics, or advertising cookies are set.</p>
+
+  <h3>Channel data read live from Twitch</h3>
+  <p>
+    For the channel you own, YEPPDash asks Twitch for the lists it needs to render the dashboard:
+    moderators, VIPs, channel editors, followers, users you have blocked, ban status, and the users
+    currently in chat. For the accounts on those lists it also reads the public Twitch profile and
+    chat colour so they can be shown with a name and avatar instead of a bare ID.
+  </p>
+  <p>
+    These lists are not written to the database. They are held in the server's memory for a short
+    while so the dashboard does not have to re-fetch them on every click — including a fetch started
+    right after you log in — and they are dropped when the server restarts or when you change a role
+    through the dashboard.
+  </p>
+
+  <h3>Channel data stored in the shared database</h3>
+  <ul>
+    <li>
+      <strong>Birthdays.</strong> The day, month and year you set for yourself, stored against your
+      Twitch user ID. Broadcasters see a birthday list covering themselves and their followers who
+      have set one, so YEPPBot can congratulate them.
+    </li>
+    <li>
+      <strong>Quotes.</strong> The quote text and its timestamp, per channel. You can add, edit,
+      reorder and delete them, and export them to, or import them from, a spreadsheet file.
+    </li>
+    <li>
+      <strong>Custom commands.</strong> Command name, aliases, response message, active flag,
+      response type and required user level, per channel.
+    </li>
+    <li>
+      <strong>BDSM test results.</strong> Where a user has taken YEPPBot's BDSM test in chat, the
+      result is stored with their Twitch user ID, a timestamp, the stated gender and age group, and a
+      score per trait. YEPPDash only displays these results — it never creates or edits them.
+      Broadcasters can view the results of their own followers; nobody else can read them through
+      YEPPDash.
+    </li>
+  </ul>
+  <p>No tracking, analytics, or advertising cookies are set, and no data is stored in your browser.</p>
+
+  <h2>Special category data</h2>
+  <p>
+    BDSM test results say something about a person's sex life and therefore count as a special
+    category of personal data under Art. 9 GDPR. They are processed only on the basis of explicit
+    consent under Art. 9(2)(a) GDPR, given by choosing to take the test in chat — the test is never
+    run for you, and if you never take it there is nothing to show. That consent can be withdrawn at
+    any time by asking for the result to be deleted, using the contact address below.
+  </p>
+  <p>
+    If you are a broadcaster: results of your followers are shown to you because they consented to
+    the test in a channel context. You are responsible for handling what you see there lawfully and
+    discreetly, and for not republishing it.
+  </p>
 
   <h2>Legal basis</h2>
-  <p>
-    Processing is based on Art. 6(1)(b) GDPR (necessary to provide the dashboard you requested) and,
-    for server logs, Art. 6(1)(f) GDPR (legitimate interest in operating a secure, reliable service).
-  </p>
+  <ul>
+    <li>Art. 6(1)(b) GDPR — account, token, session and channel data needed to provide the dashboard you asked for;</li>
+    <li>Art. 6(1)(f) GDPR — server logs, for the legitimate interest in operating a secure, reliable service;</li>
+    <li>Art. 6(1)(a) and Art. 9(2)(a) GDPR — BDSM test results, on explicit consent given in chat.</li>
+  </ul>
 
   <h2>Who else sees this data</h2>
   <p>
     Twitch Interactive, Inc. receives the requests YEPPDash makes on your behalf as part of the OAuth
     flow and API calls — see <a href="https://www.twitch.tv/p/legal/privacy-notice/" target="_blank" rel="noopener">Twitch's own Privacy Notice</a>
-    for how they handle that. Your data is otherwise not sold, rented, or shared with any third party.
+    for how they handle that. The YEPPBot instance, run by the same operator, receives your channel's
+    user ID when you have it join or leave, or when its custom commands are reloaded. Broadcasters
+    see the channel data described above for their own channel. Your data is otherwise not sold,
+    rented, or shared with any third party.
   </p>
 
   <h2>Data retention</h2>
   <p>
-    Account and token data is kept until you disconnect YEPPDash, revoke access via Twitch, or request
-    deletion. Server logs are retained only briefly before being rotated out.
+    Tokens are kept until you sign out, revoke access via Twitch, or request deletion; signing out
+    revokes the token and removes the stored row. Channel data — birthdays, quotes, custom commands
+    and BDSM results — belongs to YEPPBot and stays in the shared database until it is deleted in the
+    dashboard, in chat, or on request; revoking YEPPDash's Twitch access alone does not remove it.
+    The live channel lists live only in memory, and server logs are rotated out after a short period.
   </p>
 
   <h2>Your rights</h2>
@@ -62,6 +132,7 @@
   <ul>
     <li>access the data held about you;</li>
     <li>request correction or deletion of your data;</li>
+    <li>withdraw consent you have given, without affecting processing already carried out;</li>
     <li>restrict or object to processing;</li>
     <li>receive your data in a portable format;</li>
     <li>lodge a complaint with a supervisory authority.</li>
@@ -76,7 +147,9 @@
   <h2>Security</h2>
   <p>
     All traffic is served over HTTPS. Stored Twitch tokens are encrypted at rest, and the session
-    cookie is HttpOnly and Secure so it cannot be read or sent over an insecure connection.
+    cookie is HttpOnly and Secure so it cannot be read or sent over an insecure connection. Every
+    dashboard endpoint checks that the signed-in account matches the channel being asked about, so
+    one account cannot read another's channel data.
   </p>
 
   <h2>Children's privacy</h2>
@@ -88,5 +161,5 @@
     date below.
   </p>
 
-  <p class="legal-updated">Last updated: 2026-07-29</p>
+  <p class="legal-updated">Last updated: 2026-08-02</p>
 </section>

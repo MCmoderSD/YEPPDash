@@ -8,10 +8,20 @@
 
   <h2>The service</h2>
   <p>
-    YEPPDash lets Twitch broadcasters manage YEPPBot for their channel from a browser — for example
-    adding or removing the bot, and (depending on what's implemented) managing moderators, VIPs, and
-    related channel settings. It is a free, solo-developed, open-source hobby project, not a
-    commercial product.
+    YEPPDash lets Twitch broadcasters manage YEPPBot for their channel from a browser. It is a free,
+    solo-developed, open-source hobby project, not a commercial product. Today it lets you:
+  </p>
+  <ul>
+    <li>have YEPPBot join or leave your channel;</li>
+    <li>view and manage your channel's moderators and VIPs, and view its editors;</li>
+    <li>view your followers, the users currently in chat, and the accounts you have blocked or banned, and lift a block or ban;</li>
+    <li>add, edit, reorder, delete, import and export your channel's quotes;</li>
+    <li>create, edit, enable, disable and delete your channel's custom commands;</li>
+    <li>set your own birthday and see the birthdays of your followers who set one;</li>
+    <li>view the BDSM test results of followers who took YEPPBot's test in chat.</li>
+  </ul>
+  <p>
+    Which of these are available can change as the project develops.
   </p>
 
   <h2>Account &amp; authorization</h2>
@@ -20,7 +30,27 @@
     to the permissions shown on Twitch's authorization screen, used only to perform the actions you
     trigger in the dashboard. You can revoke this access at any time from your
     <a href="https://www.twitch.tv/settings/connections" target="_blank" rel="noopener">Twitch connected-apps settings</a>,
-    which immediately ends YEPPDash's ability to act on your behalf.
+    which immediately ends YEPPDash's ability to act on your behalf. You are responsible for what
+    happens through your account, and each account may only reach its own channel's data.
+  </p>
+
+  <h2>Content you create</h2>
+  <p>
+    Quotes, custom commands and anything else you enter stay yours, and you are responsible for them.
+    You grant only what is needed to store this content and to have YEPPBot deliver it in your
+    channel. Do not enter content that is unlawful, infringes someone else's rights, or breaks
+    Twitch's rules — it may be removed without notice. Imported files are read for their quote
+    contents only.
+  </p>
+
+  <h2>Other people's data</h2>
+  <p>
+    The dashboard shows you information about other people in your channel — followers, chatters,
+    moderators, VIPs, birthdays, and BDSM test results. This is shown to you so you can run your
+    channel and its bot. You agree to treat it accordingly: do not republish it, do not use it to
+    profile or target anyone, and take particular care with birthdays and BDSM test results, which
+    are sensitive. Depending on what you do with it, you may be a data controller in your own right
+    under the GDPR. See the <a href="/privacy">Privacy Policy</a> for how this data is handled.
   </p>
 
   <h2>Acceptable use</h2>
@@ -28,6 +58,7 @@
   <ul>
     <li>use YEPPDash to violate Twitch's own Terms of Service, Community Guidelines, or Developer Agreement;</li>
     <li>attempt to disrupt, overload, or gain unauthorized access to the service or its infrastructure;</li>
+    <li>attempt to reach channel data belonging to an account other than your own;</li>
     <li>use YEPPDash to harass, abuse, or harm any person or channel.</li>
   </ul>
 
@@ -35,14 +66,17 @@
   <p>
     YEPPDash is provided on a best-effort basis by a single developer in their spare time. There is no
     guaranteed uptime, and the service may be changed, interrupted, or discontinued at any time,
-    with notice given where reasonably possible.
+    with notice given where reasonably possible. It also depends on the Twitch API and on the YEPPBot
+    instance being reachable, so parts of the dashboard can fail even when YEPPDash itself is running.
   </p>
 
   <h2>No warranty &amp; limitation of liability</h2>
   <p>
     YEPPDash is provided "as is", without warranty of any kind, express or implied, to the maximum
-    extent permitted by law. To the extent permitted by law, liability for damages arising from your
-    use of the service is limited to cases of intent or gross negligence.
+    extent permitted by law. No guarantee is given that stored data — quotes, commands, birthdays —
+    will not be lost; keep your own copy of anything you care about. To the extent permitted by law,
+    liability for damages arising from your use of the service is limited to cases of intent or gross
+    negligence.
   </p>
 
   <h2>Third-party services</h2>
@@ -53,8 +87,10 @@
 
   <h2>Termination</h2>
   <p>
-    You may stop using YEPPDash at any time by revoking its Twitch authorization. Access may be
-    suspended or terminated for accounts that violate these terms or Twitch's own policies.
+    You may stop using YEPPDash at any time by revoking its Twitch authorization. Note that this ends
+    YEPPDash's access but does not by itself delete the channel data YEPPBot already holds — see the
+    <a href="/privacy">Privacy Policy</a> for how to have it removed. Access may be suspended or
+    terminated for accounts that violate these terms or Twitch's own policies.
   </p>
 
   <h2>Open source</h2>
@@ -76,5 +112,5 @@
   <h2>Contact</h2>
   <p>Questions about these terms: <a href="mailto:business@mcmodersd.de">business&#64;mcmodersd.de</a>.</p>
 
-  <p class="legal-updated">Last updated: 2026-07-29</p>
+  <p class="legal-updated">Last updated: 2026-08-02</p>
 </section>

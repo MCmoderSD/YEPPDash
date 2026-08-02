@@ -3,7 +3,7 @@ import { BadgeComponent } from '../badge-component/badge.component';
 import { TwitchUser } from '../../data/twitch-user';
 import { roleBadges } from '../../data/user-roles';
 import { BadgePreset, BadgeSize, DEFAULT_BADGE_SIZE } from '../../data/badge';
-import { environment } from '../../environments/environment';
+import { isBotUser } from '../../data/bot-users';
 
 // Kept out of the button it sits beside: those carry an aria-label naming the whole control, which
 // would swallow every badge nested inside them.
@@ -43,6 +43,6 @@ export class UserBadgesComponent {
 
   protected readonly badges: Signal<BadgePreset[]> = computed((): BadgePreset[] => {
     const user: TwitchUser = this.user();
-    return roleBadges(user.roles ?? null, user.id === environment.botUserId);
+    return roleBadges(user.roles ?? null, isBotUser(user.id));
   });
 }

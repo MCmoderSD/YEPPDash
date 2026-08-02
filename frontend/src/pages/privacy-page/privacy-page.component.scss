@@ -20,6 +20,12 @@ h2 {
   font: var(--mat-sys-title-medium);
 }
 
+// Tighter above than an h2 so a subsection reads as belonging to the section it sits under.
+h3 {
+  margin: 1.25rem 0 0.5rem;
+  font: var(--mat-sys-title-small);
+}
+
 p, li {
   margin: 0 0 0.75rem;
   color: var(--mat-sys-on-surface-variant);
