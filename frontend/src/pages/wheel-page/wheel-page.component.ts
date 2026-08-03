@@ -1,49 +1,14 @@
 import { DOCUMENT } from '@angular/common';
-import {
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
-  Signal,
-  signal,
-  viewChild,
-  WritableSignal,
-} from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
-import {
-  WheelWinnerChoice,
-  WheelWinnerDialogComponent,
-} from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
+import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
-import {
-  addEntry,
-  cleanLabel,
-  entriesFrom,
-  entryText,
-  flattenEntries,
-  hasSeparator,
-  removeOne,
-  shuffleEntries,
-  sliceCount,
-  sortEntries,
-  WHEEL_LABEL_MAX_LENGTH,
-  WHEEL_MAX_SLICES,
-  WheelEntry,
-  wheelSlices,
-} from '../../data/wheel-entry';
-import {
-  parseWheelFile,
-  separatorMessage,
-  StoredWheel,
-  WHEEL_FILE_NAME,
-  WheelFile,
-  wheelFileContent,
-} from '../../data/wheel';
+import { addEntry, cleanLabel, entriesFrom, entryText, flattenEntries, hasSeparator, removeOne, shuffleEntries, sliceCount, sortEntries, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, wheelSlices } from '../../data/wheel-entry';
+import { parseWheelFile, separatorMessage, StoredWheel, WHEEL_FILE_NAME, WheelFile, wheelFileContent } from '../../data/wheel';
 import { wheelOverlayUrl } from '../../data/wheel-overlay';
 
 @Component({
@@ -66,8 +31,6 @@ export class WheelPageComponent {
   protected readonly draft: WritableSignal<string> = signal('');
   protected readonly loading: WritableSignal<boolean> = signal(false);
 
-  // The tail of the writes that are still in flight, so they reach the server in the order they
-  // were made.
   private writing: Promise<void> = Promise.resolve();
 
   protected readonly columns: string[] = ['entry', 'actions'];
@@ -82,21 +45,16 @@ export class WheelPageComponent {
 
   protected readonly spinning: Signal<boolean> = computed((): boolean => this.wheel()?.spinning() ?? false);
 
-  // Saving deliberately does not count as busy: a write is a round trip, and locking the field for
-  // it would stop the next name being typed while the last one is on its way.
-  protected readonly busy: Signal<boolean> = computed((): boolean =>
-    this.spinning() || this.loading());
+  protected readonly busy: Signal<boolean> = computed((): boolean => this.spinning() || this.loading());
 
-  private readonly channelId: Signal<string | null> = computed((): string | null =>
-    this.auth.currentUser()?.id ?? null);
+  private readonly channelId: Signal<string | null> = computed((): string | null => this.auth.currentUser()?.id ?? null);
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const channelId: string | null = this.channelId();
-
     return channelId === null ? null : wheelOverlayUrl(channelId);
   });
 
-  protected readonly label = entryText;
+  protected readonly label: (entry: WheelEntry) => string = entryText;
 
   constructor() {
     void this.load();
@@ -131,8 +89,6 @@ export class WheelPageComponent {
     void this.persist();
   }
 
-  // Taking away the last copy takes the entry off the wheel, which is why there is no separate
-  // delete alongside this.
   protected removeOne(label: string): void {
     this.entries.update((entries: WheelEntry[]): WheelEntry[] => removeOne(entries, label));
     void this.persist();
@@ -148,8 +104,6 @@ export class WheelPageComponent {
     void this.persist();
   }
 
-  // The winner is drawn here rather than inside the wheel, so the same one can be sent to every
-  // overlay: two wheels each picking for themselves would stop on two different names.
   protected spin(): void {
     const count: number = this.slices().length;
     const channelId: string | null = this.channelId();
@@ -157,8 +111,6 @@ export class WheelPageComponent {
 
     const index: number = Math.floor(Math.random() * count);
 
-    // This wheel is turned straight away rather than waiting for the round trip — the overlay is
-    // half a second behind at worst, and the streamer is the one watching this one.
     this.wheel()?.spin(index);
     void this.wheels.spin(channelId, index).catch((): void => undefined);
   }
@@ -166,12 +118,9 @@ export class WheelPageComponent {
   protected async landed(spin: WheelSpin): Promise<void> {
     const choice: WheelWinnerChoice = await WheelWinnerDialogComponent.announce(this.dialog, spin.label);
 
-    // Whichever way it was dismissed, the overlay showing the same name has no way of its own to
-    // take it off the stream.
     const channelId: string | null = this.channelId();
     if (channelId !== null) void this.wheels.dismiss(channelId).catch((): void => undefined);
 
-    // One copy, not the whole row: a name entered twice has only had one of its slices come up.
     if (choice === 'remove') this.removeOne(spin.label);
   }
 
@@ -203,7 +152,6 @@ export class WheelPageComponent {
     link.download = WHEEL_FILE_NAME;
     link.click();
 
-    // The blob stays in memory for as long as the URL exists, and the click has already read it.
     view.URL.revokeObjectURL(url);
   }
 
@@ -211,7 +159,6 @@ export class WheelPageComponent {
     const input = event.target as HTMLInputElement;
     const file: File | undefined = input.files?.[0];
 
-    // Cleared straight away so picking the same file twice in a row still fires a change event.
     input.value = '';
     if (!file) return;
 
@@ -222,8 +169,6 @@ export class WheelPageComponent {
       return;
     }
 
-    // Replacing rather than appending is what "import" means everywhere else, so the list that is
-    // about to be lost is worth a question.
     if (this.entries().length > 0) {
       const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
         title: `Replace the wheel with ${file.name}?`,
@@ -281,12 +226,6 @@ export class WheelPageComponent {
     }
   }
 
-  // Written whole rather than per entry: the order is the wheel, so there is no smaller change to
-  // send than the list itself.
-  //
-  // Chained onto whatever is still in flight rather than sent straight away. Every write carries the
-  // whole list, so two of them overtaking each other would leave the server holding the older one —
-  // which, for a list somebody is editing quickly, is the state they just moved away from.
   private persist(): Promise<void> {
     const channelId: string | null = this.channelId();
     if (channelId === null) return Promise.resolve();

@@ -1,6 +1,5 @@
 <div class="wheel">
 
-  <!-- Only the disc turns; the pointer is laid over it and stays put. -->
   <div
     #disc
     class="wheel-disc"
@@ -12,7 +11,6 @@
         <path [attr.d]="sector.path" [attr.fill]="sector.fill" class="wheel-slice"/>
       }
 
-      <!-- Drawn after every slice so a label is never covered by the wedge next to it. -->
       @for (sector of sectors(); track $index) {
         <text
           class="wheel-label"
@@ -32,9 +30,6 @@
     </svg>
   </div>
 
-  <!-- Filled with the colour of whatever it is currently over, so it reads as pointing at that
-       slice rather than as a part sitting on top of the wheel. The outline is what keeps its shape
-       once the two colours are the same. -->
   <svg class="wheel-pointer" viewBox="0 0 10 10" aria-hidden="true">
     <polygon points="9.6,0.7 9.6,9.3 0.7,5" [attr.fill]="pointerFill()"/>
   </svg>

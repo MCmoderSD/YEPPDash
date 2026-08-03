@@ -1,13 +1,7 @@
 import { cleanLabel, hasSeparator, WHEEL_MAX_SLICES, WHEEL_SEPARATOR } from './wheel-entry';
 
-export enum WheelType {
-  Wheel = 'Wheel',
-  Giveaway = 'Giveaway',
-}
-
 export interface StoredWheel {
   entries: string[];
-  type: WheelType;
 }
 
 export const WHEEL_FILE_NAME = 'lucky-wheel.txt';

@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
 import { WHEEL_OVERLAY_PARAM } from '../../data/wheel-overlay';
-import { separatorMessage, StoredWheel, WheelType } from '../../data/wheel';
+import { separatorMessage, StoredWheel } from '../../data/wheel';
 import { TwitchUser } from '../../data/twitch-user';
 
 const USER = '644984959';
@@ -22,7 +22,7 @@ class FakeWheelService {
   dismissed: string[] = [];
   failSave = false;
 
-  getWheel = vi.fn(async (): Promise<StoredWheel> => ({ entries: this.stored, type: WheelType.Wheel }));
+  getWheel = vi.fn(async (): Promise<StoredWheel> => ({ entries: this.stored }));
 
   saveWheel = vi.fn(async (_channel: string, entries: readonly string[]): Promise<StoredWheel> => {
     if (this.failSave) throw new Error('nope');
@@ -30,7 +30,7 @@ class FakeWheelService {
     this.saved.push([...entries]);
     this.stored = [...entries];
 
-    return { entries: this.stored, type: WheelType.Wheel };
+    return { entries: this.stored };
   });
 
   spin = vi.fn(async (channel: string, index: number): Promise<void> => {
