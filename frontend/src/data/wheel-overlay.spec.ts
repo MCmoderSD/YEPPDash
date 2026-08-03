@@ -15,6 +15,13 @@ describe('isWheelOverlayUrl', () => {
     expect(isWheelOverlayUrl('/wheel')).toBe(false);
     expect(isWheelOverlayUrl('/dash/wheel')).toBe(false);
   });
+
+  // What the dash host's rewrite used to make of the overlay before it was taught to skip it:
+  // no route answers this, so the wildcard bounced it to '/' and the guard sent OBS to the
+  // marketing site. The server checks the incoming URL, which is why this has to stay false.
+  it('should not recognise the overlay once it has been rewritten under the dashboard', () => {
+    expect(isWheelOverlayUrl('/dash/wheel/overlay?channel=164284617')).toBe(false);
+  });
 });
 
 describe('wheelOverlayUrl', () => {
