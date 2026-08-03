@@ -1,11 +1,15 @@
 import {
   addEntry,
   cleanLabel,
+  entriesFrom,
   entryText,
+  flattenEntries,
+  hasSeparator,
   removeEntry,
   removeOne,
   shuffleEntries,
   sliceCount,
+  slicesFrom,
   sortEntries,
   WHEEL_LABEL_MAX_LENGTH,
   WheelEntry,
@@ -142,5 +146,52 @@ describe('wheelSlices', () => {
 
   it('should be empty for an empty wheel', () => {
     expect(wheelSlices([])).toEqual([]);
+  });
+});
+
+describe('hasSeparator', () => {
+  // Entries are stored as one comma-joined column, so a comma inside one would come back as two.
+  it('should spot a comma in an entry', () => {
+    expect(hasSeparator('Ali, the first')).toBe(true);
+    expect(hasSeparator('Ali')).toBe(false);
+  });
+});
+
+describe('flattenEntries', () => {
+  it('should write a doubled entry out twice, in table order', () => {
+    expect(flattenEntries(entries(['Ali', 2], ['Beatriz', 1]))).toEqual(['Ali', 'Ali', 'Beatriz']);
+  });
+
+  // What is stored and exported has no room for a count, so the table has to survive being written
+  // out flat and read back.
+  it('should survive a round trip through the flat list', () => {
+    const list = entries(['Charles', 1], ['Ali', 3], ['Beatriz', 2]);
+
+    expect(entriesFrom(flattenEntries(list))).toEqual(list);
+  });
+});
+
+describe('entriesFrom', () => {
+  it('should fold repeats into a count', () => {
+    expect(entriesFrom(['Ali', 'Beatriz', 'Ali'])).toEqual(entries(['Ali', 2], ['Beatriz', 1]));
+  });
+
+  it('should keep the order the names first appear in', () => {
+    expect(entriesFrom(['Charles', 'Ali']).map((entry: WheelEntry): string => entry.label))
+      .toEqual(['Charles', 'Ali']);
+  });
+});
+
+describe('slicesFrom', () => {
+  // The shortcut both pages take: a stored flat list straight to the slices a wheel is drawn from.
+  it('should spread a doubled name across the wheel without the table in between', () => {
+    expect(slicesFrom(['Ali', 'Ali', 'Beatriz', 'Charles']))
+      .toEqual(wheelSlices(entriesFrom(['Ali', 'Ali', 'Beatriz', 'Charles'])));
+
+    expect(slicesFrom(['Ali', 'Ali', 'Beatriz'])).toEqual(['Ali', 'Beatriz', 'Ali']);
+  });
+
+  it('should be empty for an empty list', () => {
+    expect(slicesFrom([])).toEqual([]);
   });
 });

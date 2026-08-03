@@ -6,5 +6,3 @@ public static class WheelLimits
     public const int MaxEntries = 200;
     public const char Separator = ',';
 }
-
-public sealed record Wheel(IReadOnlyList<string> Entries);

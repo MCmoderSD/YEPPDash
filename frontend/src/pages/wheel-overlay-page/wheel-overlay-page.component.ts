@@ -3,8 +3,7 @@ import { Component, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, 
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { WheelService } from '../../services/wheel.service';
 import { WheelListener, WheelMessage, WheelSyncService } from '../../services/wheel-sync.service';
-import { entriesFrom, wheelSlices } from '../../data/wheel-entry';
-import { StoredWheel } from '../../data/wheel';
+import { slicesFrom } from '../../data/wheel-entry';
 
 const TRANSPARENT: string = 'app-transparent';
 
@@ -66,8 +65,7 @@ export class WheelOverlayPageComponent {
     if (this.wheel()?.spinning()) return;
 
     try {
-      const stored: StoredWheel = await this.wheels.getWheel(channelId);
-      this.show(stored.entries);
+      this.show(await this.wheels.getWheel(channelId));
     } catch {
       // A stream that outlives a restart of the API picks the list up on the next connect rather
       // than sitting on an error.
@@ -92,7 +90,7 @@ export class WheelOverlayPageComponent {
   }
 
   private show(entries: string[]): void {
-    const slices: string[] = wheelSlices(entriesFrom(entries));
+    const slices: string[] = slicesFrom(entries);
 
     if (slices.join(' ') === this.slices().join(' ')) return;
     if (this.wheel()?.spinning()) return;

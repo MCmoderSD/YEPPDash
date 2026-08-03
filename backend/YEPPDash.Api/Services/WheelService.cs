@@ -6,14 +6,13 @@ namespace YEPPDash.Api.Services;
 
 public sealed class WheelService(WheelRepository repository, ILogger<WheelService> logger)
 {
-    public async Task<Wheel> GetAsync(string channelId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>> GetAsync(string channelId, CancellationToken cancellationToken)
     {
-        var stored = await repository.GetAsync(ParseChannelId(channelId), cancellationToken);
-
-        return stored ?? new Wheel([]);
+        return await repository.GetAsync(ParseChannelId(channelId), cancellationToken) ?? [];
     }
 
-    public async Task<Wheel> SaveAsync(string channelId, WheelRequest request, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>> SaveAsync(
+        string channelId, WheelRequest request, CancellationToken cancellationToken)
     {
         var id = ParseChannelId(channelId);
         var entries = Normalize(request.Entries);
@@ -21,7 +20,7 @@ public sealed class WheelService(WheelRepository repository, ILogger<WheelServic
         await repository.SaveAsync(id, entries, cancellationToken);
         logger.LogDebug("Stored {Count} entries for channel {ChannelId}", entries.Count, id);
 
-        return new Wheel(entries);
+        return entries;
     }
 
     public Task<bool> DeleteAsync(string channelId, CancellationToken cancellationToken)

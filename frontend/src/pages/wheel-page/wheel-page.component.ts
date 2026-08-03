@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
@@ -7,8 +7,7 @@ import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
-import { addEntry, cleanLabel, entriesFrom, entryText, flattenEntries, hasSeparator, removeOne, shuffleEntries, sliceCount, sortEntries, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, wheelSlices } from '../../data/wheel-entry';
-import { parseWheelFile, separatorMessage, StoredWheel, WHEEL_FILE_NAME, WheelFile, wheelFileContent } from '../../data/wheel';
+import { addEntry, cleanLabel, entriesFrom, entryText, flattenEntries, hasSeparator, parseWheelFile, removeOne, separatorMessage, shuffleEntries, sliceCount, sortEntries, WHEEL_FILE_NAME, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
 import { wheelOverlayUrl } from '../../data/wheel-overlay';
 
 @Component({
@@ -217,8 +216,7 @@ export class WheelPageComponent {
 
     this.loading.set(true);
     try {
-      const stored: StoredWheel = await this.wheels.getWheel(channelId);
-      this.entries.set(entriesFrom(stored.entries));
+      this.entries.set(entriesFrom(await this.wheels.getWheel(channelId)));
     } catch {
       this.notifications.failure('Could not load your wheel.');
     } finally {

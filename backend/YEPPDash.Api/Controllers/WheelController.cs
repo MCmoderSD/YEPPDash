@@ -25,8 +25,7 @@ public sealed class WheelController(WheelService wheels, WheelHub hub, ILogger<W
     {
         if (!int.TryParse(userId, out _)) return BadRequest("That is not a Twitch user ID.");
 
-        var wheel = await wheels.GetAsync(userId, cancellationToken);
-        return Ok(WheelResponse.From(wheel));
+        return Ok(new WheelResponse(await wheels.GetAsync(userId, cancellationToken)));
     }
 
 
@@ -84,11 +83,11 @@ public sealed class WheelController(WheelService wheels, WheelHub hub, ILogger<W
 
         try
         {
-            var wheel = await wheels.SaveAsync(userId, request, cancellationToken);
+            var entries = await wheels.SaveAsync(userId, request, cancellationToken);
 
-            Publish(userId, new { type = "state", entries = wheel.Entries });
+            Publish(userId, new { type = "state", entries });
 
-            return Ok(WheelResponse.From(wheel));
+            return Ok(new WheelResponse(entries));
         }
         catch (InvalidWheelException exception)
         {

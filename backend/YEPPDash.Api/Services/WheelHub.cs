@@ -50,7 +50,7 @@ public sealed class WheelHub
         if (!_listeners.TryGetValue(channelId, out var group)) return;
 
         group.TryRemove(id, out _);
-        
+
         if (group.IsEmpty) _listeners.TryRemove(channelId, out _);
     }
 }

@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { WheelOverlayPageComponent } from './wheel-overlay-page.component';
 import { WheelService } from '../../services/wheel.service';
 import { WheelListener, WheelMessage, WheelSyncService } from '../../services/wheel-sync.service';
-import { StoredWheel } from '../../data/wheel';
 
 const CHANNEL = '164284617';
 
@@ -10,10 +9,10 @@ class FakeWheelService {
   stored: string[] = [];
   fail = false;
 
-  getWheel = vi.fn(async (): Promise<StoredWheel> => {
+  getWheel = vi.fn(async (): Promise<string[]> => {
     if (this.fail) throw new Error('nope');
 
-    return { entries: this.stored };
+    return this.stored;
   });
 }
 

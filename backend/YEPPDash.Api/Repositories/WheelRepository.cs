@@ -14,7 +14,7 @@ public sealed class WheelRepository(YeppDashConnectionFactory connections)
         )
         """;
 
-    public async Task<Wheel?> GetAsync(int channelId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>?> GetAsync(int channelId, CancellationToken cancellationToken)
     {
         await using var connection = connections.Create();
 
@@ -25,7 +25,7 @@ public sealed class WheelRepository(YeppDashConnectionFactory connections)
                 cancellationToken: cancellationToken)
             );
 
-        return entries is null ? null : new Wheel(Split(entries));
+        return entries is null ? null : Split(entries);
     }
 
     public async Task SaveAsync(int channelId, IReadOnlyList<string> entries, CancellationToken cancellationToken)
