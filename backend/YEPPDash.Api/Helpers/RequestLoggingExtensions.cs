@@ -27,9 +27,17 @@ public static class RequestLoggingExtensions
             finally
             {
                 var status = context.Response.StatusCode;
-                var level = status >= StatusCodes.Status500InternalServerError
-                    ? LogLevel.Error
-                    : LogLevel.Information;
+
+                // A 404 that never reached an endpoint is somebody knocking — a proxy probing '/',
+                // a scanner walking paths — not this API answering. Kept at Debug rather than
+                // dropped, so raising the level still shows who is knocking. A 404 a controller
+                // decided on is a real answer and stays at Information.
+                var level = status switch
+                {
+                    >= StatusCodes.Status500InternalServerError => LogLevel.Error,
+                    StatusCodes.Status404NotFound when context.GetEndpoint() is null => LogLevel.Debug,
+                    _ => LogLevel.Information,
+                };
 
                 logger.Log(
                     level,
