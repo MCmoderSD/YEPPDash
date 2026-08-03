@@ -1,0 +1,28 @@
+<div class="overlay">
+
+  <!-- Nothing to press here: the dashboard owns the wheel and this one follows it, so a spin
+       started on the overlay would only ever disagree with what the streamer is looking at. That is
+       also why this page needs no session — anyone can open it, it just watches. -->
+  <app-wheel class="overlay-wheel" [slices]="slices()" (spun)="landed($event)"/>
+
+  @if (winner()) {
+    <!-- The same announcement the dashboard puts in a dialog, without its buttons: closing it is
+         the streamer's to do, and a control here would only be captured into the stream. -->
+    <div class="overlay-winner" role="status">
+      <p class="overlay-winner-title">We have a winner!</p>
+      <p class="overlay-winner-name">{{ winner() }}</p>
+    </div>
+  }
+
+  @if (slices().length === 0) {
+    <p class="overlay-hint">
+      @if (!channel()) {
+        This link has no channel. Copy the overlay link again from the Lucky Wheel page.
+      } @else if (loaded()) {
+        No entries on this wheel yet. Add some on the Lucky Wheel page.
+      } @else {
+        Loading…
+      }
+    </p>
+  }
+</div>

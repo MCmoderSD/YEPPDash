@@ -77,6 +77,18 @@
 
   <a
     mat-list-item
+    [routerLink]="wheelPath"
+    routerLinkActive="sidebar-entry-active"
+    [routerLinkActiveOptions]="activeMatch"
+    ariaCurrentWhenActive="page"
+    (click)="close()"
+  >
+    <mat-icon matListItemIcon aria-hidden="true">casino</mat-icon>
+    <span matListItemTitle>Lucky Wheel</span>
+  </a>
+
+  <a
+    mat-list-item
     [routerLink]="bdsmPath"
     routerLinkActive="sidebar-entry-active"
     [routerLinkActiveOptions]="activeMatch"

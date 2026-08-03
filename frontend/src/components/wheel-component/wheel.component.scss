@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+// Only where the wheel is something to press. The overlay never sets it, so nothing there invites a
+// click that would not be honoured anyway.
+:host(.wheel-interactive) .wheel {
+  cursor: pointer;
+}
+
+.wheel {
+  position: relative;
+
+  // The wheel is always round, so it takes its height from whatever width it is given — that is
+  // what lets the OBS browser source be resized to anything without distorting it.
+  aspect-ratio: 1;
+  width: 100%;
+}
+
+.wheel-disc {
+  position: absolute;
+  inset: 0;
+
+  // 5.2s of ease-out is what reads as a wheel that was thrown hard and ran itself down.
+  transition: transform 5.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.wheel-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wheel-slice {
+  // Dark rather than light: the gap reads as a seam on any stream background this ends up over.
+  stroke: #16161a;
+  stroke-width: 0.4;
+}
+
+.wheel-label {
+  // Anchored at the outer end so every label runs inwards from the rim, the way a wheel is read.
+  text-anchor: end;
+  dominant-baseline: middle;
+
+  // No font-family here: SVG text inherits it, so the wheel follows the theme's typography rather
+  // than naming a face of its own that would then have to be kept in step with it.
+  font-weight: 600;
+
+  // Nothing here is selectable, and a drag across the wheel should not highlight the names.
+  user-select: none;
+}
+
+.wheel-empty {
+  fill: none;
+  stroke: #6b6b73;
+  stroke-width: 0.6;
+  stroke-dasharray: 3 3;
+}
+
+.wheel-rim {
+  fill: none;
+  stroke: #16161a;
+  stroke-width: 1;
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: 50%;
+  right: -2%;
+
+  // Sized in per cent of the wheel rather than pixels so it scales with it.
+  width: 10%;
+  height: 8%;
+
+  // transform rather than the standalone translate property: the browser OBS embeds is old enough
+  // not to have the latter, and would leave the pointer hanging off the wheel's centre line.
+  transform: translateY(-50%);
+
+  polygon {
+    // Carries its own edge: the fill matches the slice underneath, so without this the pointer
+    // would vanish into the wheel exactly when it is saying which slice it means.
+    stroke: #16161a;
+    stroke-width: 0.7;
+    stroke-linejoin: round;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-disc {
+    transition: none;
+  }
+}

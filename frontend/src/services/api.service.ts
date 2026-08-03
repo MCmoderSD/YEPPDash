@@ -17,6 +17,10 @@ export abstract class ApiService {
     return firstValueFrom(this.http.post<T>(this.url(path), body, { withCredentials: true }));
   }
 
+  protected put<T>(path: string, body: unknown): Promise<T> {
+    return firstValueFrom(this.http.put<T>(this.url(path), body, { withCredentials: true }));
+  }
+
   protected patch<T>(path: string, body: unknown): Promise<T> {
     return firstValueFrom(this.http.patch<T>(this.url(path), body, { withCredentials: true }));
   }

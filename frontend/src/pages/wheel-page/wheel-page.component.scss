@@ -1,0 +1,233 @@
+.wheel-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(72rem, 100%);
+  margin-inline: auto;
+}
+
+.wheel-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.wheel-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.wheel-page-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.wheel-page-layout {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+
+  // Side by side once there is room for a wheel worth looking at next to the list.
+  @media (min-width: 60rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
+  }
+}
+
+.wheel-page-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  // Past this the wheel stops gaining anything and just pushes the list off the screen.
+  app-wheel {
+    width: min(28rem, 100%);
+  }
+}
+
+.wheel-page-spin {
+  // Directly under the wheel it belongs to, wide enough to read as the thing the page is for.
+  min-width: 12rem;
+}
+
+.wheel-page-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.wheel-page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// The pair under the table. Centred and given equal width so they read as one control for moving
+// the list in and out, rather than as two more buttons tacked onto the row above.
+.wheel-page-transfer {
+  justify-content: center;
+  margin-block-start: 0.25rem;
+
+  button {
+    flex: 1 1 0;
+    max-width: 11rem;
+  }
+}
+
+// The picker itself is never shown — the Import button beside it is what opens it — but it stays in
+// the DOM because that is the only thing that can open a file dialog.
+.wheel-page-file {
+  display: none;
+}
+
+// The field and its note, held together at a tighter spacing than the panel uses between blocks, so
+// the note reads as belonging to the field above it.
+.wheel-page-entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// With the field no longer reserving room for a subscript, its height is the input box itself, and
+// centring the row is all it takes to line the button up with it — no nudging either of them.
+.wheel-page-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wheel-page-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.wheel-page-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+
+  // Two lines of small text at the theme's own leading run together; this is what keeps them apart.
+  line-height: 1.5;
+}
+
+// Matches the other tables in the dashboard: the outline sits on the scroll container so it spans
+// the full width, and a narrow viewport scrolls the columns instead of squashing them.
+.wheel-page-scroll {
+  align-self: stretch;
+  overflow: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+
+  // Roughly ten rows before it starts scrolling, which keeps the wheel next to it in view.
+  max-height: 24rem;
+}
+
+table.wheel-page-table {
+  width: 100%;
+  background: transparent;
+
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 0.75rem;
+  }
+}
+
+.wheel-page-row {
+  &:hover,
+  &:focus-within {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  // Nothing follows the last row, so its rule only draws a line along the container's own border.
+  &:last-of-type .mdc-data-table__cell {
+    border-bottom: none;
+  }
+}
+
+.wheel-page-entry {
+  font: var(--mat-sys-body-medium);
+}
+
+.wheel-page-entry-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// The same chip the command table puts its aliases in, so a count reads as a tag on the name rather
+// than as part of it.
+.wheel-page-badge {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wheel-page-name {
+  overflow-wrap: anywhere;
+}
+
+.wheel-page-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: end;
+}
+
+.wheel-page-hidden-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wheel-page-empty {
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.wheel-page-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  // The rule is what separates this section from the list above it, so the heading needs room to
+  // sit below the line rather than against it.
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.wheel-page-overlay-title {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+}
+
+.wheel-page-overlay-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.wheel-page-overlay-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  // On top of the section's own gap: the two paragraphs above belong together, the field is the
+  // next thing along and should not look wedged under them.
+  margin-block-start: 0.5rem;
+}

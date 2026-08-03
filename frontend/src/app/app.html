@@ -1,10 +1,13 @@
-<app-navbar/>
+@if (chrome()) {
+  <app-navbar/>
+}
 
 <main class="app-main">
   <router-outlet/>
 </main>
 
-<!-- Directly before the footer on purpose: that is what stops the notification stack covering it. -->
-<app-notifications/>
+@if (chrome()) {
+  <app-notifications/>
 
-<app-footer/>
+  <app-footer/>
+}

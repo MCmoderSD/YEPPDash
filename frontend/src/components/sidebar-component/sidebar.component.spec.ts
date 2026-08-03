@@ -34,6 +34,7 @@ describe('SidebarComponent', () => {
         'terminalCustom Commands',
         'groupCommunity',
         'cakeFollower Birthdays',
+        'casinoLucky Wheel',
         'psychologyBDSM Test',
       ]);
   });
@@ -47,6 +48,7 @@ describe('SidebarComponent', () => {
         '/dash/commands',
         '/dash/community',
         '/dash/birthdays',
+        '/dash/wheel',
         '/dash/bdsm',
       ]);
   });
@@ -69,7 +71,7 @@ describe('SidebarComponent', () => {
 
     // The two role entries share a path and differ only in ?mode=, so query params have to be
     // compared — matching on the path alone would light up both.
-    expect(active).toEqual([null, 'page', null, null, null, null, null]);
+    expect(active).toEqual([null, 'page', null, null, null, null, null, null]);
   });
 
   it('should minimize the drawer once an entry is picked', () => {

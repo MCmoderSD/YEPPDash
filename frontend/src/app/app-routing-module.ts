@@ -6,6 +6,7 @@ import { PrivacyPageComponent } from '../pages/privacy-page/privacy-page.compone
 import { TermsPageComponent } from '../pages/terms-page/terms-page.component';
 import { authGuard } from '../services/auth.guard';
 import { isDashHost } from '../services/dash-host';
+import { WHEEL_OVERLAY_PATH } from '../data/wheel-overlay';
 import { environment } from '../environments/environment';
 
 const dashHostMatch: CanMatchFn = () => isDashHost();
@@ -13,6 +14,15 @@ const otherHostMatch: CanMatchFn = () => !isDashHost();
 const devOnlyMatch: CanMatchFn = () => !environment.production;
 
 const routes: Routes = [
+  // Ahead of everything else: on the dashboard host the empty path below carries all of its
+  // children, so a route listed after it would never be reached. No guard on purpose — this is
+  // loaded by a browser source in OBS, which brings no session along.
+  {
+    path: WHEEL_OVERLAY_PATH,
+    loadComponent: () => import('../pages/wheel-overlay-page/wheel-overlay-page.component')
+      .then((module) => module.WheelOverlayPageComponent),
+    title: 'Lucky Wheel',
+  },
   {
     path: '',
     canActivate: [authGuard],

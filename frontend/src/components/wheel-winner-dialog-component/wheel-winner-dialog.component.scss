@@ -1,0 +1,14 @@
+// The one moment on the page worth celebrating, so the title carries the wheel's own yellow rather
+// than the dialog's ordinary heading colour.
+.wheel-winner-title {
+  color: var(--mat-sys-tertiary);
+}
+
+.wheel-winner-name {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+  text-align: center;
+
+  // A display name can be long and is not always made of words that break.
+  overflow-wrap: anywhere;
+}

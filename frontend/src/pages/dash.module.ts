@@ -26,6 +26,9 @@ import { BdsmPageComponent } from './bdsm-page/bdsm-page.component';
 import { BdsmResultComponent } from '../components/bdsm-result-component/bdsm-result.component';
 import { CommunityPageComponent } from './community-page/community-page.component';
 import { CommandPageComponent } from './command-page/command-page.component';
+import { WheelPageComponent } from './wheel-page/wheel-page.component';
+import { WheelComponent } from '../components/wheel-component/wheel.component';
+import { WheelWinnerDialogComponent } from '../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
 import { CommandTableComponent } from '../components/command-table-component/command-table.component';
 import { CommandEditComponent } from '../components/command-edit-component/command-edit.component';
 import { SidebarComponent } from '../components/sidebar-component/sidebar.component';
@@ -51,6 +54,7 @@ const routes: Routes = [
       { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'community', component: CommunityPageComponent, title: 'Community' },
+      { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }
@@ -67,6 +71,8 @@ const components: any[] = [
   CommandPageComponent,
   CommandTableComponent,
   CommandEditComponent,
+  WheelPageComponent,
+  WheelWinnerDialogComponent,
   BirthdayListComponent,
   CommunityPageComponent,
   QuoteEditDialogComponent,
@@ -82,6 +88,7 @@ const components: any[] = [
     RouterModule.forChild(routes),
     UserComponentsModule,
     UserBadgesComponent,
+    WheelComponent,
     ScrollBarComponent,
     LocaleDatePipe,
     DatePipe,
