@@ -1,0 +1,19 @@
+<mat-expansion-panel class="faq-entry">
+
+  <mat-expansion-panel-header class="faq-entry-header">
+    <mat-panel-title class="faq-entry-question">{{ entry().question }}</mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <p class="faq-entry-answer">{{ entry().answer }}</p>
+
+  @for (detail of entry().details; track detail) {
+    <p class="faq-entry-detail">{{ detail }}</p>
+  }
+
+  @if (entry().link; as link) {
+    <a class="faq-entry-link" [href]="link.url" target="_blank" rel="noopener">
+      <span>{{ link.label }}</span>
+      <mat-icon aria-hidden="true">open_in_new</mat-icon>
+    </a>
+  }
+</mat-expansion-panel>

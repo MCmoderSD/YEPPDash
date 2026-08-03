@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CanMatchFn, RouterModule, type Routes } from '@angular/router';
 import { LandingPageComponent } from '../pages/landing-page/landing-page.component';
+import { FaqPageComponent } from '../pages/faq-page/faq-page.component';
 import { ImprintPageComponent } from '../pages/imprint-page/imprint-page.component';
 import { PrivacyPageComponent } from '../pages/privacy-page/privacy-page.component';
 import { TermsPageComponent } from '../pages/terms-page/terms-page.component';
@@ -20,6 +21,7 @@ const routes: Routes = [
     loadChildren: () => import('../pages/dash.module').then((module) => module.DashModule),
   },
   { path: '', component: LandingPageComponent, title: 'YEPPDash', canMatch: [otherHostMatch] },
+  { path: 'faq', component: FaqPageComponent, title: 'FAQ', canMatch: [otherHostMatch] },
   { path: 'imprint', component: ImprintPageComponent, title: 'Imprint', canMatch: [otherHostMatch] },
   { path: 'privacy', component: PrivacyPageComponent, title: 'Privacy Policy', canMatch: [otherHostMatch] },
   { path: 'terms', component: TermsPageComponent, title: 'Terms of Service', canMatch: [otherHostMatch] },
