@@ -1,0 +1,20 @@
+<section class="faq">
+  <h1 class="faq-title">Frequently asked questions</h1>
+
+  <p class="faq-intro">
+    What YEPPBot is, what this dashboard does with your Twitch account, and how finished any of it
+    actually is. Pick a question to open it.
+  </p>
+
+  <div class="faq-entries">
+    @for (entry of entries; track entry.question) {
+      <app-faq-entry [entry]="entry"/>
+    }
+  </div>
+
+  <p class="faq-more">
+    Still stuck? Ask on
+    <a href="https://github.com/MCmoderSD/YEPPDash/issues" target="_blank" rel="noopener">GitHub</a>
+    and it will end up on this page.
+  </p>
+</section>

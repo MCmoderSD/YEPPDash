@@ -21,6 +21,12 @@
   gap: 0.25rem;
 }
 
+.navbar-end {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .navbar-brand {
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-title-medium);
@@ -32,8 +38,8 @@
   }
 }
 
-a[mat-flat-button] {
+a[mat-flat-button],
+a[mat-button] {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
 }

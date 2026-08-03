@@ -84,6 +84,38 @@ describe('NavbarComponent', () => {
     expect(compiled.querySelector('app-user-menu')).toBeNull();
   });
 
+  it('should sit the FAQ link ahead of the login link', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    fixture.detectChanges();
+
+    const end = (fixture.nativeElement as HTMLElement).querySelector('.navbar-end')!;
+    const order = [...end.querySelectorAll('.navbar-faq, a[href*="/auth/login"]')]
+      .map((link) => link.classList.contains('navbar-faq') ? 'faq' : 'login');
+
+    expect(order).toEqual(['faq', 'login']);
+  });
+
+  it('should keep the FAQ link once signed in', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    auth.currentUser.set(USER);
+    fixture.detectChanges();
+
+    const end = (fixture.nativeElement as HTMLElement).querySelector('.navbar-end')!;
+    expect(end.querySelector('.navbar-faq')).toBeTruthy();
+
+    const order = [...end.children].map((child) => child.classList.contains('navbar-faq'));
+    expect(order[0]).toBe(true);
+  });
+
+  // Not the production host under test, so the FAQ stays a routed link rather than an absolute one.
+  it('should route to the FAQ rather than reload the page', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLAnchorElement>('.navbar-faq')!.getAttribute('href')).toBe('/faq');
+  });
+
   it('should swap the login link for the user menu once signed in', () => {
     const fixture = TestBed.createComponent(NavbarComponent);
     auth.currentUser.set(USER);

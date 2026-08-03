@@ -14,13 +14,27 @@
       <a class="navbar-brand" routerLink="/">YEPPDash</a>
     </div>
 
-    @if (auth.currentUser(); as user) {
-      <app-user-menu [user]="user" />
-    } @else {
-      <a mat-flat-button [href]="loginUrl">
-        <mat-icon aria-hidden="true">login</mat-icon>
-        Login with Twitch
-      </a>
-    }
+    <div class="navbar-end">
+      @if (faqUrl; as url) {
+        <a mat-button class="navbar-faq" [href]="url">
+          <mat-icon aria-hidden="true">quiz</mat-icon>
+          FAQ
+        </a>
+      } @else {
+        <a mat-button class="navbar-faq" routerLink="/faq">
+          <mat-icon aria-hidden="true">quiz</mat-icon>
+          FAQ
+        </a>
+      }
+
+      @if (auth.currentUser(); as user) {
+        <app-user-menu [user]="user" />
+      } @else {
+        <a mat-flat-button [href]="loginUrl">
+          <mat-icon aria-hidden="true">login</mat-icon>
+          Login with Twitch
+        </a>
+      }
+    </div>
   </nav>
 </header>
