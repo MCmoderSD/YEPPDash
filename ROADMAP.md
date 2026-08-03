@@ -57,15 +57,52 @@ Phase 1b ist damit funktional abgeschlossen — Login, Session, Live-Profil, Tok
 
 **Bewusst nicht gemacht**: in YEPPBots `helix.RefreshToken` schreiben. Das würde den Bot direkt mit-autorisieren, aber beide Prozesse teilten sich dann einen Refresh Token pro User — und da Twitch den Refresh Token bei Benutzung rotiert, fliegt der jeweils zweite raus. Details in [PLAN.md](PLAN.md#auth).
 
-## Phase 2 — Channel Join/Leave v1 (gegen Stub)
+## Phase 2 — Bot-Steuerung (Join/Leave)
 
-- [ ] 1. Backend: `IBotClient`-Interface + `StubBotClient` (In-Memory-Fake)
-- [ ] 2. Backend: `/api/channel/status|join|leave`, Ziel-Channel immer aus Auth-Claim abgeleitet
-- [ ] 3. Frontend: `ChannelService`, Status-Karte + Join/Leave-Button mit Loading-/Error-States
-- [ ] 4. Manueller Test: vollständiger UI-Flow gegen den Stub
-- [ ] 5. *(separat, außerhalb dieses Repos)*: YEPPBot-seitige interne API nach dokumentiertem Contract umsetzen
-- [ ] 6. Sobald verfügbar: `HttpBotClient` per Config aktivieren, End-to-End gegen echten Bot re-testen (live Chat-Join, nicht nur DB-Flag)
+Die in PLAN.md ursprünglich geplante `IBotClient`/`StubBotClient`/`HttpBotClient`-Abstraktion wurde beim Umsetzen verworfen — YEPPBot bekam stattdessen direkt eine eigene kleine HTTP-API, gegen die YEPPDash ohne Zwischenschritt spricht. Details in [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md).
 
-## Phase 3 — Command Management
+- [x] 1. ~~`IBotClient`-Interface + `StubBotClient`~~ **anders gelöst**: `YeppBotClient` ist eine einzelne konkrete Klasse, die per HTTP `POST` gegen eine laufende YEPPBot-Instanz spricht (`JoinChannel/{id}`, `LeaveChannel/{id}`, später auch `UpdateCustomCommands/{id}`, siehe Phase 6), authentifiziert mit einem aus dem Twitch-Client-Secret abgeleiteten Bearer-Token. Ist keine Bot-Basis-URL konfiguriert, wird `YeppBotClient.Configured` `false` und Aufrufe werden zu No-Ops (`NotConfigured`) — das übernimmt die Rolle des ursprünglich geplanten Stub, ohne eine eigene Implementierung zu brauchen
+- [x] 2. Backend: `BotController` (`POST bot/{userId}/join`, `POST bot/{userId}/leave`), Zielkanal immer aus dem Auth-Claim abgeleitet
+- [x] 3. Frontend: `BotManageComponent` auf der Dashboard-Startseite (`/dash`) — zeigt Bot-Status (gebannt/geblockt/Moderator/im Chat) und Join-/Leave-Buttons
 
-- [ ] Scope wird später festgelegt, kein Umsetzungsschritt bisher.
+## Phase 3 — Twitch-Rollen & Community-Daten
+
+- [x] 1. Backend: `TwitchController` (Route `twitch`) + `TwitchChannelService` — Moderatoren, VIPs, Editoren (nur lesend, Helix bietet dort kein Add/Remove), Follower, Bans/Unbans, Blocks/Unblocks, Chatter; alles seitenweise gegen Helix paginiert
+- [x] 2. `TwitchChannelCache` (In-Process, pro Rolle + Broadcaster) + `TwitchChannelWarmup`/`-WarmupWorker` — wärmt die Caches beim Start und bei jedem Login für alle Kanäle mit gespeichertem Token vor
+- [x] 3. Frontend: `RoleManagementComponent` in zwei Konfigurationen (`?mode=0|1` = Moderator/VIP) über die Sidebar erreichbar; `UserAddDialogComponent` löst einen eingegebenen Namen erst gegen einen echten Account auf, bevor etwas hinzugefügt wird
+- [x] 4. Rollen-Badges, Chat-Farbe und Verified-Status auf jeder User-Anzeige
+
+## Phase 4 — Quote-Verwaltung
+
+- [x] 1. Backend: `QuoteController`/`QuoteService`/`QuoteRepository` — CRUD, Umsortieren (transaktionale ID-Verschiebung), Excel-Export/-Import (ClosedXML, 5 MB Limit) gegen YEPPBots `Quote`-Tabelle
+- [x] 2. Frontend: `QuoteManagementComponent` (`/dash/quotes`) — sortier-/filterbare Tabelle, Drag-Reorder, Excel-Import/-Export, `ConfirmActionDialogComponent` vor destruktiven Aktionen
+
+## Phase 5 — Follower-Geburtstage
+
+- [x] 1. Backend: `BirthdayController`/`BirthdayService`/`BirthdayRepository` — eigenen Geburtstag lesen/setzen/ändern, Follower-Geburtstage per Schnittmenge aus gespeicherten Einträgen und aktuellen Followern
+- [x] 2. Frontend: `BirthdayListComponent` (`/dash/birthdays`) — Alter/Countdown, lokalisierte Datumsanzeige (`LocaleDatePipe`)
+
+## Phase 6 — Custom Commands
+
+- [x] 1. Backend: `CustomCommandController`/`CustomCommandService`/`CustomCommandRepository` — Trigger-/Alias-Validierung, Eindeutigkeit pro Kanal; jede schreibende Aktion löst über `YeppBotClient.UpdateCustomCommandsAsync` einen Hot-Reload des laufenden Bots aus
+- [x] 2. Frontend: `CommandPageComponent` (`/dash/commands`) — Anlegen/Bearbeiten/Löschen/Aktivieren
+
+## Phase 7 — BDSM-Testergebnisse
+
+- [x] 1. Backend: `BdsmController`/`BdsmService`/`BdsmRepository` — eigene Ergebnisse sowie die der eigenen Follower (gleiches Schnittmenge-Muster wie Phase 5)
+- [x] 2. Frontend: `BdsmPageComponent` (`/dash/bdsm`) — zwei Tabs (eigene Ergebnisse / Community), mehrere Ergebnisse gleichzeitig aufklappbar
+
+## Phase 8 — Community-Übersicht
+
+- [x] 1. Frontend: `CommunityPageComponent` (`/dash/community`) — sortier-, filter- und paginierbare Tabelle aller Follower
+
+## Phase 9 — Landing Page & rechtliche Seiten
+
+- [x] 1. Frontend: Feature-Liste der Landing-Page an den echten Funktionsumfang angepasst (Rollen-Verwaltung, Custom Commands, Geburtstage — mit Status-Badges "Stable"/"Works, buggy"/"Coming soon"), Beta-Disclaimer-Abschnitt ergänzt
+- [x] 2. Footer verlinkt Imprint/Privacy/Terms sowie beide GitHub-Repos (YEPPBot, YEPPDash), gruppiert neben dem Copyright-Hinweis statt bei den rechtlichen Links
+
+## Offen
+
+- [ ] Auto-Shoutouts für Raids (auf der Landing-Page bereits als "Coming soon" angekündigt) — kein Code dafür vorhanden
+- [ ] Dedizierter Moderations-Bereich im Dashboard: Unban-/Unblock-Endpoints (`twitch/banned/*`, `twitch/blocked/*`) existieren bereits im Backend, werden aber bisher nur von `BotManageComponent` genutzt, nicht von einer eigenen Seite
+- [ ] Prod-DB-Grants für `yeppdash_ro` auf `dedi.mcmodersd.de` — siehe Phase 1b, Schritt 14, weiterhin offen

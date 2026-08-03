@@ -1,17 +1,27 @@
 # YEPPDash
 
-Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot) — a monolithic Twitch chat bot with no interactive console of its own. YEPPDash lets broadcasters control YEPPBot from a browser (starting with adding/removing the bot from their channel) instead of only via Twitch chat commands, without weakening the bot's security posture: end users never talk to the bot directly, only to this dashboard's backend.
+Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot) — a monolithic Twitch chat bot with no interactive console of its own. YEPPDash lets broadcasters control YEPPBot from a browser instead of only via Twitch chat commands, without weakening the bot's security posture: end users never talk to the bot directly, only to this dashboard's backend.
 
-Status: early development, pre-Phase 1. See [`ROADMAP.md`](ROADMAP.md) for current progress.
+Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, and BDSM test results are live. The UI, and the feature set, are still changing — see [`ROADMAP.md`](ROADMAP.md) for what shipped and what's next.
+
+## Features
+
+- **Twitch login** — OAuth2 against Twitch, no separate account/password
+- **Bot management** — see the bot's status in your channel (banned/blocked/moderator/in chat) and join/leave it
+- **Role management** — add/remove moderators and VIPs, view editors, followers, banned and blocked users
+- **Custom commands** — add, edit, and toggle chat commands, with a live reload of the running bot
+- **Quote management** — add, edit, reorder, and bulk import/export quotes as Excel
+- **Follower birthdays** — track and view your community's birthdays
+- **BDSM test results** — view your own and your followers' results
 
 ## Tech Stack
 
 | | |
 |---|---|
-| Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector |
+| Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector, ClosedXML |
 | Frontend | Angular 22 + Angular Material, SSR (`@angular/ssr` + Express) |
 | Auth | Twitch OAuth2 (authorization code) + Helix `/users` — no local passwords/user table |
-| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot; this repo reads with a least-privilege, SELECT-only user |
+| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot, plus YEPPDash's own `TwitchToken` table for encrypted OAuth tokens |
 | Reverse proxy | Caddy, run by the operator outside this repo — subdomain routing (`dash.yeppbot.com`/`.dev` → frontend, `api.yeppbot.com`/`.dev` → backend) |
 
 ## Repository Structure
@@ -35,10 +45,11 @@ Reverse proxying (Caddy) is not part of this repo — it's handled by the operat
 - [`ROADMAP.md`](ROADMAP.md) — ordered, checkable implementation steps
 - [`docs/diagrams/`](docs/diagrams) — architecture overview, auth flow, and channel join/leave flow as editable [Excalidraw](https://excalidraw.com) scenes
 - [`docs/twitch-api-client.md`](docs/twitch-api-client.md) — endpoints and features of the two Twitch API wrappers (Helix + OAuth)
+- [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) — the HTTP client YEPPDash uses to talk to a running YEPPBot instance (join/leave a channel, reload custom commands)
 
 ## Relationship to YEPPBot
 
-YEPPDash never writes bot-affecting state directly to the database. All actions that affect the running bot (e.g. join/leave a channel) go through a dedicated internal API on YEPPBot itself — see [`PLAN.md`](PLAN.md#internal-bot-interface-contract-now-implementation-deferred) for the contract. This keeps YEPPBot's only inputs as "its own internal API" and "the Twitch API," matching its existing security model.
+YEPPDash never writes bot-affecting state directly to the database. Actions that affect the running bot (join/leave a channel, reload custom commands) go through a small HTTP API on YEPPBot itself — see [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) for the contract. This keeps YEPPBot's only inputs as "its own HTTP API" and "the Twitch API," matching its existing security model.
 
 ## License
 
