@@ -22,4 +22,9 @@ export class FooterComponent {
     { label: 'Privacy Policy', url: `${environment.marketingBaseUrl}/privacy` },
     { label: 'Terms of Service', url: `${environment.marketingBaseUrl}/terms` },
   ];
+
+  protected readonly repos: readonly FooterLink[] = [
+    { label: 'YEPPBot Repo', url: 'https://github.com/MCmoderSD/YEPPBot' },
+    { label: 'YEPPDash Repo', url: 'https://github.com/MCmoderSD/YEPPDash' },
+  ];
 }

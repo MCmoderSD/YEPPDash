@@ -1,6 +1,14 @@
 <footer class="footer">
   <div class="footer-inner">
-    <p class="footer-copyright">© {{ year }} MCmoderSD</p>
+    <div class="footer-start">
+      <p class="footer-copyright">© {{ year }} MCmoderSD</p>
+
+      <nav class="footer-repos" aria-label="Source code">
+        @for (repo of repos; track repo.url) {
+          <a [href]="repo.url" target="_blank" rel="noopener">{{ repo.label }}</a>
+        }
+      </nav>
+    </div>
 
     <nav class="footer-links" aria-label="Legal">
       @for (link of links; track link.url) {
