@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import { environment } from './environments/environment';
+import { isWheelOverlayUrl } from './data/wheel-overlay';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -41,6 +42,15 @@ app.use(
  */
 app.use((req, res, next) => {
   if (!isProd) return next();
+
+  /**
+   * The OBS overlay lives at the top of the route table rather than inside the dashboard, because
+   * a browser source carries no session and must not sit behind the auth guard. Rewriting it to
+   * /dash/* would therefore aim it at a route that only exists in development, leaving the
+   * wildcard to redirect it to '/' - which is where the guard then sends it on to the marketing
+   * site, and OBS captures the landing page instead of the wheel.
+   */
+  if (isWheelOverlayUrl(req.url)) return next();
 
   const host = (req.headers.host ?? '').split(':')[0];
   const targetsDash = req.url === '/dash' || req.url.startsWith('/dash/') || req.url.startsWith('/dash?');
