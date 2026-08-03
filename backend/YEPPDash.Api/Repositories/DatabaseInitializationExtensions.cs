@@ -16,6 +16,7 @@ public static class DatabaseInitializationExtensions
         {
             await using var connection = connections.Create();
             await connection.ExecuteAsync(DatabaseTwitchTokenStore.CreateTableSql);
+            await connection.ExecuteAsync(WheelRepository.CreateTableSql);
         }
         catch (MySqlException exception)
         {

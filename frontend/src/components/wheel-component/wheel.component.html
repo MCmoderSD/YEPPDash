@@ -1,0 +1,36 @@
+<div class="wheel">
+
+  <div
+    #disc
+    class="wheel-disc"
+    [style.transform]="'rotate(' + rotation() + 'deg)'"
+    (transitionend)="settle($event)"
+  >
+    <svg class="wheel-face" viewBox="0 0 100 100" role="img" [attr.aria-label]="description()">
+      @for (sector of sectors(); track $index) {
+        <path [attr.d]="sector.path" [attr.fill]="sector.fill" class="wheel-slice"/>
+      }
+
+      @for (sector of sectors(); track $index) {
+        <text
+          class="wheel-label"
+          [attr.transform]="'rotate(' + sector.angle + ' 50 50)'"
+          [attr.x]="labelX"
+          y="50"
+          [attr.fill]="sector.ink"
+          [attr.font-size]="sector.fontSize"
+        >{{ sector.text }}</text>
+      }
+
+      @if (sectors().length === 0) {
+        <circle class="wheel-empty" cx="50" cy="50" r="49"/>
+      }
+
+      <circle class="wheel-rim" cx="50" cy="50" r="49"/>
+    </svg>
+  </div>
+
+  <svg class="wheel-pointer" viewBox="0 0 10 10" aria-hidden="true">
+    <polygon points="9.6,0.7 9.6,9.3 0.7,5" [attr.fill]="pointerFill()"/>
+  </svg>
+</div>

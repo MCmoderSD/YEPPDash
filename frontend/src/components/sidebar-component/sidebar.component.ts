@@ -35,6 +35,8 @@ export class SidebarComponent {
 
   protected readonly communityPath: string = isDashHost() ? '/community' : '/dash/community';
 
+  protected readonly wheelPath: string = isDashHost() ? '/wheel' : '/dash/wheel';
+
   protected readonly bdsmPath: string = isDashHost() ? '/bdsm' : '/dash/bdsm';
 
   protected close(): void {

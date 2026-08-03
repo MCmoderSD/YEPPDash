@@ -1,0 +1,11 @@
+<h2 mat-dialog-title class="wheel-winner-title">We have a winner!</h2>
+
+<mat-dialog-content>
+  <p class="wheel-winner-name">{{ data.label }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="choose('close')">Close</button>
+
+  <button mat-flat-button type="button" (click)="choose('remove')">Remove</button>
+</mat-dialog-actions>

@@ -59,6 +59,17 @@ body {
   }
 }
 
+// The OBS overlay is captured over whatever the scene has behind it, so the page must not paint a
+// background of its own. OBS does strip one through its own custom CSS, but only while that setting
+// is left at its default — this makes it the page's own doing instead.
+//
+// Added and removed by WheelOverlayPageComponent. It is global because the elements it applies to,
+// the document and its body, sit outside that component.
+.app-transparent,
+.app-transparent body {
+  background: transparent;
+}
+
 // Takes the platform's own scroll bar out of the picture, leaving the element scrollable. Added
 // and removed by ScrollBarComponent, which draws the app's bar over the element instead — this
 // class is only global because the element it applies to lives outside that component.
