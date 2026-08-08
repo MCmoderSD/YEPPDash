@@ -121,6 +121,16 @@
   background: var(--app-tint-primary-strong);
 }
 
+// Artwork the icon font does not carry, painted through a mask so it takes the tile's own colour
+// rather than sitting at whatever colour it was drawn in. Sized to match the font's glyphs beside
+// it, which render at Material's default 24px.
+.dash-home-card-glyph {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
 .dash-home-card-body {
   display: flex;
   flex-direction: column;

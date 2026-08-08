@@ -4,7 +4,14 @@ import { isDashHost } from '../services/dash-host';
 
 export interface NavItem {
   label: string;
+  // A Material Icons ligature, ignored when `mask` is set.
   icon: string;
+  // An image drawn as a CSS mask rather than placed as one. The icon font's entries take their
+  // colour from the row around them, and a plain <img> could not — it would sit at whatever colour
+  // it was drawn in while its neighbours went from grey to the brand colour with the active state.
+  // Masking paints the artwork in the row's own colour instead, so a custom icon behaves like the
+  // rest. Only the artwork's alpha is used, which is what both of these files carry their shape in.
+  mask?: string;
   description: string;
   path: string;
   queryParams?: Params;
@@ -89,13 +96,17 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       {
         label: 'Lucky Wheel',
+        // The icon font is the classic Material Icons set, which has no prize wheel — `casino`
+        // stood in with a pair of dice, which is a different game entirely.
         icon: 'casino',
+        mask: 'lucky-wheel.svg',
         description: 'Spin for a winner, live on an OBS overlay.',
         path: `${BASE}/wheel`,
       },
       {
         label: 'BDSM Test',
         icon: 'psychology',
+        mask: 'BDSM-Test-64px.png',
         description: 'Results your chat has shared with the channel.',
         path: `${BASE}/bdsm`,
       },

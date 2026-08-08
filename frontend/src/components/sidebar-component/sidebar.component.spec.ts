@@ -66,9 +66,24 @@ describe('SidebarComponent', () => {
         'terminalCommands',
         'groupMembers',
         'cakeBirthdays',
-        'casinoLucky Wheel',
-        'psychologyBDSM Test',
+        // These two carry artwork the icon font does not have, drawn as a mask rather than as a
+        // ligature — so unlike the entries above they contribute no icon name to the text.
+        'Lucky Wheel',
+        'BDSM Test',
       ]);
+  });
+
+  it('should mask in the artwork the icon font has no glyph for', () => {
+    const masks = [...(render().nativeElement as HTMLElement)
+      .querySelectorAll<HTMLElement>('.sidebar-link-icon-mask')];
+
+    expect(masks.map((mask) => [
+      mask.closest('.sidebar-link')!.textContent!.trim(),
+      mask.style.getPropertyValue('--icon'),
+    ])).toEqual([
+      ['Lucky Wheel', 'url(lucky-wheel.svg)'],
+      ['BDSM Test', 'url(BDSM-Test-64px.png)'],
+    ]);
   });
 
   it('should head each group with a disclosure button', () => {

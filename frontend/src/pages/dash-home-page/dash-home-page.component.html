@@ -32,7 +32,11 @@
                  full tile for a pointer and a single stop for the keyboard. -->
             <a class="dash-home-card" [routerLink]="item.path" [queryParams]="item.queryParams">
               <span class="dash-home-card-icon" aria-hidden="true">
-                <mat-icon>{{ item.icon }}</mat-icon>
+                @if (item.mask; as mask) {
+                  <span class="dash-home-card-glyph" [style.--icon]="'url(' + mask + ')'"></span>
+                } @else {
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                }
               </span>
 
               <span class="dash-home-card-body">
