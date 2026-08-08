@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use './theme-colors' as theme;
+@use './styles/tokens' as tokens;
 
 html {
   height: 100%;
@@ -16,13 +17,27 @@ html {
     )
   );
 
-  // Brand override: YEPPBot's dashboard always runs dark, matching Twitch's
-  // own chrome (rgb(14,14,16)). M3's computed dark surface tone for our
-  // yellowgreen seed doesn't land exactly on that value since it's derived
-  // from the seed hue, so it's pinned explicitly here. Re-check this block
-  // after any Angular Material upgrade that regenerates theme tokens.
+  @include tokens.app-tokens;
+  @include tokens.app-reduced-motion;
+
+  // Material derives the surface tones from the palette's hue, which drags a green cast into every
+  // panel. The neutrals in _theme-colors.scss are already the exact ramp this design wants, so the
+  // handful of tokens Material computes rather than reads are pinned back to it here. Re-check this
+  // block after any Angular Material upgrade that regenerates theme tokens.
   --mat-sys-surface: #0e0e10;
   --mat-sys-background: #0e0e10;
+  --mat-sys-surface-dim: #0e0e10;
+  --mat-sys-surface-bright: #35353c;
+  --mat-sys-surface-container-lowest: #08080b;
+  --mat-sys-surface-container-low: #131318;
+  --mat-sys-surface-container: #17171c;
+  --mat-sys-surface-container-high: #212127;
+  --mat-sys-surface-container-highest: #2b2b31;
+
+  // Material resolves this to neutral-variant 90, which lands within a hair of on-surface and
+  // leaves secondary text no dimmer than primary. Pinned a step down to restore the hierarchy —
+  // still 10.2:1 on the page surface, well past the 4.5:1 AA minimum it has to clear as body text.
+  --mat-sys-on-surface-variant: #bcbcc7;
 }
 
 body {
@@ -34,6 +49,20 @@ body {
   font: var(--mat-sys-body-medium);
   margin: 0;
   height: 100%;
+
+  // Long words in user-supplied content — a quote, a command response, a Twitch display name — are
+  // what push a panel past its column and give the page a horizontal scroll it should never have.
+  overflow-wrap: break-word;
+}
+
+// A 2px ring in the brand lime, offset far enough off the element to stay visible when it sits on a
+// container of nearly the same tone. Applied globally because keyboard focus has to be obvious on
+// every control, including the ones Material does not style itself.
+:where(a, button, [tabindex]):focus-visible,
+:where(input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+  border-radius: var(--app-radius-sm);
 }
 
 // A select renders its dropdown in the CDK overlay, outside the component that declared it, so its
@@ -45,18 +74,30 @@ body {
 // is what lets the radius below stick whichever way the panel opens, without reaching for
 // !important.
 .mat-mdc-select-panel.mdc-menu-surface.app-select-panel {
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-medium);
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
   padding: 0.25rem;
   background-color: var(--mat-sys-surface-container-high);
-  box-shadow: var(--mat-sys-level3);
+  box-shadow: var(--app-elevation-3);
 
   // Inset by the panel's own padding, so a highlighted option is a rounded block inside the panel
   // rather than a square edge running into its rounded corner.
   .mat-mdc-option {
     min-height: 2.5rem;
-    border-radius: var(--mat-sys-corner-small);
+    border-radius: var(--app-radius-sm);
   }
+}
+
+// Material wraps a drawer's projected content in its own scrolling div. That div becomes the
+// scrollport for everything inside it, which leaves the sidebar's `position: sticky` with nothing
+// to stick to and scrolls the navigation off the top along with the page. Scoped to the dashboard's
+// own drawer rather than every drawer in the app, and safe because the nav caps its own height and
+// scrolls itself.
+//
+// It is global only because the element it applies to is created by Material, inside the drawer,
+// where neither the page nor the sidebar component's styles can reach it.
+.dash-drawer .mat-drawer-inner-container {
+  overflow: visible;
 }
 
 // The OBS overlay is captured over whatever the scene has behind it, so the page must not paint a

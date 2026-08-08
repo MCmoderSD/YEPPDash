@@ -1,0 +1,81 @@
+// The semantic layer on top of Material's --mat-sys-* tokens. Two things live here that the M3
+// palette cannot express: status colours beyond "error", and the shape/depth/motion vocabulary the
+// dashboard reuses across components.
+//
+// Everything is plain sRGB. Ratios in the comments are measured against the page surface (#0e0e10).
+@mixin app-tokens {
+  // --- Status ---------------------------------------------------------------------------------
+  // Four distinguishable states, each one carrying its meaning in hue rather than in brightness
+  // alone, so they survive a monochrome display and the common forms of colour blindness. Every
+  // one clears AAA (7:1) as body text, and the -container/-on pairs are checked against each other.
+  --app-success: #4ade80; // 11.1:1
+  --app-on-success: #00210f;
+  --app-success-container: #0f3d24;
+
+  --app-warning: #fbbf24; // 11.6:1
+  --app-on-warning: #241a00;
+  --app-warning-container: #453000;
+
+  --app-danger: #ff8a88; // 8.5:1
+  --app-on-danger: #3f0710;
+  --app-danger-container: #5e121c;
+
+  --app-info: #60a5fa; // 7.6:1
+  --app-on-info: #001d38;
+  --app-info-container: #0d3a63;
+
+  // Twitch's own purple, for the few places that point at Twitch itself rather than at YEPPBot.
+  --app-accent-twitch: #a78bfa; // 7.1:1
+
+  // --- Depth ----------------------------------------------------------------------------------
+  // On a near-black surface a drop shadow is close to invisible, so depth is carried by a lifted
+  // background plus a hairline border. The shadows only add the softness underneath.
+  --app-elevation-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --app-elevation-2: 0 2px 8px rgb(0 0 0 / 0.45);
+  --app-elevation-3: 0 8px 24px rgb(0 0 0 / 0.5);
+
+  // Drawn at 1px on top of a raised surface. Brighter than a plain divider because it has to read
+  // against the container it sits on, not against the page.
+  --app-border: 1px solid var(--mat-sys-outline-variant);
+  --app-border-strong: 1px solid var(--mat-sys-outline);
+
+  // The lime at low alpha. Used for the wash behind an active nav row and for hover states, where a
+  // solid container tone would be far too loud.
+  --app-tint-primary: rgb(168 224 47 / 0.12);
+  --app-tint-primary-strong: rgb(168 224 47 / 0.2);
+  --app-tint-hover: rgb(255 255 255 / 0.06);
+  --app-tint-pressed: rgb(255 255 255 / 0.1);
+
+  // --- Shape ----------------------------------------------------------------------------------
+  --app-radius-sm: 0.375rem;
+  --app-radius-md: 0.625rem;
+  --app-radius-lg: 1rem;
+  --app-radius-xl: 1.25rem;
+  --app-radius-pill: 999px;
+
+  // --- Motion ---------------------------------------------------------------------------------
+  // Two durations only. Anything that tracks a pointer uses -fast; anything the eye follows across
+  // the screen uses -base.
+  --app-motion-fast: 120ms;
+  --app-motion-base: 220ms;
+  --app-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  // --- Layout ---------------------------------------------------------------------------------
+  --app-sidebar-width: 17.5rem;
+  --app-content-max: 78rem;
+
+  // The navbar's height, and the offset everything sticky below it has to clear. Declared here
+  // rather than left to the navbar's own content so the sidebar can stick directly underneath it
+  // without the two drifting apart. The 1px is the navbar's bottom border.
+  --app-navbar-height: 4rem;
+  --app-below-navbar: calc(var(--app-navbar-height) + 1px);
+}
+
+// Honoured by every transition in the app. Kept as a mixin rather than repeated per component so
+// there is one place the reduced-motion contract is written down.
+@mixin app-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    --app-motion-fast: 1ms;
+    --app-motion-base: 1ms;
+  }
+}
