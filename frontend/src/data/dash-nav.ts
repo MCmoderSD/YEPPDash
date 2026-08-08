@@ -106,7 +106,10 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       {
         label: 'BDSM Test',
         icon: 'psychology',
-        mask: 'BDSM-Test-64px.png',
+        // 128px rather than the smallest fitting size: the browser scales it down to the icon's
+        // actual 20-24px either way, so the larger source only costs a few extra kilobytes and
+        // buys back the sharpness a 64px source loses on a high-DPI display.
+        mask: 'BDSM-Test-128px.png',
         description: 'Results your chat has shared with the channel.',
         path: `${BASE}/bdsm`,
       },

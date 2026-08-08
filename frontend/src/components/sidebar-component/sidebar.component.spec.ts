@@ -82,7 +82,7 @@ describe('SidebarComponent', () => {
       mask.style.getPropertyValue('--icon'),
     ])).toEqual([
       ['Lucky Wheel', 'url(lucky-wheel.svg)'],
-      ['BDSM Test', 'url(BDSM-Test-64px.png)'],
+      ['BDSM Test', 'url(BDSM-Test-128px.png)'],
     ]);
   });
 
