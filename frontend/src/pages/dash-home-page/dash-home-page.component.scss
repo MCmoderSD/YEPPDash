@@ -68,18 +68,31 @@
 
 .dash-home-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+
+  // min() rather than a bare 17rem: a track that cannot shrink below its minimum overflows the
+  // column on a narrow phone instead of fitting into it.
+  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
   gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
+
+  // The grid cell, made a flex container purely so the card inside can fill it by stretching.
+  // The card used to ask for `height: 100%` instead, which is circular in an auto-sized row: the
+  // row is measured from what the item contributes, while the item's height is a percentage of
+  // that row — so a description wrapping onto a second line never reached the row's height and
+  // every card spilled over the one below it. That is what showed up on a phone, where the
+  // descriptions wrap and the desktop's single line does not.
+  > li {
+    display: flex;
+  }
 }
 
 .dash-home-card {
   display: flex;
   align-items: center;
   gap: 0.875rem;
-  height: 100%;
+  flex: 1;
   padding: 1rem;
   border: var(--app-border);
   border-radius: var(--app-radius-lg);
