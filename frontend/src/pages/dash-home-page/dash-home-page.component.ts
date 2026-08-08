@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, Signal } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { AuthService } from '../../services/auth.service';
+import { TwitchUser } from '../../data/twitch-user';
+import { NAV_GROUPS, NavGroup } from '../../data/dash-nav';
 
 @Component({
   selector: 'app-dash-home-page',
@@ -8,5 +11,12 @@ import { environment } from '../../environments/environment';
   standalone: false,
 })
 export class DashHomePageComponent {
+
+  private readonly auth: AuthService = inject(AuthService);
+
   protected readonly botUserId: string = environment.botUserId;
+
+  protected readonly user: Signal<TwitchUser | null> = this.auth.currentUser;
+
+  protected readonly groups: readonly NavGroup[] = NAV_GROUPS;
 }

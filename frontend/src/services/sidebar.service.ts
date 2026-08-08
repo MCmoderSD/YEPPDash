@@ -11,6 +11,12 @@ export class SidebarService {
     this.state.update((open) => !open);
   }
 
+  // Called when the layout gains the room to keep the drawer alongside the content, where it is
+  // permanent furniture rather than something the user opens.
+  open(): void {
+    this.state.set(true);
+  }
+
   close(): void {
     this.state.set(false);
   }

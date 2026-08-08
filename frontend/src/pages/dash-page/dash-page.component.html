@@ -1,8 +1,8 @@
-<mat-sidenav-container class="dash-shell">
+<mat-sidenav-container class="dash-shell" [class.dash-shell-wide]="wide()">
 
   <mat-sidenav
     class="dash-drawer"
-    mode="over"
+    [mode]="wide() ? 'side' : 'over'"
     [opened]="sidebar.opened()"
     (closed)="sidebar.close()"
   >
@@ -10,6 +10,8 @@
   </mat-sidenav>
 
   <mat-sidenav-content class="dash-content">
-    <router-outlet/>
+    <div class="dash-content-inner">
+      <router-outlet/>
+    </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

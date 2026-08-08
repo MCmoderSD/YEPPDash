@@ -2,8 +2,17 @@
   position: sticky;
   top: 0;
   z-index: 10;
+
+  // Slightly translucent so content scrolling underneath is visibly passing behind the bar rather
+  // than disappearing at a hard line. The solid colour stays as the fallback wherever backdrop
+  // filters are unsupported, which is the OBS browser among others.
   background: var(--mat-sys-surface-container);
-  border-block-end: 1px solid var(--mat-sys-outline-variant);
+  border-block-end: var(--app-border);
+
+  @supports (backdrop-filter: blur(1px)) {
+    background: color-mix(in srgb, var(--mat-sys-surface-container) 82%, transparent);
+    backdrop-filter: blur(12px);
+  }
 }
 
 .navbar-inner {
@@ -11,30 +20,57 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 3.5rem;
-  padding: 0.5rem 1.5rem;
+
+  // Height comes from the token alone, with no block padding to add to it, so the sidebar below
+  // can stick flush underneath without the two having to agree twice.
+  min-height: var(--app-navbar-height);
+  padding: 0 1rem;
+
+  @media (min-width: 48rem) {
+    padding-inline: 1.5rem;
+  }
 }
 
 .navbar-start {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .navbar-end {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+
+  @media (min-width: 48rem) {
+    gap: 1rem;
+  }
 }
 
 .navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--app-radius-md);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-title-medium);
   text-decoration: none;
+  transition: background-color var(--app-motion-fast) var(--app-ease);
 
-  &:hover,
-  &:focus-visible {
-    text-decoration: underline;
+  &:hover {
+    background: var(--app-tint-hover);
+  }
+
+  // The dot that carries the brand colour into the bar. Decorative, so it is drawn rather than
+  // written — a screen reader reads the name on its own.
+  &::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--app-radius-pill);
+    background: var(--mat-sys-primary);
   }
 }
 
