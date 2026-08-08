@@ -26,8 +26,10 @@
   font: var(--mat-sys-label-large);
 }
 
+// Trimmed to sit level with the menu items below it, which are inset by the panel's own padding
+// (see .mat-mdc-menu-panel in styles.scss) plus their own.
 .user-menu-details {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .user-menu-detail {

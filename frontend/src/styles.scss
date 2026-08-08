@@ -68,6 +68,21 @@ html {
   --mat-option-focus-state-layer-color: var(--app-tint-hover);
   --mat-list-list-item-hover-state-layer-color: var(--mat-sys-on-surface);
   --mat-list-list-item-focus-state-layer-color: var(--mat-sys-on-surface);
+
+  // Material's corner scale is 4/8/12/16/28, and its smaller steps read as square next to the
+  // rounded surfaces the rest of the app is built from — a menu takes the 4px step, which is what
+  // made the account panel look boxy against the pill-shaped button that opens it. Raised to match
+  // the --app-radius-* scale, keeping the same five-step progression so every component that reads
+  // one of these moves together.
+  --mat-sys-corner-extra-small: var(--app-radius-sm);
+  --mat-sys-corner-small: var(--app-radius-md);
+  --mat-sys-corner-medium: var(--app-radius-lg);
+  --mat-sys-corner-large: var(--app-radius-xl);
+
+  // Set outright rather than left to the scale above: an overlay panel wants a rounder corner than
+  // the inline surfaces that share its step.
+  --mat-menu-container-shape: var(--app-radius-lg);
+  --mat-select-container-shape: var(--app-radius-lg);
 }
 
 // The platform's viewport scroll bar is taken away outright; PageScrollBarComponent draws one that
@@ -111,6 +126,28 @@ body {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
   border-radius: var(--app-radius-sm);
+}
+
+// A menu renders in the CDK overlay, outside the component that opened it, so its styling cannot
+// live with that component. Applied to every menu in the app rather than opted into per menu,
+// because unlike the select panel below there is nothing here a single menu would want differently.
+//
+// The hairline is what separates the panel from the page: it floats on a surface only a couple of
+// tones above the near-black behind it, where a drop shadow alone is close to invisible.
+.mat-mdc-menu-panel {
+  border: var(--app-border);
+  box-shadow: var(--app-elevation-3);
+
+  .mat-mdc-menu-content {
+    padding: 0.25rem;
+  }
+
+  // Inset by the panel's own padding, so a highlighted item is a rounded block inside the panel
+  // rather than a square edge running into its rounded corner.
+  .mat-mdc-menu-item {
+    min-height: 2.5rem;
+    border-radius: var(--app-radius-md);
+  }
 }
 
 // A select renders its dropdown in the CDK overlay, outside the component that declared it, so its
