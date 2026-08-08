@@ -38,6 +38,36 @@ html {
   // leaves secondary text no dimmer than primary. Pinned a step down to restore the hierarchy —
   // still 10.2:1 on the page surface, well past the 4.5:1 AA minimum it has to clear as body text.
   --mat-sys-on-surface-variant: #bcbcc7;
+
+  // Material washes a control's hover and focus state in its own accent, which for an unqualified
+  // button is the primary — so every text button, icon button and menu entry lit up in the brand
+  // lime and read as though it had already been chosen. Being chosen is the one thing that should
+  // be green, so these are switched to the neutral wash Material itself uses for its non-accent
+  // buttons, matching the navbar's own hover.
+  //
+  // Only which colour is washed over the control changes; the paired -opacity tokens are left at
+  // Material's defaults, so the weight of the effect is untouched. Selected states are left alone
+  // too — see --mat-option-selected-state-layer-color, which stays on the accent by design.
+  --mat-button-text-state-layer-color: var(--mat-sys-on-surface);
+  --mat-button-outlined-state-layer-color: var(--mat-sys-on-surface);
+  --mat-button-protected-state-layer-color: var(--mat-sys-on-surface);
+  --mat-button-tonal-state-layer-color: var(--mat-sys-on-surface);
+  --mat-icon-button-state-layer-color: var(--mat-sys-on-surface);
+
+  // Ripples and the menu/option washes below carry their alpha in the colour itself rather than in
+  // a paired opacity token, so these take a translucent value where the ones above take a solid one.
+  --mat-button-text-ripple-color: var(--app-tint-pressed);
+  --mat-button-outlined-ripple-color: var(--app-tint-pressed);
+  --mat-button-protected-ripple-color: var(--app-tint-pressed);
+  --mat-button-tonal-ripple-color: var(--app-tint-pressed);
+  --mat-icon-button-ripple-color: var(--app-tint-pressed);
+
+  --mat-menu-item-hover-state-layer-color: var(--app-tint-hover);
+  --mat-menu-item-focus-state-layer-color: var(--app-tint-hover);
+  --mat-option-hover-state-layer-color: var(--app-tint-hover);
+  --mat-option-focus-state-layer-color: var(--app-tint-hover);
+  --mat-list-list-item-hover-state-layer-color: var(--mat-sys-on-surface);
+  --mat-list-list-item-focus-state-layer-color: var(--mat-sys-on-surface);
 }
 
 // The platform's viewport scroll bar is taken away outright; PageScrollBarComponent draws one that
