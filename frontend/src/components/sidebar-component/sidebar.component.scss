@@ -4,6 +4,11 @@
 :host {
   display: block;
   height: 100%;
+
+  // The scroll bars are inserted as a sibling of the nav and positioned against the nearest
+  // positioned ancestor, so without this they would be laid out against the drawer and land
+  // somewhere other than on the nav they belong to.
+  position: relative;
 }
 
 // The drawer itself is as tall as the content beside it, so left alone the navigation scrolls off
@@ -117,11 +122,15 @@
 }
 
 .sidebar-group-list {
-  // How far the entries sit in from the rail they hang off. The rail and the active marker are both
-  // drawn at this offset, so neither can drift from the other — and it is deliberately tight,
-  // because the wider this gets the more the marker reads as something floating on its own rather
-  // than as the row's own edge.
+  // How far the entries sit in from the rail they hang off. Deliberately tight: the wider this
+  // gets, the more the marker reads as something floating on its own rather than as the row's own
+  // edge.
   --sidebar-rail-gap: 0.875rem;
+
+  // The rail and the marker are laid out from this pair rather than from two sets of numbers, which
+  // is what keeps the marker centred on the rail however either is retuned.
+  --sidebar-rail-width: 1px;
+  --sidebar-marker-width: 4px;
 
   // Clips on the grid item itself, not on the grid above. Only a grid item's own `overflow` lifts
   // its automatic minimum size off `auto`, and without that the 0fr row cannot squeeze it down —
@@ -143,15 +152,18 @@
   // heading once several groups are open at once.
   //
   // Drawn inside the box rather than as a border on its edge: a border sits outside the padding box
-  // that `overflow` clips to, which put it permanently out of reach of the active marker and left a
-  // hairline of bare background between the two. As a pseudo-element at the same offset the marker
-  // uses, the marker can paint straight over it.
+  // that `overflow` clips to, which put it permanently out of reach of the active marker.
+  //
+  // Set in from that clip edge by half a marker, so the rail runs down the marker's centre line and
+  // the marker straddles it. Sitting flush at the edge instead would leave the marker no room to
+  // extend to the left of the rail, and it would read as hung off one side of the line rather than
+  // as part of it.
   &::before {
     content: '';
     position: absolute;
     inset-block: 0;
-    inset-inline-start: 0;
-    width: 1px;
+    inset-inline-start: calc((var(--sidebar-marker-width) - var(--sidebar-rail-width)) / 2);
+    width: var(--sidebar-rail-width);
     background: var(--mat-sys-outline-variant);
   }
 }
@@ -230,16 +242,16 @@
   // height of the row: a full-height bar competes with the tinted row for the eye, where a stub
   // reads as a mark on the rail — the row's own tint is what says which entry this is.
   //
-  // Lands on exactly the offset the rail is drawn at, so it paints over that hairline instead of
-  // sitting beside it. Stopping short of the rail left a sliver of bare background between a dim
-  // 1px line and a bright 3px mark, and the two read as separate accents rather than as one
-  // segment of the rail lighting up.
+  // Straddles the rail rather than sitting against it: the rail is inset by half a marker (see
+  // .sidebar-group-list), so starting flush at the list's clip edge leaves the line running down
+  // this marker's centre and cutting it in two. Hung off one side instead, it read as a separate
+  // accent parked next to the line rather than as part of it.
   &::before {
     content: '';
     position: absolute;
     inset-inline-start: calc(-1 * var(--sidebar-rail-gap));
     top: 50%;
-    width: 4px;
+    width: var(--sidebar-marker-width);
     height: 1.125rem;
     transform: translateY(-50%);
     border-radius: var(--app-radius-pill);
