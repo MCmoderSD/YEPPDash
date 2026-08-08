@@ -1,7 +1,8 @@
-// The one moment on the page worth celebrating, so the title carries the wheel's own yellow rather
-// than the dialog's ordinary heading colour.
+// The one moment on the page worth celebrating, so the title carries the brand colour rather than
+// the dialog's ordinary heading colour. Not the tertiary it used to reach for: that is now the
+// cyan counterpoint, which read as an unrelated blue sitting on its own in the middle of the app.
 .wheel-winner-title {
-  color: var(--mat-sys-tertiary);
+  color: var(--mat-sys-primary);
 }
 
 .wheel-winner-name {
