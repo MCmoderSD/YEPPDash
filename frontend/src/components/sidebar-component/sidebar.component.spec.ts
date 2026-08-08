@@ -128,10 +128,10 @@ describe('SidebarComponent', () => {
 
     expect(management.getAttribute('aria-expanded')).toBe('false');
 
-    // Hidden rather than removed, so the collapse can be animated — but `hidden` is what keeps the
-    // links inside out of the tab order while it is shut.
+    // Kept in the DOM so the collapse can be animated. The open class is what drives both the
+    // animation and the visibility that keeps the links inside out of the tab order while shut.
     const items = (fixture.nativeElement as HTMLElement).querySelector('#sidebar-group-management');
-    expect(items!.hasAttribute('hidden')).toBe(true);
+    expect(items!.classList.contains('sidebar-group-items-open')).toBe(false);
 
     management.click();
     fixture.detectChanges();

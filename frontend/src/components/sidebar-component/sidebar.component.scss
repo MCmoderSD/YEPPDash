@@ -89,22 +89,48 @@
   transform: rotate(-90deg);
 }
 
+// A single grid row travelling between 0fr and 1fr. That is what makes this animate to the height
+// the content decides rather than to a max-height guessed in advance — too small and long groups
+// are cut off, too large and the transition spends most of its time crossing empty space.
+//
+// A browser without animatable grid tracks simply snaps open and shut, which is where this started.
 .sidebar-group-items {
+  display: grid;
+  grid-template-rows: 0fr;
+
+  // Takes the links inside out of the tab order while the group is shut, which `hidden` used to do.
+  // visibility is a discrete property, so with a transition on it the flip to hidden waits until
+  // the collapse has finished, while the flip back to visible happens as the expand starts.
+  visibility: hidden;
+
+  transition:
+    grid-template-rows var(--app-motion-base) var(--app-ease),
+    visibility var(--app-motion-base);
+}
+
+.sidebar-group-items-open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.sidebar-group-list {
+  // The row above can only squeeze this to nothing if it is allowed to clip its own content.
+  overflow: hidden;
+
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  margin: 0.125rem 0 0;
-  padding: 0 0 0 1.375rem;
+  margin: 0;
+
+  // Padding rather than a top margin: a margin sits outside the box the grid row measures, so it
+  // would hold the group a couple of pixels open after it had collapsed.
+  padding: 0.125rem 0 0 1.375rem;
   list-style: none;
 
   // The rail the indented entries hang off, which is what keeps them legible as children of the
   // heading once several groups are open at once.
   border-inline-start: var(--app-border);
   margin-inline-start: 1.0625rem;
-
-  &[hidden] {
-    display: none;
-  }
 }
 
 // --- Entries ----------------------------------------------------------------------------------
