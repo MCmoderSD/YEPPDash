@@ -36,6 +36,12 @@
 }
 
 .dash-content {
+  // Material sizes this element with `height: 100%`, and nothing in the app sets border-box, so
+  // the padding below was being added on top of that height rather than fitting inside it. The
+  // element ended up taller than the shell by exactly its own padding, pushing the page past the
+  // viewport and letting the footer drift up off the bottom on a page with nothing to scroll.
+  box-sizing: border-box;
+
   // Its own scroll container rather than the page's: the drawer stays put while the content moves,
   // which is the whole point of running it in `side` mode.
   padding: 1.5rem 1rem 3rem;
