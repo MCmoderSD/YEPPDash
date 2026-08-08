@@ -10,13 +10,15 @@ import { NavbarComponent } from './navbar-component/navbar.component';
 import { FooterComponent } from './footer-component/footer.component';
 import { UserMenuComponent } from './user-menu-component/user-menu.component';
 import { NotificationsComponent } from './notifications-component/notifications.component';
+import { PageScrollBarComponent } from './page-scroll-bar-component/page-scroll-bar.component';
 import { LocaleDatePipe } from '../pipes/locale-date.pipe';
 
 const components: any[] = [
   NavbarComponent,
   FooterComponent,
   UserMenuComponent,
-  NotificationsComponent
+  NotificationsComponent,
+  PageScrollBarComponent
 ];
 
 @NgModule({

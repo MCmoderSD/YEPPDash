@@ -40,6 +40,24 @@ html {
   --mat-sys-on-surface-variant: #bcbcc7;
 }
 
+// The platform's viewport scroll bar is taken away outright; PageScrollBarComponent draws one that
+// floats over the content instead of sitting beside it.
+//
+// Not a cosmetic preference. A native bar occupies a gutter outside the area any element or
+// background can paint into, so on this near-black page it reads as a pale stripe down the right
+// edge that nothing in the design can reach. Removing the gutter is what makes the background
+// continuous by construction rather than by coincidence.
+//
+// Scoped to the document element, so elements that scroll inside the page keep their own — those
+// are handled by ScrollBarComponent where it is attached, and left native where it is not.
+html {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 body {
   // Dashboard is dark-only by design (Twitch-chrome background) — no light variant.
   color-scheme: dark;

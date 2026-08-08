@@ -1,0 +1,65 @@
+// Floats over the content at the right edge rather than sitting in a gutter beside it, so the page
+// background runs unbroken underneath — which is the point of replacing the platform bar at all. A
+// native bar's track is outside the area any element or background can paint into, so it shows the
+// bare canvas colour there as a stripe down the edge of an otherwise dark page.
+:host {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0.75rem;
+
+  // Above the page and its sticky chrome, below the CDK overlay: a dialog or a menu still wins.
+  z-index: 30;
+
+  // The strip itself is never a target; only the thumb takes the pointer back. Otherwise this would
+  // swallow every click along the right edge of the page.
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity var(--app-motion-base) var(--app-ease);
+}
+
+// Out until the pointer comes to the edge, is holding the thumb, or the page was just scrolled.
+:host(.page-scroll-bar-revealed) {
+  opacity: 1;
+}
+
+.page-scroll-bar-thumb {
+  position: absolute;
+  top: 0;
+  right: 0.1875rem;
+  width: 0.375rem;
+  border-radius: var(--app-radius-pill);
+  background: color-mix(in srgb, var(--mat-sys-on-surface-variant) 55%, transparent);
+  pointer-events: auto;
+
+  // Drawn over content of any brightness, so it carries its own hairline rather than relying on
+  // whatever happens to be behind it for separation.
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
+
+  // Without this the browser claims a vertical drag for its own scrolling gesture before the
+  // pointermove handler ever sees it.
+  touch-action: none;
+
+  transition:
+    background-color var(--app-motion-fast) var(--app-ease),
+    width var(--app-motion-fast) var(--app-ease),
+    right var(--app-motion-fast) var(--app-ease);
+}
+
+// Thickens and takes the brand colour under the pointer, and stays that way for the whole drag —
+// which is mostly spent with the pointer well away from the bar.
+.page-scroll-bar-thumb:hover,
+:host(.page-scroll-bar-dragging) .page-scroll-bar-thumb {
+  width: 0.5rem;
+  right: 0.125rem;
+  background: var(--mat-sys-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .page-scroll-bar-thumb {
+    transition: none;
+  }
+}
