@@ -35,8 +35,11 @@
   border-block-start: var(--app-border);
 }
 
+// The breathing room between a heading and its first entry lives here rather than as padding inside
+// the list, which is the box that collapses — padding there survives the collapse and leaves every
+// shut group holding a couple of pixels open.
 .sidebar-group-heading {
-  margin: 0;
+  margin: 0 0 0.125rem;
 }
 
 .sidebar-group-button {
@@ -114,29 +117,43 @@
 }
 
 .sidebar-group-list {
-  // How far the entries sit in from the rail they hang off. The active marker is drawn back out to
-  // that rail from inside its own row, so both read this rather than repeating the number — and it
-  // is deliberately tight, because the wider this gets the more the marker reads as something
-  // floating on its own rather than as the row's own edge.
+  // How far the entries sit in from the rail they hang off. The rail and the active marker are both
+  // drawn at this offset, so neither can drift from the other — and it is deliberately tight,
+  // because the wider this gets the more the marker reads as something floating on its own rather
+  // than as the row's own edge.
   --sidebar-rail-gap: 0.875rem;
 
-  // The row above can only squeeze this to nothing if it is allowed to clip its own content.
+  // Clips on the grid item itself, not on the grid above. Only a grid item's own `overflow` lifts
+  // its automatic minimum size off `auto`, and without that the 0fr row cannot squeeze it down —
+  // the group would simply stay open.
   overflow: hidden;
 
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  margin: 0;
+  margin: 0 0 0 1.0625rem;
 
-  // Padding rather than a top margin: a margin sits outside the box the grid row measures, so it
-  // would hold the group a couple of pixels open after it had collapsed.
-  padding: 0.125rem 0 0 var(--sidebar-rail-gap);
+  // No block padding at all: anything here is inside the box the grid row collapses and would hold
+  // a shut group that far open. The heading above carries the spacing instead.
+  padding: 0 0 0 var(--sidebar-rail-gap);
   list-style: none;
 
   // The rail the indented entries hang off, which is what keeps them legible as children of the
   // heading once several groups are open at once.
-  border-inline-start: var(--app-border);
-  margin-inline-start: 1.0625rem;
+  //
+  // Drawn inside the box rather than as a border on its edge: a border sits outside the padding box
+  // that `overflow` clips to, which put it permanently out of reach of the active marker and left a
+  // hairline of bare background between the two. As a pseudo-element at the same offset the marker
+  // uses, the marker can paint straight over it.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 1px;
+    background: var(--mat-sys-outline-variant);
+  }
 }
 
 // --- Entries ----------------------------------------------------------------------------------
@@ -177,6 +194,14 @@
   transition: color var(--app-motion-fast) var(--app-ease);
 }
 
+// Artwork the icon font does not carry, painted through a mask so it takes the row's own colour
+// exactly as the font's entries do — placed as an image it would sit at whatever colour it was
+// drawn in while everything beside it moved from grey to the brand colour.
+.sidebar-link-icon-mask {
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
 .sidebar-link-label {
   min-width: 0;
   overflow: hidden;
@@ -205,18 +230,24 @@
   // height of the row: a full-height bar competes with the tinted row for the eye, where a stub
   // reads as a mark on the rail — the row's own tint is what says which entry this is.
   //
-  // It stops at the rail rather than crossing it because the list clips at exactly that line to
-  // make the collapse work, so anything further out would simply be cut off.
+  // Lands on exactly the offset the rail is drawn at, so it paints over that hairline instead of
+  // sitting beside it. Stopping short of the rail left a sliver of bare background between a dim
+  // 1px line and a bright 3px mark, and the two read as separate accents rather than as one
+  // segment of the rail lighting up.
   &::before {
     content: '';
     position: absolute;
     inset-inline-start: calc(-1 * var(--sidebar-rail-gap));
     top: 50%;
-    width: 3px;
+    width: 4px;
     height: 1.125rem;
     transform: translateY(-50%);
     border-radius: var(--app-radius-pill);
     background: var(--mat-sys-primary);
+
+    // Bleeds the accent a little way into the surface around it, which softens the transition from
+    // a 4px bar to bare background and keeps the mark from looking pasted on.
+    box-shadow: 0 0 0.5rem 0 var(--app-tint-primary-strong);
   }
 }
 
