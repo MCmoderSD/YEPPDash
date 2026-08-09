@@ -64,13 +64,24 @@
   }
 }
 
+// Three words and an icon, with nothing in them that survives being squeezed. Left shrinkable it
+// took its share of every shortage and clipped its own label, when the account name beside it is
+// the thing here that can be cut and still be read.
+.navbar-faq {
+  flex: none;
+}
+
 // Signed out the bar holds little else, so the FAQ has the room. Signed in it competes with the
-// drawer toggle and the account button, and on a phone the three together overrun the width. The
-// FAQ is the one of them with somewhere else to go, so there it moves into the account menu.
+// drawer toggle and the account button, and below this the three together leave the display name
+// too little to be worth showing. The FAQ is the one of them with somewhere else to go, so under
+// that width it moves into the account menu.
+//
+// The width itself is where a normal-length display name stops fitting alongside all three, not a
+// device size: measured against the bar's own contents, that lands a little under 34rem.
 .navbar-end-authed .navbar-faq {
   display: none;
 
-  @media (min-width: 48rem) {
+  @media (min-width: 34rem) {
     display: inline-flex;
   }
 }

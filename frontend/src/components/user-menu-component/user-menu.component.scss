@@ -65,9 +65,11 @@
 }
 
 // The navbar carries its own FAQ link from this width up, so keeping one here too would offer the
-// same page twice over. See the note in the template.
+// same page twice over. Has to be the width the navbar hands the link over at, not a round number
+// of its own — the two together are what makes the FAQ reachable at exactly one place per width.
+// See the note in the template.
 .user-menu-faq {
-  @media (min-width: 48rem) {
+  @media (min-width: 34rem) {
     display: none;
   }
 }
