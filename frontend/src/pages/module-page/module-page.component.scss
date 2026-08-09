@@ -75,8 +75,9 @@
     transform: rotate(180deg);
   }
 
-  // The description follows directly below once the card is open, so the summary's bottom edge is
-  // no longer a corner of anything — rounding it there leaves the wash notched mid-card.
+  // Only the keyboard ring is drawn on this edge now that the hover wash is gone while open, but it
+  // follows the same radius: the description sits directly under the summary here, so its bottom
+  // corner is no longer a corner of anything and rounding it would notch the ring mid-card.
   .module-panel-summary {
     border-end-start-radius: 0;
   }
@@ -117,16 +118,20 @@
   cursor: pointer;
   transition: background-color var(--app-motion-fast) var(--app-ease);
 
-  &:hover {
-    background: var(--app-tint-hover);
-  }
-
   // The browser's own ring, kept rather than removed: it is what makes the row usable from the
   // keyboard, and it is inset so it does not sit on top of the card's border.
   &:focus-visible {
     outline: 2px solid var(--mat-sys-primary);
     outline-offset: -2px;
   }
+}
+
+// Only while the card is shut. Open, it already says so with a lifted tone and a brand-coloured
+// edge, and a wash over the summary alone adds a third mark that covers part of a card the eye now
+// reads as one block — the summary stops being a row of its own once the description sits under it.
+// Reshaping it was not enough; there is simply nothing left for it to say here.
+.module-panel:not(.module-panel-open) .module-panel-summary:hover {
+  background: var(--app-tint-hover);
 }
 
 .module-panel-chevron {
