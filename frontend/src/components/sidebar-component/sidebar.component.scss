@@ -120,8 +120,14 @@
 
   // The rail and the marker are laid out from this pair rather than from two sets of numbers, which
   // is what keeps the marker centred on the rail however either is retuned.
+  //
+  // Their difference has to stay EVEN, because the rail is offset by half of it. At 4px against a
+  // 1px rail that offset was 1.5px, which no device pixel lands on at 100% zoom: the browser pushed
+  // the hairline a whole pixel to the right and the marker read as sitting left of it. It only
+  // looked centred at 200%, where 1.5px happens to be exactly three device pixels. An even
+  // difference keeps every edge on a whole pixel at any zoom.
   --sidebar-rail-width: 1px;
-  --sidebar-marker-width: 4px;
+  --sidebar-marker-width: 3px;
 
   // Clips on the grid item itself, not on the grid above. Only a grid item's own `overflow` lifts
   // its automatic minimum size off `auto`, and without that the 0fr row cannot squeeze it down —
