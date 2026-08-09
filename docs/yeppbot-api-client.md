@@ -9,6 +9,7 @@ These routes are what make a change take effect now instead of at the bot's next
 ```
 frontend BotService  →  backend /bot/*  →  YeppBotClient  →  YEPPBot
                         CustomCommandService ↗
+                        ModuleService       ↗
 ```
 
 ## Configuration
@@ -43,17 +44,21 @@ host trusts where that is possible.
 
 ## `YeppBotClient`
 
-All three endpoints are POST, take the channel's numeric Twitch user id as the last path segment, send
-no body, and answer `{ success, status, message }`.
+Every endpoint is POST, sends no body, and answers `{ success, status, message }`.
 
 | Method | Endpoint | Notes |
 |---|---|---|
 | `JoinChannelAsync` | `POST api/JoinChannel/{channelId}` | Idempotent — already joined still answers 200 |
 | `LeaveChannelAsync` | `POST api/LeaveChannel/{channelId}` | |
 | `UpdateCustomCommandsAsync` | `POST api/UpdateCustomCommands/{channelId}` | Reload is asynchronous on the bot's side: success means it started, not that it finished |
+| `UpdateBlacklistAsync` | `POST api/UpdateBlacklist` | **No channel segment.** Reload is synchronous: success means it has finished |
 
 `{channelId}` is the **channel owner's** id, not the bot's. Anything that is not a positive integer is
 refused before a request is spent on it, matching the 400 the bot would answer with.
+
+`UpdateBlacklist` is the one global route: the bot keeps a single blacklist covering every channel it
+serves and re-reads all of it at once, so there is no id to send — and it answers 400 for a segment
+appended anyway, rather than ignoring it.
 
 ### Failure handling
 
@@ -86,3 +91,10 @@ reported as `502`.
 should answer — add, update, delete, and the active toggle. It is best effort and never fails the edit:
 the write has already committed, so a bot that cannot be reached only means it answers with the old
 command until it is asked again or restarted. That is a log line, not an error for the channel to act on.
+
+### Blacklist reloads
+
+`ModuleService` calls `UpdateBlacklistAsync` after a module is actually switched on or off — not when
+the write was a no-op, since nothing changed for the bot to re-read. Same best-effort contract as the
+command reloads: the row is committed either way, and an unreachable bot only keeps answering the old
+way until it is asked again or restarts.

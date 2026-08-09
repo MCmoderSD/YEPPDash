@@ -26,6 +26,17 @@ public sealed class YeppBotClient(HttpClient httpClient, YeppBotOptions options,
         return PostAsync("UpdateCustomCommands", userId, cancellationToken);
     }
 
+    /// <summary>
+    /// Tells the bot to re-read the whole <c>Blacklist</c> table. Unlike the other calls this one is
+    /// not per channel — the bot holds one blacklist for every channel it serves and reloads all of
+    /// it, so there is no id to send and it rejects a path segment with 400. The reload is
+    /// synchronous on the bot's side, so success here means it has finished.
+    /// </summary>
+    public Task<YeppBotResult> UpdateBlacklistAsync(CancellationToken cancellationToken)
+    {
+        return SendAsync("UpdateBlacklist", "UpdateBlacklist", cancellationToken);
+    }
+
     private async Task<YeppBotResult> PostAsync(string endpoint, string userId, CancellationToken cancellationToken)
     {
         if (!options.Configured) return YeppBotResult.NotConfigured;
@@ -37,9 +48,16 @@ public sealed class YeppBotClient(HttpClient httpClient, YeppBotOptions options,
             return YeppBotResult.Failed($"'{userId}' is not a Twitch user id.");
         }
 
+        return await SendAsync(endpoint, $"{endpoint}/{channelId}", cancellationToken);
+    }
+
+    private async Task<YeppBotResult> SendAsync(string endpoint, string path, CancellationToken cancellationToken)
+    {
+        if (!options.Configured) return YeppBotResult.NotConfigured;
+
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/{channelId}");
+            using var request = new HttpRequestMessage(HttpMethod.Post, path);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
 
             using var response = await httpClient.SendAsync(request, cancellationToken);
@@ -51,9 +69,11 @@ public sealed class YeppBotClient(HttpClient httpClient, YeppBotOptions options,
 
             if (!success)
             {
+                // The path rather than the id on its own: it carries the channel where there is one,
+                // and UpdateBlacklist has none to name.
                 logger.LogWarning(
-                    "YEPPBot refused {Endpoint} for channel {ChannelId}: {Status} {Message}",
-                    endpoint, channelId, status, message);
+                    "YEPPBot refused {Endpoint} at {Path}: {Status} {Message}",
+                    endpoint, path, status, message);
             }
 
             return new YeppBotResult(success, status, message);
@@ -64,7 +84,7 @@ public sealed class YeppBotClient(HttpClient httpClient, YeppBotOptions options,
             if (cancellationToken.IsCancellationRequested) throw;
 
             logger.LogWarning(
-                exception, "Could not reach YEPPBot for {Endpoint} on channel {ChannelId}", endpoint, channelId);
+                exception, "Could not reach YEPPBot for {Endpoint} at {Path}", endpoint, path);
 
             return YeppBotResult.Failed("Could not reach YEPPBot.");
         }
