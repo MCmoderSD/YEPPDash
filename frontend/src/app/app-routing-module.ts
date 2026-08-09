@@ -26,11 +26,53 @@ const routes: Routes = [
     canMatch: [dashHostMatch],
     loadChildren: () => import('../pages/dash.module').then((module) => module.DashModule),
   },
-  { path: '', component: LandingPageComponent, title: 'YEPPDash', canMatch: [otherHostMatch] },
-  { path: 'faq', component: FaqPageComponent, title: 'FAQ', canMatch: [otherHostMatch] },
-  { path: 'imprint', component: ImprintPageComponent, title: 'Imprint', canMatch: [otherHostMatch] },
-  { path: 'privacy', component: PrivacyPageComponent, title: 'Privacy Policy', canMatch: [otherHostMatch] },
-  { path: 'terms', component: TermsPageComponent, title: 'Terms of Service', canMatch: [otherHostMatch] },
+  // These five are prerendered (see app.routes.server.ts), so each description below is baked into
+  // the static HTML for that page rather than only appearing once the app has booted.
+  {
+    path: '',
+    component: LandingPageComponent,
+    title: 'YEPPDash',
+    canMatch: [otherHostMatch],
+    data: {
+      description: 'Run YEPPBot from your browser. Sign in with Twitch to add the bot to your '
+        + 'channel, hand out moderator and VIP roles, write custom commands, and keep quotes and '
+        + 'follower birthdays in one place.',
+    },
+  },
+  {
+    path: 'faq',
+    component: FaqPageComponent,
+    title: 'FAQ',
+    canMatch: [otherHostMatch],
+    data: {
+      description: 'What YEPPBot is, what YEPPDash does with your Twitch account, which permissions '
+        + 'it asks for and why, and how finished any of it actually is.',
+    },
+  },
+  {
+    path: 'imprint',
+    component: ImprintPageComponent,
+    title: 'Imprint',
+    canMatch: [otherHostMatch],
+    data: { description: 'Who runs YEPPDash and YEPPBot, and how to get in touch.' },
+  },
+  {
+    path: 'privacy',
+    component: PrivacyPageComponent,
+    title: 'Privacy Policy',
+    canMatch: [otherHostMatch],
+    data: {
+      description: 'What YEPPDash processes about you and why, how your Twitch tokens are kept '
+        + 'encrypted, and your rights under the GDPR. No analytics, no data brokers.',
+    },
+  },
+  {
+    path: 'terms',
+    component: TermsPageComponent,
+    title: 'Terms of Service',
+    canMatch: [otherHostMatch],
+    data: { description: 'The terms you agree to when using YEPPDash to run YEPPBot in your channel.' },
+  },
   {
     path: 'dash',
     canActivate: [authGuard],

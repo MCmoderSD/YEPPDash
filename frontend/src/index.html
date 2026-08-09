@@ -6,14 +6,35 @@
     <base href="/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
+    <!-- The default for every route, and the one place its wording lives — PageMetaStrategy reads it
+         back out as the fallback for routes that say nothing about themselves, and replaces it for
+         the ones that do. It has to sit in the document as served: the public pages are prerendered
+         with their own description baked in, and a crawler that never runs the app sees only this. -->
+    <meta name="description" content="Web dashboard for YEPPBot, the Twitch chat bot. Add the bot to your channel, manage moderators and VIPs, custom commands, quotes and follower birthdays — all from the browser instead of chat."/>
+
     <!--suppress HtmlUnknownTarget -->
     <link rel="icon" type="image/x-icon" href="favicon.ico"/>
 
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 
+    <!-- The first thing the app does once it boots is ask the API who is signed in, and on the
+         dashboard nothing renders until that answers. Left to itself the DNS lookup and TLS
+         handshake for it only start at that point; this gets them out of the way while the HTML is
+         still being parsed. crossorigin because the call carries the session cookie, and a
+         preconnect opened without it is a different connection than the one the fetch needs.
+
+         Spelled out rather than read from environment.ts: this is a resource hint in static HTML,
+         and the file is served before any of that exists. It is the production API either way — a
+         local backend is on another port and simply ignores the hint. -->
+    <link rel="preconnect" href="https://api.yeppbot.com" crossorigin/>
+
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+    <!-- display=swap here too: without it this face falls back to `auto`, which blocks every icon in
+         the app for up to three seconds on a slow connection while the 128 kB font arrives. The
+         Roboto link above has always carried it; this one was the only face left blocking. -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet"/>
   </head>
   <body>
     <app-root></app-root>
