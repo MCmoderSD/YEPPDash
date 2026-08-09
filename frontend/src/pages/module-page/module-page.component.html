@@ -1,0 +1,86 @@
+<section class="module-page">
+
+  <header class="module-page-header">
+    <h1 class="module-page-title">Modules</h1>
+    <p class="module-page-count">
+      @if (count() === 0) {
+        Nothing to switch yet
+      } @else {
+        {{ enabledCount() }} of {{ count() }} module{{ count() === 1 ? '' : 's' }} on in your channel
+      }
+    </p>
+  </header>
+
+  <!-- Kept in the layout while idle so the list does not jump every time a request starts. -->
+  <mat-progress-bar
+    class="module-page-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!(loading() || busy())"
+    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+  />
+
+  @if (count() === 0) {
+    <p class="module-page-empty">
+      @if (loading()) {
+        Loading your modules…
+      } @else if (unreachable()) {
+        Could not reach the dashboard's API. Reload the page to try again.
+      } @else {
+        YEPPBot has no modules to manage here.
+      }
+    </p>
+  }
+
+  <div class="module-page-list">
+    @for (module of moduleList(); track module.id) {
+      <!-- Not a mat-expansion-panel: its header is itself a button, and the switch below would then
+           be a control nested inside another one — which screen readers announce unreliably and AXE
+           rejects outright. The summary button and the switch are siblings here instead, so opening
+           the panel and switching the module off are two separate targets. -->
+      <div class="module-panel" [class.module-panel-open]="isOpen(module.id)">
+
+        <div class="module-panel-header">
+          <button
+            type="button"
+            class="module-panel-summary"
+            [attr.aria-expanded]="isOpen(module.id)"
+            [attr.aria-controls]="'module-body-' + module.id"
+            (click)="toggleOpen(module.id)"
+          >
+            <mat-icon class="module-panel-chevron" aria-hidden="true">expand_more</mat-icon>
+            <span class="module-panel-name">{{ module.name }}</span>
+            <span class="module-panel-trigger">!{{ module.id }}</span>
+          </button>
+
+          <!-- hideIcon because the tick and dash inside the handle are what make M3's switch read
+               as heavy; on and off are already told apart by colour and by which side it sits. -->
+          <mat-slide-toggle
+            class="module-panel-switch"
+            hideIcon
+            [checked]="module.enabled"
+            [disabled]="busy()"
+            [aria-label]="'Module ' + module.name + ' enabled'"
+            (change)="setEnabled(module, $event)"
+          />
+        </div>
+
+        <!-- Always rendered so aria-controls always resolves; the collapsed state is a zero-height
+             grid row, which animates where a removed element could not. -->
+        <div class="module-panel-body" [id]="'module-body-' + module.id">
+          <div class="module-panel-body-inner">
+            <p class="module-panel-description">{{ module.description }}</p>
+
+            @if (module.aliases.length > 0) {
+              <p class="module-panel-aliases">
+                <span class="module-panel-aliases-label">Also responds to</span>
+                @for (alias of module.aliases; track alias) {
+                  <span class="module-panel-alias">!{{ alias }}</span>
+                }
+              </p>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</section>

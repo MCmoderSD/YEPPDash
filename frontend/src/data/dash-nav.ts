@@ -70,6 +70,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         description: 'Custom commands and what they answer with.',
         path: `${BASE}/commands`,
       },
+      {
+        label: 'Modules',
+        icon: 'extension',
+        description: "Switch YEPPBot's built-in commands on and off.",
+        path: `${BASE}/modules`,
+      },
     ],
   },
   {

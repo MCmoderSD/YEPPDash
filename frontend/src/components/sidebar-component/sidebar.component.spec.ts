@@ -66,6 +66,7 @@ describe('SidebarComponent', () => {
         'VIPs',
         'format_quoteQuotes',
         'terminalCommands',
+        'extensionModules',
         'groupFollower',
         'cakeBirthdays',
         'Lucky Wheel',
@@ -105,6 +106,7 @@ describe('SidebarComponent', () => {
         '/dash/role-management?mode=1',
         '/dash/quotes',
         '/dash/commands',
+        '/dash/modules',
         '/dash/community',
         '/dash/birthdays',
         '/dash/wheel',
@@ -128,7 +130,7 @@ describe('SidebarComponent', () => {
 
     // The two role entries share a path and differ only in ?mode=, so query params have to be
     // compared — matching on the path alone would light up both.
-    expect(active).toEqual([null, null, 'page', null, null, null, null, null, null]);
+    expect(active).toEqual([null, null, 'page', null, null, null, null, null, null, null]);
   });
 
   it('should start with every group open', () => {

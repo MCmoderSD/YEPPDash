@@ -26,6 +26,7 @@ import { BdsmPageComponent } from './bdsm-page/bdsm-page.component';
 import { BdsmResultComponent } from '../components/bdsm-result-component/bdsm-result.component';
 import { CommunityPageComponent } from './community-page/community-page.component';
 import { CommandPageComponent } from './command-page/command-page.component';
+import { ModulePageComponent } from './module-page/module-page.component';
 import { WheelPageComponent } from './wheel-page/wheel-page.component';
 import { WheelComponent } from '../components/wheel-component/wheel.component';
 import { WheelWinnerDialogComponent } from '../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
@@ -53,6 +54,7 @@ const routes: Routes = [
       { path: 'role-management', component: RoleManagementComponent, title: 'Role Management' },
       { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
       { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
+      { path: 'modules', component: ModulePageComponent, title: 'Modules' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'community', component: CommunityPageComponent, title: 'Community' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
@@ -70,6 +72,7 @@ const components: any[] = [
   RoleManagementComponent,
   QuoteManagementComponent,
   CommandPageComponent,
+  ModulePageComponent,
   CommandTableComponent,
   CommandEditComponent,
   WheelPageComponent,

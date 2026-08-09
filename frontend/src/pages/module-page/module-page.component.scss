@@ -1,0 +1,242 @@
+.module-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  // Narrower than the tables: every row here is a name and a switch, and the descriptions read
+  // badly once a line runs the full width of a desktop window.
+  width: min(48rem, 100%);
+  margin-inline: auto;
+}
+
+.module-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.module-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.module-page-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.module-page-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+.module-page-empty {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.module-page-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// The FAQ card, rebuilt on a plain element: a lifted surface with an edge of its own, because
+// Material's own drop shadow is close to invisible against this near-black background.
+.module-panel {
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container);
+  transition:
+    border-color var(--app-motion-fast) var(--app-ease),
+    background-color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    border-color: var(--mat-sys-outline);
+  }
+}
+
+// Open carries the brand colour on its edge and lifts a tone further, so which module is being read
+// is obvious from the shape of the page rather than from the chevron alone.
+.module-panel-open {
+  border-color: var(--mat-sys-primary);
+  background: var(--mat-sys-surface-container-high);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+  }
+
+  .module-panel-chevron {
+    color: var(--mat-sys-primary);
+    transform: rotate(180deg);
+  }
+}
+
+.module-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  // On the row rather than on the button, so the switch keeps the same inset from the card's edge
+  // as the name does on the other side.
+  padding-inline-end: 1.25rem;
+}
+
+// The whole left side is the target that opens the panel — a name alone is a small thing to hit,
+// and the row has nothing else in it that a click could mean.
+.module-panel-summary {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  padding: 0.875rem 0.5rem 0.875rem 1.25rem;
+  border: 0;
+  border-radius: var(--app-radius-lg);
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    background: var(--app-tint-hover);
+  }
+
+  // The browser's own ring, kept rather than removed: it is what makes the row usable from the
+  // keyboard, and it is inset so it does not sit on top of the card's border.
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+}
+
+.module-panel-chevron {
+  flex: none;
+  color: var(--mat-sys-on-surface-variant);
+  transition:
+    transform var(--app-motion-fast) var(--app-ease),
+    color var(--app-motion-fast) var(--app-ease);
+}
+
+.module-panel-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The command as it is actually typed, held apart from the display name so the row answers "what do
+// I type" without opening it. Same chip the command table gives its aliases.
+.module-panel-trigger {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  white-space: nowrap;
+}
+
+.module-panel-switch {
+  flex: none;
+
+  // M3's switch is 52x32 with a 24px handle, which beside a row of title text is the loudest thing
+  // on the card. Scaled through Material's own tokens rather than a transform, so the handle, the
+  // focus ring and the state layer all shrink together instead of being drawn small and hit large.
+  //
+  // The touch target token is deliberately left alone: it is a separate overlay that keeps the tap
+  // area at its full size, which is what holds the control above the 24x24 minimum.
+  --mat-slide-toggle-track-width: 36px;
+  --mat-slide-toggle-track-height: 20px;
+
+  // Not the drawn size — the travel budget. Material moves the handle by
+  // `track-width - handle-width`, so this has to be the handle plus the inset it should keep at
+  // each end (14 + 3 + 3). Leaving it unset makes that calc() invalid, which collapses the travel
+  // to zero and leaves the handle sitting wherever the margins below put it.
+  --mat-slide-toggle-handle-width: 20px;
+  --mat-slide-toggle-handle-height: 14px;
+
+  --mat-slide-toggle-unselected-handle-size: 14px;
+  --mat-slide-toggle-selected-handle-size: 14px;
+  --mat-slide-toggle-with-icon-handle-size: 14px;
+  --mat-slide-toggle-unselected-handle-horizontal-margin: 0 3px;
+  --mat-slide-toggle-selected-handle-horizontal-margin: 0 3px;
+
+  --mat-slide-toggle-pressed-handle-size: 16px;
+  --mat-slide-toggle-unselected-pressed-handle-horizontal-margin: 0 2px;
+  --mat-slide-toggle-selected-pressed-handle-horizontal-margin: 0 2px;
+
+  --mat-slide-toggle-state-layer-size: 32px;
+
+  --mat-slide-toggle-track-outline-width: 1px;
+  --mat-slide-toggle-selected-track-outline-width: 0;
+  --mat-slide-toggle-disabled-unselected-track-outline-width: 1px;
+}
+
+// A zero-height grid row rather than a removed element: the body has to stay in the DOM for the
+// summary's aria-controls to resolve, and a row height is something CSS can animate where `hidden`
+// could not.
+.module-panel-body {
+  display: grid;
+  grid-template-rows: 0fr;
+
+  // -base rather than -fast: this is a shape the eye follows down the page, not a tint tracking the
+  // pointer, and at 120ms the panel reads as snapping open rather than opening.
+  transition: grid-template-rows var(--app-motion-base) var(--app-ease);
+}
+
+.module-panel-body-inner {
+  overflow: hidden;
+
+  // What actually takes the collapsed body out of the tab order and the accessibility tree —
+  // clipping it to zero height would only hide it from sight.
+  visibility: hidden;
+  transition: visibility var(--app-motion-base) var(--app-ease);
+}
+
+.module-panel-open .module-panel-body {
+  grid-template-rows: 1fr;
+}
+
+.module-panel-open .module-panel-body-inner {
+  visibility: visible;
+}
+
+.module-panel-description {
+  margin: 0;
+
+  // Its own padding rather than the wrapper's: padding on the animated row would still be painted
+  // at zero height and leave the card looking open by a few pixels while closed.
+  padding: 0 1.25rem 0.5rem;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  line-height: 1.6;
+}
+
+.module-panel-aliases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0 1.25rem 1.125rem;
+}
+
+.module-panel-aliases-label {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.module-panel-alias {
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  white-space: nowrap;
+}
