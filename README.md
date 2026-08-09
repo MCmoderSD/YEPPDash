@@ -2,7 +2,7 @@
 
 Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot) — a monolithic Twitch chat bot with no interactive console of its own. YEPPDash lets broadcasters control YEPPBot from a browser instead of only via Twitch chat commands, without weakening the bot's security posture: end users never talk to the bot directly, only to this dashboard's backend.
 
-Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, and BDSM test results are live. The UI, and the feature set, are still changing — see [`ROADMAP.md`](ROADMAP.md) for what shipped and what's next.
+Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, and BDSM test results are live. The UI, and the feature set, are still changing.
 
 ## Features
 
@@ -30,20 +30,17 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 YEPPDash/
 ├── backend/           # ASP.NET Core 10 Web API (Rider project)
 ├── frontend/          # Angular 22 + Material SSR app (WebStorm project)
-├── docs/diagrams/     # architecture + sequence diagrams as editable .excalidraw scenes
+├── docs/              # API client docs
 ├── docker-compose.yml # local dev only: backend + frontend, ports published directly, no reverse proxy
 └── .env.example       # template for the gitignored .env (DB connection strings)
 ```
 
-Reverse proxying (Caddy) is not part of this repo — it's handled by the operator's separate, existing Caddy setup, which routes `dash.yeppbot.com`/`.dev` to the frontend and `api.yeppbot.com`/`.dev` to the backend. See [`PLAN.md`](PLAN.md#deployment).
+Reverse proxying (Caddy) is not part of this repo — it's handled by the operator's separate, existing Caddy setup, which routes `dash.yeppbot.com`/`.dev` to the frontend and `api.yeppbot.com`/`.dev` to the backend.
 
-`backend/` and `frontend/` are independent IDE project roots (Rider / WebStorm respectively) inside this one repository — see [`PLAN.md`](PLAN.md#repository-structure) for why they're kept separate.
+`backend/` and `frontend/` are independent IDE project roots (Rider / WebStorm respectively) inside this one repository.
 
 ## Documentation
 
-- [`PLAN.md`](PLAN.md) — architecture, design decisions and their rationale, API contracts, deployment approach
-- [`ROADMAP.md`](ROADMAP.md) — ordered, checkable implementation steps
-- [`docs/diagrams/`](docs/diagrams) — architecture overview, auth flow, and channel join/leave flow as editable [Excalidraw](https://excalidraw.com) scenes
 - [`docs/twitch-api-client.md`](docs/twitch-api-client.md) — endpoints and features of the two Twitch API wrappers (Helix + OAuth)
 - [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) — the HTTP client YEPPDash uses to talk to a running YEPPBot instance (join/leave a channel, reload custom commands)
 
