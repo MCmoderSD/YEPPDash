@@ -7,9 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:YEPPDash": "node dist/YEPPDash/server/server.mjs",
-    "build:local": "ng build --configuration local",
-    "serve:https": "node tools/serve-https.mjs"
+    "serve:ssr:YEPPDash": "node dist/YEPPDash/server/server.mjs"
   },
   "private": true,
   "packageManager": "npm@11.17.0",
@@ -35,7 +33,6 @@
     "@angular/compiler-cli": "^22.1.0",
     "@types/express": "^5.0.1",
     "@types/node": "^26.1.2",
-    "compression": "^1.8.1",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.3",
