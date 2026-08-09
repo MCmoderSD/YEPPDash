@@ -45,6 +45,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       {
         label: 'Moderators',
         icon: 'shield',
+        mask: 'Moderator-Nav.png',
         description: 'Grant and revoke moderator status.',
         path: `${BASE}/role-management`,
         queryParams: { mode: RoleManagementMode.Moderator },
@@ -52,6 +53,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       {
         label: 'VIPs',
         icon: 'star',
+        mask: 'VIP-Nav.png',
         description: 'Hand out and take back VIP badges.',
         path: `${BASE}/role-management`,
         queryParams: { mode: RoleManagementMode.Vip },

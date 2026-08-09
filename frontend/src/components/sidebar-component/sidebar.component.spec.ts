@@ -60,14 +60,14 @@ describe('SidebarComponent', () => {
     expect(links().map((link) => link.textContent!.trim().replace(/\s+/g, ' ')))
       .toEqual([
         'space_dashboardOverview',
-        'shieldModerators',
-        'starVIPs',
+        // These entries carry artwork of their own, drawn as a mask rather than a ligature — so
+        // unlike an entry using the icon font, they contribute no icon name to the text.
+        'Moderators',
+        'VIPs',
         'format_quoteQuotes',
         'terminalCommands',
         'groupMembers',
         'cakeBirthdays',
-        // These two carry artwork the icon font does not have, drawn as a mask rather than as a
-        // ligature — so unlike the entries above they contribute no icon name to the text.
         'Lucky Wheel',
         'BDSM Test',
       ]);
@@ -81,6 +81,8 @@ describe('SidebarComponent', () => {
       mask.closest('.sidebar-link')!.textContent!.trim(),
       mask.style.getPropertyValue('--icon'),
     ])).toEqual([
+      ['Moderators', 'url(Moderator-Nav.png)'],
+      ['VIPs', 'url(VIP-Nav.png)'],
       ['Lucky Wheel', 'url(lucky-wheel.svg)'],
       ['BDSM Test', 'url(BDSM-Test-128px.png)'],
     ]);
