@@ -10,9 +10,9 @@ import { isDashHost } from '../services/dash-host';
 import { WHEEL_OVERLAY_PATH } from '../data/wheel-overlay';
 import { environment } from '../environments/environment';
 
-const dashHostMatch: CanMatchFn = () => isDashHost();
-const otherHostMatch: CanMatchFn = () => !isDashHost();
-const devOnlyMatch: CanMatchFn = () => !environment.production;
+const dashHostMatch: CanMatchFn = (): boolean => isDashHost();
+const otherHostMatch: CanMatchFn = (): boolean => !isDashHost();
+const devOnlyMatch: CanMatchFn = (): boolean => !environment.production;
 
 const routes: Routes = [
   {
@@ -26,8 +26,6 @@ const routes: Routes = [
     canMatch: [dashHostMatch],
     loadChildren: () => import('../pages/dash.module').then((module) => module.DashModule),
   },
-  // These five are prerendered (see app.routes.server.ts), so each description below is baked into
-  // the static HTML for that page rather than only appearing once the app has booted.
   {
     path: '',
     component: LandingPageComponent,

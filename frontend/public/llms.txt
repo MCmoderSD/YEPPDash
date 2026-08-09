@@ -1,6 +1,6 @@
 # YEPPDash
 
-> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chat bot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing roles, custom commands, quotes and follower birthdays.
+> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing roles, custom commands, quotes and follower birthdays.
 
 YEPPDash is a free, open-source, solo-developed hobby project, not a commercial service. The dashboard lives at https://dash.yeppbot.com and the public site at https://www.yeppbot.com. Everything behind the dashboard requires a Twitch login and only ever acts on the signed-in user's own channel.
 
@@ -24,4 +24,4 @@ YEPPDash is a free, open-source, solo-developed hobby project, not a commercial 
 ## Source
 
 - [YEPPDash on GitHub](https://github.com/MCmoderSD/YEPPDash): The dashboard, ASP.NET Core backend and Angular frontend, BSD 3-Clause.
-- [YEPPBot on GitHub](https://github.com/MCmoderSD/YEPPBot): The Twitch chat bot itself, BSD 3-Clause.
+- [YEPPBot on GitHub](https://github.com/MCmoderSD/YEPPBot): The Twitch chatbot itself, BSD 3-Clause.

@@ -35,10 +35,6 @@ export class AuthService extends ApiService {
     try {
       const info: TwitchUser = await this.get<TwitchUser>('me');
       this.user.set(info);
-
-      // Only once there is a session to colour. Fired before this, it cost every anonymous visitor
-      // a request that could never answer with anything — and on the marketing host, where the API
-      // is a different origin, a CORS error in the console on top.
       void this.twitch.loadChatColor();
     } catch {
       this.user.set(null);

@@ -21,11 +21,8 @@ import { twitchImageLoader } from '../data/twitch-image';
     provideAnimationsAsync(),
     provideHttpClient(withFetch()),
 
-    // Replaces the router's own strategy, which sets the title and nothing else.
     { provide: TitleStrategy, useClass: PageMetaStrategy },
 
-    // Every ngSrc in the app goes through this; it only rewrites Twitch avatars and hands anything
-    // else straight back.
     { provide: IMAGE_LOADER, useValue: twitchImageLoader },
   ],
   bootstrap: [App],
