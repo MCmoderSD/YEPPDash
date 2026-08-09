@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, InputSignal, Signal, signal
 import { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { faqLink } from '../../services/dash-host';
 import { BirthdayService } from '../../services/birthday.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
@@ -23,6 +24,8 @@ export class UserMenuComponent {
   private readonly dialog: MatDialog = inject(MatDialog);
 
   readonly user:InputSignal<TwitchUser> = input.required<TwitchUser>();
+
+  protected readonly faqUrl: string | null = faqLink();
 
   protected readonly chatColor: Signal<string | null> = this.twitch.chatColor;
 

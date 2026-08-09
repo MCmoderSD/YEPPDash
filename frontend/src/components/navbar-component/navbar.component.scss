@@ -35,7 +35,11 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  min-width: 0;
+
+  // Fixed width: a toggle and a product name, neither of which has anything to give. Letting this
+  // shrink only moved the squeeze onto text that cannot reflow, so the brand went on overrunning
+  // its box and ended up drawn over whatever sat next to it.
+  flex: none;
 }
 
 .navbar-end {
@@ -43,8 +47,53 @@
   align-items: center;
   gap: 0.5rem;
 
+  // This is the side that gives when the bar runs short, because the account name inside it is the
+  // one thing here that can be cut and still be understood — see .user-menu-name. min-width lets
+  // the shrinking actually reach it rather than stopping at the button's own content width.
+  flex: 0 1 auto;
+  min-width: 0;
+
+  // The buttons here carry padding inside their own hit area, which on a phone leaves a visibly
+  // wider gutter on this side than the drawer toggle leaves on the other. Pulling back by that
+  // difference evens the two up without moving the hit area off the edge.
+  margin-inline-end: -0.5rem;
+
   @media (min-width: 48rem) {
     gap: 1rem;
+    margin-inline-end: 0;
+  }
+}
+
+// Three words and an icon, with nothing in them that survives being squeezed. Left shrinkable it
+// took its share of every shortage and clipped its own label, when the account name beside it is
+// the thing here that can be cut and still be read.
+.navbar-faq {
+  flex: none;
+}
+
+// Signed out the bar holds little else, so the FAQ has the room. Signed in it competes with the
+// drawer toggle and the account button, and below this the three together leave the display name
+// too little to be worth showing. The FAQ is the one of them with somewhere else to go, so under
+// that width it moves into the account menu.
+//
+// The width itself is where a normal-length display name stops fitting alongside all three, not a
+// device size: measured against the bar's own contents, that lands a little under 34rem.
+.navbar-end-authed .navbar-faq {
+  display: none;
+
+  @media (min-width: 34rem) {
+    display: inline-flex;
+  }
+}
+
+// Which Twitch is doing the signing in is already the only possibility this bar offers, so on a
+// narrow one it is the part of the label worth dropping — spelled out it wrapped the button onto
+// two lines. The accessible name in the template keeps saying it either way.
+.navbar-login-service {
+  display: none;
+
+  @media (min-width: 30rem) {
+    display: inline;
   }
 }
 

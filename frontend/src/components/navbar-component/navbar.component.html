@@ -14,7 +14,9 @@
       <a class="navbar-brand" routerLink="/">YEPPDash</a>
     </div>
 
-    <div class="navbar-end">
+    <!-- Signed in the bar also carries the drawer toggle and the account button, which is what the
+         narrow layout below has to make room for. -->
+    <div class="navbar-end" [class.navbar-end-authed]="auth.currentUser()">
       @if (faqUrl; as url) {
         <a mat-button class="navbar-faq" [href]="url">
           <mat-icon aria-hidden="true">quiz</mat-icon>
@@ -30,9 +32,11 @@
       @if (auth.currentUser(); as user) {
         <app-user-menu [user]="user" />
       } @else {
-        <a mat-flat-button [href]="loginUrl">
+        <!-- The full wording is kept as the accessible name at every width, so shortening the label
+             on a narrow bar does not shorten what a screen reader announces. -->
+        <a mat-flat-button [href]="loginUrl" aria-label="Login with Twitch">
           <mat-icon aria-hidden="true">login</mat-icon>
-          Login with Twitch
+          <span>Login<span class="navbar-login-service"> with Twitch</span></span>
         </a>
       }
     </div>

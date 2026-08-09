@@ -84,6 +84,20 @@ describe('NavbarComponent', () => {
     expect(compiled.querySelector('app-user-menu')).toBeNull();
   });
 
+  // A narrow bar drops "with Twitch" from the visible label, which the stylesheet does and jsdom
+  // therefore cannot see. What is checkable here is that both halves are in the DOM for a wide bar
+  // to show, and that the accessible name keeps saying the whole thing at either width.
+  it('should keep the full login wording as the accessible name', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    fixture.detectChanges();
+
+    const login = (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLAnchorElement>('a[href*="/auth/login"]')!;
+
+    expect(login.getAttribute('aria-label')).toBe('Login with Twitch');
+    expect(login.textContent).toContain('Login with Twitch');
+  });
+
   it('should sit the FAQ link ahead of the login link', () => {
     const fixture = TestBed.createComponent(NavbarComponent);
     fixture.detectChanges();
@@ -105,6 +119,25 @@ describe('NavbarComponent', () => {
 
     const order = [...end.children].map((child) => child.classList.contains('navbar-faq'));
     expect(order[0]).toBe(true);
+
+    // Signed in, a narrow bar hands the FAQ over to the account menu, which the stylesheet keys off
+    // this class. The link stays in the DOM either way, so the class is the part to pin down.
+    expect(end.classList).toContain('navbar-end-authed');
+  });
+
+  // Whatever the bar hides on a phone still has to be reachable there, and the account menu is the
+  // only thing left holding navigation once the FAQ link is gone.
+  it('should offer the FAQ from the account menu', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    auth.currentUser.set(USER);
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.user-menu-trigger')!.click();
+    fixture.detectChanges();
+
+    expect(document.querySelector<HTMLAnchorElement>('.user-menu-faq')!.getAttribute('href'))
+      .toBe('/faq');
   });
 
   // Not the production host under test, so the FAQ stays a routed link rather than an absolute one.
