@@ -81,8 +81,8 @@ describe('SidebarComponent', () => {
       mask.closest('.sidebar-link')!.textContent!.trim(),
       mask.style.getPropertyValue('--icon'),
     ])).toEqual([
-      ['Moderators', 'url(Moderator-Nav.png)'],
-      ['VIPs', 'url(VIP-Nav.png)'],
+      ['Moderators', 'url(Moderator-Icon.png)'],
+      ['VIPs', 'url(VIP-Icon.png)'],
       ['Lucky Wheel', 'url(lucky-wheel.svg)'],
       ['BDSM Test', 'url(BDSM-Test-128px.png)'],
     ]);
