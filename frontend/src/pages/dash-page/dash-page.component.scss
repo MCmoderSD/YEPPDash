@@ -7,12 +7,6 @@
   flex: 1;
   width: 100%;
   background: var(--mat-sys-surface);
-
-  // The last of the three clipping ancestors between the sidebar and the viewport. Material clips
-  // here so a closed drawer stays off-canvas, which it does on its own anyway — it is translated
-  // out and set to `visibility: hidden` — so lifting the clip costs nothing and is what finally
-  // lets the sidebar stick to the viewport instead of scrolling away with the page.
-  overflow: visible;
 }
 
 .dash-drawer {
@@ -29,9 +23,9 @@
   border-start-end-radius: 0;
   border-end-end-radius: 0;
 
-  // Material gives the drawer `overflow-y: auto`, which makes it the scrollport for anything inside
-  // and leaves the nav's `position: sticky` with nothing to stick to — so it scrolled off the top
-  // with the page. The nav caps its own height and scrolls itself, so nothing here needs to clip.
+  // Material would otherwise make the drawer its own scrollport, which would let the navigation
+  // scroll independently of the page. It belongs to the page between the navbar and the footer, so
+  // it has to overflow into the page's scroll rather than catch it here.
   overflow: visible;
 }
 
@@ -42,8 +36,6 @@
   // viewport and letting the footer drift up off the bottom on a page with nothing to scroll.
   box-sizing: border-box;
 
-  // Its own scroll container rather than the page's: the drawer stays put while the content moves,
-  // which is the whole point of running it in `side` mode.
   padding: 1.5rem 1rem 3rem;
 }
 

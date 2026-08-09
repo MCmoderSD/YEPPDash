@@ -173,11 +173,10 @@ body {
   }
 }
 
-// Material wraps a drawer's projected content in its own scrolling div. That div becomes the
-// scrollport for everything inside it, which leaves the sidebar's `position: sticky` with nothing
-// to stick to and scrolls the navigation off the top along with the page. Scoped to the dashboard's
-// own drawer rather than every drawer in the app, and safe because the nav caps its own height and
-// scrolls itself.
+// Material wraps a drawer's projected content in its own scrolling div, which would catch the
+// navigation's overflow and let it scroll independently of the page. The navigation belongs to the
+// page between the navbar and the footer, so that scroll has to reach the page instead. Scoped to
+// the dashboard's own drawer rather than every drawer in the app.
 //
 // It is global only because the element it applies to is created by Material, inside the drawer,
 // where neither the page nor the sidebar component's styles can reach it.

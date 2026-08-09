@@ -1,9 +1,5 @@
-// An unstyled component host is `display: inline` and only as tall as the nav inside it, which
-// leaves the sticky nav below a containing block with no room to travel down. Filling the drawer is
-// what gives it that room.
 :host {
   display: block;
-  height: 100%;
 
   // The scroll bars are inserted as a sibling of the nav and positioned against the nearest
   // positioned ancestor, so without this they would be laid out against the drawer and land
@@ -11,23 +7,18 @@
   position: relative;
 }
 
-// The drawer itself is as tall as the content beside it, so left alone the navigation scrolls off
-// the top the moment a long table is scrolled. Sticking it directly under the navbar is what keeps
-// it on screen — which is the point of running the drawer permanently rather than as an overlay.
+// Ordinary flow, deliberately: the navigation is part of the page between the navbar and the
+// footer and scrolls with it, rather than being pinned under the navbar and holding still while
+// the content moves.
 //
-// Harmless in `over` mode, where the drawer is only ever the height of the viewport anyway.
+// Pinning it also meant giving it a viewport-height cap, and the drawer is as tall as the content
+// column beside it — so on a short page the nav was left standing in a tall empty drawer with the
+// gap showing above the first entry.
 .sidebar {
-  position: sticky;
-  top: var(--app-below-navbar);
-
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 1rem 0.75rem 2rem;
-
-  // A nav taller than the space under the navbar scrolls within itself rather than being cut off.
-  max-height: calc(100dvh - var(--app-below-navbar));
-  overflow-y: auto;
 }
 
 // --- Groups -----------------------------------------------------------------------------------

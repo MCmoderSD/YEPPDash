@@ -64,11 +64,9 @@
   --app-sidebar-width: 17.5rem;
   --app-content-max: 78rem;
 
-  // The navbar's height, and the offset everything sticky below it has to clear. Declared here
-  // rather than left to the navbar's own content so the sidebar can stick directly underneath it
-  // without the two drifting apart. The 1px is the navbar's bottom border.
+  // Declared here rather than left to the navbar's own content, so the bar keeps one predictable
+  // height instead of one that shifts with whatever it happens to hold.
   --app-navbar-height: 4rem;
-  --app-below-navbar: calc(var(--app-navbar-height) + 1px);
 }
 
 // Honoured by every transition in the app. Kept as a mixin rather than repeated per component so
