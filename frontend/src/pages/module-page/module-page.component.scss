@@ -83,17 +83,26 @@
   }
 }
 
+// Carries the hover wash rather than the summary button inside it: the button stops where the
+// switch begins, so a wash on it left the last quarter of the row untinted and read as a highlight
+// that had been cut short. This spans the whole row, switch included.
 .module-panel-header {
   display: flex;
 
-  // stretch rather than center: the summary carries the hover wash, and it has to fill the row's
-  // full height or the wash leaves a sliver of card above and below it.
+  // stretch rather than center: the summary has to fill the row's full height so the keyboard ring
+  // traces the row rather than a band floating inside it.
   align-items: stretch;
   gap: 0.5rem;
 
   // On the row rather than on the button, so the switch keeps the same inset from the card's edge
   // as the name does on the other side.
   padding-inline-end: 1.25rem;
+
+  // Nothing clips this to the card, so without its own radius the wash would square off the card's
+  // rounded corners. A pixel under the card's own, since it sits inside that 1px border. While shut
+  // the body below has no height, so all four corners are the card's.
+  border-radius: calc(var(--app-radius-lg) - 1px);
+  transition: background-color var(--app-motion-fast) var(--app-ease);
 }
 
 // The whole left side is the target that opens the panel — a name alone is a small thing to hit,
@@ -116,7 +125,6 @@
   font: var(--mat-sys-title-medium);
   text-align: start;
   cursor: pointer;
-  transition: background-color var(--app-motion-fast) var(--app-ease);
 
   // The browser's own ring, kept rather than removed: it is what makes the row usable from the
   // keyboard, and it is inset so it does not sit on top of the card's border.
@@ -127,10 +135,12 @@
 }
 
 // Only while the card is shut. Open, it already says so with a lifted tone and a brand-coloured
-// edge, and a wash over the summary alone adds a third mark that covers part of a card the eye now
-// reads as one block — the summary stops being a row of its own once the description sits under it.
-// Reshaping it was not enough; there is simply nothing left for it to say here.
-.module-panel:not(.module-panel-open) .module-panel-summary:hover {
+// edge, and a wash over the row adds a third mark to a card the eye now reads as one block — the
+// row stops being a row of its own once the description sits under it.
+//
+// Triggered by the card rather than by the row it paints, so hovering anywhere on the card — its
+// border included — lights the same thing.
+.module-panel:not(.module-panel-open):hover .module-panel-header {
   background: var(--app-tint-hover);
 }
 
