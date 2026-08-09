@@ -249,7 +249,10 @@
         <mat-tab label="Results">
           <div class="wheel-page-tab-body">
 
-          <div class="wheel-page-toolbar">
+          <!-- Its own class rather than .wheel-page-toolbar: that one is built for a row of several
+               buttons wrapping onto their own width, and the single button here is the one case in
+               this page unlikely to ever grow a second — it can just take the row. -->
+          <div class="wheel-page-results-toolbar">
             <!-- Only a way to empty the log lives here: what is logged is decided by spinning the
                  wheel, not by anything on this tab. -->
             <button
@@ -281,7 +284,7 @@
               </ng-container>
 
               <ng-container matColumnDef="time">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Time</th>
+                <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="wheel-page-time">Time</th>
                 <td mat-cell *matCellDef="let result" class="wheel-page-time">
                   <time [attr.datetime]="result.wonAt">{{ result.wonAt | localeDate: 'medium':'short' }}</time>
                 </td>

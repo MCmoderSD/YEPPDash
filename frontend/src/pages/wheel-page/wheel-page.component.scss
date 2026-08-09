@@ -102,6 +102,13 @@
   gap: 0.5rem;
 }
 
+// The one button here has nothing to share the row with, so it takes the whole width rather than
+// sitting stranded at the start of it. mat-button already centres its own content, so the icon and
+// label land in the middle of that width for free.
+.wheel-page-results-toolbar .wheel-page-results-clear {
+  width: 100%;
+}
+
 // The pair under the table. Centred and given equal width so they read as one control for moving
 // the list in and out, rather than as two more buttons tacked onto the row above.
 .wheel-page-transfer {
@@ -212,6 +219,12 @@ table.wheel-page-table {
 }
 
 .wheel-page-time {
+  // Same trick as .wheel-page-actions below: a table column sized to 1% of a table wider than its
+  // content shrinks to that content instead, handing everything it gives up to the other column. The
+  // date this holds is always about the same length, so Entry is the one column here worth growing.
+  width: 1%;
+  text-align: end;
+
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
   font-variant-numeric: tabular-nums;
