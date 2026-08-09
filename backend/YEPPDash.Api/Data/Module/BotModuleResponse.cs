@@ -5,6 +5,7 @@ public sealed record BotModuleResponse(
     string Name,
     string Description,
     IReadOnlyList<string> Aliases,
+    IReadOnlyList<BotModuleUsage> Usage,
     bool Enabled
 ) {
     /// <param name="enabled">
@@ -13,6 +14,7 @@ public sealed record BotModuleResponse(
     /// </param>
     public static BotModuleResponse From(BotModule module, bool enabled)
     {
-        return new BotModuleResponse(module.Id, module.Name, module.Description, module.Aliases, enabled);
+        return new BotModuleResponse(
+            module.Id, module.Name, module.Description, module.Aliases, module.Usage, enabled);
     }
 }

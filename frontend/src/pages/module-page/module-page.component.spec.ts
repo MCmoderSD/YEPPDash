@@ -36,6 +36,10 @@ function module(overrides: Partial<BotModule> = {}): BotModule {
     name: 'Weather',
     description: 'Shows the current weather report.',
     aliases: ['wetter', 'wetterbericht'],
+    usage: [
+      { syntax: '!weather <city>', description: 'The weather there.', moderators: false },
+      { syntax: '!weather clear', description: 'Forgets the last city.', moderators: true },
+    ],
     enabled: true,
     ...overrides,
   };
@@ -170,6 +174,38 @@ describe('ModulePageComponent', () => {
 
     expect(controls).toBe('module-body-weather');
     expect(element(fixture).querySelector(`#${controls}`)).not.toBeNull();
+  });
+
+  it('should show how the command is typed, with what each form does', async () => {
+    const fixture = await render();
+
+    summary(fixture).click();
+    fixture.detectChanges();
+
+    const rows = Array.from(panels(fixture)[0].querySelectorAll('.module-panel-usage-row'))
+      .map((row) => [
+        row.querySelector('code')!.textContent!.trim(),
+        row.querySelector('.module-panel-usage-text')!.textContent!.trim(),
+      ]);
+
+    expect(rows).toEqual([
+      ['!weather <city>', 'The weather there.'],
+      ['!weather clear', 'Forgets the last city.'],
+    ]);
+  });
+
+  // The bot answers a chatter nothing at all for these, which reads as the module being broken —
+  // so which forms need moderator has to be visible before the attempt.
+  it('should mark only the forms that need a moderator', async () => {
+    const fixture = await render();
+
+    summary(fixture).click();
+    fixture.detectChanges();
+
+    const marked = Array.from(panels(fixture)[0].querySelectorAll('.module-panel-usage-row'))
+      .map((row) => row.querySelector('.module-panel-mods') !== null);
+
+    expect(marked).toEqual([false, true]);
   });
 
   it('should show the aliases the module also answers to', async () => {

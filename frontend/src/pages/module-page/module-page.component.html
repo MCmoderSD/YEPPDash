@@ -70,6 +70,24 @@
           <div class="module-panel-body-inner">
             <p class="module-panel-description">{{ module.description }}</p>
 
+            <!-- A description list rather than a table: each line is one way of typing the command
+                 paired with what it does, which is exactly a term and its definition. -->
+            @if (module.usage.length > 0) {
+              <dl class="module-panel-usage">
+                @for (usage of module.usage; track usage.syntax) {
+                  <div class="module-panel-usage-row">
+                    <dt class="module-panel-syntax">
+                      <code>{{ usage.syntax }}</code>
+                      @if (usage.moderators) {
+                        <span class="module-panel-mods">Mods</span>
+                      }
+                    </dt>
+                    <dd class="module-panel-usage-text">{{ usage.description }}</dd>
+                  </div>
+                }
+              </dl>
+            }
+
             @if (module.aliases.length > 0) {
               <p class="module-panel-aliases">
                 <span class="module-panel-aliases-label">Also responds to</span>

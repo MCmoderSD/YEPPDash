@@ -14,6 +14,7 @@ function module(overrides: Partial<BotModule> = {}): BotModule {
     name: 'Weather',
     description: 'Shows the current weather report.',
     aliases: ['wetter', 'wetterbericht'],
+    usage: [{ syntax: '!weather <city>', description: 'The weather there.', moderators: false }],
     enabled: true,
     ...overrides,
   };
