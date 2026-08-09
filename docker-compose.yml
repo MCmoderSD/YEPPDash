@@ -14,6 +14,12 @@ services:
       Twitch__ClientSecretProd: ${TWITCH__CLIENTSECRETPROD}
       Twitch__RedirectUri: ${TWITCH__REDIRECTURI}
       AllowedFrontendOrigins__0: ${ALLOWEDFRONTENDORIGINS__0}
+
+      # The marketing host, which calls /auth/me to send an already signed-in visitor straight to
+      # the dashboard. Only one origin was wired through before, so that call was blocked and every
+      # visit logged a CORS error. Left unset it comes through as an empty string, which matches no
+      # origin and is simply never used — index 0 stays the origin redirects fall back to.
+      AllowedFrontendOrigins__1: ${ALLOWEDFRONTENDORIGINS__1}
     ports:
       - 8080:8080/tcp
 
