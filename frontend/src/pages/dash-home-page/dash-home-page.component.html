@@ -1,3 +1,54 @@
-<section class="dash">
-  <app-bot-manage [botUserId]="botUserId"/>
-</section>
+<div class="dash-home">
+
+  <header class="dash-home-header">
+    <p class="dash-home-eyebrow">Dashboard</p>
+    <h1 class="dash-home-title">
+      @if (user(); as user) {
+        Welcome back, <span class="dash-home-name">{{ user.displayName }}</span>
+      } @else {
+        Welcome back
+      }
+    </h1>
+    <p class="dash-home-subtitle">Everything YEPPBot runs in your channel, in one place.</p>
+  </header>
+
+  <section class="dash-home-section" aria-labelledby="dash-home-bot">
+    <h2 class="dash-home-section-title" id="dash-home-bot">Bot status</h2>
+    <app-bot-manage [botUserId]="botUserId"/>
+  </section>
+
+  @for (group of groups; track group.id) {
+    <section class="dash-home-section" [attr.aria-labelledby]="'dash-home-' + group.id">
+
+      <h2 class="dash-home-section-title" [id]="'dash-home-' + group.id">
+        <mat-icon class="dash-home-section-icon" aria-hidden="true">{{ group.icon }}</mat-icon>
+        {{ group.label }}
+      </h2>
+
+      <ul class="dash-home-cards">
+        @for (item of group.items; track item.label) {
+          <li>
+            <!-- The whole card is the link rather than a button inside it, so the target is the
+                 full tile for a pointer and a single stop for the keyboard. -->
+            <a class="dash-home-card" [routerLink]="item.path" [queryParams]="item.queryParams">
+              <span class="dash-home-card-icon" aria-hidden="true">
+                @if (item.mask; as mask) {
+                  <span class="dash-home-card-glyph" [style.--icon]="'url(' + mask + ')'"></span>
+                } @else {
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                }
+              </span>
+
+              <span class="dash-home-card-body">
+                <span class="dash-home-card-title">{{ item.label }}</span>
+                <span class="dash-home-card-text">{{ item.description }}</span>
+              </span>
+
+              <mat-icon class="dash-home-card-chevron" aria-hidden="true">chevron_right</mat-icon>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

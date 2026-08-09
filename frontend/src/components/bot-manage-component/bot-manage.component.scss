@@ -1,9 +1,14 @@
 @use '../../styles/chat-color' as chat;
 
+// Capped rather than filling the dashboard column: the card is a stack of one-line sentences, and
+// run out to the full width of a desktop each of them would trail off into empty space.
 .bot-manage {
   width: 100%;
-  max-width: 34rem;
+  max-width: 42rem;
   overflow: hidden;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container);
 }
 
 // Kept in the layout even when idle so showing it does not shift the card contents down.
@@ -75,8 +80,9 @@
 
 .bot-manage-issue {
   padding: 0.75rem;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-medium);
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--mat-sys-surface-container-high);
 
   // Below this the icon, sentence and button stop fitting on one line without the text going ragged.
   @media (width < 30rem) {
@@ -94,12 +100,19 @@
   flex: none;
 }
 
+// Amber rather than red: every one of these is something the user can fix from this card, not a
+// failure. Red is kept for the state where the bot could not be read at all.
 .bot-manage-icon-warn {
-  color: var(--mat-sys-error);
+  color: var(--app-warning);
 }
 
 .bot-manage-icon-ok {
-  color: var(--mat-sys-primary);
+  color: var(--app-success);
+}
+
+// The bot could not be read at all, which is the one state on this card with nothing to act on.
+.bot-manage-icon-error {
+  color: var(--app-danger);
 }
 
 .bot-manage-healthy,

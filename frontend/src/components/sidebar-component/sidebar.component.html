@@ -1,101 +1,71 @@
-<mat-nav-list class="sidebar" aria-label="Dashboard sections">
-  <h3 matSubheader>Management</h3>
+<nav class="sidebar" appScrollBar aria-label="Dashboard sections">
 
   <a
-    mat-list-item
-    [routerLink]="roleManagementPath"
-    [queryParams]="{ mode: Mode.Moderator }"
-    routerLinkActive="sidebar-entry-active"
+    class="sidebar-link sidebar-link-standalone"
+    [routerLink]="overviewPath"
+    routerLinkActive="sidebar-link-active"
     [routerLinkActiveOptions]="activeMatch"
     ariaCurrentWhenActive="page"
     (click)="close()"
   >
-    <mat-icon matListItemIcon aria-hidden="true">shield</mat-icon>
-    <span matListItemTitle>Moderator Management</span>
+    <mat-icon class="sidebar-link-icon" aria-hidden="true">space_dashboard</mat-icon>
+    <span class="sidebar-link-label">Overview</span>
   </a>
 
-  <a
-    mat-list-item
-    [routerLink]="roleManagementPath"
-    [queryParams]="{ mode: Mode.Vip }"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">star</mat-icon>
-    <span matListItemTitle>VIP Management</span>
-  </a>
+  @for (group of groups; track group.id) {
+    <section class="sidebar-group">
 
-  <a
-    mat-list-item
-    [routerLink]="quoteManagementPath"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">format_quote</mat-icon>
-    <span matListItemTitle>Quote Management</span>
-  </a>
+      <!-- A real button rather than a styled heading: it is the control that opens the list, and
+           aria-controls ties it to the region it opens so the state is announced with it. -->
+      <h3 class="sidebar-group-heading">
+        <button
+          type="button"
+          class="sidebar-group-button"
+          [attr.aria-expanded]="expanded(group)"
+          [attr.aria-controls]="'sidebar-group-' + group.id"
+          (click)="toggle(group)"
+        >
+          <mat-icon class="sidebar-group-icon" aria-hidden="true">{{ group.icon }}</mat-icon>
+          <span class="sidebar-group-label">{{ group.label }}</span>
+          <mat-icon class="sidebar-group-chevron" aria-hidden="true">expand_more</mat-icon>
+        </button>
+      </h3>
 
-  <a
-    mat-list-item
-    [routerLink]="commandPath"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">terminal</mat-icon>
-    <span matListItemTitle>Custom Commands</span>
-  </a>
-
-  <a
-    mat-list-item
-    [routerLink]="communityPath"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">group</mat-icon>
-    <span matListItemTitle>Community</span>
-  </a>
-
-  <a
-    mat-list-item
-    [routerLink]="birthdayListPath"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">cake</mat-icon>
-    <span matListItemTitle>Follower Birthdays</span>
-  </a>
-
-  <a
-    mat-list-item
-    [routerLink]="wheelPath"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">casino</mat-icon>
-    <span matListItemTitle>Lucky Wheel</span>
-  </a>
-
-  <a
-    mat-list-item
-    [routerLink]="bdsmPath"
-    routerLinkActive="sidebar-entry-active"
-    [routerLinkActiveOptions]="activeMatch"
-    ariaCurrentWhenActive="page"
-    (click)="close()"
-  >
-    <mat-icon matListItemIcon aria-hidden="true">psychology</mat-icon>
-    <span matListItemTitle>BDSM Test</span>
-  </a>
-</mat-nav-list>
+      <!-- Kept in the DOM rather than removed, so opening and closing can be animated. The wrapper
+           exists only to carry that animation: it is the grid whose single row travels between 0fr
+           and 1fr, and the list inside is what clips itself while it does. -->
+      <div
+        class="sidebar-group-items"
+        [class.sidebar-group-items-open]="expanded(group)"
+        [id]="'sidebar-group-' + group.id"
+      >
+        <ul class="sidebar-group-list">
+          @for (item of group.items; track item.label) {
+            <li>
+              <a
+                class="sidebar-link"
+                [routerLink]="item.path"
+                [queryParams]="item.queryParams"
+                routerLinkActive="sidebar-link-active"
+                [routerLinkActiveOptions]="activeMatch"
+                ariaCurrentWhenActive="page"
+                (click)="close()"
+              >
+                @if (item.mask; as mask) {
+                  <span
+                    class="sidebar-link-icon sidebar-link-icon-mask"
+                    [style.--icon]="'url(' + mask + ')'"
+                    aria-hidden="true"
+                  ></span>
+                } @else {
+                  <mat-icon class="sidebar-link-icon" aria-hidden="true">{{ item.icon }}</mat-icon>
+                }
+                <span class="sidebar-link-label">{{ item.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+  }
+</nav>

@@ -6,13 +6,48 @@
 .dash-shell {
   flex: 1;
   width: 100%;
+  background: var(--mat-sys-surface);
 }
 
 .dash-drawer {
-  width: 17rem;
+  width: var(--app-sidebar-width);
   max-width: 85vw;
+
+  // A shade above the page so the drawer reads as a panel beside the content rather than as part
+  // of it, with the border carrying the edge where the two meet.
+  background: var(--mat-sys-surface-container-low);
+  border-inline-end: var(--app-border);
+
+  // Material rounds the drawer's trailing corners by default, which leaves two notches against the
+  // content once the drawer is permanent rather than an overlay sliding over it.
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+
+  // Material would otherwise make the drawer its own scrollport, which would let the navigation
+  // scroll independently of the page. It belongs to the page between the navbar and the footer, so
+  // it has to overflow into the page's scroll rather than catch it here.
+  overflow: visible;
 }
 
 .dash-content {
-  padding: 2rem 1rem;
+  // Material sizes this element with `height: 100%`, and nothing in the app sets border-box, so
+  // the padding below was being added on top of that height rather than fitting inside it. The
+  // element ended up taller than the shell by exactly its own padding, pushing the page past the
+  // viewport and letting the footer drift up off the bottom on a page with nothing to scroll.
+  box-sizing: border-box;
+
+  padding: 1.5rem 1rem 3rem;
+}
+
+// Capped and centred so a table does not stretch to the full width of an ultrawide display, where
+// a row's last cell ends up too far from its first to scan across.
+.dash-content-inner {
+  max-width: var(--app-content-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 60rem) {
+  .dash-content {
+    padding: 2rem 2rem 4rem;
+  }
 }

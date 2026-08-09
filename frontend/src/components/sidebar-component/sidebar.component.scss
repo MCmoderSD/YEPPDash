@@ -1,4 +1,267 @@
-.sidebar-entry-active {
-  background: var(--mat-sys-surface-container-high);
-  box-shadow: inset 0.25rem 0 0 0 var(--mat-sys-primary);
+:host {
+  display: block;
+
+  // The scroll bars are inserted as a sibling of the nav and positioned against the nearest
+  // positioned ancestor, so without this they would be laid out against the drawer and land
+  // somewhere other than on the nav they belong to.
+  position: relative;
+}
+
+// Ordinary flow, deliberately: the navigation is part of the page between the navbar and the
+// footer and scrolls with it, rather than being pinned under the navbar and holding still while
+// the content moves.
+//
+// Pinning it also meant giving it a viewport-height cap, and the drawer is as tall as the content
+// column beside it — so on a short page the nav was left standing in a tall empty drawer with the
+// gap showing above the first entry.
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 0.75rem 2rem;
+}
+
+// --- Groups -----------------------------------------------------------------------------------
+
+.sidebar-group + .sidebar-group {
+  // A rule rather than more space: three groups separated by gaps alone start to read as one long
+  // list again, which is what the grouping is here to undo.
+  margin-block-start: 0.75rem;
+  padding-block-start: 0.75rem;
+  border-block-start: var(--app-border);
+}
+
+// The breathing room between a heading and its first entry lives here rather than as padding inside
+// the list, which is the box that collapses — padding there survives the collapse and leaves every
+// shut group holding a couple of pixels open.
+.sidebar-group-heading {
+  margin: 0 0 0.125rem;
+}
+
+.sidebar-group-button {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 0;
+  border-radius: var(--app-radius-md);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+  letter-spacing: 0.06em;
+  text-align: start;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--app-motion-fast) var(--app-ease),
+              color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    background: var(--app-tint-hover);
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.sidebar-group-icon {
+  flex: none;
+  font-size: 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.sidebar-group-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-group-chevron {
+  flex: none;
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform var(--app-motion-base) var(--app-ease);
+}
+
+// Points down when the list below is open and up when it is shut, so the chevron reads as the
+// direction the list will move rather than as decoration.
+.sidebar-group-button[aria-expanded='false'] .sidebar-group-chevron {
+  transform: rotate(-90deg);
+}
+
+// A single grid row travelling between 0fr and 1fr. That is what makes this animate to the height
+// the content decides rather than to a max-height guessed in advance — too small and long groups
+// are cut off, too large and the transition spends most of its time crossing empty space.
+//
+// A browser without animatable grid tracks simply snaps open and shut, which is where this started.
+.sidebar-group-items {
+  display: grid;
+  grid-template-rows: 0fr;
+
+  // Takes the links inside out of the tab order while the group is shut, which `hidden` used to do.
+  // visibility is a discrete property, so with a transition on it the flip to hidden waits until
+  // the collapse has finished, while the flip back to visible happens as the expand starts.
+  visibility: hidden;
+
+  transition:
+    grid-template-rows var(--app-motion-base) var(--app-ease),
+    visibility var(--app-motion-base);
+}
+
+.sidebar-group-items-open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.sidebar-group-list {
+  // How far the entries sit in from the rail they hang off. Deliberately tight: the wider this
+  // gets, the more the marker reads as something floating on its own rather than as the row's own
+  // edge.
+  --sidebar-rail-gap: 0.875rem;
+
+  // The rail and the marker are laid out from this pair rather than from two sets of numbers, which
+  // is what keeps the marker centred on the rail however either is retuned.
+  //
+  // Their difference has to stay EVEN, because the rail is offset by half of it. At 4px against a
+  // 1px rail that offset was 1.5px, which no device pixel lands on at 100% zoom: the browser pushed
+  // the hairline a whole pixel to the right and the marker read as sitting left of it. It only
+  // looked centred at 200%, where 1.5px happens to be exactly three device pixels. An even
+  // difference keeps every edge on a whole pixel at any zoom.
+  --sidebar-rail-width: 1px;
+  --sidebar-marker-width: 3px;
+
+  // Clips on the grid item itself, not on the grid above. Only a grid item's own `overflow` lifts
+  // its automatic minimum size off `auto`, and without that the 0fr row cannot squeeze it down —
+  // the group would simply stay open.
+  overflow: hidden;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0 0 0 1.0625rem;
+
+  // No block padding at all: anything here is inside the box the grid row collapses and would hold
+  // a shut group that far open. The heading above carries the spacing instead.
+  padding: 0 0 0 var(--sidebar-rail-gap);
+  list-style: none;
+
+  // The rail the indented entries hang off, which is what keeps them legible as children of the
+  // heading once several groups are open at once.
+  //
+  // Drawn inside the box rather than as a border on its edge: a border sits outside the padding box
+  // that `overflow` clips to, which put it permanently out of reach of the active marker.
+  //
+  // Set in from that clip edge by half a marker, so the rail runs down the marker's centre line and
+  // the marker straddles it. Sitting flush at the edge instead would leave the marker no room to
+  // extend to the left of the rail, and it would read as hung off one side of the line rather than
+  // as part of it.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc((var(--sidebar-marker-width) - var(--sidebar-rail-width)) / 2);
+    width: var(--sidebar-rail-width);
+    background: var(--mat-sys-outline-variant);
+  }
+}
+
+// --- Entries ----------------------------------------------------------------------------------
+
+.sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--app-radius-md);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  text-decoration: none;
+  transition: background-color var(--app-motion-fast) var(--app-ease),
+              color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    background: var(--app-tint-hover);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &:active {
+    background: var(--app-tint-pressed);
+  }
+}
+
+.sidebar-link-standalone {
+  margin-block-end: 0.25rem;
+}
+
+.sidebar-link-icon {
+  flex: none;
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--mat-sys-outline);
+  transition: color var(--app-motion-fast) var(--app-ease);
+}
+
+// Artwork the icon font does not carry, painted through a mask so it takes the row's own colour
+// exactly as the font's entries do — placed as an image it would sit at whatever colour it was
+// drawn in while everything beside it moved from grey to the brand colour.
+.sidebar-link-icon-mask {
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.sidebar-link-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The current page. Three signals rather than one — a tinted background, the brand colour on the
+// label and icon, and a marker on the leading edge — so it survives both a monochrome display and
+// the forms of colour blindness that would flatten the tint against the panel.
+.sidebar-link-active {
+  background: var(--app-tint-primary);
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--app-tint-primary-strong);
+    color: var(--mat-sys-primary);
+  }
+
+  .sidebar-link-icon {
+    color: var(--mat-sys-primary);
+  }
+
+  // A rounded stub against the rail the group draws. Short and centred rather than running the
+  // height of the row: a full-height bar competes with the tinted row for the eye, where a stub
+  // reads as a mark on the rail — the row's own tint is what says which entry this is.
+  //
+  // Straddles the rail rather than sitting against it: the rail is inset by half a marker (see
+  // .sidebar-group-list), so starting flush at the list's clip edge leaves the line running down
+  // this marker's centre and cutting it in two. Hung off one side instead, it read as a separate
+  // accent parked next to the line rather than as part of it.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(-1 * var(--sidebar-rail-gap));
+    top: 50%;
+    width: var(--sidebar-marker-width);
+    height: 1.125rem;
+    transform: translateY(-50%);
+    border-radius: var(--app-radius-pill);
+    background: var(--mat-sys-primary);
+
+    // Bleeds the accent a little way into the surface around it, which softens the transition from
+    // a 4px bar to bare background and keeps the mark from looking pasted on.
+    box-shadow: 0 0 0.5rem 0 var(--app-tint-primary-strong);
+  }
+}
+
+// Nothing draws the rail next to a standalone entry, so there is no hairline for the marker to
+// stand in for and it would float in the padding on its own.
+.sidebar-link-standalone.sidebar-link-active::before {
+  content: none;
 }

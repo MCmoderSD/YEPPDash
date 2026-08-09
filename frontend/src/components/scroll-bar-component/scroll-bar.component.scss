@@ -1,5 +1,10 @@
 // Laid over the element it belongs to, sized to it from the component. Consumers can retune the
 // bar by setting --scroll-bar-size or --scroll-bar-inset on the <app-scroll-bar> element.
+//
+// The bars stay out of sight until they are wanted: the component adds .scroll-bar-revealed once
+// the pointer nears the edge that carries one, while it is being dragged, or briefly after a
+// scroll. Everything below is written so that hiding costs only opacity and a transform, both of
+// which the compositor can animate without touching layout.
 :host {
   position: absolute;
 
@@ -9,78 +14,117 @@
   // Only the bars themselves take the pointer — the rest of this box belongs to the content
   // underneath, which must stay clickable.
   pointer-events: none;
+
+  // The visible width of the thumb, which is narrower than the strip it can be grabbed by. Widened
+  // on hover so the bar thickens under the pointer that is aiming for it.
+  --scroll-bar-thumb-size: 0.375rem;
 }
 
 .scroll-bar-track {
   position: absolute;
   visibility: hidden;
-  pointer-events: auto;
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: transparent;
-  transition: background-color 120ms var(--mat-sys-easing-standard, ease);
+
+  // Hidden until revealed, and unhittable with it: a track that still took the pointer would eat
+  // clicks along an edge where nothing is drawn.
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity var(--app-motion-base) var(--app-ease),
+    transform var(--app-motion-base) var(--app-ease),
+    background-color var(--app-motion-fast) var(--app-ease);
 
   // Hidden rather than removed from the layout: the component reads the thickness back off this
   // element, and display:none would measure as zero.
   &.scroll-bar-shown {
     visibility: visible;
   }
-
-  &:hover {
-    background: var(--mat-sys-surface-container-high);
-  }
 }
 
 .scroll-bar-track-vertical {
   top: 0;
   right: 0;
-  width: var(--scroll-bar-size, 0.625rem);
+  width: var(--scroll-bar-size, 0.75rem);
+
+  // Slides in from just past the edge it belongs to, which reads as the bar arriving rather than
+  // fading up out of the content.
+  transform: translateX(0.25rem);
 }
 
 .scroll-bar-track-horizontal {
   bottom: 0;
   left: 0;
-  height: var(--scroll-bar-size, 0.625rem);
+  height: var(--scroll-bar-size, 0.75rem);
+  transform: translateY(0.25rem);
+}
+
+:host(.scroll-bar-revealed) .scroll-bar-track.scroll-bar-shown {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+// A channel behind the thumb, but only once the pointer is on the bar itself. Showing it any
+// earlier would draw a second line down the edge of every panel.
+.scroll-bar-track:hover {
+  background: rgb(255 255 255 / 0.05);
 }
 
 .scroll-bar-thumb {
   position: absolute;
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: var(--mat-sys-outline);
-  transition: background-color 120ms var(--mat-sys-easing-standard, ease);
+
+  // Sits on content of any brightness — a table row, an image, a code block — so it carries a dark
+  // hairline of its own rather than relying on the backdrop for separation.
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
+
+  transition:
+    background-color var(--app-motion-fast) var(--app-ease),
+    inset-inline var(--app-motion-fast) var(--app-ease),
+    inset-block var(--app-motion-fast) var(--app-ease);
 }
 
-// Inset from the track's long edges so the bar reads slimmer than the strip it can be grabbed by.
+// Centred in the track by whatever room the thumb does not take, so widening the thumb on hover
+// grows it about its own centre line instead of pushing it off the edge.
 .scroll-bar-track-vertical .scroll-bar-thumb {
-  left: var(--scroll-bar-inset, 3px);
-  right: var(--scroll-bar-inset, 3px);
+  inset-inline: calc((var(--scroll-bar-size, 0.75rem) - var(--scroll-bar-thumb-size)) / 2);
 }
 
 .scroll-bar-track-horizontal .scroll-bar-thumb {
-  top: var(--scroll-bar-inset, 3px);
-  bottom: var(--scroll-bar-inset, 3px);
+  inset-block: calc((var(--scroll-bar-size, 0.75rem) - var(--scroll-bar-thumb-size)) / 2);
 }
 
 .scroll-bar-track:hover .scroll-bar-thumb {
+  --scroll-bar-thumb-size: 0.5rem;
+
   background: var(--mat-sys-on-surface-variant);
 }
 
-// Stays lit for the whole drag: the pointer spends most of it well away from the bar, where the
-// hover rule above no longer holds.
+// Lit in the brand colour and held there for the whole drag: the pointer spends most of one well
+// away from the bar, where the hover rule above no longer holds.
 :host(.scroll-bar-dragging) .scroll-bar-thumb {
-  background: var(--mat-sys-on-surface);
+  --scroll-bar-thumb-size: 0.5rem;
+
+  background: var(--mat-sys-primary);
 }
 
 // A touch screen scrolls the content directly and has no hover to reveal anything, so the bars
-// stay purely as an indicator and hand every gesture through to what is underneath.
+// stay purely as an indicator — shown by the scroll itself, and handing every gesture through to
+// what is underneath.
 @media (hover: none) {
-  .scroll-bar-track {
+  .scroll-bar-track,
+  :host(.scroll-bar-revealed) .scroll-bar-track.scroll-bar-shown {
     pointer-events: none;
   }
 }
 
+// The bars still appear and disappear — that is what they are for — but they do it at once rather
+// than sliding, and nothing animates its width under the pointer.
 @media (prefers-reduced-motion: reduce) {
-  .scroll-bar-track,
-  .scroll-bar-thumb {
-    transition: none;
+  .scroll-bar-track {
+    transform: none;
   }
 }

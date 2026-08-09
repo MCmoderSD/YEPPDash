@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000">
+  <!-- Used as a CSS mask, so only the alpha of these shapes matters — the colour comes from
+       whatever is masked, which lets the icon follow the same states as the icon font beside it. -->
+  <path d="M9.8 2.2h4.4L12 6.3z"/>
+  <circle cx="12" cy="13.6" r="8.2" fill="none" stroke="#000" stroke-width="1.7"/>
+  <path d="M12 13.6V5.4a8.2 8.2 0 0 1 7.1 4.1z"/>
+  <path d="M12 13.6l7.1 4.1A8.2 8.2 0 0 1 12 21.8z"/>
+  <path d="M12 13.6l-7.1 4.1a8.2 8.2 0 0 1 0-8.2z"/>
+</svg>

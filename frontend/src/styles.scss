@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use './theme-colors' as theme;
+@use './styles/tokens' as tokens;
 
 html {
   height: 100%;
@@ -16,13 +17,90 @@ html {
     )
   );
 
-  // Brand override: YEPPBot's dashboard always runs dark, matching Twitch's
-  // own chrome (rgb(14,14,16)). M3's computed dark surface tone for our
-  // yellowgreen seed doesn't land exactly on that value since it's derived
-  // from the seed hue, so it's pinned explicitly here. Re-check this block
-  // after any Angular Material upgrade that regenerates theme tokens.
+  @include tokens.app-tokens;
+  @include tokens.app-reduced-motion;
+
+  // Material derives the surface tones from the palette's hue, which drags a green cast into every
+  // panel. The neutrals in _theme-colors.scss are already the exact ramp this design wants, so the
+  // handful of tokens Material computes rather than reads are pinned back to it here. Re-check this
+  // block after any Angular Material upgrade that regenerates theme tokens.
   --mat-sys-surface: #0e0e10;
   --mat-sys-background: #0e0e10;
+  --mat-sys-surface-dim: #0e0e10;
+  --mat-sys-surface-bright: #35353c;
+  --mat-sys-surface-container-lowest: #08080b;
+  --mat-sys-surface-container-low: #131318;
+  --mat-sys-surface-container: #17171c;
+  --mat-sys-surface-container-high: #212127;
+  --mat-sys-surface-container-highest: #2b2b31;
+
+  // Material resolves this to neutral-variant 90, which lands within a hair of on-surface and
+  // leaves secondary text no dimmer than primary. Pinned a step down to restore the hierarchy —
+  // still 10.2:1 on the page surface, well past the 4.5:1 AA minimum it has to clear as body text.
+  --mat-sys-on-surface-variant: #bcbcc7;
+
+  // Material washes a control's hover and focus state in its own accent, which for an unqualified
+  // button is the primary — so every text button, icon button and menu entry lit up in the brand
+  // lime and read as though it had already been chosen. Being chosen is the one thing that should
+  // be green, so these are switched to the neutral wash Material itself uses for its non-accent
+  // buttons, matching the navbar's own hover.
+  //
+  // Only which colour is washed over the control changes; the paired -opacity tokens are left at
+  // Material's defaults, so the weight of the effect is untouched. Selected states are left alone
+  // too — see --mat-option-selected-state-layer-color, which stays on the accent by design.
+  --mat-button-text-state-layer-color: var(--mat-sys-on-surface);
+  --mat-button-outlined-state-layer-color: var(--mat-sys-on-surface);
+  --mat-button-protected-state-layer-color: var(--mat-sys-on-surface);
+  --mat-button-tonal-state-layer-color: var(--mat-sys-on-surface);
+  --mat-icon-button-state-layer-color: var(--mat-sys-on-surface);
+
+  // Ripples and the menu/option washes below carry their alpha in the colour itself rather than in
+  // a paired opacity token, so these take a translucent value where the ones above take a solid one.
+  --mat-button-text-ripple-color: var(--app-tint-pressed);
+  --mat-button-outlined-ripple-color: var(--app-tint-pressed);
+  --mat-button-protected-ripple-color: var(--app-tint-pressed);
+  --mat-button-tonal-ripple-color: var(--app-tint-pressed);
+  --mat-icon-button-ripple-color: var(--app-tint-pressed);
+
+  --mat-menu-item-hover-state-layer-color: var(--app-tint-hover);
+  --mat-menu-item-focus-state-layer-color: var(--app-tint-hover);
+  --mat-option-hover-state-layer-color: var(--app-tint-hover);
+  --mat-option-focus-state-layer-color: var(--app-tint-hover);
+  --mat-list-list-item-hover-state-layer-color: var(--mat-sys-on-surface);
+  --mat-list-list-item-focus-state-layer-color: var(--mat-sys-on-surface);
+
+  // Material's corner scale is 4/8/12/16/28, and its smaller steps read as square next to the
+  // rounded surfaces the rest of the app is built from — a menu takes the 4px step, which is what
+  // made the account panel look boxy against the pill-shaped button that opens it. Raised to match
+  // the --app-radius-* scale, keeping the same five-step progression so every component that reads
+  // one of these moves together.
+  --mat-sys-corner-extra-small: var(--app-radius-sm);
+  --mat-sys-corner-small: var(--app-radius-md);
+  --mat-sys-corner-medium: var(--app-radius-lg);
+  --mat-sys-corner-large: var(--app-radius-xl);
+
+  // Set outright rather than left to the scale above: an overlay panel wants a rounder corner than
+  // the inline surfaces that share its step.
+  --mat-menu-container-shape: var(--app-radius-lg);
+  --mat-select-container-shape: var(--app-radius-lg);
+}
+
+// The platform's viewport scroll bar is taken away outright; PageScrollBarComponent draws one that
+// floats over the content instead of sitting beside it.
+//
+// Not a cosmetic preference. A native bar occupies a gutter outside the area any element or
+// background can paint into, so on this near-black page it reads as a pale stripe down the right
+// edge that nothing in the design can reach. Removing the gutter is what makes the background
+// continuous by construction rather than by coincidence.
+//
+// Scoped to the document element, so elements that scroll inside the page keep their own — those
+// are handled by ScrollBarComponent where it is attached, and left native where it is not.
+html {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 body {
@@ -34,6 +112,42 @@ body {
   font: var(--mat-sys-body-medium);
   margin: 0;
   height: 100%;
+
+  // Long words in user-supplied content — a quote, a command response, a Twitch display name — are
+  // what push a panel past its column and give the page a horizontal scroll it should never have.
+  overflow-wrap: break-word;
+}
+
+// A 2px ring in the brand lime, offset far enough off the element to stay visible when it sits on a
+// container of nearly the same tone. Applied globally because keyboard focus has to be obvious on
+// every control, including the ones Material does not style itself.
+:where(a, button, [tabindex]):focus-visible,
+:where(input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+  border-radius: var(--app-radius-sm);
+}
+
+// A menu renders in the CDK overlay, outside the component that opened it, so its styling cannot
+// live with that component. Applied to every menu in the app rather than opted into per menu,
+// because unlike the select panel below there is nothing here a single menu would want differently.
+//
+// The hairline is what separates the panel from the page: it floats on a surface only a couple of
+// tones above the near-black behind it, where a drop shadow alone is close to invisible.
+.mat-mdc-menu-panel {
+  border: var(--app-border);
+  box-shadow: var(--app-elevation-3);
+
+  .mat-mdc-menu-content {
+    padding: 0.25rem;
+  }
+
+  // Inset by the panel's own padding, so a highlighted item is a rounded block inside the panel
+  // rather than a square edge running into its rounded corner.
+  .mat-mdc-menu-item {
+    min-height: 2.5rem;
+    border-radius: var(--app-radius-md);
+  }
 }
 
 // A select renders its dropdown in the CDK overlay, outside the component that declared it, so its
@@ -45,18 +159,29 @@ body {
 // is what lets the radius below stick whichever way the panel opens, without reaching for
 // !important.
 .mat-mdc-select-panel.mdc-menu-surface.app-select-panel {
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-medium);
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
   padding: 0.25rem;
   background-color: var(--mat-sys-surface-container-high);
-  box-shadow: var(--mat-sys-level3);
+  box-shadow: var(--app-elevation-3);
 
   // Inset by the panel's own padding, so a highlighted option is a rounded block inside the panel
   // rather than a square edge running into its rounded corner.
   .mat-mdc-option {
     min-height: 2.5rem;
-    border-radius: var(--mat-sys-corner-small);
+    border-radius: var(--app-radius-sm);
   }
+}
+
+// Material wraps a drawer's projected content in its own scrolling div, which would catch the
+// navigation's overflow and let it scroll independently of the page. The navigation belongs to the
+// page between the navbar and the footer, so that scroll has to reach the page instead. Scoped to
+// the dashboard's own drawer rather than every drawer in the app.
+//
+// It is global only because the element it applies to is created by Material, inside the drawer,
+// where neither the page nor the sidebar component's styles can reach it.
+.dash-drawer .mat-drawer-inner-container {
+  overflow: visible;
 }
 
 // The OBS overlay is captured over whatever the scene has behind it, so the page must not paint a

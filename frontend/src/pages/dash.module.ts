@@ -40,6 +40,7 @@ import { ConfirmActionDialogComponent } from '../components/confirm-action-dialo
 import { BotManageComponent } from '../components/bot-manage-component/bot-manage.component';
 import { UserBadgesComponent } from '../components/user-badges-component/user-badges.component';
 import { ScrollBarComponent } from '../components/scroll-bar-component/scroll-bar.component';
+import { ScrollBarDirective } from '../components/scroll-bar-component/scroll-bar.directive';
 import { LocaleDatePipe } from '../pipes/locale-date.pipe';
 import { UserComponentsModule } from '../components/user-components.module';
 
@@ -90,6 +91,7 @@ const components: any[] = [
     UserBadgesComponent,
     WheelComponent,
     ScrollBarComponent,
+    ScrollBarDirective,
     LocaleDatePipe,
     DatePipe,
     NgOptimizedImage,

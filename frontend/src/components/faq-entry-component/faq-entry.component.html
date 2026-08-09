@@ -1,4 +1,10 @@
-<mat-expansion-panel class="faq-entry">
+<!-- The panel reports its own open state rather than the component tracking a second copy of it,
+     which would be one more thing able to disagree with what is actually on screen. -->
+<mat-expansion-panel
+  class="faq-entry"
+  [class.faq-entry-open]="panel.expanded"
+  #panel
+>
 
   <mat-expansion-panel-header class="faq-entry-header">
     <mat-panel-title class="faq-entry-question">{{ entry().question }}</mat-panel-title>

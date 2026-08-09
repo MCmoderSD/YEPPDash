@@ -29,7 +29,7 @@
 
       @if (healthy()) {
         <p class="bot-manage-healthy">
-          <mat-icon class="bot-manage-icon" aria-hidden="true">check_circle</mat-icon>
+          <mat-icon class="bot-manage-icon bot-manage-icon-ok" aria-hidden="true">check_circle</mat-icon>
           <span>{{ bot.displayName }} is set up and in your chat.</span>
         </p>
       }
@@ -99,7 +99,7 @@
     } @else {
 
       <p class="bot-manage-empty">
-        <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">error_outline</mat-icon>
+        <mat-icon class="bot-manage-icon bot-manage-icon-error" aria-hidden="true">error_outline</mat-icon>
         <span>
           {{ unreachable() ? 'Could not reach Twitch to read the bot status.' : 'No Twitch account matches the configured bot ID.' }}
         </span>

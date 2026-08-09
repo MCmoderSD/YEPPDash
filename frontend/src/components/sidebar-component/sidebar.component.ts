@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
-import { IsActiveMatchOptions } from '@angular/router';
+import { Component, computed, effect, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { IsActiveMatchOptions, NavigationEnd, Router } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
-import { RoleManagementMode } from "../role-management-component/role-management.component";
-import { isDashHost } from '../../services/dash-host';
+import { groupForUrl, NAV_GROUPS, NavGroup, OVERVIEW_PATH } from '../../data/dash-nav';
 
 const ACTIVE_MATCH: IsActiveMatchOptions = {
   paths: 'exact',
@@ -20,24 +21,58 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
 export class SidebarComponent {
 
   private readonly sidebar: SidebarService = inject(SidebarService);
+  private readonly router: Router = inject(Router);
 
   protected readonly activeMatch: IsActiveMatchOptions = ACTIVE_MATCH;
 
-  protected readonly Mode = RoleManagementMode;
+  protected readonly overviewPath: string = OVERVIEW_PATH;
 
-  protected readonly roleManagementPath: string = isDashHost() ? '/role-management' : '/dash/role-management';
+  protected readonly groups: readonly NavGroup[] = NAV_GROUPS;
 
-  protected readonly quoteManagementPath: string = isDashHost() ? '/quotes' : '/dash/quotes';
+  // Every group starts open. With three of them the whole tree fits without scrolling, and hiding
+  // entries behind a click the user did not ask for would be worse than the height it costs.
+  private readonly collapsed: WritableSignal<ReadonlySet<string>> = signal(new Set<string>());
 
-  protected readonly commandPath: string = isDashHost() ? '/commands' : '/dash/commands';
+  private readonly url: Signal<string> = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event: NavigationEnd): string => event.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
 
-  protected readonly birthdayListPath: string = isDashHost() ? '/birthdays' : '/dash/birthdays';
+  private readonly activeGroup: Signal<string | undefined> =
+    computed((): string | undefined => groupForUrl(this.groups, this.url()));
 
-  protected readonly communityPath: string = isDashHost() ? '/community' : '/dash/community';
+  constructor() {
+    // Reopens whichever group the route moved into, so the entry now marked as the current page is
+    // never hidden inside a collapsed group. Done as a one-off on arrival rather than as a rule in
+    // expanded() below, which would leave the group the user is on impossible to collapse.
+    effect((): void => {
+      const active: string | undefined = this.activeGroup();
+      if (!active) return;
 
-  protected readonly wheelPath: string = isDashHost() ? '/wheel' : '/dash/wheel';
+      this.collapsed.update((collapsed: ReadonlySet<string>): ReadonlySet<string> => {
+        if (!collapsed.has(active)) return collapsed;
 
-  protected readonly bdsmPath: string = isDashHost() ? '/bdsm' : '/dash/bdsm';
+        const next = new Set(collapsed);
+        next.delete(active);
+        return next;
+      });
+    });
+  }
+
+  protected expanded(group: NavGroup): boolean {
+    return !this.collapsed().has(group.id);
+  }
+
+  protected toggle(group: NavGroup): void {
+    this.collapsed.update((collapsed: ReadonlySet<string>): ReadonlySet<string> => {
+      const next = new Set(collapsed);
+      next.has(group.id) ? next.delete(group.id) : next.add(group.id);
+      return next;
+    });
+  }
 
   protected close(): void {
     this.sidebar.close();

@@ -1,6 +1,6 @@
 import { Component, signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ScrollBarComponent, scrollBarAxis, scrollForThumbOffset } from './scroll-bar.component';
+import { nearEdge, ScrollBarComponent, scrollBarAxis, scrollForThumbOffset } from './scroll-bar.component';
 
 @Component({
   imports: [ScrollBarComponent],
@@ -108,6 +108,42 @@ describe('scrollForThumbOffset', () => {
   });
 });
 
+describe('nearEdge', () => {
+  const box = { top: 100, left: 200, width: 400, height: 300 };
+
+  // Right edge is x=600, bottom edge is y=400, and the reveal band is 72px wide.
+
+  it('should be near when the pointer is within the band of the vertical bar', () => {
+    expect(nearEdge({ x: 560, y: 250 }, box, true, false)).toBe(true);
+  });
+
+  it('should not be near while the pointer is out in the middle of the content', () => {
+    expect(nearEdge({ x: 300, y: 250 }, box, true, false)).toBe(false);
+  });
+
+  it('should not answer for an edge that carries no bar', () => {
+    // Hard against the right edge, but nothing overflows vertically, so there is nothing to reveal.
+    expect(nearEdge({ x: 599, y: 250 }, box, false, false)).toBe(false);
+  });
+
+  it('should watch the bottom edge for the horizontal bar', () => {
+    expect(nearEdge({ x: 300, y: 380 }, box, false, true)).toBe(true);
+    expect(nearEdge({ x: 300, y: 200 }, box, false, true)).toBe(false);
+  });
+
+  it('should put the bars away once the pointer leaves the element', () => {
+    // Past the right edge the pointer belongs to whatever is next to the element, even though it is
+    // closer to the bar than ever.
+    expect(nearEdge({ x: 640, y: 250 }, box, true, false)).toBe(false);
+    expect(nearEdge({ x: 560, y: 90 }, box, true, false)).toBe(false);
+  });
+
+  it('should take the band width it is given', () => {
+    expect(nearEdge({ x: 560, y: 250 }, box, true, false, 20)).toBe(false);
+    expect(nearEdge({ x: 590, y: 250 }, box, true, false, 20)).toBe(true);
+  });
+});
+
 describe('ScrollBarComponent', () => {
 
   beforeEach(async () => {
@@ -152,6 +188,94 @@ describe('ScrollBarComponent', () => {
 
     return fixture;
   }
+
+  function host(fixture: ComponentFixture<HostComponent>): HTMLElement {
+    return fixture.nativeElement.querySelector('app-scroll-bar');
+  }
+
+  function revealed(fixture: ComponentFixture<HostComponent>): boolean {
+    return host(fixture).classList.contains('scroll-bar-revealed');
+  }
+
+  function pointerOver(
+    fixture: ComponentFixture<HostComponent>, x: number, y: number,
+  ): void {
+    // jsdom reports every rect as zero, so the element is given one to be measured against.
+    target(fixture).getBoundingClientRect = () => ({ top: 0, left: 0 }) as DOMRect;
+    target(fixture).dispatchEvent(new MouseEvent('pointermove', { clientX: x, clientY: y }));
+    TestBed.tick();
+  }
+
+  const OVERFLOWING = { clientWidth: 400, clientHeight: 300, scrollWidth: 400, scrollHeight: 900 };
+
+  it('should keep the bars out of sight until something asks for them', () => {
+    vi.useFakeTimers();
+
+    try {
+      const fixture = render(OVERFLOWING);
+
+      // The scroll that render() fires to measure the element also flashes the bars up, the same
+      // way a real one does. They go away again once it settles.
+      expect(revealed(fixture)).toBe(true);
+
+      vi.advanceTimersByTime(1000);
+      TestBed.tick();
+
+      expect(revealed(fixture)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should bring the bars out as the pointer nears the edge, and put them away again', () => {
+    vi.useFakeTimers();
+
+    try {
+      const fixture = render(OVERFLOWING);
+      vi.advanceTimersByTime(1000);
+      TestBed.tick();
+
+      pointerOver(fixture, 200, 150);
+      expect(revealed(fixture)).toBe(false);
+
+      // Within 72px of the right edge, which is where the vertical bar lives.
+      pointerOver(fixture, 380, 150);
+      expect(revealed(fixture)).toBe(true);
+
+      target(fixture).dispatchEvent(new MouseEvent('pointerleave'));
+      TestBed.tick();
+
+      expect(revealed(fixture)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('should hold the bars up while the pointer is on one of them', () => {
+    vi.useFakeTimers();
+
+    try {
+      const fixture = render(OVERFLOWING);
+      vi.advanceTimersByTime(1000);
+      TestBed.tick();
+
+      // The bars swallow the pointer once it reaches them, so the element underneath stops hearing
+      // about it — without this the bar would vanish just as it was reached for.
+      host(fixture).dispatchEvent(new MouseEvent('pointerenter'));
+      TestBed.tick();
+      expect(revealed(fixture)).toBe(true);
+
+      vi.advanceTimersByTime(5000);
+      TestBed.tick();
+      expect(revealed(fixture)).toBe(true);
+
+      host(fixture).dispatchEvent(new MouseEvent('pointerleave'));
+      TestBed.tick();
+      expect(revealed(fixture)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
   it('should hide the platform bar on the element it is pointed at', () => {
     const fixture = render();

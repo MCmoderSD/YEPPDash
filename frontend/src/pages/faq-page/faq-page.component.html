@@ -1,10 +1,13 @@
 <section class="faq">
-  <h1 class="faq-title">Frequently asked questions</h1>
 
-  <p class="faq-intro">
-    What YEPPBot is, what this dashboard does with your Twitch account, and how finished any of it
-    actually is. Pick a question to open it.
-  </p>
+  <header class="faq-header">
+    <p class="faq-eyebrow">Help</p>
+    <h1 class="faq-title">Frequently asked questions</h1>
+    <p class="faq-intro">
+      What YEPPBot is, what this dashboard does with your Twitch account, and how finished any of it
+      actually is. Pick a question to open it.
+    </p>
+  </header>
 
   <div class="faq-entries">
     @for (entry of entries; track entry.question) {
@@ -12,9 +15,14 @@
     }
   </div>
 
-  <p class="faq-more">
-    Still stuck? Ask on
-    <a href="https://github.com/MCmoderSD/YEPPDash/issues" target="_blank" rel="noopener">GitHub</a>
-    and it will end up on this page.
-  </p>
+  <!-- Set apart from the questions rather than trailing after the last one, where it read as though
+       it belonged to that answer. -->
+  <aside class="faq-more">
+    <mat-icon class="faq-more-icon" aria-hidden="true">forum</mat-icon>
+    <p class="faq-more-text">
+      Still stuck? Ask on
+      <a href="https://github.com/MCmoderSD/YEPPDash/issues" target="_blank" rel="noopener">GitHub</a>
+      and it will end up on this page.
+    </p>
+  </aside>
 </section>
