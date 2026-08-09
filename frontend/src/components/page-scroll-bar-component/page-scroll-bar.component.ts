@@ -15,6 +15,13 @@ import { scrollBarAxis, ScrollBarAxis } from '../scroll-bar-component/scroll-bar
 // How close to the right edge the pointer has to come before the bar reveals itself. Wider than the
 // bar's own hit area so it can be found without pixel-perfect aim, narrow enough that it still
 // reads as having gone to the edge rather than merely hovering the page.
+//
+// Narrower than the element-level bar's band in ScrollBarComponent, on purpose. This edge is the
+// viewport's, which the pointer physically cannot travel past — reaching for the bar always ends
+// against it, so a narrow band is enough to catch that. An element's edge sits in the middle of the
+// page with more content beyond it, where the pointer sails straight through on its way somewhere
+// else, and needs the wider band to register the approach as deliberate. A band this wide there
+// would also fire on ordinary travel across the page rather than on an actual reach for the bar.
 const REVEAL_DISTANCE = 48;
 
 // How long the bar stays up after the last scroll. Scrolling is the one moment the position it

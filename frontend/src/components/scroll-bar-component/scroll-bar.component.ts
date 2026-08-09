@@ -25,6 +25,10 @@ const MIN_THUMB_SIZE = 24;
 // How close to the element's trailing edge the pointer has to come before the bars appear. Wide
 // enough that reaching for the bar reveals it before the pointer arrives — a band only as wide as
 // the bar itself would mean aiming at something invisible.
+//
+// Wider than the page-level band in PageScrollBarComponent, on purpose: this edge sits in the
+// middle of the page with more content past it, so the pointer has to be caught on approach rather
+// than where it comes to rest. See the note there for the other half of the reasoning.
 const REVEAL_DISTANCE = 72;
 
 // How long the bars stay up after the last scroll event. Scrolling is the one case where the bars
