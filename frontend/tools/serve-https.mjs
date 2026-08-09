@@ -15,6 +15,7 @@ import { createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import compression from 'compression';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env['PORT'] ?? 4000);
@@ -37,12 +38,19 @@ try {
   throw error;
 }
 
+// Caddy compresses everything it serves in production; the bundle arrives around 92 kB there and
+// 430 kB straight off this server. Measuring without it makes every JS-bound metric look far worse
+// than what is actually shipped — the difference between a Performance score of 82 and 92 on the
+// same build. gzip rather than brotli: a few percent larger, and what a plain Node server can do.
+const gzip = compression();
+const handler = (req, res) => gzip(req, res, () => reqHandler(req, res));
+
 const server = createServer(
   {
     key: readFileSync(join(here, '..', '.certs', 'localhost.key')),
     cert: readFileSync(join(here, '..', '.certs', 'localhost.pem')),
   },
-  reqHandler,
+  handler,
 );
 
 server.listen(port, () => console.log(`Serving the production bundle on https://localhost:${port}`));
