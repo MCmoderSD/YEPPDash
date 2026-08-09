@@ -36,7 +36,12 @@
     </div>
 
     <div class="wheel-page-panel">
-      <mat-tab-group class="wheel-page-tabs">
+      <!-- dynamicHeight: without it, MatTabGroup only animates the slide and leaves the wrapper's
+           own height to plain CSS layout, which resizes it to the incoming tab in a single frame —
+           invisible while the two tabs are close in height, but with a long entry list, Management
+           runs well past Results, and everything below the panel visibly jumped when the switch
+           landed. This makes Material measure and animate the height itself instead. -->
+      <mat-tab-group class="wheel-page-tabs" dynamicHeight>
 
         <mat-tab label="Management">
           <div class="wheel-page-tab-body">
