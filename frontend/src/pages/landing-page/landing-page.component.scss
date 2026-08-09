@@ -76,36 +76,63 @@
 }
 
 .disclaimer {
+  // Spaced by the container rather than by a margin on every paragraph, so the last one does not
+  // need an exception to stop it pushing the bottom padding out.
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  // The app sets no global box model, so without this the padding and the border are added on top
+  // of the full width rather than taken out of it — the card came out 42px wider than the column it
+  // sits in and hung off both edges of a phone screen, its text running under the bezel. That, and
+  // not the spacing inside it, is what made this look crushed.
+  box-sizing: border-box;
   width: 100%;
   max-width: 42rem;
   margin: 3rem 0 0;
-  padding: 1.25rem 1.5rem;
-  border-radius: var(--mat-sys-corner-large);
-  background: var(--mat-sys-surface-variant);
+  padding: 1.25rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+
+  // The dashboard's own surface with an edge drawn round it, rather than the lighter fill this used
+  // to carry. That fill was the one block on the page not built out of the app's surfaces, and on a
+  // phone — where it runs nearly the full width — it read as a slab dropped onto the page.
+  background: var(--mat-sys-surface-container);
   text-align: start;
+
+  // Room to breathe once there is width to spend on it. On a phone the padding stays modest,
+  // because every millimetre taken here comes off lines that are already short.
+  @media (min-width: 48rem) {
+    padding: 1.75rem 2rem;
+  }
 }
 
 .disclaimer-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.75rem;
-  color: var(--mat-sys-on-surface-variant);
+  gap: 0.625rem;
+  margin: 0;
+
+  // Full-strength against the softer body text below, so the heading reads as the heading rather
+  // than as a first line set in bold.
+  color: var(--mat-sys-on-surface);
   font: var(--mat-sys-title-medium);
 
   mat-icon {
     flex: none;
+    color: var(--mat-sys-primary);
   }
 }
 
 .disclaimer p {
-  margin: 0 0 0.75rem;
+  margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
 
-  &:last-child {
-    margin-bottom: 0;
-  }
+  // Set after the shorthand, which carries a line height of its own. That default is what left four
+  // stacked paragraphs sitting on top of one another on a narrow screen, where each of them wraps
+  // over five or six lines instead of two.
+  line-height: 1.6;
 }
 
 .disclaimer a {

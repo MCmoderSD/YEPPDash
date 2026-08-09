@@ -1,16 +1,46 @@
 @use '../../styles/chat-color' as chat;
 
+// --- Trigger --------------------------------------------------------------------------------
+//
+// Everything from here down to .user-menu-name exists to let one thing happen: the display name
+// giving way when the bar runs short. Nothing in the chain is optional, because a box that cannot
+// shrink anywhere along it holds every box inside it out at full width — which is how a long name
+// used to push the chevron clean off a phone screen and take the page's width with it.
+
+// A flex item of .navbar-end, so without this its automatic minimum size is whatever the button
+// inside measures and it never gives an inch.
+:host {
+  display: block;
+  min-width: 0;
+}
+
 .user-menu-trigger {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+
+  // A button sizes to its content rather than to its parent, however it is displayed — so the host
+  // above can shrink all it likes and the button will still sit there at full width, overflowing
+  // it. This is what ties the two together.
+  max-width: 100%;
+}
+
+// Material's own wrapper around the projected label, whose minimum is its content width by default.
+// Reached through ::ng-deep because the span belongs to MatButton's template and so carries none of
+// this component's encapsulation attributes; the selector in front of it keeps the rule to this one
+// button.
+.user-menu-trigger ::ng-deep .mdc-button__label {
+  min-width: 0;
 }
 
 .user-menu-identity {
-  display: inline-flex;
+  // Block-level rather than inline, which is the whole point: an inline box refuses to go below its
+  // own content width, so as an inline-flex this stopped at the full width of the name and drew it
+  // straight over the chevron. Block-level, it takes the width the label hands it.
+  display: flex;
   align-items: center;
-  vertical-align: middle;
   gap: 0.5rem;
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -24,6 +54,22 @@
   @include chat.chat-color;
 
   font: var(--mat-sys-label-large);
+
+  // The end of the chain above: Twitch display names run to 25 characters, which on a phone is more
+  // width than the bar has left once the brand and the drawer toggle have taken theirs. This is the
+  // one part of the button worth cutting — the menu it opens spells the account out in full — so it
+  // is the part that gives, and only by as much as the width actually asks for.
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// The navbar carries its own FAQ link from this width up, so keeping one here too would offer the
+// same page twice over. See the note in the template.
+.user-menu-faq {
+  @media (min-width: 48rem) {
+    display: none;
+  }
 }
 
 // Trimmed to sit level with the menu items below it, which are inset by the panel's own padding

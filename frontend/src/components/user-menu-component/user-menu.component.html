@@ -53,6 +53,21 @@
 
   <mat-divider/>
 
+  <!-- The navbar drops its FAQ link on a narrow screen, where the bar has no room for it alongside
+       the drawer toggle and this button. It lives here instead so the page stays reachable on a
+       phone; the stylesheet takes it away again once the bar is wide enough to carry its own. -->
+  @if (faqUrl; as url) {
+    <a mat-menu-item class="user-menu-faq" [href]="url">
+      <mat-icon aria-hidden="true">quiz</mat-icon>
+      <span>FAQ</span>
+    </a>
+  } @else {
+    <a mat-menu-item class="user-menu-faq" routerLink="/faq">
+      <mat-icon aria-hidden="true">quiz</mat-icon>
+      <span>FAQ</span>
+    </a>
+  }
+
   <button mat-menu-item type="button" (click)="editBirthday()">
     <mat-icon aria-hidden="true">cake</mat-icon>
     <span>{{ birthday() ? 'Change birthday' : 'Set birthday' }}</span>
