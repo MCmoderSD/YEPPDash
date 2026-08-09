@@ -78,7 +78,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     icon: 'diversity_3',
     items: [
       {
-        label: 'Members',
+        label: 'Follower',
         icon: 'group',
         description: 'Who is around, and what roles they hold.',
         path: `${BASE}/community`,

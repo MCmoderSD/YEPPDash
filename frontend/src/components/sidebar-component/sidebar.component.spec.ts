@@ -66,7 +66,7 @@ describe('SidebarComponent', () => {
         'VIPs',
         'format_quoteQuotes',
         'terminalCommands',
-        'groupMembers',
+        'groupFollower',
         'cakeBirthdays',
         'Lucky Wheel',
         'BDSM Test',
