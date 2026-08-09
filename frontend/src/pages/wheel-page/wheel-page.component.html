@@ -39,6 +39,7 @@
       <mat-tab-group class="wheel-page-tabs">
 
         <mat-tab label="Management">
+          <div class="wheel-page-tab-body">
 
           <div class="wheel-page-toolbar">
             <button
@@ -242,9 +243,11 @@
               </div>
             }
           </section>
+          </div>
         </mat-tab>
 
         <mat-tab label="Results">
+          <div class="wheel-page-tab-body">
 
           <div class="wheel-page-toolbar">
             <!-- Only a way to empty the log lives here: what is logged is decided by spinning the
@@ -296,6 +299,7 @@
           </div>
 
           <app-scroll-bar [target]="resultsScroll"/>
+          </div>
         </mat-tab>
       </mat-tab-group>
     </div>
