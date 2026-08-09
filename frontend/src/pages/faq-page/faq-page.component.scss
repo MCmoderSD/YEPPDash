@@ -2,36 +2,93 @@
   display: flex;
   flex: 1;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 3rem 1rem 4rem;
 }
 
 .faq {
   width: 100%;
-  max-width: 42rem;
+
+  // Wider than a bare reading column would be, because the answers sit inside cards with padding of
+  // their own — the text itself still lands around a comfortable line length.
+  max-width: 44rem;
+}
+
+// --- Header -----------------------------------------------------------------------------------
+
+.faq-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-block-end: 2rem;
+}
+
+// The same eyebrow the dashboard's landing page uses, so a public page and a signed-in one read as
+// parts of the same product rather than two designs.
+.faq-eyebrow {
+  margin: 0;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-label-medium);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .faq-title {
-  margin: 0 0 1rem;
+  margin: 0;
   font: var(--mat-sys-headline-medium);
 }
 
 .faq-intro {
-  margin: 0 0 2rem;
+  margin: 0;
+  max-width: 38rem;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-large);
+  line-height: 1.6;
 }
+
+// --- Entries ----------------------------------------------------------------------------------
 
 .faq-entries {
   display: grid;
-  gap: 0.5rem;
+
+  // Wider than the old half-rem: the cards carry their own edge now, and packed tighter than this
+  // two closed cards read as one control with a line through it.
+  gap: 0.75rem;
 }
 
+// --- Closing note -----------------------------------------------------------------------------
+
 .faq-more {
-  margin: 2.5rem 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-block-start: 2.5rem;
+  padding: 1rem 1.25rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+
+  // A step below the question cards rather than level with them, so it reads as a footnote to the
+  // list instead of as one more entry in it.
+  background: var(--mat-sys-surface-container-low);
+}
+
+.faq-more-icon {
+  flex: none;
+  color: var(--mat-sys-primary);
+}
+
+.faq-more-text {
+  margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
+  line-height: 1.6;
 
   a {
     color: var(--mat-sys-primary);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 }
