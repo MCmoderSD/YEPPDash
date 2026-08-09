@@ -61,10 +61,52 @@
   min-width: 0;
 }
 
+// A wrapper of this component's own rather than styling Material's .mat-mdc-tab-body-content
+// directly: that element belongs to MatTabBody's template, not this one, so Angular's per-component
+// style scoping never lets a rule here reach it — the selector compiles fine and matches nothing,
+// which is why the toolbar, the form and the table below used to sit flush against one another with
+// no gap between them at all. This div is written by wheel-page's own template, so it is reachable.
+//
+// Laid out the way the panel itself used to be before the tabs existed — one column, the same gap
+// between its pieces.
+.wheel-page-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block-start: 1rem;
+}
+
+// MatTabGroup measures each tab's own content once to size the shared wrapper it animates between
+// tabs, then leaves that number fixed — the height painted by the flex column above can come out a
+// pixel or two past what was measured, which is not a real amount of content to scroll but is enough
+// for Chrome and Firefox to draw a scrollbar over a table that plainly has no more rows to reach.
+// mat-tab-body carries the actual overflow: .mat-mdc-tab-body-content is a plain height: 100% of it,
+// so hiding the bar on the outer element covers both.
+//
+// ::ng-deep because both elements belong to MatTabBody's own template, not this component's — a
+// selector without it would carry this component's encapsulation attribute and match nothing.
+.wheel-page-tabs {
+  ::ng-deep mat-tab-body,
+  ::ng-deep .mat-mdc-tab-body-content {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
 .wheel-page-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+// The one button here has nothing to share the row with, so it takes the whole width rather than
+// sitting stranded at the start of it. mat-button already centres its own content, so the icon and
+// label land in the middle of that width for free.
+.wheel-page-results-toolbar .wheel-page-results-clear {
+  width: 100%;
 }
 
 // The pair under the table. Centred and given equal width so they read as one control for moving
@@ -174,6 +216,19 @@ table.wheel-page-table {
 
 .wheel-page-name {
   overflow-wrap: anywhere;
+}
+
+.wheel-page-time {
+  // Same trick as .wheel-page-actions below: a table column sized to 1% of a table wider than its
+  // content shrinks to that content instead, handing everything it gives up to the other column. The
+  // date this holds is always about the same length, so Entry is the one column here worth growing.
+  width: 1%;
+  text-align: end;
+
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .wheel-page-actions {

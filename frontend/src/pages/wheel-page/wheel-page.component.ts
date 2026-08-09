@@ -1,13 +1,17 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
+import { WheelResultsService } from '../../services/wheel-results.service';
 import { addEntry, cleanLabel, entriesFrom, entryText, flattenEntries, hasSeparator, parseWheelFile, removeOne, separatorMessage, shuffleEntries, sliceCount, sortEntries, WHEEL_FILE_NAME, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
+import { resultWonAt, WheelResult } from '../../data/wheel-result';
 import { wheelOverlayUrl } from '../../data/wheel-overlay';
 
 @Component({
@@ -23,12 +27,20 @@ export class WheelPageComponent {
   private readonly document: Document = inject(DOCUMENT);
   private readonly auth: AuthService = inject(AuthService);
   private readonly wheels: WheelService = inject(WheelService);
+  private readonly wheelResults: WheelResultsService = inject(WheelResultsService);
 
   private readonly wheel: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
+  private readonly resultsSorter: Signal<MatSort | undefined> = viewChild(MatSort);
 
   protected readonly entries: WritableSignal<WheelEntry[]> = signal<WheelEntry[]>([]);
   protected readonly draft: WritableSignal<string> = signal('');
   protected readonly loading: WritableSignal<boolean> = signal(false);
+
+  // Kept only in the browser's own storage, not the server the rest of the wheel talks to — see
+  // WheelResultsService.
+  protected readonly results: WritableSignal<WheelResult[]> = signal<WheelResult[]>([]);
+  protected readonly resultColumns: string[] = ['winner', 'time'];
+  protected readonly resultsDataSource: MatTableDataSource<WheelResult> = new MatTableDataSource<WheelResult>([]);
 
   private writing: Promise<void> = Promise.resolve();
 
@@ -57,6 +69,15 @@ export class WheelPageComponent {
 
   constructor() {
     void this.load();
+
+    this.resultsDataSource.sortingDataAccessor = (result, column): string | number =>
+      column === 'time' ? resultWonAt(result).getTime() : result.label.toLowerCase();
+
+    effect((): WheelResult[] => this.resultsDataSource.data = this.results());
+    effect((): void => {
+      const sorter: MatSort | undefined = this.resultsSorter();
+      if (sorter) this.resultsDataSource.sort = sorter;
+    });
   }
 
   protected add(): void {
@@ -115,12 +136,32 @@ export class WheelPageComponent {
   }
 
   protected async landed(spin: WheelSpin): Promise<void> {
+    const channelId: string | null = this.channelId();
+
+    // Recorded as soon as the wheel stops, ahead of the dialog: the win already happened at this
+    // point, whatever the streamer then does with the announcement.
+    if (channelId !== null) this.results.set(this.wheelResults.record(channelId, spin.label));
+
     const choice: WheelWinnerChoice = await WheelWinnerDialogComponent.announce(this.dialog, spin.label);
 
-    const channelId: string | null = this.channelId();
     if (channelId !== null) void this.wheels.dismiss(channelId).catch((): void => undefined);
 
     if (choice === 'remove') this.removeOne(spin.label);
+  }
+
+  protected async resetResults(): Promise<void> {
+    const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
+      title: 'Clear the results?',
+      message: `All ${this.results().length} recorded results will be removed.`,
+      confirmLabel: 'Clear',
+    });
+
+    if (!confirmed) return;
+
+    const channelId: string | null = this.channelId();
+    if (channelId === null) return;
+
+    this.results.set(this.wheelResults.clear(channelId));
   }
 
   protected async clear(): Promise<void> {
@@ -213,6 +254,8 @@ export class WheelPageComponent {
   private async load(): Promise<void> {
     const channelId: string | null = this.channelId();
     if (channelId === null) return;
+
+    this.results.set(this.wheelResults.list(channelId));
 
     this.loading.set(true);
     try {
