@@ -74,11 +74,20 @@
     color: var(--mat-sys-primary);
     transform: rotate(180deg);
   }
+
+  // The description follows directly below once the card is open, so the summary's bottom edge is
+  // no longer a corner of anything — rounding it there leaves the wash notched mid-card.
+  .module-panel-summary {
+    border-end-start-radius: 0;
+  }
 }
 
 .module-panel-header {
   display: flex;
-  align-items: center;
+
+  // stretch rather than center: the summary carries the hover wash, and it has to fill the row's
+  // full height or the wash leaves a sliver of card above and below it.
+  align-items: stretch;
   gap: 0.5rem;
 
   // On the row rather than on the button, so the switch keeps the same inset from the card's edge
@@ -96,7 +105,11 @@
   min-width: 0;
   padding: 0.875rem 0.5rem 0.875rem 1.25rem;
   border: 0;
-  border-radius: var(--app-radius-lg);
+
+  // Hugs the card's own corners on the left and stops square where the switch begins, rather than
+  // floating as a rounded pill in the middle of the card. A pixel under the card's radius because
+  // this sits inside the card's border, where the same value would bleed past it.
+  border-radius: calc(var(--app-radius-lg) - 1px) 0 0 calc(var(--app-radius-lg) - 1px);
   background: none;
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-title-medium);
@@ -144,6 +157,10 @@
 
 .module-panel-switch {
   flex: none;
+
+  // The row stretches its children so the summary's wash fills it; the switch is the one thing that
+  // should stay its own size and sit centred against the name beside it.
+  align-self: center;
 
   // M3's switch is 52x32 with a 24px handle, which beside a row of title text is the loudest thing
   // on the card. Scaled through Material's own tokens rather than a transform, so the handle, the
