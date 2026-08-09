@@ -36,208 +36,268 @@
     </div>
 
     <div class="wheel-page-panel">
+      <mat-tab-group class="wheel-page-tabs">
 
-      <div class="wheel-page-toolbar">
-        <button
-          mat-stroked-button
-          type="button"
-          [disabled]="busy() || entries().length < 2"
-          (click)="shuffle()"
-        >
-          <mat-icon aria-hidden="true">shuffle</mat-icon>
-          <span>Shuffle</span>
-        </button>
+        <mat-tab label="Management">
 
-        <button
-          mat-stroked-button
-          type="button"
-          [disabled]="busy() || entries().length < 2"
-          (click)="sort()"
-        >
-          <mat-icon aria-hidden="true">sort_by_alpha</mat-icon>
-          <span>Sort</span>
-        </button>
+          <div class="wheel-page-toolbar">
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="busy() || entries().length < 2"
+              (click)="shuffle()"
+            >
+              <mat-icon aria-hidden="true">shuffle</mat-icon>
+              <span>Shuffle</span>
+            </button>
 
-        <button
-          mat-stroked-button
-          type="button"
-          class="wheel-page-clear"
-          [disabled]="busy() || entries().length === 0"
-          (click)="clear()"
-        >
-          <mat-icon aria-hidden="true">delete_sweep</mat-icon>
-          <span>Clear</span>
-        </button>
-      </div>
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="busy() || entries().length < 2"
+              (click)="sort()"
+            >
+              <mat-icon aria-hidden="true">sort_by_alpha</mat-icon>
+              <span>Sort</span>
+            </button>
 
-      <!-- The field and the note under it are one thing, so they are grouped rather than left as two
-           children of the panel: that way the note sits close to what it is about, and the panel's
-           own spacing still separates the pair from the table below. -->
-      <div class="wheel-page-entry-form">
-
-        <!-- A form so Enter adds the entry, which is how a list of names actually gets typed in. -->
-        <form class="wheel-page-add" (submit)="$event.preventDefault(); add()">
-          <!-- subscriptSizing dynamic: the field carries no hint of its own, and the space Material
-               reserves for one otherwise counts towards its height — which is what puts the button
-               beside it off centre. -->
-          <mat-form-field appearance="outline" class="wheel-page-field" subscriptSizing="dynamic">
-            <mat-label>Entry</mat-label>
-            <input
-              matInput
-              type="text"
-              autocomplete="off"
-              [attr.maxlength]="maxLength"
-              [value]="draft()"
-              [disabled]="busy()"
-              (input)="draft.set($any($event.target).value)"
-            />
-          </mat-form-field>
-
-          <button
-            mat-flat-button
-            type="submit"
-            [disabled]="busy() || draft().trim().length === 0"
-          >
-            <mat-icon aria-hidden="true">add</mat-icon>
-            <span>Add</span>
-          </button>
-        </form>
-
-        <!-- A note about the whole list rather than about the field, so it sits under the row
-             instead of in the field's own hint slot — which is also what lets that field collapse
-             to the height of its input. -->
-        <p class="wheel-page-hint">
-          Adding a name that is already listed makes it 2x instead of a second row. Commas are what
-          separate the entries when they are stored, so a name cannot contain one.
-        </p>
-      </div>
-
-      <div #scroll class="wheel-page-scroll">
-        <table mat-table [dataSource]="entries()" class="wheel-page-table">
-
-          <ng-container matColumnDef="entry">
-            <th mat-header-cell *matHeaderCellDef scope="col">Entry</th>
-            <td mat-cell *matCellDef="let entry" class="wheel-page-entry">
-              <!-- Laid out in a wrapper rather than in the cell itself: a table cell turned into a
-                   flex container stops taking part in the table's own layout. -->
-              <div class="wheel-page-entry-content">
-                <!-- The count is a badge rather than part of the name, so a row reads as one name
-                     however many times it is on the wheel. -->
-                @if (entry.count > 1) {
-                  <span class="wheel-page-badge">{{ entry.count }}x</span>
-                }
-                <span class="wheel-page-name">{{ entry.label }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef scope="col">
-              <span class="wheel-page-hidden-label">Actions</span>
-            </th>
-            <td mat-cell *matCellDef="let entry" class="wheel-page-actions">
-              <button
-                mat-icon-button
-                type="button"
-                [attr.aria-label]="'Add another ' + entry.label"
-                [disabled]="busy() || full()"
-                (click)="addOne(entry.label)"
-              >
-                <mat-icon aria-hidden="true">add</mat-icon>
-              </button>
-
-              <!-- The last one taken away is the entry leaving the wheel, so this is the only way
-                   off it and no separate delete is needed. -->
-              <button
-                mat-icon-button
-                type="button"
-                [attr.aria-label]="entry.count > 1
-                  ? 'Remove one ' + entry.label
-                  : 'Remove ' + entry.label + ' from the wheel'"
-                [disabled]="busy()"
-                (click)="removeOne(entry.label)"
-              >
-                <mat-icon aria-hidden="true">remove</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let entry; columns: columns" class="wheel-page-row"></tr>
-
-          <tr class="wheel-page-empty-row" *matNoDataRow>
-            <td class="wheel-page-empty" [attr.colspan]="columns.length">
-              @if (loading()) {
-                Loading your wheel…
-              } @else {
-                Nothing on the wheel yet. Add your first entry above.
-              }
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <app-scroll-bar [target]="scroll"/>
-
-      <!-- Under the table rather than above it: both of these are about the list as a whole, so they
-           belong after it rather than between the buttons that edit it. -->
-      <div class="wheel-page-toolbar wheel-page-transfer">
-        <!-- The file picker is the input; the button is what is actually styled and reachable, so
-             the input itself stays out of the layout and out of the tab order. -->
-        <button
-          mat-stroked-button
-          type="button"
-          [disabled]="busy()"
-          (click)="file.click()"
-        >
-          <mat-icon aria-hidden="true">arrow_upward</mat-icon>
-          <span>Import</span>
-        </button>
-
-        <input
-          #file
-          type="file"
-          class="wheel-page-file"
-          accept=".txt,text/plain"
-          tabindex="-1"
-          aria-hidden="true"
-          (change)="import($event)"
-        />
-
-        <button
-          mat-stroked-button
-          type="button"
-          [disabled]="busy() || entries().length === 0"
-          (click)="export()"
-        >
-          <mat-icon aria-hidden="true">arrow_downward</mat-icon>
-          <span>Export</span>
-        </button>
-      </div>
-
-      <!-- The wheel is meant to end up in the stream, so the browser source link belongs next to the
-           list it is built from rather than somewhere in the settings. -->
-      <section class="wheel-page-overlay">
-        <h2 class="wheel-page-overlay-title">OBS browser source</h2>
-        <p class="wheel-page-overlay-hint">
-          This link is yours and stays the same. Add it as a browser source and resize it freely —
-          the wheel scales with it, follows the list on this page and spins along when you spin here.
-        </p>
-
-        @if (overlayUrl(); as url) {
-          <div class="wheel-page-overlay-link">
-            <mat-form-field appearance="outline" class="wheel-page-field" subscriptSizing="dynamic">
-              <mat-label>Overlay link</mat-label>
-              <input matInput type="text" readonly [value]="url"/>
-            </mat-form-field>
-
-            <button mat-stroked-button type="button" (click)="copyOverlayUrl()">
-              <mat-icon aria-hidden="true">content_copy</mat-icon>
-              <span>Copy</span>
+            <button
+              mat-stroked-button
+              type="button"
+              class="wheel-page-clear"
+              [disabled]="busy() || entries().length === 0"
+              (click)="clear()"
+            >
+              <mat-icon aria-hidden="true">delete_sweep</mat-icon>
+              <span>Clear</span>
             </button>
           </div>
-        }
-      </section>
+
+          <!-- The field and the note under it are one thing, so they are grouped rather than left as
+               two children of the panel: that way the note sits close to what it is about, and the
+               panel's own spacing still separates the pair from the table below. -->
+          <div class="wheel-page-entry-form">
+
+            <!-- A form so Enter adds the entry, which is how a list of names actually gets typed in. -->
+            <form class="wheel-page-add" (submit)="$event.preventDefault(); add()">
+              <!-- subscriptSizing dynamic: the field carries no hint of its own, and the space
+                   Material reserves for one otherwise counts towards its height — which is what puts
+                   the button beside it off centre. -->
+              <mat-form-field appearance="outline" class="wheel-page-field" subscriptSizing="dynamic">
+                <mat-label>Entry</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  autocomplete="off"
+                  [attr.maxlength]="maxLength"
+                  [value]="draft()"
+                  [disabled]="busy()"
+                  (input)="draft.set($any($event.target).value)"
+                />
+              </mat-form-field>
+
+              <button
+                mat-flat-button
+                type="submit"
+                [disabled]="busy() || draft().trim().length === 0"
+              >
+                <mat-icon aria-hidden="true">add</mat-icon>
+                <span>Add</span>
+              </button>
+            </form>
+
+            <!-- A note about the whole list rather than about the field, so it sits under the row
+                 instead of in the field's own hint slot — which is also what lets that field collapse
+                 to the height of its input. -->
+            <p class="wheel-page-hint">
+              Adding a name that is already listed makes it 2x instead of a second row. Commas are
+              what separate the entries when they are stored, so a name cannot contain one.
+            </p>
+          </div>
+
+          <div #scroll class="wheel-page-scroll">
+            <table mat-table [dataSource]="entries()" class="wheel-page-table">
+
+              <ng-container matColumnDef="entry">
+                <th mat-header-cell *matHeaderCellDef scope="col">Entry</th>
+                <td mat-cell *matCellDef="let entry" class="wheel-page-entry">
+                  <!-- Laid out in a wrapper rather than in the cell itself: a table cell turned into
+                       a flex container stops taking part in the table's own layout. -->
+                  <div class="wheel-page-entry-content">
+                    <!-- The count is a badge rather than part of the name, so a row reads as one
+                         name however many times it is on the wheel. -->
+                    @if (entry.count > 1) {
+                      <span class="wheel-page-badge">{{ entry.count }}x</span>
+                    }
+                    <span class="wheel-page-name">{{ entry.label }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef scope="col">
+                  <span class="wheel-page-hidden-label">Actions</span>
+                </th>
+                <td mat-cell *matCellDef="let entry" class="wheel-page-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="'Add another ' + entry.label"
+                    [disabled]="busy() || full()"
+                    (click)="addOne(entry.label)"
+                  >
+                    <mat-icon aria-hidden="true">add</mat-icon>
+                  </button>
+
+                  <!-- The last one taken away is the entry leaving the wheel, so this is the only
+                       way off it and no separate delete is needed. -->
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="entry.count > 1
+                      ? 'Remove one ' + entry.label
+                      : 'Remove ' + entry.label + ' from the wheel'"
+                    [disabled]="busy()"
+                    (click)="removeOne(entry.label)"
+                  >
+                    <mat-icon aria-hidden="true">remove</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columns"></tr>
+              <tr mat-row *matRowDef="let entry; columns: columns" class="wheel-page-row"></tr>
+
+              <tr class="wheel-page-empty-row" *matNoDataRow>
+                <td class="wheel-page-empty" [attr.colspan]="columns.length">
+                  @if (loading()) {
+                    Loading your wheel…
+                  } @else {
+                    Nothing on the wheel yet. Add your first entry above.
+                  }
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <app-scroll-bar [target]="scroll"/>
+
+          <!-- Under the table rather than above it: both of these are about the list as a whole, so
+               they belong after it rather than between the buttons that edit it. -->
+          <div class="wheel-page-toolbar wheel-page-transfer">
+            <!-- The file picker is the input; the button is what is actually styled and reachable,
+                 so the input itself stays out of the layout and out of the tab order. -->
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="busy()"
+              (click)="file.click()"
+            >
+              <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+              <span>Import</span>
+            </button>
+
+            <input
+              #file
+              type="file"
+              class="wheel-page-file"
+              accept=".txt,text/plain"
+              tabindex="-1"
+              aria-hidden="true"
+              (change)="import($event)"
+            />
+
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="busy() || entries().length === 0"
+              (click)="export()"
+            >
+              <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+              <span>Export</span>
+            </button>
+          </div>
+
+          <!-- The wheel is meant to end up in the stream, so the browser source link belongs next to
+               the list it is built from rather than somewhere in the settings. -->
+          <section class="wheel-page-overlay">
+            <h2 class="wheel-page-overlay-title">OBS browser source</h2>
+            <p class="wheel-page-overlay-hint">
+              This link is yours and stays the same. Add it as a browser source and resize it freely
+              — the wheel scales with it, follows the list on this page and spins along when you spin
+              here.
+            </p>
+
+            @if (overlayUrl(); as url) {
+              <div class="wheel-page-overlay-link">
+                <mat-form-field appearance="outline" class="wheel-page-field" subscriptSizing="dynamic">
+                  <mat-label>Overlay link</mat-label>
+                  <input matInput type="text" readonly [value]="url"/>
+                </mat-form-field>
+
+                <button mat-stroked-button type="button" (click)="copyOverlayUrl()">
+                  <mat-icon aria-hidden="true">content_copy</mat-icon>
+                  <span>Copy</span>
+                </button>
+              </div>
+            }
+          </section>
+        </mat-tab>
+
+        <mat-tab label="Results">
+
+          <div class="wheel-page-toolbar">
+            <!-- Only a way to empty the log lives here: what is logged is decided by spinning the
+                 wheel, not by anything on this tab. -->
+            <button
+              mat-stroked-button
+              type="button"
+              class="wheel-page-clear wheel-page-results-clear"
+              [disabled]="busy() || results().length === 0"
+              (click)="resetResults()"
+            >
+              <mat-icon aria-hidden="true">delete_sweep</mat-icon>
+              <span>Clear</span>
+            </button>
+          </div>
+
+          <div #resultsScroll class="wheel-page-scroll">
+            <table
+              mat-table
+              matSort
+              matSortActive="time"
+              matSortDirection="desc"
+              matSortDisableClear
+              [dataSource]="resultsDataSource"
+              class="wheel-page-table wheel-page-results-table"
+            >
+
+              <ng-container matColumnDef="winner">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Entry</th>
+                <td mat-cell *matCellDef="let result" class="wheel-page-entry wheel-page-result-winner">{{ result.label }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="time">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Time</th>
+                <td mat-cell *matCellDef="let result" class="wheel-page-time">
+                  <time [attr.datetime]="result.wonAt">{{ result.wonAt | localeDate: 'medium':'short' }}</time>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="resultColumns"></tr>
+              <tr mat-row *matRowDef="let result; columns: resultColumns" class="wheel-page-row"></tr>
+
+              <tr class="wheel-page-empty-row" *matNoDataRow>
+                <td class="wheel-page-empty" [attr.colspan]="resultColumns.length">
+                  Nothing recorded yet. Spin the wheel to log a result here.
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <app-scroll-bar [target]="resultsScroll"/>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   </div>
 </section>

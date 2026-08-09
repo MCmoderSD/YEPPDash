@@ -9,11 +9,38 @@ import { WheelPageComponent } from './wheel-page.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
+import { WheelResultsService } from '../../services/wheel-results.service';
 import { WHEEL_OVERLAY_PARAM } from '../../data/wheel-overlay';
 import { separatorMessage } from '../../data/wheel-entry';
+import { WheelResult } from '../../data/wheel-result';
 import { TwitchUser } from '../../data/twitch-user';
 
 const USER = '644984959';
+
+// Real storage stands in a browser, but what these tests care about is what the page does with what
+// comes back from it — not whether localStorage itself round-trips JSON, which WheelResultsService's
+// own spec already covers.
+class FakeWheelResultsService {
+  stored: Record<string, WheelResult[]> = {};
+  private ticks = 0;
+
+  list = vi.fn((channelId: string): WheelResult[] => this.stored[channelId] ?? []);
+
+  // A fixed, ever-increasing clock rather than the real one: several results can be recorded within
+  // the same test faster than Date.now() moves, and a tie would leave the default sort by time with
+  // nothing to distinguish them by.
+  record = vi.fn((channelId: string, label: string): WheelResult[] => {
+    const result: WheelResult = { label, wonAt: new Date(2026, 0, 1, 0, 0, this.ticks++).toISOString() };
+
+    this.stored[channelId] = [...(this.stored[channelId] ?? []), result];
+    return this.stored[channelId];
+  });
+
+  clear = vi.fn((channelId: string): WheelResult[] => {
+    this.stored[channelId] = [];
+    return [];
+  });
+}
 
 class FakeWheelService {
   stored: string[] = [];
@@ -59,6 +86,7 @@ function twitchUser(): TwitchUser {
 
 describe('WheelPageComponent', () => {
   let api: FakeWheelService;
+  let results: FakeWheelResultsService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -66,6 +94,7 @@ describe('WheelPageComponent', () => {
       providers: [
         { provide: AuthService, useValue: { currentUser: signal(twitchUser()) } },
         { provide: WheelService, useClass: FakeWheelService },
+        { provide: WheelResultsService, useClass: FakeWheelResultsService },
         provideHttpClient(),
         provideHttpClientTesting(),
         provideNoopAnimations(),
@@ -73,6 +102,7 @@ describe('WheelPageComponent', () => {
     }).compileComponents();
 
     api = TestBed.inject(WheelService) as unknown as FakeWheelService;
+    results = TestBed.inject(WheelResultsService) as unknown as FakeWheelResultsService;
   });
 
   afterEach(() => vi.restoreAllMocks());
@@ -632,6 +662,203 @@ describe('WheelPageComponent', () => {
       return fixture.whenStable().then((): void => {
         expect(written).toEqual(['Ali\nAli\nBeatriz']);
       });
+    });
+  });
+
+  describe('results', () => {
+    function winners(fixture: ComponentFixture<WheelPageComponent>): string[] {
+      return [...element(fixture).querySelectorAll('.wheel-page-result-winner')]
+        .map((cell) => cell.textContent!.trim());
+    }
+
+    // The raw ISO value on the <time> element rather than the text a reader sees: what the text
+    // says depends on the test environment's own locale, but the order rows are sorted into does not.
+    function timestamps(fixture: ComponentFixture<WheelPageComponent>): string[] {
+      return [...element(fixture).querySelectorAll('.wheel-page-results-table time')]
+        .map((time) => time.getAttribute('datetime')!);
+    }
+
+    function sortResultsBy(fixture: ComponentFixture<WheelPageComponent>, header: string): void {
+      const button = [...element(fixture).querySelectorAll<HTMLElement>(
+        '.wheel-page-results-table th .mat-sort-header-container')]
+        .find((candidate) => candidate.textContent!.includes(header))!;
+
+      button.click();
+      fixture.detectChanges();
+    }
+
+    // Material only instantiates the body of the tab that is actually selected — even the initial
+    // one, not just later switches — so the results table does not exist in the DOM at all until
+    // this has run. Left for the caller to invoke after everything that needs the Management tab's
+    // own content instead: switching tabs detaches it, along with whatever findable elements it held.
+    async function openResultsTab(fixture: ComponentFixture<WheelPageComponent>): Promise<void> {
+      const tab = [...element(fixture).querySelectorAll<HTMLElement>('[role="tab"]')]
+        .find((candidate) => candidate.textContent!.includes('Results'))!;
+
+      tab.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    // Math.random is mocked per call rather than left to the shuffle in addEntry, so a spin can be
+    // pointed at a chosen slice; the three entries are never removed across a test, so the slice
+    // order stays put and one random value keeps meaning one name throughout it.
+    async function spinAndDismiss(
+      fixture: ComponentFixture<WheelPageComponent>, random: number, choice: 'Close' | 'Remove' = 'Close',
+    ): Promise<void> {
+      vi.spyOn(Math, 'random').mockReturnValue(random);
+      press(fixture, 'Spin');
+      stop(fixture);
+      await fixture.whenStable();
+      await dismiss(fixture, choice);
+    }
+
+    it('should start out with nothing recorded', async () => {
+      const fixture = await render();
+      await openResultsTab(fixture);
+
+      expect(winners(fixture)).toEqual([]);
+      expect(element(fixture).querySelector('.wheel-page-results-table .wheel-page-empty')!.textContent)
+        .toContain('Nothing recorded yet');
+    });
+
+    it('should log the winner of a spin', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      await spinAndDismiss(fixture, 0);
+      await openResultsTab(fixture);
+
+      expect(winners(fixture)).toEqual(['Ali']);
+    });
+
+    // The choice offered afterwards — putting the name back on the wheel or taking it off — is about
+    // what happens next, not about whether the spin counted. It did, the moment the wheel stopped.
+    it('should log the winner even when it is then removed from the wheel', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      await spinAndDismiss(fixture, 0, 'Remove');
+      await openResultsTab(fixture);
+
+      expect(winners(fixture)).toEqual(['Ali']);
+    });
+
+    it('should keep every past winner rather than just the latest', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      add(fixture, 'Charles');
+
+      await spinAndDismiss(fixture, 0.75); // Charles
+      await spinAndDismiss(fixture, 0); // Ali
+      await spinAndDismiss(fixture, 0.4); // Beatriz
+      await openResultsTab(fixture);
+
+      expect([...winners(fixture)].sort()).toEqual(['Ali', 'Beatriz', 'Charles']);
+    });
+
+    it('should sort by time with the most recently recorded result first by default', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      add(fixture, 'Charles');
+
+      await spinAndDismiss(fixture, 0.75); // Charles
+      await spinAndDismiss(fixture, 0); // Ali
+      await spinAndDismiss(fixture, 0.4); // Beatriz
+      await openResultsTab(fixture);
+
+      expect(winners(fixture)).toEqual(['Beatriz', 'Ali', 'Charles']);
+      expect(timestamps(fixture)).toEqual([...timestamps(fixture)].sort().reverse());
+    });
+
+    it('should sort alphabetically once the Entry header is clicked', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      add(fixture, 'Charles');
+
+      await spinAndDismiss(fixture, 0.75); // Charles
+      await spinAndDismiss(fixture, 0); // Ali
+      await spinAndDismiss(fixture, 0.4); // Beatriz
+      await openResultsTab(fixture);
+
+      sortResultsBy(fixture, 'Entry');
+
+      expect(winners(fixture)).toEqual(['Ali', 'Beatriz', 'Charles']);
+    });
+
+    it('should put the recorded results on screen when the page opens', async () => {
+      results.stored[USER] = [
+        { label: 'Ali', wonAt: '2026-01-01T00:00:00.000Z' },
+        { label: 'Beatriz', wonAt: '2026-01-01T00:00:01.000Z' },
+      ];
+
+      const fixture = await render();
+      await openResultsTab(fixture);
+
+      expect(winners(fixture)).toEqual(['Beatriz', 'Ali']);
+    });
+
+    it('should ask before clearing the results', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      await spinAndDismiss(fixture, 0);
+      await openResultsTab(fixture);
+
+      (element(fixture).querySelector('.wheel-page-results-clear') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(dialog()!.textContent).toContain('Clear the results?');
+      expect(winners(fixture)).toEqual(['Ali']);
+    });
+
+    it('should empty the results table once clearing is confirmed', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      await spinAndDismiss(fixture, 0);
+      await openResultsTab(fixture);
+
+      (element(fixture).querySelector('.wheel-page-results-clear') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await dismiss(fixture, 'Clear');
+
+      expect(winners(fixture)).toEqual([]);
+      expect(results.stored[USER]).toEqual([]);
+    });
+
+    it('should leave the results alone when clearing is declined', async () => {
+      const fixture = await render();
+
+      add(fixture, 'Ali');
+      add(fixture, 'Beatriz');
+      await spinAndDismiss(fixture, 0);
+      await openResultsTab(fixture);
+
+      (element(fixture).querySelector('.wheel-page-results-clear') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await dismiss(fixture, 'Cancel');
+
+      expect(winners(fixture)).toEqual(['Ali']);
+    });
+
+    it('should disable clearing while there is nothing recorded', async () => {
+      const fixture = await render();
+      await openResultsTab(fixture);
+
+      expect((element(fixture).querySelector('.wheel-page-results-clear') as HTMLButtonElement).disabled)
+        .toBe(true);
     });
   });
 });

@@ -61,6 +61,15 @@
   min-width: 0;
 }
 
+// The body of whichever tab is open, laid out the way the panel itself used to be before the tabs
+// existed — one column, the same gap between its pieces.
+.wheel-page-tabs .mat-mdc-tab-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
 .wheel-page-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -174,6 +183,13 @@ table.wheel-page-table {
 
 .wheel-page-name {
   overflow-wrap: anywhere;
+}
+
+.wheel-page-time {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .wheel-page-actions {
