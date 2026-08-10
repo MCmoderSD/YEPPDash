@@ -81,8 +81,6 @@ const components: any[] = [
   BotManageComponent
 ];
 
-// Loaded lazily behind /dash: everything in here — the Material table, sort, input, dialog, list
-// and progress bar — is dead weight on the public pages, which is most of the traffic.
 @NgModule({
   declarations: [components],
   imports: [

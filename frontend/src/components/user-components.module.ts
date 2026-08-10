@@ -22,9 +22,6 @@ const components: any[] = [
   UserTableComponent
 ];
 
-// Kept out of ComponentsModule on purpose: that one holds the app shell and is loaded on every
-// page, while the table drags in Material's table, sort, input and dialog — around 100 kB that
-// the landing page has no use for. Import this where users are actually listed.
 @NgModule({
   declarations: [components],
   imports: [

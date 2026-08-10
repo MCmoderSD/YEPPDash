@@ -32,9 +32,10 @@
       @if (auth.currentUser(); as user) {
         <app-user-menu [user]="user" />
       } @else {
-        <!-- The full wording is kept as the accessible name at every width, so shortening the label
-             on a narrow bar does not shorten what a screen reader announces. -->
-        <a mat-flat-button [href]="loginUrl" aria-label="Login with Twitch">
+        <!-- No aria-label: the full wording is in the label itself at every width, only clipped out
+             of sight on a narrow bar, so the accessible name and what the button says are the same
+             string rather than two that have to be kept in step. -->
+        <a mat-flat-button [href]="loginUrl">
           <mat-icon aria-hidden="true">login</mat-icon>
           <span>Login<span class="navbar-login-service"> with Twitch</span></span>
         </a>

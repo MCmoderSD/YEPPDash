@@ -94,8 +94,12 @@ describe('NavbarComponent', () => {
     const login = (fixture.nativeElement as HTMLElement)
       .querySelector<HTMLAnchorElement>('a[href*="/auth/login"]')!;
 
-    expect(login.getAttribute('aria-label')).toBe('Login with Twitch');
     expect(login.textContent).toContain('Login with Twitch');
+
+    // Named by its own label rather than by an aria-label repeating it: a name that does not
+    // contain what the control visibly says fails axe's label-content-name-mismatch, and leaves
+    // "click Login" unusable from voice control.
+    expect(login.getAttribute('aria-label')).toBeNull();
   });
 
   it('should sit the FAQ link ahead of the login link', () => {

@@ -1,9 +1,11 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
+import { IMAGE_LOADER } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ComponentsModule } from '../components.module';
+import { twitchImageLoader } from '../../data/twitch-image';
 import { UserMenuComponent } from './user-menu.component';
 import { NotificationService } from '../../services/notification.service';
 import { environment } from '../../environments/environment';
@@ -42,7 +44,14 @@ describe('UserMenuComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ComponentsModule, RouterModule.forRoot([])],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideNoopAnimations()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideNoopAnimations(),
+        // Wired the same way AppModule wires it, so what the avatar below asks for is what the
+        // running app asks for.
+        { provide: IMAGE_LOADER, useValue: twitchImageLoader },
+      ],
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);
@@ -223,5 +232,32 @@ describe('UserMenuComponent', () => {
     fixture.detectChanges();
 
     expect(menu(fixture).textContent).toContain(shown(17, 5, 2000));
+  });
+
+  // Helix hands out the 300x300 variant for everyone, which is around 100 kB behind a 32 px circle.
+  // This is the one place the loader is proven to reach NgOptimizedImage rather than only to work
+  // on its own.
+  it('should ask Twitch for an avatar the size it is actually drawn at', () => {
+    const fixture = TestBed.createComponent(UserMenuComponent);
+    fixture.componentRef.setInput('user', {
+      ...USER,
+      profileImageUrl:
+        'https://static-cdn.jtvnw.net/jtv_user_pictures/c2c3a227-profile_image-300x300.png',
+    });
+    fixture.detectChanges();
+
+    const avatar = (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLImageElement>('.user-menu-avatar')!;
+
+    // The srcset is what the browser actually picks from, and both descriptors have to come down —
+    // sizing only the 1x would pull the 300x300 straight back in on a retina display.
+    expect(avatar.getAttribute('srcset'))
+      .toBe('https://static-cdn.jtvnw.net/jtv_user_pictures/c2c3a227-profile_image-50x50.png 1x, '
+        + 'https://static-cdn.jtvnw.net/jtv_user_pictures/c2c3a227-profile_image-70x70.png 2x');
+
+    // src keeps the original: Angular asks the loader for it without a width, which is its way of
+    // saying "no particular size" — it is the fallback for a browser that ignores srcset, and no
+    // browser that matters does.
+    expect(avatar.getAttribute('src')).toContain('-profile_image-300x300.png');
   });
 });

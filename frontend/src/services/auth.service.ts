@@ -31,11 +31,11 @@ export class AuthService extends ApiService {
 
   async ensureLoaded(): Promise<TwitchUser | null> {
     if (this.loaded()) return this.user();
-    void this.twitch.loadChatColor();
 
     try {
       const info: TwitchUser = await this.get<TwitchUser>('me');
       this.user.set(info);
+      void this.twitch.loadChatColor();
     } catch {
       this.user.set(null);
     } finally {
