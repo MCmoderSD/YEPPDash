@@ -17,7 +17,7 @@
     <table
       mat-table
       matSort
-      multiTemplateDataRows
+      multiTemplateDataRows="true"
       [dataSource]="dataSource"
       [trackBy]="trackByName"
       class="command-table-grid"
@@ -70,7 +70,7 @@
         <td mat-cell *matCellDef="let command" class="command-table-active" (click)="$event.stopPropagation()">
           @if (!isDraft(command)) {
             <mat-slide-toggle
-              hideIcon
+              hideIcon="true"
               [checked]="command.active"
               [disabled]="busy()"
               [aria-label]="'Command ' + command.name + ' active'"
