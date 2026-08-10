@@ -17,12 +17,18 @@ describe('twitchImageLoader', () => {
     expect(load(AVATAR, 64)).toContain('-profile_image-70x70.png');
   });
 
+  // 96 is a size in its own right, not a gap between 70 and 150 — the app draws exactly this wide
+  // in a couple of places, and picking 150 there would be the same waste this loader exists to cut.
+  it('should hit an exact size rather than rounding up past it', () => {
+    expect(load(AVATAR, 96)).toContain('-profile_image-96x96.png');
+  });
+
   it('should cover the largest avatar the app draws', () => {
     expect(load(AVATAR, 128)).toContain('-profile_image-150x150.png');
   });
 
   it('should stop at the largest size Twitch renders', () => {
-    expect(load(AVATAR, 4000)).toContain('-profile_image-300x300.png');
+    expect(load(AVATAR, 4000)).toContain('-profile_image-600x600.png');
   });
 
   it('should keep the rest of the URL exactly as it was', () => {

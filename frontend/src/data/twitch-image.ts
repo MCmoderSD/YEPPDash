@@ -1,8 +1,10 @@
 import { ImageLoaderConfig } from '@angular/common';
 
-// The sizes Twitch's CDN renders for a profile image. Probed against the CDN rather than assumed:
-// a size it does not hold answers 404, and the avatar would simply be missing.
-const SIZES: readonly number[] = [28, 50, 70, 150, 300];
+// The sizes Twitch's CDN renders for a profile image. Probed against the CDN rather than assumed —
+// every integer size from 1 to 4096 was requested, and this is exactly what came back as a real
+// image rather than a 404, identical across two different avatars and the default picture. There
+// is no documented list of these; asking for anything else answers 404 and the avatar goes missing.
+const SIZES: readonly number[] = [28, 50, 70, 96, 150, 300, 600];
 
 // Only the profile images, and only ones already carrying a size to swap. Anything else — a local
 // asset, another host, a URL shaped differently than this — is handed back untouched.
