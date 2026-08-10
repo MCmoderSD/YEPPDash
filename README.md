@@ -30,7 +30,7 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 YEPPDash/
 ├── backend/           # ASP.NET Core 10 Web API (Rider project)
 ├── frontend/          # Angular 22 + Material SSR app (WebStorm project)
-├── docs/              # API client docs, frontend testing scope
+├── docs/              # API client docs
 ├── docker-compose.yml # local dev only: backend + frontend, ports published directly, no reverse proxy
 └── .env.example       # template for the gitignored .env (DB connection strings)
 ```
@@ -43,7 +43,6 @@ Reverse proxying (Caddy) is not part of this repo — it's handled by the operat
 
 - [`docs/twitch-api-client.md`](docs/twitch-api-client.md) — endpoints and features of the two Twitch API wrappers (Helix + OAuth)
 - [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) — the HTTP client YEPPDash uses to talk to a running YEPPBot instance (join/leave a channel, reload custom commands)
-- [`docs/frontend-testing.md`](docs/frontend-testing.md) — which parts of the frontend are worth a unit test, which are deliberately left without one, and why
 
 ## Relationship to YEPPBot
 
