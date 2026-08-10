@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRouteSnapshot, RouterStateSnapshot, TitleStrategy } from "@angular/router";
+import { ActivatedRouteSnapshot, RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
 @Injectable()
 export class PageMetaStrategy extends TitleStrategy {

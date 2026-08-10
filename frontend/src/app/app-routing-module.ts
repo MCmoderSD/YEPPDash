@@ -33,8 +33,7 @@ const routes: Routes = [
     canMatch: [otherHostMatch],
     data: {
       description: 'Run YEPPBot from your browser. Sign in with Twitch to add the bot to your '
-        + 'channel, hand out moderator and VIP roles, write custom commands, and keep quotes and '
-        + 'follower birthdays in one place.',
+        + 'channel, manage moderators, VIPs, custom commands, quotes and birthdays.',
     },
   },
   {
