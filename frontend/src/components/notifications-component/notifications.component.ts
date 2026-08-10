@@ -6,7 +6,6 @@ import { Notification } from '../../data/notification';
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
-  standalone: false,
 })
 export class NotificationsComponent {
 

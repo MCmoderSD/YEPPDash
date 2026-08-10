@@ -1,8 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
@@ -18,7 +25,7 @@ import { wheelOverlayUrl } from '../../data/wheel-overlay';
   selector: 'app-wheel-page',
   templateUrl: './wheel-page.component.html',
   styleUrl: './wheel-page.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, ScrollBarComponent, WheelComponent, LocaleDatePipe],
 })
 export class WheelPageComponent {
 

@@ -1,5 +1,6 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { TwitchUser } from "../../data/twitch-user";
 import { environment } from '../../environments/environment';
@@ -15,7 +16,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   selector: 'app-landing-page',
   templateUrl: './landing-page.component.html',
   styleUrl: './landing-page.component.scss',
-  standalone: false,
+  imports: [MatIconModule],
 })
 export class LandingPageComponent {
 

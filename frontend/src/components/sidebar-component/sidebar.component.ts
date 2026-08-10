@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { IsActiveMatchOptions, NavigationEnd, Router } from '@angular/router';
+import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { filter, map } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { groupForUrl, NAV_GROUPS, NavGroup, OVERVIEW_PATH } from '../../data/dash-nav';
@@ -16,7 +17,7 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
-  standalone: false,
+  imports: [RouterLink, RouterLinkActive, MatIconModule],
 })
 export class SidebarComponent {
 

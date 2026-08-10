@@ -10,7 +10,6 @@ interface FooterLink {
   selector: 'app-footer',
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.scss',
-  standalone: false,
 })
 export class FooterComponent {
   protected readonly year: number = new Date().getFullYear();

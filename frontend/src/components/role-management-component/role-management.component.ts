@@ -1,8 +1,11 @@
 import { Component, computed, effect, inject, input, InputSignalWithTransform, Signal, signal, WritableSignal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { firstValueFrom } from 'rxjs';
 import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
-import { UserTableMode } from '../user-table-component/user-table.component';
+import { UserTableComponent, UserTableMode } from '../user-table-component/user-table.component';
 import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchUser } from '../../data/twitch-user';
@@ -40,7 +43,7 @@ function tableModeFor(mode: RoleManagementMode): UserTableMode {
   selector: 'app-role-management',
   templateUrl: './role-management.component.html',
   styleUrl: './role-management.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, UserTableComponent],
 })
 export class RoleManagementComponent {
 

@@ -10,7 +10,12 @@ import {
   Signal,
   WritableSignal,
 } from '@angular/core';
-import { MatChipInputEvent } from '@angular/material/chips';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import {
   cleanTrigger,
   COMMAND_MAX_LENGTH,
@@ -33,7 +38,7 @@ import {
   selector: 'app-command-edit',
   templateUrl: './command-edit.component.html',
   styleUrl: './command-edit.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
 })
 export class CommandEditComponent {
 

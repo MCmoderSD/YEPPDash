@@ -1,6 +1,13 @@
 import { Component, computed, effect, inject, input, InputSignal, Signal, signal, WritableSignal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { firstValueFrom } from 'rxjs';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { faqLink } from '../../services/dash-host';
 import { BirthdayService } from '../../services/birthday.service';
@@ -13,7 +20,7 @@ import { TwitchUser } from '../../data/twitch-user';
   selector: 'app-user-menu',
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, RouterLink, MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, LocaleDatePipe],
 })
 export class UserMenuComponent {
 
