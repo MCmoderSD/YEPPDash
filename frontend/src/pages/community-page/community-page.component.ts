@@ -47,13 +47,13 @@ export class CommunityPageComponent {
   private readonly pager: Signal<MatPaginator | undefined> = viewChild(MatPaginator);
 
   constructor() {
-    this.dataSource.filterPredicate = (entry, filter): boolean => {
+    this.dataSource.filterPredicate = (entry: CommunityEntry, filter: string): boolean => {
       return entry.user.displayName.toLowerCase().includes(filter)
         || entry.user.login.toLowerCase().includes(filter)
         || entry.user.id.includes(filter);
     };
 
-    this.dataSource.sortingDataAccessor = (entry, column): string | number => {
+    this.dataSource.sortingDataAccessor = (entry: CommunityEntry, column: string): string | number => {
       return column === 'followedAt'
         ? entry.followedAt.getTime()
         : entry.user.displayName.toLowerCase();
@@ -76,9 +76,6 @@ export class CommunityPageComponent {
   protected filter(value: string): void {
     this.query.set(value.trim());
     this.dataSource.filter = value.trim().toLowerCase();
-
-    // Back to the front: staying on page 7 of a list that just shrank to two rows would show an
-    // empty table rather than the matches.
     this.dataSource.paginator?.firstPage();
   }
 

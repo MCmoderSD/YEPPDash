@@ -12,9 +12,6 @@ import { TwitchUser } from '../../data/twitch-user';
 
 export interface BirthdayEntry {
   birthday: Birthday;
-
-  // Null when Twitch no longer resolves the id — a deleted or renamed account still has a row in
-  // YEPPBot's table, and dropping it would silently shorten the list.
   user: TwitchUser | null;
   name: string;
   date: Date;
@@ -26,7 +23,6 @@ export interface BirthdayEntry {
 function labelFor(daysUntil: number): string {
   if (daysUntil === 0) return 'Today';
   if (daysUntil === 1) return 'Tomorrow';
-
   return `in ${daysUntil} days`;
 }
 
@@ -68,8 +64,6 @@ export class BirthdayListComponent {
 
     this.dataSource.sortingDataAccessor = (entry, column): string | number => {
       switch (column) {
-        // Month and day only: this column is about when the birthday falls in the year, so sorting
-        // it by the full date would order people by age instead.
         case 'date': return entry.birthday.month * 100 + entry.birthday.day;
         case 'age': return entry.age;
         case 'next': return entry.daysUntil;
@@ -91,12 +85,6 @@ export class BirthdayListComponent {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  /**
-   * Opens the details of the follower a row belongs to.
-   *
-   * A no-op when Twitch never resolved the account: the dialog is built around a user, and there is
-   * none to hand it.
-   */
   protected showDetails(entry: BirthdayEntry, event?: Event): void {
     event?.stopPropagation();
     if (entry.user) UserInfoDialogComponent.open(this.dialog, entry.user);
@@ -115,12 +103,9 @@ export class BirthdayListComponent {
     try {
       const birthdays: Birthday[] = await this.birthdays.getFollowerBirthdays(channelId);
 
-      // The endpoint answers with ids and dates only, so the names come from a second lookup — the
-      // same split the role management page uses.
-      const users: TwitchUser[] = await this.twitch.getUsers(birthdays.map((entry) => entry.userId));
-      const byId: Map<string, TwitchUser> = new Map(users.map((user) => [user.id, user]));
+      const users: TwitchUser[] = await this.twitch.getUsers(birthdays.map((entry: Birthday): string => entry.userId));
+      const byId: Map<string, TwitchUser> = new Map(users.map((user: TwitchUser): [string, TwitchUser] => [user.id, user]));
 
-      // One instant for the whole list, so every row is measured against the same day.
       const today: Date = new Date();
 
       this.rows.set(birthdays.map((birthday: Birthday): BirthdayEntry => {

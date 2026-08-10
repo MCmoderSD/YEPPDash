@@ -12,11 +12,8 @@ import { QuoteService } from '../../services/quote.service';
 import { NotificationService } from '../../services/notification.service';
 import { Quote } from '../../data/quote';
 
-// A rejected import answers with the reason as plain text. It arrives as a Blob because the
-// request asked for JSON and the body is not, so it has to be unwrapped before it can be shown.
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse) || error.status !== 400) return null;
-
   return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
 }
 
@@ -55,16 +52,12 @@ export class QuoteManagementComponent {
   private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
 
   constructor() {
-    // Both the text and the id are searched, so "wisdom" and "12" both find something. The filter
-    // string arrives already lowercased, which is what makes the comparison case-insensitive.
-    this.dataSource.filterPredicate = (quote, filter): boolean => {
+    this.dataSource.filterPredicate = (quote: Quote, filter: string): boolean => {
       return quote.quote.toLowerCase().includes(filter) || `${quote.id}`.includes(filter);
     };
 
-    this.dataSource.sortingDataAccessor = (quote, column): string | number => {
+    this.dataSource.sortingDataAccessor = (quote: Quote, column: string): string | number => {
       switch (column) {
-        // Sorted on the parsed instant rather than the rendered date, so the order does not follow
-        // whatever format the column happens to display.
         case 'timestamp': return Date.parse(quote.timestamp);
         case 'quote': return quote.quote.toLowerCase();
         default: return quote.id;
@@ -134,8 +127,6 @@ export class QuoteManagementComponent {
 
     await this.run(
       async (channelId: string): Promise<void> => {
-        // The server answers with the renumbered list, so this is the one action that does not
-        // need a reload afterwards.
         this.entries.set(await this.quotes.moveQuote(channelId, quote.id, position));
       },
       `Could not move quote ${quote.id}.`,
@@ -162,15 +153,12 @@ export class QuoteManagementComponent {
   protected async import(input: HTMLInputElement): Promise<void> {
     const file: File | undefined = input.files?.[0];
 
-    // Cleared straight away so picking the same file twice in a row still fires a change event.
     input.value = '';
     if (!file) return;
 
     const channelId: string | undefined = this.auth.currentUser()?.id;
     if (!channelId) return;
 
-    // The only action here that throws away every quote at once, so it gets the timeout as well —
-    // long enough that a click already on its way cannot land on Confirm.
     const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
       title: 'Replace all quotes?',
       message: this.count() === 0
@@ -188,7 +176,6 @@ export class QuoteManagementComponent {
       this.entries.set(imported);
       this.notifications.success(`Imported ${imported.length} quote${imported.length === 1 ? '' : 's'}.`);
     } catch (error: unknown) {
-      // The backend explains exactly which row it choked on, so that beats a generic message.
       this.notifications.failure(reasonFor(error) ?? 'Could not import the file.');
     } finally {
       this.isBusy.set(false);
@@ -210,11 +197,7 @@ export class QuoteManagementComponent {
     return firstValueFrom(QuoteEditDialogComponent.open(this.dialog, quote).afterClosed());
   }
 
-  private async run(
-    action: (channelId: string) => Promise<void>,
-    failure: string,
-    options: { reload: boolean } = { reload: true },
-  ): Promise<void> {
+  private async run(action: (channelId: string) => Promise<void>, failure: string, options: { reload: boolean } = { reload: true }): Promise<void> {
     const channelId: string | undefined = this.auth.currentUser()?.id;
     if (!channelId) return;
 

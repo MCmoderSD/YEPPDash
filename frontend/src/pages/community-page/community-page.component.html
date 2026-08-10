@@ -40,13 +40,12 @@
   </mat-form-field>
 
   <div #scroll class="community-page-scroll">
-    <!-- Newest follower first: the reason to open this page is to see who joined recently. -->
     <table
       mat-table
       matSort
       matSortActive="followedAt"
       matSortDirection="desc"
-      matSortDisableClear
+      matSortDisableClear="true"
       [dataSource]="dataSource"
       class="community-page-grid"
     >
@@ -54,8 +53,6 @@
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Follower</th>
         <td mat-cell *matCellDef="let entry">
-          <!-- The flex lives on this wrapper rather than on the cell: a td set to display:flex stops
-               being a table cell, which takes the column widths and the row's border with it. -->
           <div class="community-page-identity">
             <img
               class="community-page-avatar"
@@ -66,7 +63,7 @@
               alt=""
             />
 
-            <app-user-badges [user]="entry.user" />
+            <app-user-badges [user]="entry.user"/>
 
             <button
               type="button"
@@ -85,7 +82,6 @@
       <ng-container matColumnDef="followedAt">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Following since</th>
         <td mat-cell *matCellDef="let entry" class="community-page-date">
-          <!-- The attribute stays ISO for machines; only the text follows the reader's locale. -->
           <time [attr.datetime]="entry.followedAt | date: 'yyyy-MM-dd'">
             {{ entry.followedAt | localeDate }}
           </time>
@@ -93,7 +89,6 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <!-- The row is the mouse path into the details; the button in the first cell is the keyboard one. -->
       <tr
         mat-row
         *matRowDef="let entry; columns: columns"
@@ -121,7 +116,7 @@
     class="community-page-paginator"
     [pageSizeOptions]="pageSizes"
     [pageSize]="25"
-    showFirstLastButtons
+    showFirstLastButtons="true"
     aria-label="Select a page of followers"
   />
 

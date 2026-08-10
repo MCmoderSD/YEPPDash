@@ -11,7 +11,6 @@ import { CustomCommand, CustomCommandDraft, sameTrigger } from '../../data/custo
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse)) return null;
   if (error.status !== 400 && error.status !== 409) return null;
-
   return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
 }
 
@@ -83,7 +82,6 @@ export class CommandPageComponent {
       `Could not delete ${command.name}.`,
     );
 
-    // Nothing left to edit if the row it belonged to is gone.
     if (deleted && this.editing() === command.name) this.editing.set(null);
   }
 
@@ -124,9 +122,7 @@ export class CommandPageComponent {
   }
 
   private patchActive(name: string, active: boolean): void {
-    this.entries.update((entries: CustomCommand[]): CustomCommand[] => entries
-      .map((entry: CustomCommand): CustomCommand =>
-        sameTrigger(entry.name, name) ? { ...entry, active } : entry));
+    this.entries.update((entries: CustomCommand[]): CustomCommand[] => entries.map((entry: CustomCommand): CustomCommand => sameTrigger(entry.name, name) ? { ...entry, active } : entry));
   }
 
   private async run(

@@ -15,8 +15,6 @@ interface FooterLink {
 export class FooterComponent {
   protected readonly year: number = new Date().getFullYear();
 
-  // Absolute rather than routed: the legal pages only exist on the marketing host, so a routerLink
-  // would resolve against whatever host the footer is on and find no route at all on the dashboard.
   protected readonly links: readonly FooterLink[] = [
     { label: 'Imprint', url: `${environment.marketingBaseUrl}/imprint` },
     { label: 'Privacy Policy', url: `${environment.marketingBaseUrl}/privacy` },

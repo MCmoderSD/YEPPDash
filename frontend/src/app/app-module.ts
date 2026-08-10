@@ -1,7 +1,6 @@
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { IMAGE_LOADER } from '@angular/common';
 import { TitleStrategy } from '@angular/router';
 
@@ -18,8 +17,7 @@ import { twitchImageLoader } from '../data/twitch-image';
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideClientHydration(),
-    provideAnimationsAsync(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(),
 
     { provide: TitleStrategy, useClass: PageMetaStrategy },
 

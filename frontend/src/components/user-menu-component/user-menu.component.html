@@ -22,9 +22,6 @@
 
 <mat-menu #menu="matMenu">
 
-  <!-- Material closes the menu on any click inside the panel, which for a block of text meant that
-       selecting it shut the panel and dropped the selection. These are details to read and copy,
-       not a control, so the click stops here. The items below are outside and still close it. -->
   <div
     class="user-menu-details"
     role="group"
@@ -53,9 +50,6 @@
 
   <mat-divider/>
 
-  <!-- The navbar drops its FAQ link on a narrow screen, where the bar has no room for it alongside
-       the drawer toggle and this button. It lives here instead so the page stays reachable on a
-       phone; the stylesheet takes it away again once the bar is wide enough to carry its own. -->
   @if (faqUrl; as url) {
     <a mat-menu-item class="user-menu-faq" [href]="url">
       <mat-icon aria-hidden="true">quiz</mat-icon>

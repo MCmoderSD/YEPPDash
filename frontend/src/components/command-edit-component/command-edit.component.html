@@ -15,10 +15,6 @@
         (input)="name.set(trigger.value)"
       />
 
-      <!-- The reason rides in the hint rather than a mat-error: without a form control the field
-           never enters an error state, so a mat-error would never be shown. The hint is wired into
-           the input's aria-describedby either way, and aria-live carries a change that happens
-           while the field already has focus. -->
       <mat-hint>
         @if (nameError(); as error) {
           <span class="command-edit-error" aria-live="polite">{{ error }}</span>
@@ -107,8 +103,9 @@
     ></textarea>
 
     <mat-hint>
-      <!-- aria-live so the count is announced as it changes rather than only on focus. -->
-      <span aria-live="polite">{{ messageLength() }} of {{ maxLength }} characters</span>
+      <span aria-live="polite">
+        {{ messageLength() }} of {{ maxLength }} characters
+      </span>
     </mat-hint>
   </mat-form-field>
 

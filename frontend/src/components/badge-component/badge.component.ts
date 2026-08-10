@@ -35,14 +35,10 @@ export class BadgeComponent {
     (): string => this.label() ?? this.preset() ?? '',
   );
 
-  // Written out when asked for, and whenever there is no icon — a badge that would otherwise render
-  // as an empty element is worse than one that ignores the setting.
   protected readonly text: Signal<string> = computed(
     (): string => this.showName() || !this.source() ? this.name() : '',
   );
 
-  // The icon carries the role on its own once the name is hidden; alongside the name it would only
-  // repeat it, which is why this empties out then.
   protected readonly iconAlt: Signal<string> = computed(
     (): string => this.text() ? '' : this.name(),
   );

@@ -14,8 +14,6 @@
       <a class="navbar-brand" routerLink="/">YEPPDash</a>
     </div>
 
-    <!-- Signed in the bar also carries the drawer toggle and the account button, which is what the
-         narrow layout below has to make room for. -->
     <div class="navbar-end" [class.navbar-end-authed]="auth.currentUser()">
       @if (faqUrl; as url) {
         <a mat-button class="navbar-faq" [href]="url">
@@ -32,9 +30,6 @@
       @if (auth.currentUser(); as user) {
         <app-user-menu [user]="user" />
       } @else {
-        <!-- No aria-label: the full wording is in the label itself at every width, only clipped out
-             of sight on a narrow bar, so the accessible name and what the button says are the same
-             string rather than two that have to be kept in step. -->
         <a mat-flat-button [href]="loginUrl">
           <mat-icon aria-hidden="true">login</mat-icon>
           <span>Login<span class="navbar-login-service"> with Twitch</span></span>
