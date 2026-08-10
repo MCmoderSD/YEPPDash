@@ -1,8 +1,17 @@
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { BirthdayService } from '../../services/birthday.service';
 import { NotificationService } from '../../services/notification.service';
@@ -30,7 +39,7 @@ function labelFor(daysUntil: number): string {
   selector: 'app-birthday-list',
   templateUrl: './birthday-list.component.html',
   styleUrl: './birthday-list.component.scss',
-  standalone: false,
+  imports: [DatePipe, NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
 })
 export class BirthdayListComponent {
 

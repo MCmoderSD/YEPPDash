@@ -1,5 +1,9 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { Quote } from '../../data/quote';
 
 export const QUOTE_MAX_LENGTH: number = 500;
@@ -12,7 +16,7 @@ export interface QuoteEditDialogData {
   selector: 'app-quote-edit-dialog',
   templateUrl: './quote-edit-dialog.component.html',
   styleUrl: './quote-edit-dialog.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, ScrollBarComponent],
 })
 export class QuoteEditDialogComponent {
 

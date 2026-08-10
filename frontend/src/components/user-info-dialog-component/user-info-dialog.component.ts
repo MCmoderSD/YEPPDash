@@ -1,5 +1,9 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { BirthdayService } from '../../services/birthday.service';
 import { Birthday, birthdayToDate } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
@@ -9,7 +13,7 @@ import { BadgeSize } from '../../data/badge';
   selector: 'app-user-info-dialog',
   templateUrl: './user-info-dialog.component.html',
   styleUrl: './user-info-dialog.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, UserBadgesComponent, LocaleDatePipe],
 })
 export class UserInfoDialogComponent {
 

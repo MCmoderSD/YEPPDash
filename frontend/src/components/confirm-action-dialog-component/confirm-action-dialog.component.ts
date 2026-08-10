@@ -1,5 +1,6 @@
 import { Component, computed, DestroyRef, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 
 let nextHintId: number = 0;
@@ -16,7 +17,7 @@ export interface ConfirmActionDialogData {
   selector: 'app-confirm-action-dialog',
   templateUrl: './confirm-action-dialog.component.html',
   styleUrl: './confirm-action-dialog.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatDialogModule],
 })
 export class ConfirmActionDialogComponent {
 

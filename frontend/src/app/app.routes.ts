@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { CanMatchFn, RouterModule, type Routes } from '@angular/router';
+import { CanMatchFn, type Routes } from '@angular/router';
 import { LandingPageComponent } from '../pages/landing-page/landing-page.component';
 import { FaqPageComponent } from '../pages/faq-page/faq-page.component';
 import { ImprintPageComponent } from '../pages/imprint-page/imprint-page.component';
@@ -14,7 +13,7 @@ const dashHostMatch: CanMatchFn = (): boolean => isDashHost();
 const otherHostMatch: CanMatchFn = (): boolean => !isDashHost();
 const devOnlyMatch: CanMatchFn = (): boolean => !environment.production;
 
-const routes: Routes = [
+export const routes: Routes = [
   {
     path: WHEEL_OVERLAY_PATH,
     loadComponent: () => import('../pages/wheel-overlay-page/wheel-overlay-page.component').then((module) => module.WheelOverlayPageComponent),
@@ -24,7 +23,7 @@ const routes: Routes = [
     path: '',
     canActivate: [authGuard],
     canMatch: [dashHostMatch],
-    loadChildren: () => import('../pages/dash.module').then((module) => module.DashModule),
+    loadChildren: () => import('../pages/dash.routes').then((module) => module.DASH_ROUTES),
   },
   {
     path: '',
@@ -74,13 +73,7 @@ const routes: Routes = [
     path: 'dash',
     canActivate: [authGuard],
     canMatch: [devOnlyMatch],
-    loadChildren: () => import('../pages/dash.module').then((module) => module.DashModule),
+    loadChildren: () => import('../pages/dash.routes').then((module) => module.DASH_ROUTES),
   },
   { path: '**', redirectTo: '' },
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes, { bindToComponentInputs: true })],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }

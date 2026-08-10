@@ -1,2 +1,7 @@
+import { ApplicationRef } from '@angular/core';
+import { bootstrapApplication, type BootstrapContext } from '@angular/platform-browser';
+import { App } from './app/app';
+import { config } from './app/app.config.server';
+
 // noinspection JSUnusedGlobalSymbols
-export { AppServerModule as default } from './app/app.module.server';
+export default (context: BootstrapContext): Promise<ApplicationRef> => bootstrapApplication(App, config, context);

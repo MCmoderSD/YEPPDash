@@ -1,7 +1,10 @@
 import { Component, effect, inject, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { RouterOutlet } from '@angular/router';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { map } from 'rxjs';
+import { SidebarComponent } from '../../components/sidebar-component/sidebar.component';
 import { SidebarService } from '../../services/sidebar.service';
 
 // Below this the drawer has to be an overlay: the content column left beside a 17.5rem drawer is
@@ -12,7 +15,7 @@ const WIDE = '(min-width: 60rem)';
   selector: 'app-dash-page',
   templateUrl: './dash-page.component.html',
   styleUrl: './dash-page.component.scss',
-  standalone: false,
+  imports: [RouterOutlet, MatSidenavModule, SidebarComponent],
 })
 export class DashPageComponent {
 

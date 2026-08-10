@@ -13,8 +13,15 @@ import {
   viewChild,
   WritableSignal,
 } from '@angular/core';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { CommandEditComponent } from '../command-edit-component/command-edit.component';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import {
   commandTriggers,
   CustomCommand,
@@ -50,7 +57,7 @@ function isDraft(command: CustomCommand): boolean {
   selector: 'app-command-table',
   templateUrl: './command-table.component.html',
   styleUrl: './command-table.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSlideToggleModule, MatSortModule, MatTableModule, CommandEditComponent, ScrollBarComponent],
 })
 export class CommandTableComponent {
 

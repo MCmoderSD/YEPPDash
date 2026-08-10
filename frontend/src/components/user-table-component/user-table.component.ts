@@ -1,7 +1,14 @@
 import { Component, computed, effect, inject, input, InputSignal, output, OutputEmitterRef, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
 import { TwitchUser } from '../../data/twitch-user';
 
@@ -18,7 +25,7 @@ const ROLE_LABELS: Record<UserTableMode, string> = {
   selector: 'app-user-table',
   templateUrl: './user-table.component.html',
   styleUrl: './user-table.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent],
 })
 export class UserTableComponent {
 

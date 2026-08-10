@@ -1,10 +1,17 @@
 import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { firstValueFrom } from 'rxjs';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { QuoteEditDialogComponent } from '../quote-edit-dialog-component/quote-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { AuthService } from '../../services/auth.service';
@@ -21,7 +28,7 @@ function reasonFor(error: unknown): string | null {
   selector: 'app-quote-management',
   templateUrl: './quote-management.component.html',
   styleUrl: './quote-management.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, LocaleDatePipe],
 })
 export class QuoteManagementComponent {
 
