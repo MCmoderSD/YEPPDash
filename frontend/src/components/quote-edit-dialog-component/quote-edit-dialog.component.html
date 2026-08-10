@@ -15,13 +15,12 @@
       ></textarea>
 
       <mat-hint>
-        <!-- aria-live so the count is announced as it changes rather than only on focus. -->
-        <span aria-live="polite">{{ length() }} of {{ maxLength }} characters</span>
+        <span aria-live="polite">
+          {{ length() }} of {{ maxLength }} characters
+        </span>
       </mat-hint>
     </mat-form-field>
 
-    <!-- Outside the form field rather than in it, so nothing about Material's own layout has to be
-         worked around; the bar is positioned from the textarea it is pointed at. -->
     <app-scroll-bar [target]="message"/>
   </form>
 </mat-dialog-content>

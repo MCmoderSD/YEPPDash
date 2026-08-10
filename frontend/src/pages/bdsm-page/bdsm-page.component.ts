@@ -16,8 +16,8 @@ export interface BdsmCommunityEntry extends BdsmResultEntry {
   name: string;
 }
 
-const OWN_TAB = 0;
-const COMMUNITY_TAB = 1;
+const OWN_TAB: number = 0;
+const COMMUNITY_TAB: number = 1;
 
 @Component({
   selector: 'app-bdsm-page',
@@ -41,7 +41,7 @@ export class BdsmPageComponent {
   private readonly communityFailed: WritableSignal<boolean> = signal(false);
 
 
-  private communityRequested = false;
+  private communityRequested: boolean = false;
 
   protected readonly selected: WritableSignal<number> = signal(OWN_TAB);
 

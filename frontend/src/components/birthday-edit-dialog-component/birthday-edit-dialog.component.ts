@@ -8,9 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Birthday, BirthdayDraft, birthdayToDate, dateToBirthdayDraft } from '../../data/birthday';
 import { LocaleDateAdapter } from './locale-date.adapter';
 
-// Mirrors the lower bound of the CHECK constraint on YEPPBot's Birthday table, so the picker cannot
-// offer a year the server is going to refuse.
-const MIN_YEAR = 1900;
+const MIN_YEAR: number = 1900;
 
 export interface BirthdayEditDialogData {
   birthday: Birthday | null;
@@ -41,8 +39,7 @@ export interface BirthdayEditDialogData {
 })
 export class BirthdayEditDialogComponent {
 
-  private readonly dialogRef: MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft> =
-    inject<MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft>>(MatDialogRef);
+  private readonly dialogRef: MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft> = inject<MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft>>(MatDialogRef);
 
   private readonly data: BirthdayEditDialogData = inject<BirthdayEditDialogData>(MAT_DIALOG_DATA);
 
@@ -50,17 +47,10 @@ export class BirthdayEditDialogComponent {
 
   protected readonly title: string = this.editing ? 'Change your birthday' : 'Set your birthday';
 
-  /**
-   * Bound as the field's starting value and never written again — what is currently picked lives in
-   * a signal of its own, so the binding cannot reformat the field while it is being typed into.
-   */
-  protected readonly initial: Date | null =
-    this.data.birthday ? birthdayToDate(this.data.birthday) : null;
+  protected readonly initial: Date | null = this.data.birthday ? birthdayToDate(this.data.birthday) : null;
 
   protected readonly earliest: Date = new Date(MIN_YEAR, 0, 1);
 
-  // The server refuses a birthday in the future, so the picker does not offer one — nobody should be
-  // told off for choosing something they were allowed to choose.
   protected readonly latest: Date = new Date();
 
   private readonly selected: WritableSignal<Date | null> = signal<Date | null>(this.initial);
@@ -72,14 +62,11 @@ export class BirthdayEditDialogComponent {
     const stored: Birthday | null = this.data.birthday;
     if (!stored) return true;
 
-    // Sending the date that is already stored would be a request with nothing in it.
     const draft: BirthdayDraft = dateToBirthdayDraft(date);
     return draft.day !== stored.day || draft.month !== stored.month || draft.year !== stored.year;
   });
 
-  static open(
-    dialog: MatDialog, birthday: Birthday | null,
-  ): MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft> {
+  static open(dialog: MatDialog, birthday: Birthday | null,): MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft> {
     return dialog.open<BirthdayEditDialogComponent, BirthdayEditDialogData, BirthdayDraft>(
       BirthdayEditDialogComponent,
       {
@@ -100,8 +87,6 @@ export class BirthdayEditDialogComponent {
     if (date && this.canSave()) this.dialogRef.close(dateToBirthdayDraft(date));
   }
 
-  // Closes with undefined rather than through the mat-dialog-close attribute: as a bare attribute
-  // that binds the empty string, which the caller cannot tell apart from an answer.
   protected cancel(): void {
     this.dialogRef.close();
   }

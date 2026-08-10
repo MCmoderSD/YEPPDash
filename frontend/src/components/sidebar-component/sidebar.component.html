@@ -14,9 +14,6 @@
 
   @for (group of groups; track group.id) {
     <section class="sidebar-group">
-
-      <!-- A real button rather than a styled heading: it is the control that opens the list, and
-           aria-controls ties it to the region it opens so the state is announced with it. -->
       <h3 class="sidebar-group-heading">
         <button
           type="button"
@@ -31,9 +28,6 @@
         </button>
       </h3>
 
-      <!-- Kept in the DOM rather than removed, so opening and closing can be animated. The wrapper
-           exists only to carry that animation: it is the grid whose single row travels between 0fr
-           and 1fr, and the list inside is what clips itself while it does. -->
       <div
         class="sidebar-group-items"
         [class.sidebar-group-items-open]="expanded(group)"

@@ -19,8 +19,6 @@
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
         <td mat-cell *matCellDef="let user">
-          <!-- The flex lives on this wrapper rather than on the cell: a td set to display:flex stops
-               being a table cell, which takes the column widths and the row's border with it. -->
           <div class="user-table-identity">
             <img
               class="user-table-avatar"
@@ -31,7 +29,7 @@
               alt=""
             />
 
-            <app-user-badges [user]="user" />
+            <app-user-badges [user]="user"/>
 
             <button
               type="button"

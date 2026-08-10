@@ -36,8 +36,6 @@ export class WheelPageComponent {
   protected readonly draft: WritableSignal<string> = signal('');
   protected readonly loading: WritableSignal<boolean> = signal(false);
 
-  // Kept only in the browser's own storage, not the server the rest of the wheel talks to — see
-  // WheelResultsService.
   protected readonly results: WritableSignal<WheelResult[]> = signal<WheelResult[]>([]);
   protected readonly resultColumns: string[] = ['winner', 'time'];
   protected readonly resultsDataSource: MatTableDataSource<WheelResult> = new MatTableDataSource<WheelResult>([]);
@@ -138,8 +136,6 @@ export class WheelPageComponent {
   protected async landed(spin: WheelSpin): Promise<void> {
     const channelId: string | null = this.channelId();
 
-    // Recorded as soon as the wheel stops, ahead of the dialog: the win already happened at this
-    // point, whatever the streamer then does with the announcement.
     if (channelId !== null) this.results.set(this.wheelResults.record(channelId, spin.label));
 
     const choice: WheelWinnerChoice = await WheelWinnerDialogComponent.announce(this.dialog, spin.label);

@@ -28,8 +28,6 @@
       <ul class="dash-home-cards">
         @for (item of group.items; track item.label) {
           <li>
-            <!-- The whole card is the link rather than a button inside it, so the target is the
-                 full tile for a pointer and a single stop for the keyboard. -->
             <a class="dash-home-card" [routerLink]="item.path" [queryParams]="item.queryParams">
               <span class="dash-home-card-icon" aria-hidden="true">
                 @if (item.mask; as mask) {
