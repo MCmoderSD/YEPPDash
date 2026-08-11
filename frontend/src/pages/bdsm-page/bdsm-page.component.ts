@@ -12,7 +12,8 @@ import { AuthService } from '../../services/auth.service';
 import { BdsmService } from '../../services/bdsm.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
-import { BdsmResult, resultTakenAt } from '../../data/bdsm-result';
+import { BdsmMatchScore, BdsmResult, resultTakenAt, traitColor } from '../../data/bdsm-result';
+import { FollowerProfile } from '../../data/follower';
 import { TwitchUser } from '../../data/twitch-user';
 
 export interface BdsmResultEntry {
@@ -20,9 +21,16 @@ export interface BdsmResultEntry {
   takenAt: Date;
 }
 
+export interface BdsmMatch {
+  percent: number;
+  color: string;
+}
+
 export interface BdsmCommunityEntry extends BdsmResultEntry {
   user: TwitchUser | null;
   name: string;
+  // Null for anyone the score could not be worked out for.
+  match: BdsmMatch | null;
 }
 
 const OWN_TAB: number = 0;
@@ -103,28 +111,35 @@ export class BdsmPageComponent {
   }
 
   private async loadCommunity(): Promise<void> {
-    const channelId: string | undefined = this.auth.currentUser()?.id;
-    if (!channelId) return;
+    const me: TwitchUser | null = this.auth.currentUser();
+    if (!me) return;
 
     this.communityRequested = true;
 
     this.communityLoading.set(true);
     this.communityFailed.set(false);
     try {
-      const results: BdsmResult[] = await this.bdsm.getFollowerResults(channelId);
+      // The follower list doubles as the profile lookup, so the names and avatars below need no
+      // second request. A broadcaster does not follow themselves, but their own result belongs in
+      // their channel's list.
+      const followers: FollowerProfile[] = await this.twitch.getFollowers();
+      const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
+      byId.set(me.id, me);
 
-      const users: TwitchUser[] = await this.twitch.getUsers(results.map((entry: BdsmResult): string => entry.userId));
-      const byId: Map<string, TwitchUser> = new Map(users.map((user: TwitchUser): [string, TwitchUser] => [user.id, user]));
+      const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
+      const matches: Map<string, number> = await this.matchesAgainst(me.id, results);
 
       this.communityRows.set(results
         .map((result: BdsmResult): BdsmCommunityEntry => {
           const user: TwitchUser | undefined = byId.get(result.userId);
+          const percent: number | undefined = matches.get(result.userId);
 
           return {
             result,
             takenAt: resultTakenAt(result),
             user: user ?? null,
             name: user?.displayName ?? result.userId,
+            match: percent === undefined ? null : { percent, color: traitColor(percent) },
           };
         })
         .sort((left: BdsmCommunityEntry, right: BdsmCommunityEntry): number => right.takenAt.getTime() - left.takenAt.getTime()));
@@ -135,6 +150,24 @@ export class BdsmPageComponent {
       this.notifications.failure('Could not load the BDSM test results of your followers.');
     } finally {
       this.communityLoading.set(false);
+    }
+  }
+
+  // Compatibility is what the list is nicer for, not what it is for, so a failure here leaves the
+  // results standing rather than emptying the tab.
+  private async matchesAgainst(userId: string, results: BdsmResult[]): Promise<Map<string, number>> {
+    // The viewer's own row is asked for too: BDSMTest.org scores a result against itself like any
+    // other pair, and what that comes to is worth seeing next to the rest.
+    const partnerIds: string[] = results.map((result: BdsmResult): string => result.userId);
+
+    if (!partnerIds.length) return new Map();
+
+    try {
+      const scores: BdsmMatchScore[] = await this.bdsm.getMatchScores(userId, partnerIds);
+      return new Map(scores.map((score: BdsmMatchScore): [string, number] => [score.partnerId, score.score]));
+    } catch {
+      this.notifications.failure('Could not work out how well you match your followers.');
+      return new Map();
     }
   }
 }

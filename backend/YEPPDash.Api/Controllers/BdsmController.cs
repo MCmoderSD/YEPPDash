@@ -1,3 +1,4 @@
+using MCmoderSD.BdsmTestApi.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Bdsm;
@@ -12,43 +13,103 @@ namespace YEPPDash.Api.Controllers;
 [Route("bdsm")]
 public sealed class BdsmController(BdsmService results, ILogger<BdsmController> logger) : ControllerBase
 {
+    private Language? _language;
+
+    private Language Language => _language ??= Request.GetBdsmLanguage();
+
     [HttpGet("{userId:int}")]
-    public async Task<IActionResult> GetResults(string userId, CancellationToken cancellationToken)
+    public Task<IActionResult> GetResults(string userId, CancellationToken cancellationToken)
     {
-        if (Denied(userId) is { } denied) return denied;
-
-        var found = await results.GetForUserAsync(userId, cancellationToken);
-        return Ok(found.Select(BdsmResultResponse.From));
+        return Guarded([userId], async () =>
+        {
+            var found = await results.GetForUserAsync(userId, cancellationToken);
+            return Ok(found.Select(result => BdsmResultResponse.From(result, Language)));
+        }, cancellationToken);
     }
 
-    [HttpGet("followers/{userId:int}")]
-    public async Task<IActionResult> GetFollowerResults(string userId, CancellationToken cancellationToken)
+    [HttpPost]
+    public Task<IActionResult> GetResults([FromBody] string[] userIds, CancellationToken cancellationToken)
     {
-        if (Denied(userId) is { } denied) return denied;
-
-        try
+        return Guarded(userIds, async () =>
         {
-            var found = await results.GetForFollowersAsync(userId, cancellationToken);
-            return Ok(found.Select(BdsmResultResponse.From));
-        }
-        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
-        {
-            logger.LogWarning(exception, "Cannot read the followers of channel {UserId}", userId);
-            return StatusCode(StatusCodes.Status502BadGateway);
-        }
+            var found = await results.GetForUsersAsync(userIds, cancellationToken);
+            return Ok(found.Select(result => BdsmResultResponse.From(result, Language)));
+        }, cancellationToken);
     }
 
-    private IActionResult? Denied(string userId)
+    [HttpGet("match/{userId:int}/{partnerId:int}")]
+    public Task<IActionResult> GetMatch(string userId, string partnerId, CancellationToken cancellationToken)
+    {
+        return GuardedMatch([new BdsmPair(userId, partnerId)], async () =>
+        {
+            var match = await results.MatchAsync(userId, partnerId, cancellationToken);
+            return match is null ? NotFound() : Ok(BdsmMatchResponse.From(match, Language));
+        }, cancellationToken);
+    }
+
+    [HttpPost("match/{userId:int}")]
+    public Task<IActionResult> GetMatches(string userId, [FromBody] string[] partnerIds, CancellationToken cancellationToken)
+    {
+        return GuardedMatch([.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))], async () =>
+        {
+            var matches = await results.MatchAsync(userId, partnerIds, cancellationToken);
+            return Ok(matches.Select(match => BdsmMatchResponse.From(match, Language)));
+        }, cancellationToken);
+    }
+
+    [HttpPost("match/{userId:int}/scores")]
+    public Task<IActionResult> GetMatchScores(string userId, [FromBody] string[] partnerIds, CancellationToken cancellationToken)
+    {
+        return GuardedMatch(
+            [.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))],
+            async () => Ok(await results.ScoreAsync(userId, partnerIds, cancellationToken)),
+            cancellationToken);
+    }
+
+    [HttpPost("match")]
+    public Task<IActionResult> GetMatches([FromBody] BdsmPair[] pairs, CancellationToken cancellationToken)
+    {
+        return GuardedMatch(pairs, async () =>
+        {
+            var matches = await results.MatchPairsAsync(pairs, cancellationToken);
+            return Ok(matches.Select(match => BdsmMatchResponse.From(match, Language)));
+        }, cancellationToken);
+    }
+
+    private async Task<IActionResult> Guarded(IReadOnlyCollection<string> userIds, Func<Task<IActionResult>> run, CancellationToken cancellationToken)
     {
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
+        try
         {
-            logger.LogWarning("User {TwitchId} tried to reach the BDSM results of user {UserId}", twitchId, userId);
-            return Forbid();
+            if (!await results.MayAccessAsync(twitchId, userIds, cancellationToken))
+            {
+                logger.LogWarning("User {TwitchId} tried to reach BDSM results outside their own channel", twitchId);
+                return Forbid();
+            }
+
+            return await run();
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            logger.LogWarning(exception, "Cannot read the followers of channel {TwitchId}", twitchId);
+            return StatusCode(StatusCodes.Status502BadGateway);
+        }
+    }
+
+    // Every match endpoint additionally requires the caller to be one side of every pair — a
+    // broadcaster can see how they match a follower, not how two followers match each other.
+    private Task<IActionResult> GuardedMatch(IReadOnlyCollection<BdsmPair> pairs, Func<Task<IActionResult>> run, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is not null && !BdsmService.PairsInvolveCaller(twitchId, pairs))
+        {
+            logger.LogWarning("User {TwitchId} tried to match two other people's BDSM results", twitchId);
+            return Task.FromResult<IActionResult>(Forbid());
         }
 
-        return null;
+        var involved = pairs.SelectMany(pair => new[] { pair.UserId, pair.PartnerId }).Distinct().ToList();
+        return Guarded(involved, run, cancellationToken);
     }
 }

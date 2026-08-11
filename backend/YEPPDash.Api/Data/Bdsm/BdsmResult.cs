@@ -1,3 +1,5 @@
+using MCmoderSD.BdsmTestApi.Enums;
+
 namespace YEPPDash.Api.Data.Bdsm;
 
 public sealed record BdsmResult(
@@ -7,5 +9,7 @@ public sealed record BdsmResult(
     int Version,
     string Gender,
     string AgeGroup,
-    IReadOnlyDictionary<string, double> Traits
+    IReadOnlyDictionary<Kink, double> Traits
 );
+
+public sealed record BdsmCachedMatch(string ResultId, string PartnerId, double Score);
