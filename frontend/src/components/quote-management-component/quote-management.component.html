@@ -30,9 +30,6 @@
       <span>Export</span>
     </button>
 
-    <!-- The file input is what actually opens the picker; the button in front of it is only there
-         so the control matches the others. Hidden with a clip rather than display:none so it can
-         still be reached and labelled by a screen reader. -->
     <button
       mat-stroked-button
       type="button"
@@ -86,8 +83,6 @@
       <ng-container matColumnDef="quote">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Message</th>
         <td mat-cell *matCellDef="let quote" class="quote-management-text">
-          <!-- The row is clickable for the mouse, but the button is what makes editing reachable
-               by keyboard and gives screen readers something to announce. -->
           <button
             type="button"
             class="quote-management-edit"
@@ -101,7 +96,6 @@
       <ng-container matColumnDef="timestamp">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Date</th>
         <td mat-cell *matCellDef="let quote" class="quote-management-date">
-          <!-- The title carries the full timestamp so the short form stays readable in the cell. -->
           <time [attr.datetime]="quote.timestamp" [title]="quote.timestamp | localeDate: 'medium' : 'short'">
             {{ quote.timestamp | localeDate: 'medium' }}
           </time>
@@ -113,8 +107,6 @@
           <span class="quote-management-hidden-label">Actions</span>
         </th>
         <td mat-cell *matCellDef="let quote" class="quote-management-actions">
-          <!-- Keyed off the quote's own number rather than its row index: sorting or filtering
-               reorders the rows, and then the top row is no longer quote 1. -->
           <button
             mat-icon-button
             type="button"

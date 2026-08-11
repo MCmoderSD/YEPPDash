@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { FaqEntry } from "../../components/faq-entry-component/faq-entry.component";
+import { MatIconModule } from '@angular/material/icon';
+import { FaqEntry, FaqEntryComponent } from "../../components/faq-entry-component/faq-entry.component";
 import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-faq-page',
   templateUrl: './faq-page.component.html',
   styleUrl: './faq-page.component.scss',
-  standalone: false,
+  imports: [MatIconModule, FaqEntryComponent],
 })
 export class FaqPageComponent {
 

@@ -1,7 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { CommandActiveChange, CommandSubmit } from '../../components/command-table-component/command-table.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { CommandActiveChange, CommandSubmit, CommandTableComponent } from '../../components/command-table-component/command-table.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { CommandService } from '../../services/command.service';
@@ -11,7 +14,6 @@ import { CustomCommand, CustomCommandDraft, sameTrigger } from '../../data/custo
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse)) return null;
   if (error.status !== 400 && error.status !== 409) return null;
-
   return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
 }
 
@@ -19,7 +21,7 @@ function reasonFor(error: unknown): string | null {
   selector: 'app-command-page',
   templateUrl: './command-page.component.html',
   styleUrl: './command-page.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, CommandTableComponent],
 })
 export class CommandPageComponent {
 
@@ -83,7 +85,6 @@ export class CommandPageComponent {
       `Could not delete ${command.name}.`,
     );
 
-    // Nothing left to edit if the row it belonged to is gone.
     if (deleted && this.editing() === command.name) this.editing.set(null);
   }
 
@@ -124,9 +125,7 @@ export class CommandPageComponent {
   }
 
   private patchActive(name: string, active: boolean): void {
-    this.entries.update((entries: CustomCommand[]): CustomCommand[] => entries
-      .map((entry: CustomCommand): CustomCommand =>
-        sameTrigger(entry.name, name) ? { ...entry, active } : entry));
+    this.entries.update((entries: CustomCommand[]): CustomCommand[] => entries.map((entry: CustomCommand): CustomCommand => sameTrigger(entry.name, name) ? { ...entry, active } : entry));
   }
 
   private async run(

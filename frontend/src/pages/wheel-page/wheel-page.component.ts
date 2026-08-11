@@ -1,8 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
@@ -18,7 +25,7 @@ import { wheelOverlayUrl } from '../../data/wheel-overlay';
   selector: 'app-wheel-page',
   templateUrl: './wheel-page.component.html',
   styleUrl: './wheel-page.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, ScrollBarComponent, WheelComponent, LocaleDatePipe],
 })
 export class WheelPageComponent {
 
@@ -36,8 +43,6 @@ export class WheelPageComponent {
   protected readonly draft: WritableSignal<string> = signal('');
   protected readonly loading: WritableSignal<boolean> = signal(false);
 
-  // Kept only in the browser's own storage, not the server the rest of the wheel talks to — see
-  // WheelResultsService.
   protected readonly results: WritableSignal<WheelResult[]> = signal<WheelResult[]>([]);
   protected readonly resultColumns: string[] = ['winner', 'time'];
   protected readonly resultsDataSource: MatTableDataSource<WheelResult> = new MatTableDataSource<WheelResult>([]);
@@ -138,8 +143,6 @@ export class WheelPageComponent {
   protected async landed(spin: WheelSpin): Promise<void> {
     const channelId: string | null = this.channelId();
 
-    // Recorded as soon as the wheel stops, ahead of the dialog: the win already happened at this
-    // point, whatever the streamer then does with the announcement.
     if (channelId !== null) this.results.set(this.wheelResults.record(channelId, spin.label));
 
     const choice: WheelWinnerChoice = await WheelWinnerDialogComponent.announce(this.dialog, spin.label);

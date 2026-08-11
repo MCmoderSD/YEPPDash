@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 
 export interface WheelWinnerDialogData {
@@ -12,7 +13,7 @@ export type WheelWinnerChoice = 'close' | 'remove';
   selector: 'app-wheel-winner-dialog',
   templateUrl: './wheel-winner-dialog.component.html',
   styleUrl: './wheel-winner-dialog.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatDialogModule],
 })
 export class WheelWinnerDialogComponent {
 

@@ -1,4 +1,13 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { BdsmResultComponent } from '../../components/bdsm-result-component/bdsm-result.component';
+import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { BdsmService } from '../../services/bdsm.service';
 import { NotificationService } from '../../services/notification.service';
@@ -16,14 +25,14 @@ export interface BdsmCommunityEntry extends BdsmResultEntry {
   name: string;
 }
 
-const OWN_TAB = 0;
-const COMMUNITY_TAB = 1;
+const OWN_TAB: number = 0;
+const COMMUNITY_TAB: number = 1;
 
 @Component({
   selector: 'app-bdsm-page',
   templateUrl: './bdsm-page.component.html',
   styleUrl: './bdsm-page.component.scss',
-  standalone: false,
+  imports: [DatePipe, NgOptimizedImage, MatButtonModule, MatExpansionModule, MatIconModule, MatProgressBarModule, MatTabsModule, BdsmResultComponent, UserBadgesComponent, LocaleDatePipe],
 })
 export class BdsmPageComponent {
 
@@ -41,7 +50,7 @@ export class BdsmPageComponent {
   private readonly communityFailed: WritableSignal<boolean> = signal(false);
 
 
-  private communityRequested = false;
+  private communityRequested: boolean = false;
 
   protected readonly selected: WritableSignal<number> = signal(OWN_TAB);
 

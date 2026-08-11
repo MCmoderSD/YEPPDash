@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { IsActiveMatchOptions, NavigationEnd, Router } from '@angular/router';
+import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { filter, map } from 'rxjs';
 import { SidebarService } from '../../services/sidebar.service';
 import { groupForUrl, NAV_GROUPS, NavGroup, OVERVIEW_PATH } from '../../data/dash-nav';
@@ -16,7 +17,7 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
-  standalone: false,
+  imports: [RouterLink, RouterLinkActive, MatIconModule],
 })
 export class SidebarComponent {
 
@@ -29,8 +30,7 @@ export class SidebarComponent {
 
   protected readonly groups: readonly NavGroup[] = NAV_GROUPS;
 
-  // Every group starts open. With three of them the whole tree fits without scrolling, and hiding
-  // entries behind a click the user did not ask for would be worse than the height it costs.
+
   private readonly collapsed: WritableSignal<ReadonlySet<string>> = signal(new Set<string>());
 
   private readonly url: Signal<string> = toSignal(
@@ -45,9 +45,6 @@ export class SidebarComponent {
     computed((): string | undefined => groupForUrl(this.groups, this.url()));
 
   constructor() {
-    // Reopens whichever group the route moved into, so the entry now marked as the current page is
-    // never hidden inside a collapsed group. Done as a one-off on arrival rather than as a rule in
-    // expanded() below, which would leave the group the user is on impossible to collapse.
     effect((): void => {
       const active: string | undefined = this.activeGroup();
       if (!active) return;

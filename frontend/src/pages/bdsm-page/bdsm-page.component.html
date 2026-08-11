@@ -16,7 +16,6 @@
     </button>
   </div>
 
-  <!-- Kept in the layout while idle so the panels below do not jump every time a request starts. -->
   <mat-progress-bar
     class="bdsm-page-progress"
     mode="indeterminate"
@@ -41,10 +40,8 @@
         </p>
 
         @if (entries().length) {
-          <!-- Newest first, and the newest one open: the reason to come here is almost always the
-               result just taken, so it should already be on screen. Not exclusive: opening an older
-               result to compare it should not close that one. -->
-          <mat-accordion class="bdsm-page-results" multi>
+
+          <mat-accordion class="bdsm-page-results" multi="true">
             @for (entry of entries(); track entry.result.id) {
               <mat-expansion-panel [expanded]="$first">
 
@@ -55,8 +52,6 @@
                     </time>
                   </mat-panel-title>
 
-                  <!-- Lives in the header rather than the lazy content below, so it reads on a
-                       collapsed panel too instead of only after it is opened. -->
                   <mat-panel-description class="bdsm-page-summary">
                     <p class="bdsm-page-meta">
                       Version {{ entry.result.version }}
@@ -66,8 +61,6 @@
                   </mat-panel-description>
                 </mat-expansion-panel-header>
 
-                <!-- Rendered only once its panel is first opened. A result is twenty-five rows, and
-                     a page of them would otherwise all be built to show one. -->
                 <ng-template matExpansionPanelContent>
                   <app-bdsm-result [result]="entry.result"/>
                 </ng-template>
@@ -100,10 +93,7 @@
         </p>
 
         @if (community().length) {
-          <!-- One panel per person, holding their most recent test, newest test first. None opens by
-               itself: this is a list to browse rather than a single result to read. Not exclusive,
-               so more than one can be open to compare at once. -->
-          <mat-accordion class="bdsm-page-results" multi>
+          <mat-accordion class="bdsm-page-results" multi="true">
             @for (entry of community(); track entry.result.id) {
               <mat-expansion-panel>
 
@@ -119,7 +109,7 @@
                         alt=""
                       />
 
-                      <app-user-badges [user]="entry.user" />
+                      <app-user-badges [user]="entry.user"/>
                     }
                     <span class="bdsm-page-name" [style.--chat-color]="entry.user?.color">
                       {{ entry.name }}

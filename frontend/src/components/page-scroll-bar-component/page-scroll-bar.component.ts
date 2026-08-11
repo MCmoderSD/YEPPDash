@@ -42,7 +42,6 @@ const NO_POINTER = '(pointer: coarse), (hover: none)';
   selector: 'app-page-scroll-bar',
   templateUrl: './page-scroll-bar.component.html',
   styleUrl: './page-scroll-bar.component.scss',
-  standalone: false,
   host: {
     // It only restates scrolling the page already offers, so there is nothing here to announce.
     'aria-hidden': 'true',

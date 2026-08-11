@@ -1,10 +1,12 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { Quote } from '../../data/quote';
 
-// Mirrors the CHECK constraint on the Quote table, so an over-long quote is caught here rather
-// than coming back as a failed request.
-export const QUOTE_MAX_LENGTH = 500;
+export const QUOTE_MAX_LENGTH: number = 500;
 
 export interface QuoteEditDialogData {
   quote: Quote | null;
@@ -14,12 +16,11 @@ export interface QuoteEditDialogData {
   selector: 'app-quote-edit-dialog',
   templateUrl: './quote-edit-dialog.component.html',
   styleUrl: './quote-edit-dialog.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, ScrollBarComponent],
 })
 export class QuoteEditDialogComponent {
 
-  private readonly dialogRef: MatDialogRef<QuoteEditDialogComponent, string> =
-    inject<MatDialogRef<QuoteEditDialogComponent, string>>(MatDialogRef);
+  private readonly dialogRef: MatDialogRef<QuoteEditDialogComponent, string> = inject<MatDialogRef<QuoteEditDialogComponent, string>>(MatDialogRef);
 
   private readonly data: QuoteEditDialogData = inject<QuoteEditDialogData>(MAT_DIALOG_DATA);
 
@@ -38,7 +39,6 @@ export class QuoteEditDialogComponent {
     return trimmed.length > 0 && trimmed.length <= QUOTE_MAX_LENGTH;
   });
 
-  // Compared trimmed, because the text is saved trimmed — adding a trailing space is not an edit.
   protected readonly changed: Signal<boolean> = computed((): boolean => {
     return this.text().trim() !== (this.data.quote?.quote ?? '').trim();
   });
@@ -50,7 +50,7 @@ export class QuoteEditDialogComponent {
       data: { quote },
       width: '40rem',
       minWidth: 'min(22rem, 92vw)',
-      maxWidth: '92vw',
+      maxWidth: '92vw'
     });
   }
 
@@ -62,8 +62,6 @@ export class QuoteEditDialogComponent {
     if (this.canSave()) this.dialogRef.close(this.text().trim());
   }
 
-  // Closes with undefined rather than through the mat-dialog-close attribute: as a bare attribute
-  // that binds the empty string, which the caller cannot tell apart from a quote it should save.
   protected cancel(): void {
     this.dialogRef.close();
   }

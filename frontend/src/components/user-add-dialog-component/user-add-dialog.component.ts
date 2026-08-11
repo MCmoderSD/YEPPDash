@@ -1,5 +1,11 @@
 import { Component, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TwitchService } from '../../services/twitch.service';
 import { TwitchUser } from '../../data/twitch-user';
 
@@ -11,7 +17,7 @@ export interface UserAddDialogData {
   selector: 'app-user-add-dialog',
   templateUrl: './user-add-dialog.component.html',
   styleUrl: './user-add-dialog.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule],
 })
 export class UserAddDialogComponent {
 

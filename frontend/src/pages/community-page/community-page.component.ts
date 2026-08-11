@@ -1,9 +1,18 @@
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
+import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { FollowerProfile } from '../../data/follower';
@@ -17,7 +26,7 @@ export interface CommunityEntry {
   selector: 'app-community-page',
   templateUrl: './community-page.component.html',
   styleUrl: './community-page.component.scss',
-  standalone: false,
+  imports: [DatePipe, NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
 })
 export class CommunityPageComponent {
 
@@ -47,13 +56,13 @@ export class CommunityPageComponent {
   private readonly pager: Signal<MatPaginator | undefined> = viewChild(MatPaginator);
 
   constructor() {
-    this.dataSource.filterPredicate = (entry, filter): boolean => {
+    this.dataSource.filterPredicate = (entry: CommunityEntry, filter: string): boolean => {
       return entry.user.displayName.toLowerCase().includes(filter)
         || entry.user.login.toLowerCase().includes(filter)
         || entry.user.id.includes(filter);
     };
 
-    this.dataSource.sortingDataAccessor = (entry, column): string | number => {
+    this.dataSource.sortingDataAccessor = (entry: CommunityEntry, column: string): string | number => {
       return column === 'followedAt'
         ? entry.followedAt.getTime()
         : entry.user.displayName.toLowerCase();
@@ -76,9 +85,6 @@ export class CommunityPageComponent {
   protected filter(value: string): void {
     this.query.set(value.trim());
     this.dataSource.filter = value.trim().toLowerCase();
-
-    // Back to the front: staying on page 7 of a list that just shrank to two rows would show an
-    // empty table rather than the matches.
     this.dataSource.paginator?.firstPage();
   }
 

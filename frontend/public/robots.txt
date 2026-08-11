@@ -1,0 +1,17 @@
+# One file for both hosts: the marketing site at the root, and the dashboard, where the app sits at
+# the root instead and every path below needs a Twitch login.
+#
+# In production Cloudflare manages this path and appends its own content-signals block, which is
+# what actually turns the AI crawlers away. This is what the app itself answers with — and what a
+# crawler gets if that ever stops being true.
+
+User-agent: *
+Allow: /
+
+# Where the dashboard is mounted on the marketing host. Nothing under it answers a crawler with
+# anything but a redirect to the login, so there is nothing here to index.
+Disallow: /dash/
+
+# A per-channel OBS browser source rather than a page. It carries no session and is meant to be
+# opened by one streaming setup, not found in a search result.
+Disallow: /wheel/overlay

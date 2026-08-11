@@ -88,12 +88,31 @@
 
 // Which Twitch is doing the signing in is already the only possibility this bar offers, so on a
 // narrow one it is the part of the label worth dropping — spelled out it wrapped the button onto
-// two lines. The accessible name in the template keeps saying it either way.
+// two lines.
+//
+// Taken out of sight rather than out of the document, so the button is still called "Login with
+// Twitch" at every width. Hiding it outright left a visible label of "Login" against an accessible
+// name of "Login with Twitch", and a name that does not contain what the control visibly says is
+// exactly what axe's label-content-name-mismatch is for: someone saying "click Login" to a voice
+// control has to be understood.
 .navbar-login-service {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 
   @media (min-width: 30rem) {
-    display: inline;
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
   }
 }
 

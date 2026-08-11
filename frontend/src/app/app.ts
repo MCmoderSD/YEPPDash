@@ -1,15 +1,19 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { NavbarComponent } from '../components/navbar-component/navbar.component';
+import { FooterComponent } from '../components/footer-component/footer.component';
+import { NotificationsComponent } from '../components/notifications-component/notifications.component';
+import { PageScrollBarComponent } from '../components/page-scroll-bar-component/page-scroll-bar.component';
 import { isWheelOverlayUrl } from '../data/wheel-overlay';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
-  standalone: false,
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, NotificationsComponent, PageScrollBarComponent],
 })
 export class App {
 

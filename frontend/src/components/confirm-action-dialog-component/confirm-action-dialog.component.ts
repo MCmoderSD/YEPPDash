@@ -1,18 +1,15 @@
 import { Component, computed, DestroyRef, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 
-// Only used to tie the button to its hint with aria-describedby, so it just has to be unique.
-let nextHintId = 0;
+let nextHintId: number = 0;
 
 export interface ConfirmActionDialogData {
   title: string;
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-
-  // How long the confirm button stays disabled after the dialog opens. Meant for actions that
-  // cannot be undone, where an already-moving click should not land on Confirm.
   timeoutMs?: number;
 }
 
@@ -20,7 +17,7 @@ export interface ConfirmActionDialogData {
   selector: 'app-confirm-action-dialog',
   templateUrl: './confirm-action-dialog.component.html',
   styleUrl: './confirm-action-dialog.component.scss',
-  standalone: false,
+  imports: [MatButtonModule, MatDialogModule],
 })
 export class ConfirmActionDialogComponent {
 
@@ -53,8 +50,6 @@ export class ConfirmActionDialogComponent {
     this.isLocked.set(true);
     this.secondsLeft.set(Math.ceil(timeout / 1000));
 
-    // Driven off a deadline rather than counting ticks: a backgrounded tab throttles timers, and
-    // counting ticks there would unlock the button early.
     const deadline: number = Date.now() + timeout;
     const handle: ReturnType<typeof setInterval> = setInterval((): void => {
       const left: number = deadline - Date.now();
@@ -82,15 +77,11 @@ export class ConfirmActionDialogComponent {
         width: '32rem',
         minWidth: 'min(20rem, 92vw)',
         maxWidth: '92vw',
-
-        // Escape and the backdrop stay available: both count as declining, which is the safe
-        // outcome for every action this dialog guards.
-        autoFocus: 'dialog',
+        autoFocus: 'dialog'
       },
     );
   }
 
-  /// Resolves true only when the user actually pressed confirm — dismissing any other way is a no.
   static async confirm(dialog: MatDialog, data: ConfirmActionDialogData): Promise<boolean> {
     return await firstValueFrom(this.open(dialog, data).afterClosed()) === true;
   }

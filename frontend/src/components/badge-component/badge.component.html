@@ -1,5 +1,3 @@
-<!-- Eager because a badge is a few hundred bytes and is on screen the moment it is rendered:
-     lazy loading only buys it an intersection check to wait on, which is what makes it pop in. -->
 @if (source(); as iconUrl) {
   <img class="badge-icon" [ngSrc]="iconUrl" [width]="size()" [height]="size()" loading="eager" [alt]="iconAlt()" />
 }

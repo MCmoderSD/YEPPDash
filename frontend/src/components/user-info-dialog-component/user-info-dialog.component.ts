@@ -1,5 +1,9 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { BirthdayService } from '../../services/birthday.service';
 import { Birthday, birthdayToDate } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
@@ -9,7 +13,7 @@ import { BadgeSize } from '../../data/badge';
   selector: 'app-user-info-dialog',
   templateUrl: './user-info-dialog.component.html',
   styleUrl: './user-info-dialog.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, UserBadgesComponent, LocaleDatePipe],
 })
 export class UserInfoDialogComponent {
 
@@ -21,8 +25,6 @@ export class UserInfoDialogComponent {
 
   protected readonly chatColor: string | null = this.user.color ?? null;
 
-  // Bigger than in a list: the dialog is where a profile is read rather than scanned, and the name
-  // beside them is a headline rather than a table row.
   protected readonly badgeSize: BadgeSize = BadgeSize.Medium;
 
   protected readonly birthdayDate: Signal<Date | null> = computed((): Date | null => {
@@ -43,8 +45,6 @@ export class UserInfoDialogComponent {
     });
   }
 
-  // Read only here: anybody signed in may look a birthday up, but only its owner may change it, and
-  // this dialog is opened for other people. Changing your own lives in the account menu.
   private async loadBirthday(): Promise<void> {
     try {
       this.born.set(await this.birthdays.getBirthday(this.user.id));

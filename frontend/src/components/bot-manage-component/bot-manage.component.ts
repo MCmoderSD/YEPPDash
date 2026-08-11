@@ -1,5 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, ElementRef, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../services/auth.service';
 import { BotResult, BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
@@ -11,11 +17,8 @@ function contains(users: readonly TwitchUser[], userId: string): boolean {
   return users.some((user: TwitchUser): boolean => user.id === userId);
 }
 
-// A refused bot call answers with the bot's own words, which say more than anything this page could
-// write — whether it is down, unconfigured, or turned the request down itself.
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse)) return null;
-
   const message: unknown = (error.error as BotResult | null)?.message;
   return typeof message === 'string' && message.trim() ? message.trim() : null;
 }
@@ -24,12 +27,11 @@ function reasonFor(error: unknown): string | null {
   selector: 'app-bot-manage',
   templateUrl: './bot-manage.component.html',
   styleUrl: './bot-manage.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, MatProgressSpinnerModule],
 })
 export class BotManageComponent {
 
   private readonly twitch: TwitchService = inject(TwitchService);
-  // Not `bot`: that name already belongs to the signal holding the bot's Twitch account below.
   private readonly botApi: BotService = inject(BotService);
   private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
@@ -62,8 +64,6 @@ export class BotManageComponent {
     (): boolean => !this.banned() && !this.blocked() && this.moderator() && this.inChat(),
   );
 
-  // The spinner covers the first load, which has nothing to show yet; a reload keeps the filled card
-  // on screen and runs the bar instead, so this skips the bar while the spinner is already up.
   protected readonly working: Signal<boolean> = computed(
     (): boolean => this.busy() || (this.loading() && this.bot() !== null),
   );
@@ -96,8 +96,6 @@ export class BotManageComponent {
     );
   }
 
-  // Join and leave name the channel rather than the bot: it is this channel the bot is being asked
-  // to come to, and the id the bot's API keys on is the channel owner's.
   protected join(): Promise<void> {
     return this.act(
       async (channelId: string): Promise<void> => void await this.botApi.joinChannel(channelId),
@@ -118,11 +116,7 @@ export class BotManageComponent {
     return this.load(this.botUserId());
   }
 
-  private async act(
-    action: (channelId: string) => Promise<void>,
-    success: string,
-    failure: string,
-  ): Promise<void> {
+  private async act(action: (channelId: string) => Promise<void>, success: string, failure: string): Promise<void> {
     const channelId: string | undefined = this.auth.currentUser()?.id;
     if (!channelId) return;
 
@@ -142,15 +136,13 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const [users, ban, blocked, moderators, chatters]:
-        [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[]] =
-        await Promise.all([
-          this.twitch.getUsers([botUserId]),
-          this.twitch.getBanStatus(botUserId),
-          this.twitch.getBlocked(),
-          this.twitch.getModerators(),
-          this.twitch.getChatters(),
-        ]);
+      const [users, ban, blocked, moderators, chatters]: [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[]] = await Promise.all([
+        this.twitch.getUsers([botUserId]),
+        this.twitch.getBanStatus(botUserId),
+        this.twitch.getBlocked(),
+        this.twitch.getModerators(),
+        this.twitch.getChatters()
+      ]);
 
       this.bot.set(users[0] ?? null);
       this.chatColor.set(users[0]?.color ?? null);

@@ -1,12 +1,10 @@
-<!-- A list rather than a table: every row is one label and one number, and the bar beside them is a
-     second reading of that number rather than a column of its own. -->
 <ul class="bdsm-result">
   @for (trait of traits(); track trait.key) {
     <li class="bdsm-result-row">
-      <span class="bdsm-result-percent" [style.color]="trait.color">{{ trait.percent }}%</span>
+      <span class="bdsm-result-percent" [style.color]="trait.color">
+        {{ trait.percent }}%
+      </span>
 
-      <!-- Hidden from assistive technology on purpose: it draws the percentage that is already
-           spelled out either side of it, so announcing it again would only repeat the row. -->
       <span class="bdsm-result-track" aria-hidden="true">
         <span
           class="bdsm-result-bar"
@@ -15,7 +13,9 @@
         ></span>
       </span>
 
-      <span class="bdsm-result-label" [style.color]="trait.color">{{ trait.label }}</span>
+      <span class="bdsm-result-label" [style.color]="trait.color">
+        {{ trait.label }}
+      </span>
     </li>
   }
 </ul>

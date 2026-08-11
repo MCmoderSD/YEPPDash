@@ -1,6 +1,13 @@
 import { Component, computed, effect, inject, input, InputSignal, Signal, signal, WritableSignal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { firstValueFrom } from 'rxjs';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { faqLink } from '../../services/dash-host';
 import { BirthdayService } from '../../services/birthday.service';
@@ -13,7 +20,7 @@ import { TwitchUser } from '../../data/twitch-user';
   selector: 'app-user-menu',
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.scss',
-  standalone: false,
+  imports: [NgOptimizedImage, RouterLink, MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, LocaleDatePipe],
 })
 export class UserMenuComponent {
 
@@ -39,14 +46,10 @@ export class UserMenuComponent {
   });
 
   constructor() {
-    // An effect rather than the constructor body: the user arrives as an input, so it is not there
-    // yet while the component is being built.
     effect((): void => void this.load(this.user().id));
   }
 
   protected async editBirthday(): Promise<void> {
-    // Imported here rather than at the top of the file. This menu sits in the shell that every page
-    // loads, and the dialog pulls in Material's datepicker, which nothing else in the app needs.
     const { BirthdayEditDialogComponent } = await import(
       '../birthday-edit-dialog-component/birthday-edit-dialog.component'
     );
@@ -68,8 +71,6 @@ export class UserMenuComponent {
     const userId: string = this.user().id;
 
     try {
-      // Which verb applies depends on whether there is one to replace: the endpoint refuses a POST
-      // over an existing birthday rather than quietly overwriting it.
       this.stored.set(this.birthday()
         ? await this.birthdays.updateBirthday(userId, draft)
         : await this.birthdays.addBirthday(userId, draft));
@@ -84,8 +85,6 @@ export class UserMenuComponent {
     try {
       this.stored.set(await this.birthdays.getBirthday(userId));
     } catch {
-      // Shown as unset instead: an account detail that could not be read is not worth a notification
-      // the user never asked for.
       this.stored.set(null);
     }
   }

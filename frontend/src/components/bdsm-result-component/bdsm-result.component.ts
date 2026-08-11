@@ -5,7 +5,6 @@ import { BdsmResult, BdsmTraitScore, rankedTraits } from '../../data/bdsm-result
   selector: 'app-bdsm-result',
   templateUrl: './bdsm-result.component.html',
   styleUrl: './bdsm-result.component.scss',
-  standalone: false,
 })
 export class BdsmResultComponent {
 

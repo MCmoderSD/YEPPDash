@@ -14,6 +14,8 @@ services:
       Twitch__ClientSecretProd: ${TWITCH__CLIENTSECRETPROD}
       Twitch__RedirectUri: ${TWITCH__REDIRECTURI}
       AllowedFrontendOrigins__0: ${ALLOWEDFRONTENDORIGINS__0}
+      AllowedFrontendOrigins__1: ${ALLOWEDFRONTENDORIGINS__1}
+      AllowedFrontendOrigins__2: ${ALLOWEDFRONTENDORIGINS__2}
     ports:
       - 8080:8080/tcp
 

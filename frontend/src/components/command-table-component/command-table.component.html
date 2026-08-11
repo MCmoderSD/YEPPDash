@@ -14,15 +14,10 @@
   </mat-form-field>
 
   <div #scroll class="command-table-scroll">
-    <!-- Tracked by name rather than by the object: a command whose state changed is a new object,
-         and rebuilding its row for that would drop the focus of whoever just used the switch in
-         it. Renaming one does rebuild the row, which is what should happen.
-
-         multiTemplateDataRows so each command can carry a second row underneath holding its form. -->
     <table
       mat-table
       matSort
-      multiTemplateDataRows
+      multiTemplateDataRows="true"
       [dataSource]="dataSource"
       [trackBy]="trackByName"
       class="command-table-grid"
@@ -34,8 +29,6 @@
           @if (isDraft(command)) {
             <span class="command-table-placeholder">New command</span>
           } @else {
-            <!-- The row is clickable for the mouse; this button is what makes the editor reachable
-                 by keyboard and gives a screen reader something to announce. -->
             <button
               type="button"
               class="command-table-edit"
@@ -51,8 +44,6 @@
       <ng-container matColumnDef="aliases">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Aliases</th>
         <td mat-cell *matCellDef="let command" class="command-table-aliases">
-          <!-- The chips are laid out in a wrapper rather than in the cell itself: a table cell that
-               is turned into a flex container stops taking part in the table's own layout. -->
           <div class="command-table-chips">
             @for (alias of command.aliases; track alias) {
               <span class="command-table-alias">{{ alias }}</span>
@@ -65,8 +56,6 @@
 
       <ng-container matColumnDef="message">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Message</th>
-        <!-- The full text is in the title, so a long message can be cut short in the cell without
-             putting it out of reach. -->
         <td mat-cell *matCellDef="let command" class="command-table-message" [title]="command.message">
           @if (isDraft(command)) {
             <span class="command-table-none">—</span>
@@ -78,15 +67,10 @@
 
       <ng-container matColumnDef="active">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Active</th>
-        <!-- The click is stopped here rather than on the switch itself, so hitting the padding
-             around it does not open the editor either. -->
         <td mat-cell *matCellDef="let command" class="command-table-active" (click)="$event.stopPropagation()">
-          <!-- The draft has nothing to switch yet: adding a command turns it on. -->
           @if (!isDraft(command)) {
-            <!-- hideIcon because the tick and dash inside the handle are what make M3's switch read
-                 as heavy; on and off are already told apart by colour and by which side it sits. -->
             <mat-slide-toggle
-              hideIcon
+              hideIcon="true"
               [checked]="command.active"
               [disabled]="busy()"
               [aria-label]="'Command ' + command.name + ' active'"
@@ -128,8 +112,6 @@
         </td>
       </ng-container>
 
-      <!-- The second row every command gets: empty until its editor is opened, which is what keeps
-           a page of forms from being built to show one. -->
       <ng-container matColumnDef="editor">
         <td mat-cell *matCellDef="let command" class="command-table-editor" [attr.colspan]="columns.length">
           @if (isOpen(command)) {
