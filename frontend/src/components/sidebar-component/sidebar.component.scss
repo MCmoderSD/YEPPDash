@@ -21,6 +21,14 @@
   padding: 1rem 0.75rem 2rem;
 }
 
+// Each row carries its own place down the panel as `--row`, and waits that much longer before it
+// joins in. Spelled out at every use rather than kept in one inherited custom property: a var()
+// inside a custom property is substituted where that property is declared, so a shared
+// `calc(var(--row) …)` would resolve against the nav's own --row and hand every row the same zero.
+//
+// 14ms is small enough that the panel still reads as one gesture and large enough that the eye
+// follows it downwards rather than seeing everything arrive at once.
+
 // --- Groups -----------------------------------------------------------------------------------
 
 .sidebar-group + .sidebar-group {
@@ -55,7 +63,7 @@
   cursor: pointer;
   transition: background-color var(--app-timing-fast),
               color var(--app-timing-fast),
-              gap var(--app-timing-base);
+              gap var(--app-timing-base) calc(var(--row, 0) * 14ms);
 
   &:hover {
     background: var(--app-tint-hover);
@@ -77,12 +85,13 @@
   white-space: nowrap;
 }
 
-// Everything the rail fades out rather than removes, so it can travel with the width around it.
+// Everything the rail fades out rather than removes, so it can travel with the width around it —
+// each one behind the row above it.
 .sidebar-link-label,
 .sidebar-group-label,
 .sidebar-group-list::before,
 .sidebar-link-active::before {
-  transition: opacity var(--app-timing-fast);
+  transition: opacity var(--app-timing-fast) calc(var(--row, 0) * 14ms);
 }
 
 .sidebar-group-chevron {
@@ -90,9 +99,11 @@
   font-size: 1.25rem;
   width: 1.25rem;
   height: 1.25rem;
+  // No delay on the rotation: that one answers a click on the heading, and waiting its way down the
+  // panel would only make the group it belongs to feel slow to respond.
   transition: transform var(--app-timing-base),
-              width var(--app-timing-base),
-              opacity var(--app-timing-fast);
+              width var(--app-timing-base) calc(var(--row, 0) * 14ms),
+              opacity var(--app-timing-fast) calc(var(--row, 0) * 14ms);
 }
 
 // Points down when the list below is open and up when it is shut, so the chevron reads as the
@@ -194,7 +205,7 @@
   text-decoration: none;
   transition: background-color var(--app-timing-fast),
               color var(--app-timing-fast),
-              gap var(--app-timing-base);
+              gap var(--app-timing-base) calc(var(--row, 0) * 14ms);
 
   &:hover {
     background: var(--app-tint-hover);
