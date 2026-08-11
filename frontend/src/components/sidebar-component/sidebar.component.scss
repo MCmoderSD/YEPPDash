@@ -299,6 +299,20 @@
 // here has to be something that can travel: a label taken out of the flow, or hidden outright,
 // would snap between the two shapes while the width around it was still moving.
 .sidebar-rail {
+  // Closing is not the opening played backwards. A transition takes its timing from the state being
+  // moved into, so these are the ones used on the way in — and here the panel is narrowing over
+  // everything at once. A row that waited its turn would be clipped away before its own fade had
+  // started, which is what made shutting look instant while opening looked smooth.
+  .sidebar-link-label,
+  .sidebar-group-label,
+  .sidebar-group-list::before,
+  .sidebar-link-active::before,
+  .sidebar-group-chevron,
+  .sidebar-link,
+  .sidebar-group-button {
+    transition-delay: 0s;
+  }
+
   // Faded rather than removed, and left in the flow so the shrinking row clips it on the way out.
   // It stays in the accessibility tree either way, which an icon on its own could not manage.
   .sidebar-link-label,
