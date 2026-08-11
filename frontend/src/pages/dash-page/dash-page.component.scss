@@ -36,8 +36,9 @@
 // back over the content on hover instead of shoving the page sideways under the pointer — and why
 // it has to sit above the content and carry a lift for as long as it is collapsed, not only while
 // it is actually wide.
+// Material already puts the drawer on z-index 4, above the content — all that is missing while it
+// hangs over the page is the lift that separates the two.
 .dash-drawer-collapsed {
-  z-index: 3;
   box-shadow: var(--app-elevation-2);
 }
 
