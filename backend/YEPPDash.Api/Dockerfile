@@ -2,7 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
-COPY YEPPDash.Api.csproj ./
+# NuGet.config comes along: BDSM-Test-API lives on the Nexus, not on nuget.org, and without it
+# the restore only ever sees the default source.
+COPY YEPPDash.Api.csproj NuGet.config ./
 RUN dotnet restore YEPPDash.Api.csproj
 
 COPY . .
