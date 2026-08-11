@@ -100,6 +100,17 @@
   flex: none;
 }
 
+// The same badge Twitch puts on a moderator, which says "moderator" here far more directly than the
+// icon font's generic shield did. Painted through a mask rather than placed as an image so it takes
+// the row's amber like every other icon on this card — an <img> would sit at the colour it was
+// drawn in while its neighbours carried the status.
+.bot-manage-icon-mask {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: currentcolor;
+  mask: url('/Moderator-Icon.png') center / contain no-repeat;
+}
+
 // Amber rather than red: every one of these is something the user can fix from this card, not a
 // failure. Red is kept for the state where the bot could not be read at all.
 .bot-manage-icon-warn {

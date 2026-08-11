@@ -1,12 +1,19 @@
-<mat-sidenav-container class="dash-shell" [class.dash-shell-wide]="wide()">
+<mat-sidenav-container class="dash-shell" [class.dash-shell-wide]="sidebar.wide()">
 
   <mat-sidenav
     class="dash-drawer"
-    [mode]="wide() ? 'side' : 'over'"
+    [class.dash-drawer-collapsed]="collapsed()"
+    [class.dash-drawer-rail]="rail()"
+    [mode]="sidebar.wide() ? 'side' : 'over'"
     [opened]="sidebar.opened()"
     (closed)="sidebar.close()"
+    (mouseenter)="peek(true)"
+    (mouseleave)="peek(false)"
+    (focusin)="peek(true)"
+    (focusout)="peek(false)"
+    (transitionend)="settled($event)"
   >
-    <app-sidebar/>
+    <app-sidebar [rail]="rail()"/>
   </mat-sidenav>
 
   <mat-sidenav-content class="dash-content">

@@ -19,6 +19,16 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 1rem 0.75rem 2rem;
+
+  // How much longer each row down the panel waits before joining in. Small enough that the panel
+  // still reads as one gesture, large enough that the eye follows it downwards rather than seeing
+  // everything arrive at once.
+  //
+  // The multiplication is written out at every use rather than kept here as a finished delay: a
+  // var() inside a custom property is substituted where that property is declared, so a ready-made
+  // `calc(var(--row) …)` would resolve against the nav's own --row and hand every row the same zero.
+  // Only the step travels, and each row does its own arithmetic with the --row it carries.
+  --stagger: 14ms;
 }
 
 // --- Groups -----------------------------------------------------------------------------------
@@ -53,8 +63,10 @@
   text-align: start;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color var(--app-motion-fast) var(--app-ease),
-              color var(--app-motion-fast) var(--app-ease);
+  transition: background-color var(--app-timing-fast),
+              color var(--app-timing-fast),
+              gap var(--app-timing-base) calc(var(--row, 0) * var(--stagger)),
+              padding var(--app-timing-base) calc(var(--row, 0) * var(--stagger));
 
   &:hover {
     background: var(--app-tint-hover);
@@ -72,6 +84,17 @@
 .sidebar-group-label {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+// Everything the rail fades out rather than removes, so it can travel with the width around it —
+// each one behind the row above it.
+.sidebar-link-label,
+.sidebar-group-label,
+.sidebar-group-list::before,
+.sidebar-link-active::before {
+  transition: opacity var(--app-timing-fast) calc(var(--row, 0) * var(--stagger));
 }
 
 .sidebar-group-chevron {
@@ -79,7 +102,11 @@
   font-size: 1.25rem;
   width: 1.25rem;
   height: 1.25rem;
-  transition: transform var(--app-motion-base) var(--app-ease);
+  // No delay on the rotation: that one answers a click on the heading, and waiting its way down the
+  // panel would only make the group it belongs to feel slow to respond.
+  transition: transform var(--app-timing-base),
+              width var(--app-timing-base) calc(var(--row, 0) * var(--stagger)),
+              opacity var(--app-timing-fast) calc(var(--row, 0) * var(--stagger));
 }
 
 // Points down when the list below is open and up when it is shut, so the chevron reads as the
@@ -103,7 +130,7 @@
   visibility: hidden;
 
   transition:
-    grid-template-rows var(--app-motion-base) var(--app-ease),
+    grid-template-rows var(--app-timing-base),
     visibility var(--app-motion-base);
 }
 
@@ -144,6 +171,8 @@
   // a shut group that far open. The heading above carries the spacing instead.
   padding: 0 0 0 var(--sidebar-rail-gap);
   list-style: none;
+  transition: margin var(--app-timing-base),
+              padding var(--app-timing-base);
 
   // The rail the indented entries hang off, which is what keeps them legible as children of the
   // heading once several groups are open at once.
@@ -177,8 +206,10 @@
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
   text-decoration: none;
-  transition: background-color var(--app-motion-fast) var(--app-ease),
-              color var(--app-motion-fast) var(--app-ease);
+  transition: background-color var(--app-timing-fast),
+              color var(--app-timing-fast),
+              gap var(--app-timing-base) calc(var(--row, 0) * var(--stagger)),
+              padding var(--app-timing-base) calc(var(--row, 0) * var(--stagger));
 
   &:hover {
     background: var(--app-tint-hover);
@@ -200,7 +231,7 @@
   width: 1.25rem;
   height: 1.25rem;
   color: var(--mat-sys-outline);
-  transition: color var(--app-motion-fast) var(--app-ease);
+  transition: color var(--app-timing-fast);
 }
 
 // Artwork the icon font does not carry, painted through a mask so it takes the row's own colour
@@ -264,4 +295,70 @@
 // stand in for and it would float in the padding on its own.
 .sidebar-link-standalone.sidebar-link-active::before {
   content: none;
+}
+
+// --- Rail -------------------------------------------------------------------------------------
+
+// Collapsed to icons. The drawer animates its own width and the rows narrow with it, so everything
+// here has to be something that can travel: a label taken out of the flow, or hidden outright,
+// would snap between the two shapes while the width around it was still moving.
+.sidebar-rail {
+  // Closing is not the opening played backwards. A transition takes its timing from the state being
+  // moved into, so this is the one used on the way in — and here the panel is narrowing over
+  // everything at once. A row that waited its turn would be clipped away before its own fade had
+  // started, which is what made shutting look instant while opening looked smooth.
+  --stagger: 0ms;
+
+  // Faded rather than removed, and left in the flow so the shrinking row clips it on the way out.
+  // It stays in the accessibility tree either way, which an icon on its own could not manage.
+  .sidebar-link-label,
+  .sidebar-group-label {
+    opacity: 0;
+  }
+
+  // Decoration that only makes sense next to the words it belongs to. Given up its width instead of
+  // its display so the row closes around it rather than jumping when it goes.
+  .sidebar-group-chevron {
+    width: 0;
+    opacity: 0;
+  }
+
+  // A gap does not shrink with the items either side of it, so without this the icon and the space
+  // meant to sit after it are together wider than the rail and the icon is pushed off centre.
+  .sidebar-link,
+  .sidebar-group-button {
+    gap: 0;
+  }
+
+  // What is left of the panel once the nav's own padding is off it, which is what a row spans.
+  --rail-row: calc(var(--app-sidebar-rail-width) - 1.5rem);
+
+  // The icon is the first thing in the row, so where the row's leading padding ends is where the
+  // icon starts: centring it is the row less the icon, halved. Two rules because a heading's icon
+  // is the smaller of the two — sharing one padding is what had the headings sitting 5px left of
+  // their entries.
+  //
+  // Written out rather than left to `margin-inline: auto`, which does the same arithmetic by itself
+  // but cannot be transitioned: the icon would snap into place at each end of the animation.
+  .sidebar-link {
+    padding-inline: calc((var(--rail-row) - 1.25rem) / 2);
+  }
+
+  .sidebar-group-button {
+    padding-inline: calc((var(--rail-row) - 1.125rem) / 2);
+  }
+
+  // The indent, the hairline the entries hang off and the marker that straddles it are all a way of
+  // showing which heading a row belongs to. A single column of icons has nothing to indent from.
+  .sidebar-group-list {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+  }
+
+  // Faded rather than dropped: `content: none` takes the box away in one frame, while the indent
+  // it sits in is still closing.
+  .sidebar-group-list::before,
+  .sidebar-link-active::before {
+    opacity: 0;
+  }
 }

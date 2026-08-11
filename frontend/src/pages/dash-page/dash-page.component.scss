@@ -29,6 +29,42 @@
   overflow: visible;
 }
 
+// The width transition lives under Material's own `.mat-drawer-transition` guard, and has to:
+// Material re-declares `transition` there to slide over-mode drawers, and transition is a single
+// property — that declaration replaced a plain one on .dash-drawer outright rather than adding to
+// it, which left the width change with no transition at all. The panel popped between its two
+// widths while everything inside it still animated.
+//
+// Restated above that specificity with Material's transform pair carried along so the over-mode
+// slide keeps working. The width runs on Material's own duration and curve, deliberately: a toggle
+// moves the content column's margin at exactly these values, so the drawer's edge and the content
+// travel together instead of on two clocks. The guard also keeps the first render still — Material
+// only turns transitions on after it, which is what stops the drawer animating into place on load.
+.dash-shell.mat-drawer-transition .dash-drawer {
+  transition:
+    transform 400ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    width 400ms cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 1ms;
+  }
+}
+
+// Material measures the drawer when it opens and gives the content column a matching margin, so
+// the width animated here is not tracked by that margin. That is what lets a collapsed drawer open
+// back over the content on hover instead of shoving the page sideways under the pointer — and why
+// it has to sit above the content and carry a lift for as long as it is collapsed, not only while
+// it is actually wide.
+// Material already puts the drawer on z-index 4, above the content — all that is missing while it
+// hangs over the page is the lift that separates the two.
+.dash-drawer-collapsed {
+  box-shadow: var(--app-elevation-2);
+}
+
+.dash-drawer-rail {
+  width: var(--app-sidebar-rail-width);
+}
+
 .dash-content {
   // Material sizes this element with `height: 100%`, and nothing in the app sets border-box, so
   // the padding below was being added on top of that height rather than fitting inside it. The
