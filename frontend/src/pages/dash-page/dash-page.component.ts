@@ -45,7 +45,11 @@ export class DashPageComponent {
   }
 
   protected peek(peeking: boolean): void {
-    if (this.collapsed()) this.peeking.set(peeking);
+    // Only the engage side is gated on being collapsed; leaving always clears the flag. Gating both
+    // sides let the pin toggle while the pointer sat still over the drawer leave `peeking` stuck at
+    // true — the matching mouseleave/focusout would fire once collapsed() had already changed, and
+    // the guard would block the very reset it existed to run.
+    this.peeking.set(peeking && this.collapsed());
   }
 
   protected settled(event: TransitionEvent): void {

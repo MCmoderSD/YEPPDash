@@ -35,7 +35,7 @@
         [class.sidebar-group-items-open]="expanded(group)"
         [id]="'sidebar-group-' + group.id"
       >
-        <ul class="sidebar-group-list">
+        <ul class="sidebar-group-list" [style.--row]="headingRow(group)">
           @for (item of group.items; track item.label; let index = $index) {
             <li>
               <a
