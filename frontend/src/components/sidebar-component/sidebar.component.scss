@@ -265,3 +265,46 @@
 .sidebar-link-standalone.sidebar-link-active::before {
   content: none;
 }
+
+// --- Rail -------------------------------------------------------------------------------------
+
+// Collapsed to icons. The drawer animates its own width, so this is only about what a row holds.
+.sidebar-rail {
+  padding-inline: 0.5rem;
+
+  // Still here for a screen reader, just not on screen: removing them outright would leave every
+  // entry with no accessible name, which is the one thing an icon-only navigation cannot afford.
+  .sidebar-link-label,
+  .sidebar-group-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  // Decoration that only makes sense next to the words it belongs to.
+  .sidebar-group-chevron {
+    display: none;
+  }
+
+  // No gap to set: the label is out of flow and the chevron is gone, so one item is left in the row.
+  .sidebar-link,
+  .sidebar-group-button {
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+
+  // The indent, the hairline the entries hang off and the marker that straddles it are all a way of
+  // showing which heading a row belongs to. A single column of icons has nothing to indent from.
+  .sidebar-group-list {
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+  }
+
+  .sidebar-group-list::before,
+  .sidebar-link-active::before {
+    content: none;
+  }
+}

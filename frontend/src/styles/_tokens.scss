@@ -62,6 +62,11 @@
 
   // --- Layout ---------------------------------------------------------------------------------
   --app-sidebar-width: 17.5rem;
+
+  // The collapsed drawer: one icon plus the padding around it, so a row stays a comfortable target
+  // rather than shrinking to the glyph itself.
+  --app-sidebar-rail-width: 4rem;
+
   --app-content-max: 78rem;
 
   // Declared here rather than left to the navbar's own content, so the bar keeps one predictable

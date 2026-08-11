@@ -62,7 +62,7 @@
 
         @if (!moderator()) {
           <li class="bot-manage-issue">
-            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">shield</mat-icon>
+            <span class="bot-manage-icon bot-manage-icon-warn bot-manage-icon-mask" aria-hidden="true"></span>
             <span class="bot-manage-text">
               {{ bot.displayName }} is not a moderator and will be limited by your chat settings.
             </span>

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, input, InputSignal, Signal, signal, WritableSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,6 +20,10 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
   imports: [RouterLink, RouterLinkActive, MatIconModule],
 })
 export class SidebarComponent {
+
+  // Collapsed to icons only. Every label stays in the markup either way — an icon on its own gives
+  // a screen reader nothing to announce — and is taken off the screen in CSS.
+  readonly rail: InputSignal<boolean> = input(false);
 
   private readonly sidebar: SidebarService = inject(SidebarService);
   private readonly router: Router = inject(Router);
@@ -59,8 +63,10 @@ export class SidebarComponent {
     });
   }
 
+  // Shut groups stay shut, except in the rail: there the strip is only worth having if every icon
+  // is on it, and a group's own heading is down to an icon too small to explain what it hides.
   protected expanded(group: NavGroup): boolean {
-    return !this.collapsed().has(group.id);
+    return this.rail() || !this.collapsed().has(group.id);
   }
 
   protected toggle(group: NavGroup): void {
