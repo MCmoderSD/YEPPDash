@@ -89,12 +89,38 @@
 // title too narrow for a name and its badges. Sized to the date instead, so the rest is the name's.
 .bdsm-page-summary {
   flex: none;
+  gap: 0.75rem;
   justify-content: flex-end;
 
   // Material's own margin here assumes a description that runs on; this one is three short figures.
   margin-right: 1rem;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
+}
+
+// Carries its own colour from the score, so it needs the weight to stay legible against the
+// panel — the surrounding date deliberately does not compete with it.
+.bdsm-page-match {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+// The figure is what is being scanned down the list; the word is only there to say what it means.
+.bdsm-page-match-label {
+  color: var(--mat-sys-on-surface-variant);
+  font-weight: 400;
+
+  // Taken off the screen where the header has no room for it, but deliberately not out of the
+  // accessibility tree: read on its own, "87%" next to a date does not say what it measures.
+  @media (max-width: 34rem) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .bdsm-page-empty {

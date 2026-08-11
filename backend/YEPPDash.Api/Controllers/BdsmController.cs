@@ -62,6 +62,16 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
         }, cancellationToken);
     }
 
+    // Scores alone, for a listing that already shows both sides' results — a pair YEPPBot has
+    // scored then needs nothing from BDSMTest.org at all.
+    [HttpPost("match/{userId:int}/scores")]
+    public Task<IActionResult> GetMatchScores(string userId, [FromBody] string[] partnerIds, CancellationToken cancellationToken)
+    {
+        if (TooMany(partnerIds) is { } tooMany) return Task.FromResult(tooMany);
+
+        return Guarded([userId, .. partnerIds], async () => Ok(await results.ScoreAsync(userId, partnerIds, cancellationToken)), cancellationToken);
+    }
+
     [HttpPost("match")]
     public Task<IActionResult> GetMatches([FromBody] BdsmPair[] pairs, CancellationToken cancellationToken)
     {

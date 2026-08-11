@@ -46,22 +46,27 @@ public sealed class BdsmService(
         return MatchPairsAsync([.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))], cancellationToken);
     }
 
+    // Just how well everyone gets on, without the results behind it. A cached score then costs
+    // nothing at all: the two results are what would otherwise have to be fetched.
+    public async Task<IReadOnlyList<BdsmMatchScore>> ScoreAsync(string userId, IReadOnlyCollection<string> partnerIds, CancellationToken cancellationToken)
+    {
+        var (runnable, scored) = await PrepareAsync([.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))], cancellationToken);
+
+        return await RunAsync(runnable, async (entry, token) =>
+        {
+            if (scored.TryGetValue((entry.ResultId, entry.PartnerId), out var score))
+            {
+                return new BdsmMatchScore(entry.Pair.UserId, entry.Pair.PartnerId, Percent(score));
+            }
+
+            var match = await MatchedAsync(entry, token);
+            return match is null ? null : new BdsmMatchScore(entry.Pair.UserId, entry.Pair.PartnerId, match.Score);
+        }, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<BdsmUserMatch>> MatchPairsAsync(IReadOnlyCollection<BdsmPair> pairs, CancellationToken cancellationToken)
     {
-        if (pairs.Count is 0) return [];
-
-        // One lookup for every person mentioned anywhere in the list, rather than one per pair.
-        var everyone = Parse([.. pairs.SelectMany(pair => new[] { pair.UserId, pair.PartnerId })]);
-        var latest = await repository.GetLatestForUsersAsync(everyone, cancellationToken);
-        var byUser = latest.ToDictionary(entry => entry.UserId, entry => entry.ResultId);
-
-        var runnable = pairs
-            .Where(pair => TryParse(pair.UserId, out var user) && TryParse(pair.PartnerId, out var partner)
-                           && byUser.ContainsKey(user) && byUser.ContainsKey(partner))
-            .Select(pair => new Runnable(pair, byUser[int.Parse(pair.UserId)], byUser[int.Parse(pair.PartnerId)]))
-            .ToList();
-
-        var scored = await ScoredAsync(runnable, cancellationToken);
+        var (runnable, scored) = await PrepareAsync(pairs, cancellationToken);
 
         return await RunAsync(runnable, async (entry, token) =>
         {
@@ -80,28 +85,59 @@ public sealed class BdsmService(
                 return null;
             }
 
-            try
-            {
-                var match = await api.FetchMatchAsync(entry.ResultId, entry.PartnerId, cancellationToken: token);
+            var match = await MatchedAsync(entry, token);
 
-                // Feeding the cache here saves the plain result endpoints a round trip later: a
-                // match already carries both full results.
-                cache.Set(entry.ResultId, match.Result);
-                cache.Set(entry.PartnerId, match.Partner);
-
-                return new BdsmUserMatch(entry.Pair.UserId, entry.Pair.PartnerId, match.Score, match.Result, match.Partner);
-            }
-            catch (BdsmTestApiException exception)
-            {
-                logger.LogWarning(exception, "Cannot match result {ResultId} against {PartnerId}", entry.ResultId, entry.PartnerId);
-                return null;
-            }
+            return match is null
+                ? null
+                : new BdsmUserMatch(entry.Pair.UserId, entry.Pair.PartnerId, match.Score, match.Result, match.Partner);
         }, cancellationToken);
     }
 
-    private async Task<Dictionary<(string ResultId, string PartnerId), double>> ScoredAsync(
+    private async Task<MatchResult?> MatchedAsync(Runnable entry, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var match = await api.FetchMatchAsync(entry.ResultId, entry.PartnerId, cancellationToken: cancellationToken);
+
+            // Feeding the cache here saves the plain result endpoints a round trip later: a match
+            // already carries both full results.
+            cache.Set(entry.ResultId, match.Result);
+            cache.Set(entry.PartnerId, match.Partner);
+
+            return match;
+        }
+        catch (BdsmTestApiException exception)
+        {
+            logger.LogWarning(exception, "Cannot match result {ResultId} against {PartnerId}", entry.ResultId, entry.PartnerId);
+            return null;
+        }
+    }
+
+    // Which pairs can actually be answered, and which of them YEPPBot has already scored.
+    private async Task<(IReadOnlyList<Runnable> Runnable, Dictionary<(string, string), double> Scored)> PrepareAsync(
+        IReadOnlyCollection<BdsmPair> pairs, CancellationToken cancellationToken)
+    {
+        if (pairs.Count is 0) return ([], []);
+
+        // One lookup for every person mentioned anywhere in the list, rather than one per pair.
+        var everyone = Parse([.. pairs.SelectMany(pair => new[] { pair.UserId, pair.PartnerId })]);
+        var latest = await repository.GetLatestForUsersAsync(everyone, cancellationToken);
+        var byUser = latest.ToDictionary(entry => entry.UserId, entry => entry.ResultId);
+
+        var runnable = pairs
+            .Where(pair => TryParse(pair.UserId, out var user) && TryParse(pair.PartnerId, out var partner)
+                           && byUser.ContainsKey(user) && byUser.ContainsKey(partner))
+            .Select(pair => new Runnable(pair, byUser[int.Parse(pair.UserId)], byUser[int.Parse(pair.PartnerId)]))
+            .ToList();
+
+        return (runnable, await ScoredAsync(runnable, cancellationToken));
+    }
+
+    private async Task<Dictionary<(string, string), double>> ScoredAsync(
         IReadOnlyList<Runnable> runnable, CancellationToken cancellationToken)
     {
+        if (runnable.Count is 0) return [];
+
         var cached = await repository.GetCachedMatchesAsync(
             [.. runnable.Select(entry => entry.ResultId).Distinct(StringComparer.Ordinal)],
             [.. runnable.Select(entry => entry.PartnerId).Distinct(StringComparer.Ordinal)],
@@ -109,7 +145,7 @@ public sealed class BdsmService(
 
         // The query answers by two id lists, so it can return pairs nobody asked about; only the
         // ones actually on the list are kept.
-        var wanted = runnable.Select(entry => (entry.ResultId, entry.PartnerId)).ToHashSet();
+        var wanted = runnable.Select(entry => (entry.ResultId, entry.PartnerId)).ToHashSet<(string, string)>();
 
         return cached
             .Where(entry => wanted.Contains((entry.ResultId, entry.PartnerId)))

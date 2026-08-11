@@ -48,6 +48,13 @@ export interface BdsmResult {
   traits: Record<BdsmTraitKey, number>;
 }
 
+export interface BdsmMatchScore {
+  userId: string;
+  partnerId: string;
+  // Whole percent, the way BDSMTest.org reports compatibility.
+  score: number;
+}
+
 export function traitColor(percent: number): string {
   const bounded: number = Math.min(100, Math.max(0, percent));
   return `hsl(${Math.round(bounded * 1.2)} 80% 66%)`;

@@ -8,4 +8,7 @@ public sealed record BdsmUserResult(int UserId, TestResult Result);
 
 public sealed record BdsmUserMatch(string UserId, string PartnerId, int Score, TestResult Result, TestResult Partner);
 
+// A match stripped down to the number, for callers that already hold both results.
+public sealed record BdsmMatchScore(string UserId, string PartnerId, int Score);
+
 public sealed record BdsmPair(string UserId, string PartnerId);
