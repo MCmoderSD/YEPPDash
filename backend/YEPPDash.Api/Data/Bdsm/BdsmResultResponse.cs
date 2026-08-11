@@ -1,57 +1,31 @@
 using System.Globalization;
-using MCmoderSD.BdsmTestApi.Data;
-using MCmoderSD.BdsmTestApi.Enums;
 
 namespace YEPPDash.Api.Data.Bdsm;
 
 public sealed record BdsmResultResponse(
     string Id,
     string UserId,
-    DateTimeOffset Timestamp,
+    DateTime Timestamp,
     int Version,
     string Gender,
     string AgeGroup,
-    string Language,
     IReadOnlyDictionary<string, int> Traits
 ) {
-    public static BdsmResultResponse From(BdsmUserResult entry)
-    {
-        return From(entry.UserId.ToString(CultureInfo.InvariantCulture), entry.Result);
-    }
-
-    public static BdsmResultResponse From(string userId, TestResult result)
+    public static BdsmResultResponse From(BdsmResult result)
     {
         return new BdsmResultResponse(
             result.Id,
-            userId,
+            result.UserId.ToString(CultureInfo.InvariantCulture),
             result.Timestamp,
             result.Version,
             result.Gender,
-            Label(result.AgeGroup),
-            result.Language.GetCode(),
-            Traits: result.Scores.ToDictionary(score => Key(score.Kink), score => score.Value, StringComparer.Ordinal));
+            result.AgeGroup,
+            // Whole percent on the wire, the way BDSMTest.org itself reports both traits and matches.
+            result.Traits.ToDictionary(trait => trait.Key, trait => Percent(trait.Value), StringComparer.Ordinal));
     }
 
-    // The frontend keys its trait table by the lower-camel-case kink name, which is what the
-    // database columns used to be called too.
-    private static string Key(Kink kink)
+    private static int Percent(double score)
     {
-        var name = kink.ToString();
-        return string.Create(name.Length, name, (span, source) =>
-        {
-            source.CopyTo(span);
-            span[0] = char.ToLowerInvariant(span[0]);
-        });
-    }
-
-    private static string Label(AgeGroup ageGroup)
-    {
-        var min = ageGroup.GetMinAge();
-        var max = ageGroup.GetMaxAge();
-
-        if (min is 0) return $"<{max + 1}";
-        if (max is int.MaxValue) return $"{min - 1}+";
-
-        return $"{min}-{max}";
+        return (int) Math.Round(score * 100, MidpointRounding.AwayFromZero);
     }
 }

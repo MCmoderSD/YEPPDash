@@ -13,7 +13,7 @@ public sealed record BdsmMatchResponse(
             match.UserId,
             match.PartnerId,
             match.Score,
-            BdsmResultResponse.From(match.UserId, match.Result),
-            BdsmResultResponse.From(match.PartnerId, match.Partner));
+            BdsmResultResponse.From(match.Result),
+            BdsmResultResponse.From(match.Partner));
     }
 }

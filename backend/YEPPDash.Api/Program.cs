@@ -38,9 +38,7 @@ builder.Services.AddScoped<BirthdayRepository>();
 builder.Services.AddScoped<BirthdayService>();
 builder.Services.AddScoped<BdsmRepository>();
 builder.Services.AddScoped<BdsmService>();
-// Singleton alongside a pooled HttpClient: a finished test never changes, so results stay cached
-// past the request that fetched them.
-builder.Services.AddSingleton<BdsmResultCache>();
+// Only matches are fetched from BDSMTest.org; the results themselves come out of the database.
 builder.Services.AddHttpClient<BdsmTestApi>();
 builder.Services.AddScoped<CustomCommandRepository>();
 builder.Services.AddScoped<CustomCommandService>();

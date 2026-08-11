@@ -42,8 +42,6 @@ export interface BdsmResult {
   version: number;
   gender: string;
   ageGroup: string;
-  // The language BDSMTest.org recorded the test in, as a two-letter code.
-  language: string;
   // Whole percentages, the way BDSMTest.org reports them.
   traits: Record<BdsmTraitKey, number>;
 }
