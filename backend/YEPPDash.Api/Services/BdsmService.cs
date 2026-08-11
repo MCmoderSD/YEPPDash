@@ -64,6 +64,14 @@ public sealed class BdsmService(
         return strangers.All(following.Contains);
     }
 
+    // A match is something to see about yourself, not something a broadcaster can run between two
+    // followers who never agreed to be compared to each other.
+    public static bool PairsInvolveCaller(string callerId, IReadOnlyCollection<BdsmPair> pairs)
+    {
+        return pairs.All(pair => string.Equals(pair.UserId, callerId, StringComparison.Ordinal)
+                                  || string.Equals(pair.PartnerId, callerId, StringComparison.Ordinal));
+    }
+
     private async Task<IReadOnlyList<Scored>> ScoredPairsAsync(IReadOnlyCollection<BdsmPair> pairs, CancellationToken cancellationToken)
     {
         if (pairs.Count is 0) return [];
@@ -81,6 +89,8 @@ public sealed class BdsmService(
 
         return await RunAsync(runnable, async (entry, token) =>
         {
+            // MatchCache stores a 0..1 fraction, per its own CHECK constraint; BDSMTest.org's match
+            // endpoint — and so the package — already answers in whole percent.
             if (cached.TryGetValue((entry.Result.Id, entry.Partner.Id), out var score))
             {
                 return new Scored(entry.Pair, Percent(score), entry.Result, entry.Partner);

@@ -40,7 +40,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
     [HttpGet("match/{userId:int}/{partnerId:int}")]
     public Task<IActionResult> GetMatch(string userId, string partnerId, CancellationToken cancellationToken)
     {
-        return Guarded([userId, partnerId], async () =>
+        return GuardedMatch([new BdsmPair(userId, partnerId)], async () =>
         {
             var match = await results.MatchAsync(userId, partnerId, cancellationToken);
             return match is null ? NotFound() : Ok(BdsmMatchResponse.From(match, Language));
@@ -50,7 +50,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
     [HttpPost("match/{userId:int}")]
     public Task<IActionResult> GetMatches(string userId, [FromBody] string[] partnerIds, CancellationToken cancellationToken)
     {
-        return Guarded([userId, .. partnerIds], async () =>
+        return GuardedMatch([.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))], async () =>
         {
             var matches = await results.MatchAsync(userId, partnerIds, cancellationToken);
             return Ok(matches.Select(match => BdsmMatchResponse.From(match, Language)));
@@ -60,15 +60,16 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
     [HttpPost("match/{userId:int}/scores")]
     public Task<IActionResult> GetMatchScores(string userId, [FromBody] string[] partnerIds, CancellationToken cancellationToken)
     {
-        return Guarded([userId, .. partnerIds], async () => Ok(await results.ScoreAsync(userId, partnerIds, cancellationToken)), cancellationToken);
+        return GuardedMatch(
+            [.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))],
+            async () => Ok(await results.ScoreAsync(userId, partnerIds, cancellationToken)),
+            cancellationToken);
     }
 
     [HttpPost("match")]
     public Task<IActionResult> GetMatches([FromBody] BdsmPair[] pairs, CancellationToken cancellationToken)
     {
-        var involved = pairs.SelectMany(pair => new[] { pair.UserId, pair.PartnerId }).ToList();
-
-        return Guarded(involved, async () =>
+        return GuardedMatch(pairs, async () =>
         {
             var matches = await results.MatchPairsAsync(pairs, cancellationToken);
             return Ok(matches.Select(match => BdsmMatchResponse.From(match, Language)));
@@ -95,5 +96,20 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
             logger.LogWarning(exception, "Cannot read the followers of channel {TwitchId}", twitchId);
             return StatusCode(StatusCodes.Status502BadGateway);
         }
+    }
+
+    // Every match endpoint additionally requires the caller to be one side of every pair — a
+    // broadcaster can see how they match a follower, not how two followers match each other.
+    private Task<IActionResult> GuardedMatch(IReadOnlyCollection<BdsmPair> pairs, Func<Task<IActionResult>> run, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is not null && !BdsmService.PairsInvolveCaller(twitchId, pairs))
+        {
+            logger.LogWarning("User {TwitchId} tried to match two other people's BDSM results", twitchId);
+            return Task.FromResult<IActionResult>(Forbid());
+        }
+
+        var involved = pairs.SelectMany(pair => new[] { pair.UserId, pair.PartnerId }).Distinct().ToList();
+        return Guarded(involved, run, cancellationToken);
     }
 }
