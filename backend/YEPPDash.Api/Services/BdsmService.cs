@@ -11,8 +11,6 @@ public sealed class BdsmService(
     TwitchChannelService channels,
     ILogger<BdsmService> logger
 ) {
-    // BDSMTest.org is somebody else's server and one match already costs it three requests, so the
-    // fan-out is kept low even when a whole channel is being matched at once.
     private const int MaxParallelFetches = 4;
 
     public async Task<IReadOnlyList<BdsmResult>> GetForUserAsync(string userId, CancellationToken cancellationToken)
@@ -22,7 +20,6 @@ public sealed class BdsmService(
         return await repository.GetForUserAsync(parsed, cancellationToken);
     }
 
-    // The newest result per user rather than every one of them: this backs a listing of many people.
     public async Task<IReadOnlyList<BdsmResult>> GetForUsersAsync(IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var parsed = Parse(userIds);
@@ -42,7 +39,6 @@ public sealed class BdsmService(
         return MatchPairsAsync([.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))], cancellationToken);
     }
 
-    // Just the number, for a listing that already shows both sides' results.
     public async Task<IReadOnlyList<BdsmMatchScore>> ScoreAsync(string userId, IReadOnlyCollection<string> partnerIds, CancellationToken cancellationToken)
     {
         var scored = await ScoredPairsAsync([.. partnerIds.Select(partnerId => new BdsmPair(userId, partnerId))], cancellationToken);
@@ -54,12 +50,9 @@ public sealed class BdsmService(
     {
         var scored = await ScoredPairsAsync(pairs, cancellationToken);
 
-        return [.. scored.Select(entry => new BdsmUserMatch(
-            entry.Pair.UserId, entry.Pair.PartnerId, entry.Score, entry.Result, entry.Partner))];
+        return [.. scored.Select(entry => new BdsmUserMatch(entry.Pair.UserId, entry.Pair.PartnerId, entry.Score, entry.Result, entry.Partner))];
     }
 
-    // Which of the requested users the caller is allowed to see: themselves, and anyone following
-    // their channel. Everything else is refused rather than silently dropped.
     public async Task<bool> MayAccessAsync(string callerId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var strangers = userIds.Where(userId => !string.Equals(userId, callerId, StringComparison.Ordinal)).ToList();
@@ -75,14 +68,12 @@ public sealed class BdsmService(
     {
         if (pairs.Count is 0) return [];
 
-        // One lookup for every person mentioned anywhere in the list, rather than one per pair.
         var everyone = Parse([.. pairs.SelectMany(pair => new[] { pair.UserId, pair.PartnerId })]);
         var latest = await repository.GetLatestForUsersAsync(everyone, cancellationToken);
         var byUser = latest.ToDictionary(result => result.UserId);
 
         var runnable = pairs
-            .Where(pair => TryParse(pair.UserId, out var user) && TryParse(pair.PartnerId, out var partner)
-                           && byUser.ContainsKey(user) && byUser.ContainsKey(partner))
+            .Where(pair => TryParse(pair.UserId, out var user) && TryParse(pair.PartnerId, out var partner) && byUser.ContainsKey(user) && byUser.ContainsKey(partner))
             .Select(pair => new Runnable(pair, byUser[int.Parse(pair.UserId)], byUser[int.Parse(pair.PartnerId)]))
             .ToList();
 
@@ -90,8 +81,6 @@ public sealed class BdsmService(
 
         return await RunAsync(runnable, async (entry, token) =>
         {
-            // A score YEPPBot has already worked out costs nothing: both results are already here,
-            // straight out of the same query that resolved the pair.
             if (cached.TryGetValue((entry.Result.Id, entry.Partner.Id), out var score))
             {
                 return new Scored(entry.Pair, Percent(score), entry.Result, entry.Partner);
@@ -112,8 +101,7 @@ public sealed class BdsmService(
             [.. runnable.Select(entry => entry.Partner.Id).Distinct(StringComparer.Ordinal)],
             cancellationToken);
 
-        // The query answers by two id lists, so it can return pairs nobody asked about.
-        var wanted = runnable.Select(entry => (entry.Result.Id, entry.Partner.Id)).ToHashSet<(string, string)>();
+        var wanted = runnable.Select(entry => (entry.Result.Id, entry.Partner.Id)).ToHashSet();
 
         return cached
             .Where(entry => wanted.Contains((entry.ResultId, entry.PartnerId)))
@@ -125,8 +113,6 @@ public sealed class BdsmService(
     {
         try
         {
-            // The package has no score-only call, so this fetches both results as well and throws
-            // them away — three requests for the one number MatchCache would have had.
             var match = await api.FetchMatchAsync(entry.Result.Id, entry.Partner.Id, cancellationToken: cancellationToken);
             return match.Score;
         }
@@ -144,8 +130,6 @@ public sealed class BdsmService(
     {
         if (sources.Count is 0) return [];
 
-        // Indexed rather than appended to, so the order the repository sorted them into survives
-        // however the requests happen to finish.
         var results = new TResult?[sources.Count];
 
         await Parallel.ForAsync(0, sources.Count, new ParallelOptions
@@ -157,7 +141,6 @@ public sealed class BdsmService(
         return [.. results.OfType<TResult>()];
     }
 
-    // MatchCache keeps a fraction, BDSMTest.org and the package both report whole percent.
     private static int Percent(double score)
     {
         return (int) Math.Round(score * 100, MidpointRounding.AwayFromZero);

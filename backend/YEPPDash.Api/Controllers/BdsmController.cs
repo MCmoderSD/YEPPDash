@@ -13,9 +13,6 @@ namespace YEPPDash.Api.Controllers;
 [Route("bdsm")]
 public sealed class BdsmController(BdsmService results, ILogger<BdsmController> logger) : ControllerBase
 {
-    // Kink names are served in whichever of the package's languages the browser asked for. Held
-    // rather than recomputed: a listing maps this over every result, and the header parse is the
-    // same answer every time. Controllers are per request, so the field cannot outlive one.
     private Language? _language;
 
     private Language Language => _language ??= Request.GetBdsmLanguage();

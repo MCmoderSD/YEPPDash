@@ -28,8 +28,6 @@ public sealed record BdsmResultResponse(
     }
 }
 
-// The package also carries a description and a pairing description per kink; neither is shown,
-// and at 25 of them per result they are not worth the payload until something renders them.
 public sealed record BdsmTraitResponse(string Kink, string Name, int Percent)
 {
     public static BdsmTraitResponse From(Kink kink, double score, Language language)
@@ -37,7 +35,6 @@ public sealed record BdsmTraitResponse(string Kink, string Name, int Percent)
         return new BdsmTraitResponse(
             BdsmTraits.Column(kink),
             Documentation.Get(kink, language).Name,
-            // Whole percent on the wire, the way BDSMTest.org itself reports both traits and matches.
             (int) Math.Round(score * 100, MidpointRounding.AwayFromZero));
     }
 }
