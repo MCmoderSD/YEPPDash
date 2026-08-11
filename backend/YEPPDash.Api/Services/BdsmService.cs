@@ -58,33 +58,72 @@ public sealed class BdsmService(
         var runnable = pairs
             .Where(pair => TryParse(pair.UserId, out var user) && TryParse(pair.PartnerId, out var partner)
                            && byUser.ContainsKey(user) && byUser.ContainsKey(partner))
+            .Select(pair => new Runnable(pair, byUser[int.Parse(pair.UserId)], byUser[int.Parse(pair.PartnerId)]))
             .ToList();
 
-        var matches = await RunAsync(runnable, async (pair, token) =>
+        var scored = await ScoredAsync(runnable, cancellationToken);
+
+        return await RunAsync(runnable, async (entry, token) =>
         {
-            var resultId = byUser[int.Parse(pair.UserId)];
-            var partnerId = byUser[int.Parse(pair.PartnerId)];
+            // A score YEPPBot already worked out spares the match request; the two results behind
+            // it are usually in memory by then, which spares the other two.
+            if (scored.TryGetValue((entry.ResultId, entry.PartnerId), out var score))
+            {
+                var result = await ResultAsync(entry.ResultId, token);
+                var partner = await ResultAsync(entry.PartnerId, token);
+
+                if (result is not null && partner is not null)
+                {
+                    return new BdsmUserMatch(entry.Pair.UserId, entry.Pair.PartnerId, Percent(score), result, partner);
+                }
+
+                return null;
+            }
 
             try
             {
-                var match = await api.FetchMatchAsync(resultId, partnerId, cancellationToken: token);
+                var match = await api.FetchMatchAsync(entry.ResultId, entry.PartnerId, cancellationToken: token);
 
                 // Feeding the cache here saves the plain result endpoints a round trip later: a
                 // match already carries both full results.
-                cache.Set(resultId, match.Result);
-                cache.Set(partnerId, match.Partner);
+                cache.Set(entry.ResultId, match.Result);
+                cache.Set(entry.PartnerId, match.Partner);
 
-                return new BdsmUserMatch(pair.UserId, pair.PartnerId, match.Score, match.Result, match.Partner);
+                return new BdsmUserMatch(entry.Pair.UserId, entry.Pair.PartnerId, match.Score, match.Result, match.Partner);
             }
             catch (BdsmTestApiException exception)
             {
-                logger.LogWarning(exception, "Cannot match result {ResultId} against {PartnerId}", resultId, partnerId);
+                logger.LogWarning(exception, "Cannot match result {ResultId} against {PartnerId}", entry.ResultId, entry.PartnerId);
                 return null;
             }
         }, cancellationToken);
-
-        return matches;
     }
+
+    private async Task<Dictionary<(string ResultId, string PartnerId), double>> ScoredAsync(
+        IReadOnlyList<Runnable> runnable, CancellationToken cancellationToken)
+    {
+        var cached = await repository.GetCachedMatchesAsync(
+            [.. runnable.Select(entry => entry.ResultId).Distinct(StringComparer.Ordinal)],
+            [.. runnable.Select(entry => entry.PartnerId).Distinct(StringComparer.Ordinal)],
+            cancellationToken);
+
+        // The query answers by two id lists, so it can return pairs nobody asked about; only the
+        // ones actually on the list are kept.
+        var wanted = runnable.Select(entry => (entry.ResultId, entry.PartnerId)).ToHashSet();
+
+        return cached
+            .Where(entry => wanted.Contains((entry.ResultId, entry.PartnerId)))
+            .DistinctBy(entry => (entry.ResultId, entry.PartnerId))
+            .ToDictionary(entry => (entry.ResultId, entry.PartnerId), entry => entry.Score);
+    }
+
+    // MatchCache keeps a fraction, BDSMTest.org and the package both report whole percent.
+    private static int Percent(double score)
+    {
+        return (int) Math.Round(score * 100, MidpointRounding.AwayFromZero);
+    }
+
+    private sealed record Runnable(BdsmPair Pair, string ResultId, string PartnerId);
 
     // Which of the requested users the caller is allowed to see: themselves, and anyone following
     // their channel. Everything else is refused rather than silently dropped.
@@ -103,22 +142,28 @@ public sealed class BdsmService(
     {
         return await RunAsync(refs, async (entry, token) =>
         {
-            if (cache.Get(entry.ResultId) is { } cached) return new BdsmUserResult(entry.UserId, cached);
-
-            try
-            {
-                var result = await api.FetchResultAsync(entry.ResultId, cancellationToken: token);
-                cache.Set(entry.ResultId, result);
-
-                return new BdsmUserResult(entry.UserId, result);
-            }
-            catch (BdsmTestApiException exception)
-            {
-                // A stored id BDSMTest.org no longer knows should cost one row, not the whole page.
-                logger.LogWarning(exception, "Cannot fetch BDSM result {ResultId} of user {UserId}", entry.ResultId, entry.UserId);
-                return null;
-            }
+            var result = await ResultAsync(entry.ResultId, token);
+            return result is null ? null : new BdsmUserResult(entry.UserId, result);
         }, cancellationToken);
+    }
+
+    private async Task<TestResult?> ResultAsync(string resultId, CancellationToken cancellationToken)
+    {
+        if (cache.Get(resultId) is { } cached) return cached;
+
+        try
+        {
+            var result = await api.FetchResultAsync(resultId, cancellationToken: cancellationToken);
+            cache.Set(resultId, result);
+
+            return result;
+        }
+        catch (BdsmTestApiException exception)
+        {
+            // A stored id BDSMTest.org no longer knows should cost one row, not the whole page.
+            logger.LogWarning(exception, "Cannot fetch BDSM result {ResultId}", resultId);
+            return null;
+        }
     }
 
     private static async Task<IReadOnlyList<TResult>> RunAsync<TSource, TResult>(

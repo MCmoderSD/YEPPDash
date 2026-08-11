@@ -45,4 +45,21 @@ public sealed class BdsmRepository(MySqlConnection connection)
 
         return [.. rows];
     }
+
+    // Read only, and only the score — the rows belong to YEPPBot, which fills a `data` blob this
+    // side has no format for. Asking by the two id lists rather than by pair keeps it to one round
+    // trip; a pair list can match more rows than were asked for, so the caller pairs them up again.
+    public async Task<IReadOnlyList<BdsmCachedMatch>> GetCachedMatchesAsync(
+        IReadOnlyCollection<string> resultIds, IReadOnlyCollection<string> partnerIds, CancellationToken cancellationToken)
+    {
+        if (resultIds.Count is 0 || partnerIds.Count is 0) return [];
+
+        var rows = await connection.QueryAsync<BdsmCachedMatch>(
+            new CommandDefinition(
+                "SELECT id AS ResultId, partner AS PartnerId, score AS Score FROM MatchCache WHERE id IN @resultIds AND partner IN @partnerIds",
+                new { resultIds, partnerIds },
+                cancellationToken: cancellationToken));
+
+        return [.. rows];
+    }
 }
