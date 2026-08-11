@@ -1,7 +1,5 @@
 export interface BdsmTrait {
-  // The kink's lower-camel-case name, stable across languages.
   kink: string;
-  // Already in the viewer's language, straight from the BDSM Test API package.
   name: string;
   percent: number;
 }
@@ -17,7 +15,6 @@ export interface BdsmResult {
   version: number;
   gender: string;
   ageGroup: string;
-  // Which of the package's languages the names above came back in.
   language: string;
   traits: BdsmTrait[];
 }
@@ -35,8 +32,7 @@ export function traitColor(percent: number): string {
 
 export function rankedTraits(result: BdsmResult): BdsmTraitScore[] {
   return result.traits
-    .map((trait: BdsmTrait, index: number): [BdsmTraitScore, number] =>
-      [{ ...trait, color: traitColor(trait.percent) }, index])
+    .map((trait: BdsmTrait, index: number): [BdsmTraitScore, number] => [{ ...trait, color: traitColor(trait.percent) }, index])
     .sort(([left, leftIndex], [right, rightIndex]) => right.percent - left.percent || leftIndex - rightIndex)
     .map(([trait]) => trait);
 }
