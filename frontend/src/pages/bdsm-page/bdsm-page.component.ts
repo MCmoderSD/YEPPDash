@@ -29,7 +29,7 @@ export interface BdsmMatch {
 export interface BdsmCommunityEntry extends BdsmResultEntry {
   user: TwitchUser | null;
   name: string;
-  // Null for the viewer's own row, and for anyone the score could not be worked out for.
+  // Null for anyone the score could not be worked out for.
   match: BdsmMatch | null;
 }
 
@@ -156,9 +156,9 @@ export class BdsmPageComponent {
   // Compatibility is what the list is nicer for, not what it is for, so a failure here leaves the
   // results standing rather than emptying the tab.
   private async matchesAgainst(userId: string, results: BdsmResult[]): Promise<Map<string, number>> {
-    const partnerIds: string[] = results
-      .map((result: BdsmResult): string => result.userId)
-      .filter((id: string): boolean => id !== userId);
+    // The viewer's own row is asked for too: BDSMTest.org scores a result against itself like any
+    // other pair, and what that comes to is worth seeing next to the rest.
+    const partnerIds: string[] = results.map((result: BdsmResult): string => result.userId);
 
     if (!partnerIds.length) return new Map();
 
