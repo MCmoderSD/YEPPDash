@@ -13,6 +13,7 @@ import { BdsmService } from '../../services/bdsm.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { BdsmResult, resultTakenAt } from '../../data/bdsm-result';
+import { FollowerProfile } from '../../data/follower';
 import { TwitchUser } from '../../data/twitch-user';
 
 export interface BdsmResultEntry {
@@ -103,18 +104,22 @@ export class BdsmPageComponent {
   }
 
   private async loadCommunity(): Promise<void> {
-    const channelId: string | undefined = this.auth.currentUser()?.id;
-    if (!channelId) return;
+    const me: TwitchUser | null = this.auth.currentUser();
+    if (!me) return;
 
     this.communityRequested = true;
 
     this.communityLoading.set(true);
     this.communityFailed.set(false);
     try {
-      const results: BdsmResult[] = await this.bdsm.getFollowerResults(channelId);
+      // The follower list doubles as the profile lookup, so the names and avatars below need no
+      // second request. A broadcaster does not follow themselves, but their own result belongs in
+      // their channel's list.
+      const followers: FollowerProfile[] = await this.twitch.getFollowers();
+      const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
+      byId.set(me.id, me);
 
-      const users: TwitchUser[] = await this.twitch.getUsers(results.map((entry: BdsmResult): string => entry.userId));
-      const byId: Map<string, TwitchUser> = new Map(users.map((user: TwitchUser): [string, TwitchUser] => [user.id, user]));
+      const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
 
       this.communityRows.set(results
         .map((result: BdsmResult): BdsmCommunityEntry => {

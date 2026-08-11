@@ -31,7 +31,6 @@ export type BdsmTraitKey = typeof BDSM_TRAITS[number]['key'];
 export interface BdsmTraitScore {
   key: BdsmTraitKey;
   label: string;
-  score: number;
   percent: number;
   color: string;
 }
@@ -43,24 +42,26 @@ export interface BdsmResult {
   version: number;
   gender: string;
   ageGroup: string;
+  // The language BDSMTest.org recorded the test in, as a two-letter code.
+  language: string;
+  // Whole percentages, the way BDSMTest.org reports them.
   traits: Record<BdsmTraitKey, number>;
 }
 
-export function traitColor(score: number): string {
-  const bounded: number = Math.min(1, Math.max(0, score));
-  return `hsl(${Math.round(bounded * 120)} 80% 66%)`;
+export function traitColor(percent: number): string {
+  const bounded: number = Math.min(100, Math.max(0, percent));
+  return `hsl(${Math.round(bounded * 1.2)} 80% 66%)`;
 }
 
 export function traitScores(result: BdsmResult): BdsmTraitScore[] {
   return BDSM_TRAITS.map((trait): BdsmTraitScore => {
-    const score: number = result.traits[trait.key];
+    const percent: number = result.traits[trait.key];
 
     return {
       key: trait.key,
       label: trait.label,
-      score,
-      percent: Math.round(score * 100),
-      color: traitColor(score),
+      percent,
+      color: traitColor(percent),
     };
   });
 }
@@ -68,7 +69,7 @@ export function traitScores(result: BdsmResult): BdsmTraitScore[] {
 export function topTraits(result: BdsmResult, count: number): BdsmTraitScore[] {
   return traitScores(result)
     .map((trait, index): [BdsmTraitScore, number] => [trait, index])
-    .sort(([left, leftIndex], [right, rightIndex]) => right.score - left.score || leftIndex - rightIndex)
+    .sort(([left, leftIndex], [right, rightIndex]) => right.percent - left.percent || leftIndex - rightIndex)
     .slice(0, count)
     .map(([trait]) => trait);
 }
