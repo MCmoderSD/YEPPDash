@@ -28,16 +28,16 @@
   // it has to overflow into the page's scroll rather than catch it here.
   overflow: visible;
 
-  transition: width var(--app-motion-base) var(--app-ease);
+  transition: width var(--app-timing-fast);
 }
 
 // Material measures the drawer when it opens and gives the content column a matching margin, so
-// the width animated here is not tracked by that margin. That is what lets a collapsed drawer open
-// back over the content on hover instead of shoving the page sideways under the pointer — and why
-// it has to sit above the content and carry a lift for as long as it is collapsed, not only while
-// it is actually wide.
-// Material already puts the drawer on z-index 4, above the content — all that is missing while it
-// hangs over the page is the lift that separates the two.
+// the width animated above is not tracked by that margin — which is what lets a collapsed drawer
+// open back over the content on hover instead of shoving the page sideways under the pointer.
+//
+// It is already on z-index 4 and so above the content; all that is missing while it hangs over the
+// page is the lift that separates the two, and it needs that for as long as it is collapsed rather
+// than only while it happens to be wide.
 .dash-drawer-collapsed {
   box-shadow: var(--app-elevation-2);
 }
