@@ -1,3 +1,4 @@
+using MCmoderSD.BdsmTestApi.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Bdsm;
@@ -12,6 +13,12 @@ namespace YEPPDash.Api.Controllers;
 [Route("bdsm")]
 public sealed class BdsmController(BdsmService results, ILogger<BdsmController> logger) : ControllerBase
 {
+    // Kink names are served in whichever of the package's languages the browser asked for. Held
+    // rather than recomputed: a listing maps this over every result, and the header parse is the
+    // same answer every time. Controllers are per request, so the field cannot outlive one.
+    private Language? _language;
+
+    private Language Language => _language ??= Request.GetBdsmLanguage();
 
     [HttpGet("{userId:int}")]
     public Task<IActionResult> GetResults(string userId, CancellationToken cancellationToken)
@@ -19,7 +26,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
         return Guarded([userId], async () =>
         {
             var found = await results.GetForUserAsync(userId, cancellationToken);
-            return Ok(found.Select(BdsmResultResponse.From));
+            return Ok(found.Select(result => BdsmResultResponse.From(result, Language)));
         }, cancellationToken);
     }
 
@@ -29,7 +36,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
         return Guarded(userIds, async () =>
         {
             var found = await results.GetForUsersAsync(userIds, cancellationToken);
-            return Ok(found.Select(BdsmResultResponse.From));
+            return Ok(found.Select(result => BdsmResultResponse.From(result, Language)));
         }, cancellationToken);
     }
 
@@ -39,7 +46,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
         return Guarded([userId, partnerId], async () =>
         {
             var match = await results.MatchAsync(userId, partnerId, cancellationToken);
-            return match is null ? NotFound() : Ok(BdsmMatchResponse.From(match));
+            return match is null ? NotFound() : Ok(BdsmMatchResponse.From(match, Language));
         }, cancellationToken);
     }
 
@@ -49,7 +56,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
         return Guarded([userId, .. partnerIds], async () =>
         {
             var matches = await results.MatchAsync(userId, partnerIds, cancellationToken);
-            return Ok(matches.Select(BdsmMatchResponse.From));
+            return Ok(matches.Select(match => BdsmMatchResponse.From(match, Language)));
         }, cancellationToken);
     }
 
@@ -67,7 +74,7 @@ public sealed class BdsmController(BdsmService results, ILogger<BdsmController> 
         return Guarded(involved, async () =>
         {
             var matches = await results.MatchPairsAsync(pairs, cancellationToken);
-            return Ok(matches.Select(BdsmMatchResponse.From));
+            return Ok(matches.Select(match => BdsmMatchResponse.From(match, Language)));
         }, cancellationToken);
     }
 

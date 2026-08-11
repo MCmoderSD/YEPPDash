@@ -1,4 +1,6 @@
 using System.Globalization;
+using MCmoderSD.BdsmTestApi.Data;
+using MCmoderSD.BdsmTestApi.Enums;
 
 namespace YEPPDash.Api.Data.Bdsm;
 
@@ -9,9 +11,10 @@ public sealed record BdsmResultResponse(
     int Version,
     string Gender,
     string AgeGroup,
-    IReadOnlyDictionary<string, int> Traits
+    string Language,
+    IReadOnlyList<BdsmTraitResponse> Traits
 ) {
-    public static BdsmResultResponse From(BdsmResult result)
+    public static BdsmResultResponse From(BdsmResult result, Language language)
     {
         return new BdsmResultResponse(
             result.Id,
@@ -20,12 +23,21 @@ public sealed record BdsmResultResponse(
             result.Version,
             result.Gender,
             result.AgeGroup,
-            // Whole percent on the wire, the way BDSMTest.org itself reports both traits and matches.
-            result.Traits.ToDictionary(trait => trait.Key, trait => Percent(trait.Value), StringComparer.Ordinal));
+            language.GetCode(),
+            [.. BdsmTraits.All.Select(kink => BdsmTraitResponse.From(kink, result.Traits.GetValueOrDefault(kink), language))]);
     }
+}
 
-    private static int Percent(double score)
+// The package also carries a description and a pairing description per kink; neither is shown,
+// and at 25 of them per result they are not worth the payload until something renders them.
+public sealed record BdsmTraitResponse(string Kink, string Name, int Percent)
+{
+    public static BdsmTraitResponse From(Kink kink, double score, Language language)
     {
-        return (int) Math.Round(score * 100, MidpointRounding.AwayFromZero);
+        return new BdsmTraitResponse(
+            BdsmTraits.Column(kink),
+            Documentation.Get(kink, language).Name,
+            // Whole percent on the wire, the way BDSMTest.org itself reports both traits and matches.
+            (int) Math.Round(score * 100, MidpointRounding.AwayFromZero));
     }
 }

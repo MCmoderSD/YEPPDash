@@ -1,3 +1,5 @@
+using MCmoderSD.BdsmTestApi.Enums;
+
 namespace YEPPDash.Api.Data.Bdsm;
 
 // Trait scores are fractions in the database, the same way MatchCache keeps its match score.
@@ -8,7 +10,7 @@ public sealed record BdsmResult(
     int Version,
     string Gender,
     string AgeGroup,
-    IReadOnlyDictionary<string, double> Traits
+    IReadOnlyDictionary<Kink, double> Traits
 );
 
 public sealed record BdsmCachedMatch(string ResultId, string PartnerId, double Score);

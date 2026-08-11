@@ -1,3 +1,5 @@
+using MCmoderSD.BdsmTestApi.Enums;
+
 namespace YEPPDash.Api.Data.Bdsm;
 
 public sealed record BdsmMatchResponse(
@@ -7,13 +9,13 @@ public sealed record BdsmMatchResponse(
     BdsmResultResponse Result,
     BdsmResultResponse Partner
 ) {
-    public static BdsmMatchResponse From(BdsmUserMatch match)
+    public static BdsmMatchResponse From(BdsmUserMatch match, Language language)
     {
         return new BdsmMatchResponse(
             match.UserId,
             match.PartnerId,
             match.Score,
-            BdsmResultResponse.From(match.Result),
-            BdsmResultResponse.From(match.Partner));
+            BdsmResultResponse.From(match.Result, language),
+            BdsmResultResponse.From(match.Partner, language));
     }
 }

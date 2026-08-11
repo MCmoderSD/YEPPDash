@@ -1,5 +1,6 @@
 using System.Globalization;
 using Dapper;
+using MCmoderSD.BdsmTestApi.Enums;
 using MySqlConnector;
 using YEPPDash.Api.Data.Bdsm;
 
@@ -7,7 +8,7 @@ namespace YEPPDash.Api.Repositories;
 
 public sealed class BdsmRepository(MySqlConnection connection)
 {
-    private static readonly string Columns = string.Join(", ", new[] { "id", "`user`", "`timestamp`", "version", "gender", "ageGroup" }.Concat(BdsmTraits.All.Select(trait => $"`{trait}`")));
+    private static readonly string Columns = string.Join(", ", new[] { "id", "`user`", "`timestamp`", "version", "gender", "ageGroup" }.Concat(BdsmTraits.All.Select(kink => $"`{BdsmTraits.Column(kink)}`")));
 
     public async Task<IReadOnlyList<BdsmResult>> GetForUserAsync(int userId, CancellationToken cancellationToken)
     {
@@ -43,9 +44,6 @@ public sealed class BdsmRepository(MySqlConnection connection)
         return ToResults(rows);
     }
 
-    // Read only, and only the score: the `data` blob is YEPPBot's own payload in a format this side
-    // has no reader for. Asking by the two id lists keeps it to one round trip at the cost of
-    // answering with pairs nobody asked about, which the caller filters back down.
     public async Task<IReadOnlyList<BdsmCachedMatch>> GetCachedMatchesAsync(IReadOnlyCollection<string> resultIds, IReadOnlyCollection<string> partnerIds, CancellationToken cancellationToken)
     {
         if (resultIds.Count is 0 || partnerIds.Count is 0) return [];
@@ -67,10 +65,10 @@ public sealed class BdsmRepository(MySqlConnection connection)
 
     private static BdsmResult ToResult(IDictionary<string, object> row)
     {
-        var traits = new Dictionary<string, double>(BdsmTraits.All.Count, StringComparer.Ordinal);
-        foreach (var trait in BdsmTraits.All)
+        var traits = new Dictionary<Kink, double>(BdsmTraits.All.Count);
+        foreach (var kink in BdsmTraits.All)
         {
-            traits[trait] = Convert.ToDouble(row[trait], CultureInfo.InvariantCulture);
+            traits[kink] = Convert.ToDouble(row[BdsmTraits.Column(kink)], CultureInfo.InvariantCulture);
         }
 
         var timestamp = DateTime.SpecifyKind(Convert.ToDateTime(row["timestamp"], CultureInfo.InvariantCulture), DateTimeKind.Utc);
