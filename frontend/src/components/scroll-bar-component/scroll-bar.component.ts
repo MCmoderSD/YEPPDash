@@ -120,7 +120,6 @@ export function nearEdge(
   return (vertical && toRight <= distance) || (horizontal && toBottom <= distance);
 }
 
-// Used from two different NgModules, so it has to be standalone rather than declared in either.
 @Component({
   selector: 'app-scroll-bar',
   templateUrl: './scroll-bar.component.html',

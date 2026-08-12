@@ -1,5 +1,7 @@
 import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { AuthService } from '../../services/auth.service';
 import { ModuleService } from '../../services/module.service';
 import { NotificationService } from '../../services/notification.service';
@@ -9,7 +11,7 @@ import { BotModule } from '../../data/bot-module';
   selector: 'app-module-page',
   templateUrl: './module-page.component.html',
   styleUrl: './module-page.component.scss',
-  standalone: false,
+  imports: [MatIconModule, MatProgressBarModule, MatSlideToggleModule],
 })
 export class ModulePageComponent {
 
