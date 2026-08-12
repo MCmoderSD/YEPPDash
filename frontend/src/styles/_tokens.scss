@@ -58,7 +58,11 @@
   // built twice, and they stack in the same column at the same width — a search box above a table
   // it does not agree with is the one place a mismatched corner is impossible to miss. One token so
   // the two can never drift apart again.
-  --app-radius-outlined: var(--app-radius-md);
+  //
+  // The smallest step, against the trend of the rest of the scale: these are the only surfaces the
+  // page shows through rather than sits behind, and a wide outline held to a tight corner is what
+  // makes a table read as a grid instead of a rounded card with rows in it.
+  --app-radius-outlined: var(--app-radius-sm);
 
   // --- Motion ---------------------------------------------------------------------------------
   // Two durations only. Anything that tracks a pointer uses -fast; anything the eye follows across

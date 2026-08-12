@@ -84,9 +84,9 @@ html {
   --mat-menu-container-shape: var(--app-radius-lg);
   --mat-select-container-shape: var(--app-radius-lg);
 
-  // An outlined field takes the extra-small step above, which left it visibly squarer than the
-  // table it sits on top of — same width, same hairline, two different corners. Moved onto the
-  // shared outlined radius instead; the tables read the same token from their own styles.
+  // Left where the extra-small step above already put it, but pinned to the outlined radius the
+  // tables read rather than to that step: an alias chip and a notification take extra-small too,
+  // and a field belongs with the table underneath it, not with those.
   --mat-form-field-outlined-container-shape: var(--app-radius-outlined);
 }
 
