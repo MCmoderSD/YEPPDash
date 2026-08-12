@@ -1,5 +1,5 @@
 <ul class="bdsm-result">
-  @for (trait of traits(); track trait.key) {
+  @for (trait of traits(); track trait.kink) {
     <li class="bdsm-result-row">
       <span class="bdsm-result-percent" [style.color]="trait.color">
         {{ trait.percent }}%
@@ -14,7 +14,7 @@
       </span>
 
       <span class="bdsm-result-label" [style.color]="trait.color">
-        {{ trait.label }}
+        {{ trait.name }}
       </span>
     </li>
   }

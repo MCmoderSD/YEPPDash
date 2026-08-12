@@ -117,6 +117,13 @@
                   </mat-panel-title>
 
                   <mat-panel-description class="bdsm-page-summary">
+                    @if (entry.match) {
+                      <span class="bdsm-page-match" [style.color]="entry.match.color">
+                        {{ entry.match.percent }}%
+                        <span class="bdsm-page-match-label">compatible</span>
+                      </span>
+                    }
+
                     <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
                       {{ entry.takenAt | localeDate }}
                     </time>

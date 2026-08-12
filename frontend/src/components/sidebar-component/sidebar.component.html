@@ -1,7 +1,8 @@
-<nav class="sidebar" appScrollBar aria-label="Dashboard sections">
+<nav class="sidebar" [class.sidebar-rail]="rail()" appScrollBar aria-label="Dashboard sections">
 
   <a
     class="sidebar-link sidebar-link-standalone"
+    [style.--row]="0"
     [routerLink]="overviewPath"
     routerLinkActive="sidebar-link-active"
     [routerLinkActiveOptions]="activeMatch"
@@ -18,6 +19,7 @@
         <button
           type="button"
           class="sidebar-group-button"
+          [style.--row]="headingRow(group)"
           [attr.aria-expanded]="expanded(group)"
           [attr.aria-controls]="'sidebar-group-' + group.id"
           (click)="toggle(group)"
@@ -33,11 +35,12 @@
         [class.sidebar-group-items-open]="expanded(group)"
         [id]="'sidebar-group-' + group.id"
       >
-        <ul class="sidebar-group-list">
-          @for (item of group.items; track item.label) {
+        <ul class="sidebar-group-list" [style.--row]="headingRow(group)">
+          @for (item of group.items; track item.label; let index = $index) {
             <li>
               <a
                 class="sidebar-link"
+                [style.--row]="itemRow(group, index)"
                 [routerLink]="item.path"
                 [queryParams]="item.queryParams"
                 routerLinkActive="sidebar-link-active"

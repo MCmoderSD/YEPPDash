@@ -1,3 +1,4 @@
+using MCmoderSD.BdsmTestApi.Core;
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Bot;
 using YEPPDash.Api.Helpers;
@@ -37,6 +38,8 @@ builder.Services.AddScoped<BirthdayRepository>();
 builder.Services.AddScoped<BirthdayService>();
 builder.Services.AddScoped<BdsmRepository>();
 builder.Services.AddScoped<BdsmService>();
+// Only matches are fetched from BDSMTest.org; the results themselves come out of the database.
+builder.Services.AddHttpClient<BdsmTestApi>();
 builder.Services.AddScoped<CustomCommandRepository>();
 builder.Services.AddScoped<CustomCommandService>();
 builder.Services.AddScoped<ModuleRepository>();

@@ -60,8 +60,19 @@
   --app-motion-base: 220ms;
   --app-ease: cubic-bezier(0.2, 0, 0, 1);
 
+  // The duration and the easing always travel together, so they are also available as a pair —
+  // `transition: opacity var(--app-timing-fast)` rather than the same two tokens spelled out
+  // beside every property in a list.
+  --app-timing-fast: var(--app-motion-fast) var(--app-ease);
+  --app-timing-base: var(--app-motion-base) var(--app-ease);
+
   // --- Layout ---------------------------------------------------------------------------------
   --app-sidebar-width: 17.5rem;
+
+  // The collapsed drawer. Wide enough that a row keeps the padding it has when the drawer is open,
+  // so collapsing changes the width of the panel and nothing about the rows inside it.
+  --app-sidebar-rail-width: 4.5rem;
+
   --app-content-max: 78rem;
 
   // Declared here rather than left to the navbar's own content, so the bar keeps one predictable
