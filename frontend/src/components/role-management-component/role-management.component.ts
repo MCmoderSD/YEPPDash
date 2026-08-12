@@ -69,7 +69,11 @@ export class RoleManagementComponent {
   protected readonly busy: WritableSignal<boolean> = signal(false);
 
   constructor() {
-    effect((): undefined => void this.load(this.mode()));
+    effect((): void => {
+      const mode: RoleManagementMode = this.mode();
+      this.users.set([]);
+      void this.load(mode);
+    });
   }
 
   protected async openAddDialog(): Promise<void> {
@@ -118,14 +122,20 @@ export class RoleManagementComponent {
   private async load(mode: RoleManagementMode): Promise<void> {
     this.loading.set(true);
     try {
-      this.users.set(mode === RoleManagementMode.Vip
+      const users: TwitchUser[] = mode === RoleManagementMode.Vip
         ? await this.twitch.getVips()
-        : await this.twitch.getModerators());
+        : await this.twitch.getModerators();
+
+      if (this.mode() !== mode) return;
+
+      this.users.set(users);
     } catch {
+      if (this.mode() !== mode) return;
+
       this.users.set([]);
       this.notifications.failure(`Could not load the ${roleNameFor(mode)} list.`);
     } finally {
-      this.loading.set(false);
+      if (this.mode() === mode) this.loading.set(false);
     }
   }
 }
