@@ -69,7 +69,17 @@ export class RoleManagementComponent {
   protected readonly busy: WritableSignal<boolean> = signal(false);
 
   constructor() {
-    effect((): undefined => void this.load(this.mode()));
+    effect((): void => {
+      const mode: RoleManagementMode = this.mode();
+
+      // Moderators and VIPs are the same component behind two query strings, so switching between
+      // them reuses the instance — with the role it was showing a moment ago still in it. Emptied
+      // here rather than inside load(), which also runs after an add or a remove, where the list
+      // on screen is the right one and blanking it would only make the table flicker.
+      this.users.set([]);
+
+      void this.load(mode);
+    });
   }
 
   protected async openAddDialog(): Promise<void> {
@@ -118,14 +128,25 @@ export class RoleManagementComponent {
   private async load(mode: RoleManagementMode): Promise<void> {
     this.loading.set(true);
     try {
-      this.users.set(mode === RoleManagementMode.Vip
+      const users: TwitchUser[] = mode === RoleManagementMode.Vip
         ? await this.twitch.getVips()
-        : await this.twitch.getModerators());
+        : await this.twitch.getModerators();
+
+      // Switching tabs and back leaves two requests in flight, and nothing says they come back in
+      // the order they went out. A reply for the role that is no longer on screen is dropped: the
+      // load its own tab switch started is the one that gets to fill the table.
+      if (this.mode() !== mode) return;
+
+      this.users.set(users);
     } catch {
+      if (this.mode() !== mode) return;
+
       this.users.set([]);
       this.notifications.failure(`Could not load the ${roleNameFor(mode)} list.`);
     } finally {
-      this.loading.set(false);
+      // Left up for a stale reply, otherwise the bar goes out while the request that will actually
+      // fill the table is still running.
+      if (this.mode() === mode) this.loading.set(false);
     }
   }
 }
