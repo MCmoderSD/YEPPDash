@@ -71,13 +71,7 @@ export class RoleManagementComponent {
   constructor() {
     effect((): void => {
       const mode: RoleManagementMode = this.mode();
-
-      // Moderators and VIPs are the same component behind two query strings, so switching between
-      // them reuses the instance — with the role it was showing a moment ago still in it. Emptied
-      // here rather than inside load(), which also runs after an add or a remove, where the list
-      // on screen is the right one and blanking it would only make the table flicker.
       this.users.set([]);
-
       void this.load(mode);
     });
   }
@@ -132,9 +126,6 @@ export class RoleManagementComponent {
         ? await this.twitch.getVips()
         : await this.twitch.getModerators();
 
-      // Switching tabs and back leaves two requests in flight, and nothing says they come back in
-      // the order they went out. A reply for the role that is no longer on screen is dropped: the
-      // load its own tab switch started is the one that gets to fill the table.
       if (this.mode() !== mode) return;
 
       this.users.set(users);
@@ -144,8 +135,6 @@ export class RoleManagementComponent {
       this.users.set([]);
       this.notifications.failure(`Could not load the ${roleNameFor(mode)} list.`);
     } finally {
-      // Left up for a stale reply, otherwise the bar goes out while the request that will actually
-      // fill the table is still running.
       if (this.mode() === mode) this.loading.set(false);
     }
   }
