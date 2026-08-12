@@ -53,6 +53,13 @@
   --app-radius-xl: 1.5rem;
   --app-radius-pill: 999px;
 
+  // Every box that is nothing but a hairline drawn over the page: a table's scroll container, the
+  // empty state standing in for one, and Material's outlined form fields. They are the same object
+  // built twice, and they stack in the same column at the same width — a search box above a table
+  // it does not agree with is the one place a mismatched corner is impossible to miss. One token so
+  // the two can never drift apart again.
+  --app-radius-outlined: var(--app-radius-md);
+
   // --- Motion ---------------------------------------------------------------------------------
   // Two durations only. Anything that tracks a pointer uses -fast; anything the eye follows across
   // the screen uses -base.

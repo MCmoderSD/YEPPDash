@@ -83,6 +83,11 @@ html {
   // the inline surfaces that share its step.
   --mat-menu-container-shape: var(--app-radius-lg);
   --mat-select-container-shape: var(--app-radius-lg);
+
+  // An outlined field takes the extra-small step above, which left it visibly squarer than the
+  // table it sits on top of — same width, same hairline, two different corners. Moved onto the
+  // shared outlined radius instead; the tables read the same token from their own styles.
+  --mat-form-field-outlined-container-shape: var(--app-radius-outlined);
 }
 
 // The platform's viewport scroll bar is taken away outright; PageScrollBarComponent draws one that

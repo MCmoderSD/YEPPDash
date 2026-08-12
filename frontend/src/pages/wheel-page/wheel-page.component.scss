@@ -163,7 +163,7 @@
   align-self: stretch;
   overflow: auto;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-medium);
+  border-radius: var(--app-radius-outlined);
 
   // Roughly ten rows before it starts scrolling, which keeps the wheel next to it in view.
   max-height: 24rem;
