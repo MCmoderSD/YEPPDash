@@ -124,7 +124,11 @@ export class BdsmPageComponent {
       // their channel's list.
       const followers: FollowerProfile[] = await this.twitch.getFollowers();
       const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
-      byId.set(me.id, me);
+
+      // /auth/me never carries a chat colour — unlike the profile lookup behind getFollowers(), it
+      // does not make the extra call for it. The navbar already loads it into its own signal, so
+      // that is where the viewer's own row borrows it from instead.
+      byId.set(me.id, { ...me, color: me.color ?? this.twitch.chatColor() });
 
       const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
       const matches: Map<string, number> = await this.matchesAgainst(me.id, results);
