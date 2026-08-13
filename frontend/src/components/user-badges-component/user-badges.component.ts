@@ -33,6 +33,14 @@ import { isBotUser } from '../../data/bot-users';
       padding: 0;
       list-style: none;
     }
+
+    // The badge is an inline-flex box, and this is the only block left in the chain — so it lands
+    // in a line box and picks up its strut: three pixels of leading that make the row 21px tall
+    // for an 18px icon and leave the badge sitting below the centre of the avatar beside it. Flex
+    // blockifies the badge, and the line box it was being measured against goes with it.
+    .user-badges li {
+      display: flex;
+    }
   `,
 })
 export class UserBadgesComponent {
