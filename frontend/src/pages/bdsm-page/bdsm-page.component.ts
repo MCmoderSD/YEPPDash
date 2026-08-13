@@ -13,6 +13,7 @@ import { BdsmService } from '../../services/bdsm.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { BdsmMatchScore, BdsmResult, resultTakenAt, traitColor } from '../../data/bdsm-result';
+import { Broadcaster } from '../../data/broadcaster';
 import { FollowerProfile } from '../../data/follower';
 import { TwitchUser } from '../../data/twitch-user';
 
@@ -111,7 +112,7 @@ export class BdsmPageComponent {
   }
 
   private async loadCommunity(): Promise<void> {
-    const me: TwitchUser | null = this.auth.currentUser();
+    const me: Broadcaster | null = this.auth.currentUser();
     if (!me) return;
 
     this.communityRequested = true;
@@ -124,11 +125,7 @@ export class BdsmPageComponent {
       // their channel's list.
       const followers: FollowerProfile[] = await this.twitch.getFollowers();
       const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
-
-      // /auth/me never carries a chat colour — unlike the profile lookup behind getFollowers(), it
-      // does not make the extra call for it. The navbar already loads it into its own signal, so
-      // that is where the viewer's own row borrows it from instead.
-      byId.set(me.id, { ...me, color: me.color ?? this.twitch.chatColor() });
+      byId.set(me.id, me);
 
       const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
       const matches: Map<string, number> = await this.matchesAgainst(me.id, results);

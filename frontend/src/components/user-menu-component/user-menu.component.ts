@@ -12,9 +12,8 @@ import { AuthService } from '../../services/auth.service';
 import { faqLink } from '../../services/dash-host';
 import { BirthdayService } from '../../services/birthday.service';
 import { NotificationService } from '../../services/notification.service';
-import { TwitchService } from '../../services/twitch.service';
 import { Birthday, BirthdayDraft, birthdayToDate } from '../../data/birthday';
-import { TwitchUser } from '../../data/twitch-user';
+import { Broadcaster } from '../../data/broadcaster';
 
 @Component({
   selector: 'app-user-menu',
@@ -25,16 +24,13 @@ import { TwitchUser } from '../../data/twitch-user';
 export class UserMenuComponent {
 
   private readonly auth: AuthService = inject(AuthService);
-  private readonly twitch: TwitchService = inject(TwitchService);
   private readonly birthdays: BirthdayService = inject(BirthdayService);
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  readonly user:InputSignal<TwitchUser> = input.required<TwitchUser>();
+  readonly user: InputSignal<Broadcaster> = input.required<Broadcaster>();
 
   protected readonly faqUrl: string | null = faqLink();
-
-  protected readonly chatColor: Signal<string | null> = this.twitch.chatColor;
 
   private readonly stored: WritableSignal<Birthday | null> = signal<Birthday | null>(null);
 
