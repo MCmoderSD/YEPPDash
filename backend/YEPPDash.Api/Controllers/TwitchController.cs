@@ -41,22 +41,6 @@ public sealed class TwitchController(
     }
 
 
-    [HttpGet("chat-color/{userId?}")]
-    public async Task<IActionResult> GetChatColor(string? userId, CancellationToken cancellationToken)
-    {
-        var twitchId = User.GetTwitchId();
-        if (twitchId is null) return Unauthorized();
-
-        try
-        {
-            var color = await channelService.GetChatColorAsync(twitchId, userId ?? twitchId, cancellationToken);
-            return color is null ? NotFound() : Ok(new ChatColorResponse(color.UserId, color.Color));
-        }
-        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
-        {
-            return HandleTwitchFailure(exception, $"read the chat colour of {userId ?? twitchId}");
-        }
-    }
     #endregion
 
 

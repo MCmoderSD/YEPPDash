@@ -13,14 +13,6 @@ public sealed class TwitchChannelService(
 ) {
 
     #region Users
-    public async Task<TwitchChatColor?> GetChatColorAsync(string twitchUserId, string targetUserId, CancellationToken cancellationToken)
-    {
-        var accessToken = await GetAccessTokenAsync(twitchUserId, cancellationToken);
-        var colors = await apiClient.GetChatColorsAsync([targetUserId], accessToken, cancellationToken);
-
-        return colors.FirstOrDefault();
-    }
-
     public async Task<IReadOnlyList<TwitchUser>> GetUsersAsync(string twitchUserId, IReadOnlyCollection<string> userIds, IReadOnlyCollection<string> logins, CancellationToken cancellationToken)
     {
         if (userIds.Count + logins.Count is 0) return [];
