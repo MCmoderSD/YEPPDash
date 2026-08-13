@@ -43,7 +43,12 @@
 
           <mat-accordion class="bdsm-page-results" multi="true">
             @for (entry of entries(); track entry.result.id) {
-              <mat-expansion-panel [expanded]="$first">
+              <mat-expansion-panel
+                class="bdsm-page-panel"
+                [class.bdsm-page-panel-open]="panel.expanded"
+                [expanded]="$first"
+                #panel
+              >
 
                 <mat-expansion-panel-header>
                   <mat-panel-title>
@@ -95,7 +100,11 @@
         @if (community().length) {
           <mat-accordion class="bdsm-page-results" multi="true">
             @for (entry of community(); track entry.result.id) {
-              <mat-expansion-panel>
+              <mat-expansion-panel
+                class="bdsm-page-panel"
+                [class.bdsm-page-panel-open]="panel.expanded"
+                #panel
+              >
 
                 <mat-expansion-panel-header>
                   <mat-panel-title class="bdsm-page-user">

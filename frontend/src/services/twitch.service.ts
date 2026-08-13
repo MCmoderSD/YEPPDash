@@ -1,6 +1,5 @@
 import { HttpParams } from '@angular/common/http';
-import { Service, signal, Signal, WritableSignal } from '@angular/core';
-import { ChatColor } from '../data/chat-color';
+import { Service } from '@angular/core';
 import { Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
@@ -12,19 +11,6 @@ export class TwitchService extends ApiService {
 
   constructor() {
     super('twitch');
-  }
-
-  private readonly color: WritableSignal<string | null> = signal<string | null>(null);
-
-  readonly chatColor: Signal<string | null> = this.color.asReadonly();
-
-  async loadChatColor(): Promise<void> {
-    try {
-      const response: ChatColor = await this.get<ChatColor>('chat-color');
-      this.color.set(response.color);
-    } catch {
-      this.color.set(null);
-    }
   }
 
   getUsers(userIds: readonly string[] = [], logins: readonly string[] = []): Promise<TwitchUser[]> {

@@ -13,6 +13,7 @@ import { BdsmService } from '../../services/bdsm.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { BdsmMatchScore, BdsmResult, resultTakenAt, traitColor } from '../../data/bdsm-result';
+import { Broadcaster } from '../../data/broadcaster';
 import { FollowerProfile } from '../../data/follower';
 import { TwitchUser } from '../../data/twitch-user';
 
@@ -111,7 +112,7 @@ export class BdsmPageComponent {
   }
 
   private async loadCommunity(): Promise<void> {
-    const me: TwitchUser | null = this.auth.currentUser();
+    const me: Broadcaster | null = this.auth.currentUser();
     if (!me) return;
 
     this.communityRequested = true;

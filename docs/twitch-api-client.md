@@ -101,7 +101,6 @@ lookup, 100 rows per page — are the backend's problem: it splits and walks, th
 
 | Backend route | Frontend method | Returns | Notes |
 |---|---|---|---|
-| `GET twitch/chat-color/{userId?}` | `loadChatColor()` | `ChatColor` | The signed-in user's own colour, shown in the navbar. Everything else reads `color` off the user objects below |
 | `GET twitch/users?id=&login=` | `getUsers(userIds, logins)` | `TwitchUser[]` | Any number of ids and logins; the service splits them into batches of 100 and merges the answers. Each user arrives complete — chat colour and channel roles (`roles`) already on it |
 | `GET twitch/moderators` | `getModerators()` | `Moderator[]` | Full user profiles — avatar, colour, roles and all — assembled server-side: one Get Users and one Get User Chat Color batch per 100 entries, and the role flags settled against the cached moderator/VIP lists plus one editors call |
 | `GET twitch/moderators/check?id=` | `getModeratorsById(ids)` / `isModerator(id)` | `Moderator[]` / `boolean` | Membership check for any number of users; batched server-side. Answers with the same full profiles the list route does, so a check and a list are interchangeable to the caller. Uncached — it asks about specific users rather than completing a list |

@@ -1,7 +1,6 @@
-import { Injectable, computed, inject, signal, Signal, WritableSignal } from "@angular/core";
+import { Injectable, computed, signal, Signal, WritableSignal } from "@angular/core";
 import { environment } from '../environments/environment';
-import { TwitchUser } from '../data/twitch-user';
-import { TwitchService } from './twitch.service';
+import { Broadcaster } from '../data/broadcaster';
 import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -11,12 +10,10 @@ export class AuthService extends ApiService {
     super('auth');
   }
 
-  private readonly twitch: TwitchService = inject(TwitchService);
-
-  private readonly user: WritableSignal<TwitchUser | null> = signal<TwitchUser | null>(null);
+  private readonly user: WritableSignal<Broadcaster | null> = signal<Broadcaster | null>(null);
   private readonly loaded: WritableSignal<boolean> = signal(false);
 
-  readonly currentUser: Signal<TwitchUser | null> = this.user.asReadonly();
+  readonly currentUser: Signal<Broadcaster | null> = this.user.asReadonly();
   readonly isAuthenticated: Signal<boolean> = computed((): boolean => this.user() !== null);
 
   loginUrl(returnPath: string): string {
@@ -29,13 +26,11 @@ export class AuthService extends ApiService {
     this.user.set(null);
   }
 
-  async ensureLoaded(): Promise<TwitchUser | null> {
+  async ensureLoaded(): Promise<Broadcaster | null> {
     if (this.loaded()) return this.user();
 
     try {
-      const info: TwitchUser = await this.get<TwitchUser>('me');
-      this.user.set(info);
-      void this.twitch.loadChatColor();
+      this.user.set(await this.get<Broadcaster>('me'));
     } catch {
       this.user.set(null);
     } finally {

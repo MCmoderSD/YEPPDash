@@ -36,19 +36,41 @@ public sealed class TwitchAuthService(
         return (BuildPrincipal(twitchUser), twitchUser);
     }
 
-    public async Task<TwitchUser?> GetCurrentUserAsync(string twitchUserId, CancellationToken cancellationToken)
+    public async Task<Broadcaster?> GetCurrentUserAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var token = await GetValidTokenAsync(twitchUserId, cancellationToken);
         if (token is null) return null;
 
         try
         {
-            return await apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
+            // Started together rather than one after the other: the colour is looked up by id, and
+            // the id came out of the auth cookie, so it does not have to wait for the profile. Two
+            // requests cost what the one used to.
+            var profile = apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
+            var color = ChatColorAsync(twitchUserId, token.AccessToken, cancellationToken);
+
+            return Broadcaster.From(await profile, await color);
         }
         catch (TwitchOAuthException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
         {
             logger.LogWarning("Stored token for {TwitchId} was rejected by Twitch, dropping it", twitchUserId);
             await tokenStore.DeleteAsync(twitchUserId, cancellationToken);
+            return null;
+        }
+    }
+
+    // A missing colour is not a reason to fail the session — the name simply renders in the default
+    // text colour, which is what happens for everyone who never picked one anyway.
+    private async Task<string?> ChatColorAsync(string twitchUserId, string accessToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var colors = await apiClient.GetChatColorsAsync([twitchUserId], accessToken, cancellationToken);
+            return colors.Count is 0 ? null : colors[0].Color;
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            logger.LogDebug(exception, "Could not read the chat colour of {TwitchId}", twitchUserId);
             return null;
         }
     }
