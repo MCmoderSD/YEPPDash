@@ -46,6 +46,10 @@
   // wraps — and where it wraps is what decides whether the bar is needed at all.
   textarea {
     padding-inline-end: 0.75rem;
+
+    // ResizeGripComponent draws and drags the corner instead — see the note there for why the
+    // native one could not stay.
+    resize: none;
   }
 }
 

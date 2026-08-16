@@ -16,6 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { ResizeGripComponent } from '../resize-grip-component/resize-grip.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import {
   cleanTrigger,
@@ -39,7 +40,7 @@ import {
   selector: 'app-command-edit',
   templateUrl: './command-edit.component.html',
   styleUrl: './command-edit.component.scss',
-  imports: [MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, ScrollBarComponent],
+  imports: [MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, ScrollBarComponent, ResizeGripComponent],
 })
 export class CommandEditComponent {
 

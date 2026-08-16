@@ -110,6 +110,7 @@
   </mat-form-field>
 
   <app-scroll-bar [target]="reply"/>
+  <app-resize-grip [target]="reply"/>
 
   <div class="command-edit-actions">
     <button mat-button type="button" [disabled]="busy()" (click)="cancel.emit()">Cancel</button>
