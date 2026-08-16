@@ -9,7 +9,7 @@
 @if (chrome()) {
   <app-notifications/>
 
-  <app-footer/>
+  <app-footer #footer/>
 
-  <app-page-scroll-bar/>
+  <app-page-scroll-bar [endsAbove]="footerElement()"/>
 }

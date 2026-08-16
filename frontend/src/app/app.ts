@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, Signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, Signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -29,4 +29,15 @@ export class App {
   );
 
   protected readonly chrome: Signal<boolean> = computed((): boolean => !isWheelOverlayUrl(this.url()));
+
+  // Handed to the page's scroll bar so it can stop above the footer instead of running behind it.
+  // Resolved here rather than looked up from inside that component: this is the one place that
+  // knows what the page is made of, and the bar stays usable without a footer at all.
+  // `read` matters: a bare viewChild on a component's element hands back the component instance,
+  // not the element it sits on, and the type annotation alone would not say so.
+  private readonly footer: Signal<ElementRef<HTMLElement> | undefined> =
+    viewChild('footer', { read: ElementRef });
+
+  protected readonly footerElement: Signal<HTMLElement | null> =
+    computed((): HTMLElement | null => this.footer()?.nativeElement ?? null);
 }
