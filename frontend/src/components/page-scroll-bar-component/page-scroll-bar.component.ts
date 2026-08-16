@@ -4,7 +4,10 @@ import {
   Component,
   computed,
   DestroyRef,
+  ElementRef,
   inject,
+  input,
+  InputSignal,
   NgZone,
   Signal,
   signal,
@@ -47,10 +50,17 @@ const NO_POINTER = '(pointer: coarse), (hover: none)';
     'aria-hidden': 'true',
     '[class.page-scroll-bar-revealed]': 'revealed()',
     '[class.page-scroll-bar-dragging]': 'dragging()',
+    '[style.bottom.px]': 'footerInset()',
   },
 })
 export class PageScrollBarComponent {
 
+  // The element the bar has to stop above once it comes into view — the footer, which is in the
+  // ordinary flow at the end of the document rather than pinned anywhere, so how much of it is on
+  // screen changes with every scroll and can only be measured.
+  readonly endsAbove: InputSignal<HTMLElement | null> = input<HTMLElement | null>(null);
+
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly document: Document = inject(DOCUMENT);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
   private readonly zone: NgZone = inject(NgZone);
@@ -58,6 +68,13 @@ export class PageScrollBarComponent {
   private readonly scrollTop: WritableSignal<number> = signal(0);
   private readonly scrollHeight: WritableSignal<number> = signal(0);
   private readonly viewportHeight: WritableSignal<number> = signal(0);
+
+  // How tall the band between the navbar and the footer currently is. Read back off this element
+  // rather than worked out here: where the bar starts is CSS's business, and reading it means the
+  // navbar's height stays stated in exactly one place.
+  private readonly trackHeight: WritableSignal<number> = signal(0);
+
+  protected readonly footerInset: WritableSignal<number> = signal(0);
 
   private readonly pointerNear: WritableSignal<boolean> = signal(false);
   private readonly pointerOnBar: WritableSignal<boolean> = signal(false);
@@ -70,8 +87,10 @@ export class PageScrollBarComponent {
   private grabbedAt = 0;
   private grabbedScrollTop = 0;
 
+  // The track is the band the bar is drawn in, which is shorter than the viewport it scrolls: the
+  // thumb has less room to travel than the page has to move, and the two are told apart here.
   protected readonly axis: Signal<ScrollBarAxis> = computed((): ScrollBarAxis => scrollBarAxis(
-    this.viewportHeight(), this.viewportHeight(), this.scrollHeight(), this.scrollTop(),
+    this.trackHeight(), this.viewportHeight(), this.scrollHeight(), this.scrollTop(),
   ));
 
   // Only worth drawing where there is a pointer that could reach for it and something to scroll.
@@ -225,5 +244,19 @@ export class PageScrollBarComponent {
     this.scrollTop.set(root.scrollTop);
     this.scrollHeight.set(root.scrollHeight);
     this.viewportHeight.set(root.clientHeight);
+
+    // Whatever the navbar leaves above the bar. Read off the element's own top rather than from the
+    // token behind it, so where the band starts stays CSS's to decide and is stated once.
+    const bandTop: number = this.host.nativeElement.getBoundingClientRect().top;
+
+    // The footer is in the ordinary flow at the end of the document, so it is only ever in the way
+    // once it has scrolled up into the viewport — which is what this measures.
+    const footer: HTMLElement | null = this.endsAbove();
+    const inset: number = footer
+      ? Math.max(0, root.clientHeight - footer.getBoundingClientRect().top)
+      : 0;
+
+    this.footerInset.set(inset);
+    this.trackHeight.set(Math.max(0, root.clientHeight - bandTop - inset));
   }
 }

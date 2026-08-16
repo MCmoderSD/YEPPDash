@@ -25,7 +25,7 @@ builder.Services.AddCors(options => options.AddPolicy(frontendCorsPolicy, policy
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
 builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
 builder.Services.AddYeppBot(builder.Configuration, dbTarget);
-// Constructed here rather than by the container so uptime is measured from startup, not from the
+// Constructed here rather than by the container, so uptime is measured from startup, not from the
 // first request that happens to ask for it.
 builder.Services.AddSingleton(new UptimeTracker());
 builder.Services.AddSingleton<TwitchChannelCache>();

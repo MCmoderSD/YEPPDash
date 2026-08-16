@@ -1,3 +1,5 @@
+name: YEPPDash
+
 services:
   backend:
     image: mcmodersd/yeppdash:backend-latest
@@ -7,11 +9,14 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       DbTarget: ${DB_TARGET:-Dev}
-      ConnectionStrings__HelixDev: ${CONNECTIONSTRINGS__HELIXDEV}
-      ConnectionStrings__HelixProd: ${CONNECTIONSTRINGS__HELIXPROD}
-      ConnectionStrings__YeppDashProd: ${CONNECTIONSTRINGS__YEPPDASHPROD}
-      Twitch__ClientIdProd: ${TWITCH__CLIENTIDPROD}
-      Twitch__ClientSecretProd: ${TWITCH__CLIENTSECRETPROD}
+      ConnectionStrings__HelixDev: ${CONNECTIONSTRINGS__HELIXDEV:-}
+      ConnectionStrings__HelixProd: ${CONNECTIONSTRINGS__HELIXPROD:-}
+      ConnectionStrings__YeppDashDev: ${CONNECTIONSTRINGS__YEPPDASHDEV:-}
+      ConnectionStrings__YeppDashProd: ${CONNECTIONSTRINGS__YEPPDASHPROD:-}
+      Twitch__ClientIdDev: ${TWITCH__CLIENTIDDEV:-}
+      Twitch__ClientIdProd: ${TWITCH__CLIENTIDPROD:-}
+      Twitch__ClientSecretDev: ${TWITCH__CLIENTSECRETDEV:-}
+      Twitch__ClientSecretProd: ${TWITCH__CLIENTSECRETPROD:-}
       Twitch__RedirectUri: ${TWITCH__REDIRECTURI}
       AllowedFrontendOrigins__0: ${ALLOWEDFRONTENDORIGINS__0}
       AllowedFrontendOrigins__1: ${ALLOWEDFRONTENDORIGINS__1}

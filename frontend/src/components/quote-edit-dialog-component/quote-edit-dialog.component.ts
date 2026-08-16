@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { ResizeGripComponent, RESIZE_GRIP_SIZE } from '../resize-grip-component/resize-grip.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { Quote } from '../../data/quote';
 
@@ -16,7 +17,7 @@ export interface QuoteEditDialogData {
   selector: 'app-quote-edit-dialog',
   templateUrl: './quote-edit-dialog.component.html',
   styleUrl: './quote-edit-dialog.component.scss',
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, ScrollBarComponent],
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, ScrollBarComponent, ResizeGripComponent],
 })
 export class QuoteEditDialogComponent {
 
@@ -25,6 +26,8 @@ export class QuoteEditDialogComponent {
   private readonly data: QuoteEditDialogData = inject<QuoteEditDialogData>(MAT_DIALOG_DATA);
 
   protected readonly maxLength: number = QUOTE_MAX_LENGTH;
+
+  protected readonly gripSize: number = RESIZE_GRIP_SIZE;
 
   protected readonly editing: boolean = this.data.quote !== null;
 

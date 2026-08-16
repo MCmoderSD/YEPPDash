@@ -31,8 +31,8 @@ YEPPDash/
 ├── backend/           # ASP.NET Core 10 Web API (Rider project)
 ├── frontend/          # Angular 22 + Material SSR app (WebStorm project)
 ├── docs/              # API client docs
-├── docker-compose.yml # local dev only: backend + frontend, ports published directly, no reverse proxy
-└── .env.example       # template for the gitignored .env (DB connection strings)
+├── docker-compose.yaml # local dev only: backend + frontend, ports published directly, no reverse proxy
+└── .env.example        # template for the gitignored .env (DB connection strings)
 ```
 
 Reverse proxying (Caddy) is not part of this repo — it's handled by the operator's separate, existing Caddy setup, which routes `dash.yeppbot.com`/`.dev` to the frontend and `api.yeppbot.com`/`.dev` to the backend.

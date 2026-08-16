@@ -16,8 +16,9 @@ public sealed class WheelSubscription(ChannelReader<string> reader, Action relea
 public sealed class WheelHub
 {
     private const int Backlog = 32;
-
-    private readonly ConcurrentDictionary<int, ConcurrentDictionary<Guid, Channel<string>>> _listeners = new();
+    
+    private readonly ConcurrentDictionary<Guid, Listener> _listeners = new();
+    private readonly record struct Listener(int ChannelId, Channel<string> Queue);
 
     public WheelSubscription Subscribe(int channelId)
     {
@@ -28,29 +29,21 @@ public sealed class WheelHub
             SingleReader = true,
         });
 
-        _listeners.GetOrAdd(channelId, _ => new ConcurrentDictionary<Guid, Channel<string>>()).TryAdd(id, queue);
+        _listeners[id] = new Listener(channelId, queue);
 
-        return new WheelSubscription(queue.Reader, () => Release(channelId, id));
+        return new WheelSubscription(queue.Reader, () => Release(id));
     }
 
     public void Publish(int channelId, string payload)
     {
-        if (!_listeners.TryGetValue(channelId, out var group)) return;
-
-        foreach (var queue in group.Values) queue.Writer.TryWrite(payload);
+        foreach (var (_, listener) in _listeners)
+        {
+            if (listener.ChannelId == channelId) listener.Queue.Writer.TryWrite(payload);
+        }
     }
 
-    public int ListenerCount(int channelId)
+    private void Release(Guid id)
     {
-        return _listeners.TryGetValue(channelId, out var group) ? group.Count : 0;
-    }
-
-    private void Release(int channelId, Guid id)
-    {
-        if (!_listeners.TryGetValue(channelId, out var group)) return;
-
-        group.TryRemove(id, out _);
-
-        if (group.IsEmpty) _listeners.TryRemove(channelId, out _);
+        _listeners.TryRemove(id, out _);
     }
 }

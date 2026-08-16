@@ -4,9 +4,19 @@
 // bare canvas colour there as a stripe down the edge of an otherwise dark page.
 :host {
   position: fixed;
-  top: 0;
+
+  // Starts below the navbar rather than at the viewport's edge, so the bar runs beside the content
+  // it scrolls instead of across the chrome that stays put. The navbar is sticky at top: 0 and
+  // sizes itself from this same token, so the two cannot disagree about its height — the pixel
+  // added on top is the border it carries underneath, which the bar should clear as well.
+  top: calc(var(--app-navbar-height) + 1px);
   right: 0;
+
+  // The floor is the viewport until the footer scrolls into view, at which point the component
+  // lifts it to the footer's top edge. Declared here as the resting value it spends most of its
+  // life at, and overridden from the host binding while the footer is on screen.
   bottom: 0;
+
   width: 0.75rem;
 
   // Above the page and its sticky chrome, below the CDK overlay: a dialog or a menu still wins.

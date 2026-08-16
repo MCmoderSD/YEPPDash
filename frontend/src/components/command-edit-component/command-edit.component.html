@@ -109,6 +109,9 @@
     </mat-hint>
   </mat-form-field>
 
+  <app-scroll-bar [target]="reply" [endInset]="gripSize"/>
+  <app-resize-grip [target]="reply"/>
+
   <div class="command-edit-actions">
     <button mat-button type="button" [disabled]="busy()" (click)="cancel.emit()">Cancel</button>
     <button mat-flat-button type="submit" [disabled]="!canSave()">

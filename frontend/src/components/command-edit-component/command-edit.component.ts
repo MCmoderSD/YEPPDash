@@ -1,46 +1,24 @@
 import { COMMA, ENTER, SPACE } from '@angular/cdk/keycodes';
-import {
-  Component,
-  computed,
-  input,
-  InputSignal,
-  linkedSignal,
-  output,
-  OutputEmitterRef,
-  Signal,
-  WritableSignal,
-} from '@angular/core';
+import { Component, computed, input, InputSignal, linkedSignal, output, OutputEmitterRef, Signal, WritableSignal, } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import {
-  cleanTrigger,
-  COMMAND_MAX_LENGTH,
-  CommandResponseType,
-  CommandUserLevel,
-  CustomCommand,
-  CustomCommandDraft,
-  DEFAULT_RESPONSE_TYPE,
-  DEFAULT_USER_LEVEL,
-  isValidTrigger,
-  joinAliases,
-  RESPONSE_TYPE_LABELS,
-  RESPONSE_TYPES,
-  sameTrigger,
-  USER_LEVEL_LABELS,
-  USER_LEVELS,
-} from '../../data/custom-command';
+import { ResizeGripComponent, RESIZE_GRIP_SIZE } from '../resize-grip-component/resize-grip.component';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { cleanTrigger, COMMAND_MAX_LENGTH, CommandResponseType, CommandUserLevel, CustomCommand, CustomCommandDraft, DEFAULT_RESPONSE_TYPE, DEFAULT_USER_LEVEL, isValidTrigger, joinAliases, RESPONSE_TYPE_LABELS, RESPONSE_TYPES, sameTrigger, USER_LEVEL_LABELS, USER_LEVELS } from '../../data/custom-command';
 
 @Component({
   selector: 'app-command-edit',
   templateUrl: './command-edit.component.html',
   styleUrl: './command-edit.component.scss',
-  imports: [MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
+  imports: [MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, ScrollBarComponent, ResizeGripComponent],
 })
 export class CommandEditComponent {
+
+  protected readonly gripSize: number = RESIZE_GRIP_SIZE;
 
   readonly command: InputSignal<CustomCommand | null> = input<CustomCommand | null>(null);
 
