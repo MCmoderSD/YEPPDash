@@ -89,6 +89,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         description: 'Follower birthdays, so none goes unnoticed.',
         path: `${BASE}/birthdays`,
       },
+      {
+        label: 'Raids',
+        icon: 'diversity_1',
+        description: 'Who raided the channel, with how many, and when.',
+        path: `${BASE}/raids`,
+      },
     ],
   },
   {
