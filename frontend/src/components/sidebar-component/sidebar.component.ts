@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { filter, map } from 'rxjs';
+import { ScrollBarDirective } from '../scroll-bar-component/scroll-bar.directive';
 import { SidebarService } from '../../services/sidebar.service';
 import { groupForUrl, NAV_GROUPS, NavGroup, OVERVIEW_PATH } from '../../data/dash-nav';
 
@@ -31,7 +32,7 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
-  imports: [RouterLink, RouterLinkActive, MatIconModule],
+  imports: [RouterLink, RouterLinkActive, MatIconModule, ScrollBarDirective],
 })
 export class SidebarComponent {
 
