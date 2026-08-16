@@ -42,18 +42,6 @@ public sealed class WheelHub
         }
     }
 
-    public int ListenerCount(int channelId)
-    {
-        var count = 0;
-
-        foreach (var (_, listener) in _listeners)
-        {
-            if (listener.ChannelId == channelId) count++;
-        }
-
-        return count;
-    }
-
     private void Release(Guid id)
     {
         _listeners.TryRemove(id, out _);
