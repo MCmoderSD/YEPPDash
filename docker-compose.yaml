@@ -1,3 +1,5 @@
+name: YEPPDash
+
 services:
   backend:
     image: mcmodersd/yeppdash:backend-latest
@@ -7,9 +9,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       DbTarget: ${DB_TARGET:-Dev}
-      # The backend suffixes these four keys with DbTarget, so a run needs the whole set for
-      # whichever target it is on — the missing Dev half is why the documented default could not
-      # actually start. The set that is not in use stays empty and is never read.
       ConnectionStrings__HelixDev: ${CONNECTIONSTRINGS__HELIXDEV:-}
       ConnectionStrings__HelixProd: ${CONNECTIONSTRINGS__HELIXPROD:-}
       ConnectionStrings__YeppDashDev: ${CONNECTIONSTRINGS__YEPPDASHDEV:-}
