@@ -6,6 +6,9 @@
   flex-direction: column;
   gap: 1rem;
   padding: 1rem 1rem 0.5rem;
+
+  // The containing block for the scroll bar drawn over the message textarea.
+  position: relative;
 }
 
 // The four short fields pair off two to a line where there is room, and stack once there is not,
@@ -37,6 +40,13 @@
 // message is the body of the command, and the pickers are settings on it.
 .command-edit-message {
   margin-block-start: 0.75rem;
+
+  // Keeps the text clear of the scroll bar laid over the field's inner edge. Reserved at all times
+  // rather than only while the bar shows, because this padding is what decides where the text
+  // wraps — and where it wraps is what decides whether the bar is needed at all.
+  textarea {
+    padding-inline-end: 0.75rem;
+  }
 }
 
 .command-edit-error {
