@@ -27,8 +27,6 @@ export class QuoteEditDialogComponent {
 
   protected readonly maxLength: number = QUOTE_MAX_LENGTH;
 
-  // How much of the textarea's trailing corner the scroll bar has to leave to the resize grip
-  // drawn into it.
   protected readonly gripSize: number = RESIZE_GRIP_SIZE;
 
   protected readonly editing: boolean = this.data.quote !== null;
