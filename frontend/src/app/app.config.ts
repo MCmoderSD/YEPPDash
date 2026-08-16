@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideClientHydration } from '@angular/platform-browser';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { IMAGE_LOADER } from '@angular/common';
 import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
 
@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideClientHydration(),
-    provideHttpClient(),
+    provideHttpClient(withFetch()),
     provideRouter(routes, withComponentInputBinding()),
 
     { provide: TitleStrategy, useClass: PageMetaStrategy },
