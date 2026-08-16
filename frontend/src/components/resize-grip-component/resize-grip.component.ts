@@ -81,14 +81,12 @@ const NO_CORNER: GripCorner = { top: 0, left: 0 };
       color: var(--mat-sys-outline);
 
       transition: color var(--app-motion-fast) var(--app-ease);
-
-      &:hover {
-        color: var(--mat-sys-on-surface-variant);
-      }
     }
 
-    // Held in the brand colour for the whole drag, like the scroll bar thumb: the pointer spends
-    // most of one away from the corner, where :hover no longer holds.
+    // Takes the brand colour under the pointer and keeps it for the whole drag, which is mostly
+    // spent away from the corner where :hover no longer holds. The same rule and the same colour
+    // as both scroll bars, since the grip sits right beside one of them.
+    :host(:hover),
     :host(.resize-grip-dragging) {
       color: var(--mat-sys-primary);
     }

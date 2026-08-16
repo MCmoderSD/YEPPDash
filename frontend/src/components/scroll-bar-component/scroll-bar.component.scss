@@ -98,14 +98,13 @@
   inset-block: calc((var(--scroll-bar-size, 0.75rem) - var(--scroll-bar-thumb-size)) / 2);
 }
 
-.scroll-bar-track:hover .scroll-bar-thumb {
-  --scroll-bar-thumb-size: 0.5rem;
-
-  background: var(--mat-sys-on-surface-variant);
-}
-
-// Lit in the brand colour and held there for the whole drag: the pointer spends most of one well
-// away from the bar, where the hover rule above no longer holds.
+// Thickens and takes the brand colour under the pointer, and stays that way for the whole drag —
+// which is mostly spent with the pointer well away from the bar, where :hover no longer holds.
+//
+// One rule for both states rather than two, as in PageScrollBarComponent: they were separate here
+// and had drifted, leaving the page's bar going brand-coloured on hover while this one only went a
+// lighter grey and saved the colour for the drag.
+.scroll-bar-track:hover .scroll-bar-thumb,
 :host(.scroll-bar-dragging) .scroll-bar-thumb {
   --scroll-bar-thumb-size: 0.5rem;
 
