@@ -4,6 +4,7 @@ import { DashPageComponent } from './dash-page/dash-page.component';
 import { DashHomePageComponent } from './dash-home-page/dash-home-page.component';
 import { BdsmPageComponent } from './bdsm-page/bdsm-page.component';
 import { CommunityPageComponent } from './community-page/community-page.component';
+import { RaidPageComponent } from './raid-page/raid-page.component';
 import { CommandPageComponent } from './command-page/command-page.component';
 import { WheelPageComponent } from './wheel-page/wheel-page.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
@@ -21,6 +22,7 @@ export const DASH_ROUTES: Routes = [
       { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'community', component: CommunityPageComponent, title: 'Community' },
+      { path: 'raids', component: RaidPageComponent, title: 'Raid Overview' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
