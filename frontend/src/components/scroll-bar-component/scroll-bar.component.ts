@@ -141,6 +141,11 @@ export class ScrollBarComponent {
 
   readonly target: InputSignal<HTMLElement> = input.required<HTMLElement>();
 
+  // Room to leave free at the far end of both bars, in pixels, on top of the corner they already
+  // keep clear of each other. Set where something else is drawn into that same corner — a resize
+  // grip — so the track stops short of it rather than running underneath.
+  readonly endInset: InputSignal<number> = input(0);
+
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly zone: NgZone = inject(NgZone);
   private readonly document: Document = inject(DOCUMENT);
@@ -383,15 +388,19 @@ export class ScrollBarComponent {
 
     this.box.set(this.boxOf(target));
 
+    // Both tracks start at the leading edge and are sized from there, so what a shorter one gives
+    // up is the trailing end — which is the corner being kept clear.
+    const inset: number = this.endInset();
+
     this.vertical.set(scrollBarAxis(
-      target.clientHeight - (needsHorizontal ? thickness : 0),
+      target.clientHeight - (needsHorizontal ? thickness : 0) - inset,
       target.clientHeight,
       target.scrollHeight,
       target.scrollTop,
     ));
 
     this.horizontal.set(scrollBarAxis(
-      target.clientWidth - (needsVertical ? thickness : 0),
+      target.clientWidth - (needsVertical ? thickness : 0) - inset,
       target.clientWidth,
       target.scrollWidth,
       target.scrollLeft,

@@ -14,7 +14,10 @@ import {
 
 // The side of the square the grip occupies, in pixels. Matched to the native resizer it replaces:
 // small enough to stay out of the way of the text, large enough to be aimed at.
-const GRIP_SIZE = 14;
+//
+// Exported because whoever draws a scroll bar over the same element has to keep this much of the
+// corner free — see the endInset input on ScrollBarComponent.
+export const RESIZE_GRIP_SIZE = 14;
 
 // Nothing useful is left of a text box shorter than this, and a drag that can collapse one to a
 // sliver is a drag that can lose the caret off the bottom of it.
@@ -48,6 +51,11 @@ const NO_CORNER: GripCorner = { top: 0, left: 0 };
     'aria-hidden': 'true',
     '[style.top.px]': 'corner().top',
     '[style.left.px]': 'corner().left',
+
+    // Sized from the same constant the corner is measured with, rather than restated in the CSS
+    // below where the two could drift apart.
+    '[style.width.px]': 'size',
+    '[style.height.px]': 'size',
     '[class.resize-grip-dragging]': 'dragging()',
     '(pointerdown)': 'grab($event)',
   },
@@ -65,8 +73,6 @@ const NO_CORNER: GripCorner = { top: 0, left: 0 };
       z-index: 3;
 
       display: flex;
-      width: 14px;
-      height: 14px;
 
       // Vertical only. The width belongs to the form field the box sits in, and a text box dragged
       // narrower than its own label reads as broken rather than as resized.
@@ -107,6 +113,8 @@ const NO_CORNER: GripCorner = { top: 0, left: 0 };
 export class ResizeGripComponent {
 
   readonly target: InputSignal<HTMLElement> = input.required<HTMLElement>();
+
+  protected readonly size: number = RESIZE_GRIP_SIZE;
 
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly zone: NgZone = inject(NgZone);
@@ -241,8 +249,8 @@ export class ResizeGripComponent {
       const view: (Window & typeof globalThis) | null = this.document.defaultView;
 
       this.corner.set({
-        top: bottom - GRIP_SIZE + (view?.scrollY ?? 0),
-        left: right - GRIP_SIZE + (view?.scrollX ?? 0),
+        top: bottom - RESIZE_GRIP_SIZE + (view?.scrollY ?? 0),
+        left: right - RESIZE_GRIP_SIZE + (view?.scrollX ?? 0),
       });
 
       return;
@@ -253,8 +261,8 @@ export class ResizeGripComponent {
     // An absolutely positioned element starts at its offset parent's padding box, and that box
     // travels with the parent's content — hence subtracting the border and adding the scroll.
     this.corner.set({
-      top: bottom - origin.top - parent.clientTop + parent.scrollTop - GRIP_SIZE,
-      left: right - origin.left - parent.clientLeft + parent.scrollLeft - GRIP_SIZE,
+      top: bottom - origin.top - parent.clientTop + parent.scrollTop - RESIZE_GRIP_SIZE,
+      left: right - origin.left - parent.clientLeft + parent.scrollLeft - RESIZE_GRIP_SIZE,
     });
   }
 }

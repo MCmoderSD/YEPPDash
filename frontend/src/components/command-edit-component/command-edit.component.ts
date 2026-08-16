@@ -16,7 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { ResizeGripComponent } from '../resize-grip-component/resize-grip.component';
+import { ResizeGripComponent, RESIZE_GRIP_SIZE } from '../resize-grip-component/resize-grip.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import {
   cleanTrigger,
@@ -43,6 +43,10 @@ import {
   imports: [MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, ScrollBarComponent, ResizeGripComponent],
 })
 export class CommandEditComponent {
+
+  // How much of the message box's trailing corner the scroll bar has to leave to the resize grip
+  // drawn into it.
+  protected readonly gripSize: number = RESIZE_GRIP_SIZE;
 
   readonly command: InputSignal<CustomCommand | null> = input<CustomCommand | null>(null);
 

@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ResizeGripComponent } from '../resize-grip-component/resize-grip.component';
+import { ResizeGripComponent, RESIZE_GRIP_SIZE } from '../resize-grip-component/resize-grip.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { Quote } from '../../data/quote';
 
@@ -26,6 +26,10 @@ export class QuoteEditDialogComponent {
   private readonly data: QuoteEditDialogData = inject<QuoteEditDialogData>(MAT_DIALOG_DATA);
 
   protected readonly maxLength: number = QUOTE_MAX_LENGTH;
+
+  // How much of the textarea's trailing corner the scroll bar has to leave to the resize grip
+  // drawn into it.
+  protected readonly gripSize: number = RESIZE_GRIP_SIZE;
 
   protected readonly editing: boolean = this.data.quote !== null;
 

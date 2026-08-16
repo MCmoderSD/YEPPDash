@@ -1,5 +1,6 @@
-// Laid over the element it belongs to, sized to it from the component. Consumers can retune the
-// bar by setting --scroll-bar-size or --scroll-bar-inset on the <app-scroll-bar> element.
+// Laid over the element it belongs to, sized to it from the component. Consumers can retune how
+// thick the bar is with --scroll-bar-size on the <app-scroll-bar> element, and how much of the
+// trailing corner it keeps off with the endInset input.
 //
 // The bars stay out of sight until they are wanted: the component adds .scroll-bar-revealed once
 // the pointer nears the edge that carries one, while it is being dragged, or briefly after a
