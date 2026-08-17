@@ -89,6 +89,28 @@
         </li>
       </ul>
 
+      <!-- Only while the bot is actually in chat: it is the bot that shouts out, so out of the
+           channel the switch would promise something nothing is there to do. -->
+      @if (inChat() && shoutout()) {
+        <h2 class="bot-manage-heading">Settings</h2>
+
+        <ul class="bot-manage-settings">
+          <li class="bot-manage-setting">
+            <mat-icon class="bot-manage-icon" aria-hidden="true">campaign</mat-icon>
+            <span class="bot-manage-text">
+              {{ bot.displayName }} shouts out everyone who raids your channel.
+            </span>
+            <mat-slide-toggle
+              hideIcon="true"
+              [checked]="autoShoutout()"
+              [disabled]="busy()"
+              aria-label="Automatic shoutouts for raiders"
+              (change)="setAutoShoutout($event.checked)"
+            />
+          </li>
+        </ul>
+      }
+
     } @else if (loading()) {
 
       <div class="bot-manage-loading">

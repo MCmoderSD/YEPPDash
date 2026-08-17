@@ -60,7 +60,8 @@
   }
 }
 
-.bot-manage-issues {
+.bot-manage-issues,
+.bot-manage-settings {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -70,6 +71,7 @@
 }
 
 .bot-manage-issue,
+.bot-manage-setting,
 .bot-manage-healthy,
 .bot-manage-empty {
   display: flex;
@@ -78,7 +80,8 @@
   margin: 0;
 }
 
-.bot-manage-issue {
+.bot-manage-issue,
+.bot-manage-setting {
   padding: 0.75rem;
   border: var(--app-border);
   border-radius: var(--app-radius-md);
@@ -88,6 +91,12 @@
   @media (width < 30rem) {
     flex-wrap: wrap;
   }
+}
+
+// The switch is the row's control, where every other row has a button — kept at the same end so a
+// card of them reads as one column of actions rather than two.
+.bot-manage-setting mat-slide-toggle {
+  flex: none;
 }
 
 .bot-manage-text {
