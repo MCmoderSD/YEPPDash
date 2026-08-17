@@ -13,12 +13,12 @@ public sealed class ShoutoutRepository(MySqlConnection connection)
     {
         var row = await connection.QuerySingleOrDefaultAsync<ChannelRow>(
             new CommandDefinition(
-                "SELECT id, active, autoShoutout FROM Channel WHERE id = @channelId",
+                "SELECT id, autoShoutout FROM Channel WHERE id = @channelId",
                 new { channelId },
                 cancellationToken: cancellationToken)
             );
 
-        return row is null ? null : new ShoutoutSettings(row.Id, row.Active, row.AutoShoutout);
+        return row is null ? null : new ShoutoutSettings(row.Id, row.AutoShoutout);
     }
 
     public async Task<ShoutoutSettings?> SetAutoShoutoutAsync(int channelId, bool autoShoutout, CancellationToken cancellationToken)
@@ -38,7 +38,6 @@ public sealed class ShoutoutRepository(MySqlConnection connection)
     private sealed class ChannelRow
     {
         public int Id { get; init; }
-        public bool Active { get; init; }
         public bool AutoShoutout { get; init; }
     }
 }
