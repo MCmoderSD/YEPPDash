@@ -6,10 +6,10 @@
   position: fixed;
 
   // Starts below the navbar rather than at the viewport's edge, so the bar runs beside the content
-  // it scrolls instead of across the chrome that stays put. The navbar is sticky at top: 0 and
-  // sizes itself from this same token, so the two cannot disagree about its height — the pixel
-  // added on top is the border it carries underneath, which the bar should clear as well.
-  top: calc(var(--app-navbar-height) + 1px);
+  // it scrolls instead of across the chrome that stays put. The navbar is sticky at top: 0 and is
+  // what this token measures — bar plus the hairline it carries underneath — so the two cannot
+  // disagree about how much of the top is already spoken for.
+  top: var(--app-navbar-block);
   right: 0;
 
   // The floor is the viewport until the footer scrolls into view, at which point the component
