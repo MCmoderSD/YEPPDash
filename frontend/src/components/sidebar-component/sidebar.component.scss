@@ -3,17 +3,11 @@
 
   // The scroll bars are inserted as a sibling of the nav and positioned against the nearest
   // positioned ancestor, so without this they would be laid out against the drawer and land
-  // somewhere other than on the nav they belong to.
+  // somewhere other than on the nav they belong to. The pinning below replaces this with `sticky`,
+  // which is positioned as well — either way the bars have this element to measure from.
   position: relative;
 }
 
-// Ordinary flow, deliberately: the navigation is part of the page between the navbar and the
-// footer and scrolls with it, rather than being pinned under the navbar and holding still while
-// the content moves.
-//
-// Pinning it also meant giving it a viewport-height cap, and the drawer is as tall as the content
-// column beside it — so on a short page the nav was left standing in a tall empty drawer with the
-// gap showing above the first entry.
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -29,6 +23,57 @@
   // `calc(var(--row) …)` would resolve against the nav's own --row and hand every row the same zero.
   // Only the step travels, and each row does its own arithmetic with the --row it carries.
   --stagger: 14ms;
+}
+
+// --- Pinned under the navbar -------------------------------------------------------------------
+
+// The navigation stays where the eye left it while the content column beside it moves, and runs its
+// own scroll once the list outgrows the band the navbar leaves of the viewport.
+//
+// The whole component sticks rather than the nav alone: the scroll bars are a sibling of that nav
+// and are positioned against this element, so moving the two together keeps the bar sitting on the
+// nav it belongs to at every scroll position, with nothing to re-measure on the way down the page.
+//
+// Sticky rather than fixed, on purpose. A sticky box may only travel inside its containing block,
+// which here is the drawer — and the drawer ends where the content column does, above the footer.
+// So the panel rides back up out of the way as the footer arrives instead of being parked over it,
+// and none of that has to be measured and fed back in.
+//
+// All of it hangs on `overflow: clip` in dash-page.component.scss: a sticky box holds against the
+// nearest scroll container, and while Material's shell is one with `overflow: hidden` this pins
+// itself to a box that never scrolls. That is not merely inert — the offset is still applied, and
+// the panel starts a navbar's height too far down the page. So the pinning is asked for only where
+// the shell can actually clip without becoming a scroll container, and everywhere else the panel is
+// left in the ordinary flow it was in before, scrolling with the page.
+@supports (overflow: clip) {
+  :host {
+    position: sticky;
+    top: var(--app-navbar-block);
+  }
+
+  // A maximum and not a height: a nav shorter than the band keeps its own size, so a short list does
+  // not end up standing in a tall empty panel with the gap showing under the last entry.
+  //
+  // The platform's bar is taken off this element and the app's own drawn over it by the appScrollBar
+  // directive in the template, which is why neither the drawer nor Material's wrapper inside it may
+  // catch the overflow first — see dash-page.component.scss and styles.scss.
+  .sidebar {
+    // vh first so an engine without dvh keeps a working cap rather than none at all, as in app.scss.
+    max-height: calc(100vh - var(--app-navbar-block));
+    max-height: calc(100dvh - var(--app-navbar-block));
+
+    overflow-y: auto;
+
+    // Nothing here is meant to scroll sideways, and the rail transition briefly overruns its own
+    // width on the way between the two shapes — left to `auto` that flickers a horizontal bar in
+    // and out across the bottom of the panel every time the drawer collapses.
+    overflow-x: hidden;
+
+    // Reaching the end of the list stops there rather than handing the rest of the gesture on to
+    // the page underneath, which would otherwise carry on scrolling the content column while the
+    // pointer is still over the navigation.
+    overscroll-behavior: contain;
+  }
 }
 
 // --- Groups -----------------------------------------------------------------------------------

@@ -179,9 +179,13 @@ body {
 }
 
 // Material wraps a drawer's projected content in its own scrolling div, which would catch the
-// navigation's overflow and let it scroll independently of the page. The navigation belongs to the
-// page between the navbar and the footer, so that scroll has to reach the page instead. Scoped to
-// the dashboard's own drawer rather than every drawer in the app.
+// navigation's overflow before the nav itself could — leaving the platform's bar down the drawer's
+// edge while the app's own bar, drawn over the nav, had nothing left to report. The nav runs its
+// own scroll instead (see sidebar.component.scss), so this box has to stay out of the way.
+//
+// It is also the last scroll container between that nav and the page, and a sticky box holds
+// against the nearest one of those. With this visible the nav reaches the page's scroll, which is
+// what it is pinned to. Scoped to the dashboard's own drawer rather than every drawer in the app.
 //
 // It is global only because the element it applies to is created by Material, inside the drawer,
 // where neither the page nor the sidebar component's styles can reach it.
