@@ -56,8 +56,6 @@ export class BotManageComponent {
 
   protected readonly inChat: WritableSignal<boolean> = signal(false);
 
-  // Null while unread, and for a channel YEPPBot does not know yet — either way there is nothing to
-  // switch, so the row stays away rather than showing a control that would answer for no channel.
   protected readonly shoutout: WritableSignal<ShoutoutSettings | null> = signal<ShoutoutSettings | null>(null);
 
   protected readonly loading: WritableSignal<boolean> = signal(false);
@@ -126,9 +124,6 @@ export class BotManageComponent {
     return this.load(this.botUserId());
   }
 
-  // Moved before the request and put back if it fails, so the switch answers the click rather than
-  // the round trip. Not routed through act(): a setting the dashboard owns cannot change what Twitch
-  // says about the bot, so re-reading the whole status for it would spend five calls on nothing.
   protected async setAutoShoutout(autoShoutout: boolean): Promise<void> {
     const previous: ShoutoutSettings | null = this.shoutout();
     if (!previous) return;
@@ -173,8 +168,6 @@ export class BotManageComponent {
         this.twitch.getBlocked(),
         this.twitch.getModerators(),
         this.twitch.getChatters(),
-        // Caught here rather than with the rest: this one is a setting on the card, and it failing
-        // should cost its own row, not the whole status.
         this.shoutouts.getSettings().catch((): null => null)
       ]);
 

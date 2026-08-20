@@ -3,8 +3,6 @@ using YEPPDash.Api.Repositories;
 
 namespace YEPPDash.Api.Services;
 
-// The bot picks Channel up on its own schedule and its API has no reload for these settings the way
-// it has for custom commands, so a toggle is the database write and nothing more.
 public sealed class ShoutoutService(ShoutoutRepository repository, ILogger<ShoutoutService> logger)
 {
     public Task<ShoutoutSettings?> GetAsync(string channelId, CancellationToken cancellationToken)
@@ -19,8 +17,7 @@ public sealed class ShoutoutService(ShoutoutRepository repository, ILogger<Shout
 
         if (settings is not null)
         {
-            logger.LogInformation(
-                "Turned the auto shoutout of channel {ChannelId} {State}", id, autoShoutout ? "on" : "off");
+            logger.LogInformation("Turned the auto shoutout of channel {ChannelId} {State}", id, autoShoutout ? "on" : "off");
         }
 
         return settings;
@@ -28,11 +25,6 @@ public sealed class ShoutoutService(ShoutoutRepository repository, ILogger<Shout
 
     private static int ParseChannelId(string channelId)
     {
-        if (!int.TryParse(channelId, out var id))
-        {
-            throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId));
-        }
-
-        return id;
+        return !int.TryParse(channelId, out var id) ? throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId)) : id;
     }
 }
