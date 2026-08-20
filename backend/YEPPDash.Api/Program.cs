@@ -44,6 +44,8 @@ builder.Services.AddScoped<RaidRepository>();
 builder.Services.AddScoped<RaidService>();
 builder.Services.AddScoped<CustomCommandRepository>();
 builder.Services.AddScoped<CustomCommandService>();
+builder.Services.AddScoped<ShoutoutRepository>();
+builder.Services.AddScoped<ShoutoutService>();
 builder.Services.AddScoped<WheelRepository>();
 builder.Services.AddScoped<WheelService>();
 // Singleton: it is what holds the open overlay connections, which outlive any one request.

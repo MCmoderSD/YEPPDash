@@ -6,12 +6,15 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { AuthService } from '../../services/auth.service';
 import { BotResult, BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
+import { ShoutoutService } from '../../services/shoutout.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchUser } from '../../data/twitch-user';
 import { BanStatus } from '../../data/banned-user';
+import { ShoutoutSettings } from '../../data/shoutout';
 
 function contains(users: readonly TwitchUser[], userId: string): boolean {
   return users.some((user: TwitchUser): boolean => user.id === userId);
@@ -27,12 +30,13 @@ function reasonFor(error: unknown): string | null {
   selector: 'app-bot-manage',
   templateUrl: './bot-manage.component.html',
   styleUrl: './bot-manage.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, MatProgressSpinnerModule],
+  imports: [NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, MatProgressSpinnerModule, MatSlideToggleModule],
 })
 export class BotManageComponent {
 
   private readonly twitch: TwitchService = inject(TwitchService);
   private readonly botApi: BotService = inject(BotService);
+  private readonly shoutouts: ShoutoutService = inject(ShoutoutService);
   private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
 
@@ -52,6 +56,8 @@ export class BotManageComponent {
 
   protected readonly inChat: WritableSignal<boolean> = signal(false);
 
+  protected readonly shoutout: WritableSignal<ShoutoutSettings | null> = signal<ShoutoutSettings | null>(null);
+
   protected readonly loading: WritableSignal<boolean> = signal(false);
 
   protected readonly busy: WritableSignal<boolean> = signal(false);
@@ -59,6 +65,8 @@ export class BotManageComponent {
   protected readonly unreachable: WritableSignal<boolean> = signal(false);
 
   protected readonly botName: Signal<string> = computed((): string => this.bot()?.displayName ?? 'The bot');
+
+  protected readonly autoShoutout: Signal<boolean> = computed((): boolean => this.shoutout()?.autoShoutout ?? false);
 
   protected readonly healthy: Signal<boolean> = computed(
     (): boolean => !this.banned() && !this.blocked() && this.moderator() && this.inChat(),
@@ -116,6 +124,24 @@ export class BotManageComponent {
     return this.load(this.botUserId());
   }
 
+  protected async setAutoShoutout(autoShoutout: boolean): Promise<void> {
+    const previous: ShoutoutSettings | null = this.shoutout();
+    if (!previous) return;
+
+    this.shoutout.set({ ...previous, autoShoutout });
+    this.busy.set(true);
+
+    try {
+      this.shoutout.set(await this.shoutouts.setAutoShoutout(autoShoutout));
+      this.notifications.success(`Automatic shoutouts are ${autoShoutout ? 'on' : 'off'}.`);
+    } catch (error: unknown) {
+      this.shoutout.set(previous);
+      this.notifications.failure(reasonFor(error) ?? 'Could not change the automatic shoutouts.');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
   private async act(action: (channelId: string) => Promise<void>, success: string, failure: string): Promise<void> {
     const channelId: string | undefined = this.auth.currentUser()?.id;
     if (!channelId) return;
@@ -136,12 +162,13 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const [users, ban, blocked, moderators, chatters]: [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[]] = await Promise.all([
+      const [users, ban, blocked, moderators, chatters, shoutout]: [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[], ShoutoutSettings | null] = await Promise.all([
         this.twitch.getUsers([botUserId]),
         this.twitch.getBanStatus(botUserId),
         this.twitch.getBlocked(),
         this.twitch.getModerators(),
-        this.twitch.getChatters()
+        this.twitch.getChatters(),
+        this.shoutouts.getSettings().catch((): null => null)
       ]);
 
       this.bot.set(users[0] ?? null);
@@ -150,9 +177,11 @@ export class BotManageComponent {
       this.blocked.set(contains(blocked, botUserId));
       this.moderator.set(contains(moderators, botUserId));
       this.inChat.set(contains(chatters, botUserId));
+      this.shoutout.set(shoutout);
       this.unreachable.set(false);
     } catch {
       this.bot.set(null);
+      this.shoutout.set(null);
       this.unreachable.set(true);
       this.notifications.failure('Could not load the bot status.');
     } finally {
