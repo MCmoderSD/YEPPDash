@@ -7,6 +7,21 @@
   flex: 1;
   width: 100%;
   background: var(--mat-sys-surface);
+
+  // Material clips this box with `overflow: hidden`, which is how a shut drawer parked at
+  // translate3d(-100%) stays off the page instead of dragging a horizontal scroll bar across it.
+  // The cost is that `hidden` also makes the box a scroll container, and a sticky descendant sticks
+  // to the nearest one of those — so the navigation inside the drawer was pinning itself to a box
+  // that never scrolls, which is the same as not being pinned at all.
+  //
+  // `clip` clips exactly as `hidden` did but is explicitly not a scroll container, so the sticky
+  // nav reaches past it to the page's own scroll, which is what it is meant to hold still against.
+  //
+  // Both are declared, in this order, on purpose: an engine without `clip` drops that line and
+  // keeps `hidden`, where the drawer is still clipped and the nav simply scrolls with the page as
+  // it always did. That is the OBS browser among others.
+  overflow: hidden;
+  overflow: clip;
 }
 
 .dash-drawer {
@@ -23,9 +38,13 @@
   border-start-end-radius: 0;
   border-end-end-radius: 0;
 
-  // Material would otherwise make the drawer its own scrollport, which would let the navigation
-  // scroll independently of the page. It belongs to the page between the navbar and the footer, so
-  // it has to overflow into the page's scroll rather than catch it here.
+  // Material would otherwise make the drawer its own scrollport, which is one scroll container too
+  // many: the navigation inside runs its own scroll (see .sidebar) and draws the app's bar over it,
+  // while this box would catch the overflow first and show the platform's bar down the drawer's
+  // edge instead. Left visible, so what scrolls is the nav and nothing above it.
+  //
+  // It is also what lets that nav stick to the page's scroll rather than to the drawer, which
+  // holds still anyway — the same reason .dash-shell above clips rather than hides.
   overflow: visible;
 }
 

@@ -1,8 +1,18 @@
-.navbar {
+// The bar is pinned here rather than on the <header> inside it. A sticky box may only travel
+// within its own containing block, and the header's is this element — a flex item of the app shell
+// sized to exactly the bar it holds. Stuck to a box its own height it had nowhere to go, so it
+// scrolled away with the page like anything else. This element's containing block is the shell,
+// which spans the whole document, so from here the offset below actually has room to hold.
+:host {
+  display: block;
   position: sticky;
   top: 0;
-  z-index: 10;
 
+  // Over the page and its own sticky sidebar, under the page's scroll bar and the CDK overlay.
+  z-index: 10;
+}
+
+.navbar {
   // Slightly translucent so content scrolling underneath is visibly passing behind the bar rather
   // than disappearing at a hard line. The solid colour stays as the fallback wherever backdrop
   // filters are unsupported, which is the OBS browser among others.

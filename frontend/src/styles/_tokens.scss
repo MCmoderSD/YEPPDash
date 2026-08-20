@@ -89,6 +89,12 @@
   // Declared here rather than left to the navbar's own content, so the bar keeps one predictable
   // height instead of one that shifts with whatever it happens to hold.
   --app-navbar-height: 4rem;
+
+  // What the bar actually takes off the top of the page: its own height plus the hairline it
+  // carries underneath. Everything that pins itself below the navbar — the sidebar, the page's
+  // scroll bar — measures from this rather than each re-adding that pixel for itself, which is
+  // how the two used to end up a pixel apart whenever only one of them was retuned.
+  --app-navbar-block: calc(var(--app-navbar-height) + 1px);
 }
 
 // Honoured by every transition in the app. Kept as a mixin rather than repeated per component so
