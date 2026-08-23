@@ -1,0 +1,117 @@
+:host {
+  display: block;
+  padding: 0.75rem;
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  // Sized to sit inside a mat-menu, whose panel tops out at 280px.
+  width: 14rem;
+}
+
+// Seven equal tracks across the panel's full width with the swatch centred in each, so the rows
+// span edge to edge instead of huddling left — and any future count still lands centred.
+.picker-presets {
+  display: grid;
+  gap: 0.5rem 0;
+  grid-template-columns: repeat(7, 1fr);
+  justify-items: center;
+}
+
+.picker-preset {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+
+  &:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 2px var(--mat-sys-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+// A two-tone ring — panel colour first, then primary — so "which one is active" reads on any swatch,
+// including the white and black ones.
+.picker-preset-selected {
+  box-shadow:
+    0 0 0 2px var(--mat-sys-surface-container),
+    0 0 0 4px var(--mat-sys-primary);
+}
+
+// touch-action: none on both controls, or the first drag on a phone scrolls the menu instead of
+// moving the thumb — pointer capture only wins once the browser has agreed not to treat the gesture
+// as a scroll.
+.picker-area {
+  position: relative;
+  height: 8.5rem;
+  border-radius: 0.5rem;
+  cursor: crosshair;
+  touch-action: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+// White inner border with a dark outer ring: one of the two reads against any colour the thumb
+// happens to be sitting on. Painted in the picked colour itself, so it doubles as the preview.
+// pointer-events: none, or grabbing the thumb would steal the drag from the surface under it.
+.picker-thumb {
+  position: absolute;
+  inline-size: 1rem;
+  block-size: 1rem;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 60%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.picker-hue {
+  position: relative;
+  height: 0.875rem;
+  border-radius: 999px;
+
+  // The six corner points of the hue circle, evenly spaced, red at both ends to close the loop.
+  background: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
+  cursor: pointer;
+  touch-action: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.picker-hue-thumb {
+  position: absolute;
+  top: 50%;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 60%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
