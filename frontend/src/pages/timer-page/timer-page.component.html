@@ -1,0 +1,211 @@
+<section class="timer-page">
+
+  <header class="timer-page-header">
+    <h1 class="timer-page-title">Subathon Timer</h1>
+    <p class="timer-page-state">
+      @if (timer().running) {
+        Running — chat can add to it with !timer add
+      } @else {
+        Paused — nothing is counting down
+      }
+    </p>
+  </header>
+
+  <div class="timer-page-stage">
+    <p class="timer-page-readout" [class.timer-page-readout-paused]="!timer().running" role="timer">
+      <app-timer-display [timer]="timer()"/>
+    </p>
+
+    <div class="timer-page-controls">
+      <button mat-flat-button type="button" [disabled]="busy()" (click)="toggle()">
+        <mat-icon aria-hidden="true">{{ timer().running ? 'pause' : 'play_arrow' }}</mat-icon>
+        <span>{{ timer().running ? 'Pause' : 'Start' }}</span>
+      </button>
+
+      <button mat-stroked-button type="button" [disabled]="busy()" (click)="reset()">
+        <mat-icon aria-hidden="true">restart_alt</mat-icon>
+        <span>Reset</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="timer-page-panels">
+
+    <section class="timer-page-panel">
+      <h2 class="timer-page-panel-title">Change the time</h2>
+      <p class="timer-page-panel-hint">
+        Seconds, or something friendlier — 300, 5m, 1h30m, 01:30:00 all work, here and in chat.
+      </p>
+
+      <div class="timer-page-row">
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Amount</mat-label>
+          <input matInput type="text" [value]="delta()" (input)="delta.set($any($event.target).value)"/>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="adjust(1)">
+          <mat-icon aria-hidden="true">add</mat-icon>
+          <span>Add</span>
+        </button>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="adjust(-1)">
+          <mat-icon aria-hidden="true">remove</mat-icon>
+          <span>Remove</span>
+        </button>
+      </div>
+
+      <div class="timer-page-row">
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Set to</mat-label>
+          <input matInput type="text" placeholder="8h" [value]="target()" (input)="target.set($any($event.target).value)"/>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="applyTarget()">
+          <mat-icon aria-hidden="true">timer</mat-icon>
+          <span>Set</span>
+        </button>
+      </div>
+
+      <div class="timer-page-row">
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Start value</mat-label>
+          <input matInput type="text" placeholder="8h" [value]="start()" (input)="start.set($any($event.target).value)"/>
+          <mat-hint>What Reset goes back to</mat-hint>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="saveStart()">
+          <mat-icon aria-hidden="true">save</mat-icon>
+          <span>Save</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="timer-page-panel">
+      <h2 class="timer-page-panel-title">Chat commands</h2>
+      <p class="timer-page-panel-hint">
+        The bot drives the same timer this page does, so anything here can be done from chat instead.
+      </p>
+
+      <dl class="timer-page-commands">
+        <dt>!timer start</dt>
+        <dd>Starts it counting down</dd>
+
+        <dt>!timer stop</dt>
+        <dd>Holds it where it is</dd>
+
+        <dt>!timer add 5m</dt>
+        <dd>Puts time on</dd>
+
+        <dt>!timer remove 5m</dt>
+        <dd>Takes time off, never below zero</dd>
+
+        <dt>!timer set 8h</dt>
+        <dd>Replaces whatever is left</dd>
+
+        <dt>!timer reset</dt>
+        <dd>Back to the start value above, paused</dd>
+      </dl>
+    </section>
+  </div>
+
+  <section class="timer-page-panel">
+    <h2 class="timer-page-panel-title">OBS browser source</h2>
+    <p class="timer-page-panel-hint">
+      This link is yours and stays the same. Add it as a browser source and resize it freely — the
+      timer scales with it and follows every change, whether it came from this page or from chat.
+    </p>
+
+    @if (overlayUrl(); as url) {
+      <div class="timer-page-row">
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Overlay link</mat-label>
+          <input matInput type="text" readonly [value]="url"/>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" (click)="copyOverlayUrl()">
+          <mat-icon aria-hidden="true">content_copy</mat-icon>
+          <span>Copy</span>
+        </button>
+      </div>
+    }
+  </section>
+
+  <section class="timer-page-panel">
+    <h2 class="timer-page-panel-title">How it looks</h2>
+    <p class="timer-page-panel-hint">
+      Saved settings reach the overlay on their own. Copying the CSS is only needed to override them
+      from inside OBS — handy if OBS is holding on to an older version of the page.
+    </p>
+
+    <div class="timer-page-appearance">
+      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+        <mat-label>Colour</mat-label>
+        <input matInput type="text" spellcheck="false" [value]="style().color" (input)="recolour($any($event.target).value)"/>
+
+        <button
+          matSuffix
+          type="button"
+          class="timer-page-swatch"
+          aria-label="Pick the colour"
+          #paletteTrigger="matMenuTrigger"
+          [matMenuTriggerFor]="palette"
+          [style.background]="style().color"
+        ></button>
+
+      </mat-form-field>
+
+      <mat-menu #palette="matMenu">
+        <!-- Dragging emits colorChange continuously and the field beside the menu follows live; only
+             a preset click fires picked, because closing the panel mid-drag would tear it out from
+             under the pointer. -->
+        <app-color-picker
+          [color]="style().color"
+          (colorChange)="recolour($event)"
+          (picked)="paletteTrigger.closeMenu()"
+        />
+      </mat-menu>
+
+      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+        <mat-label>Size</mat-label>
+        <input matInput type="number" min="2" max="60" [value]="style().fontSize" (input)="restyle({ fontSize: +$any($event.target).value })"/>
+        <mat-hint>Share of the source, not pixels</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+        <mat-label>Font</mat-label>
+        <input matInput type="text" [value]="style().fontFamily" (input)="restyle({ fontFamily: $any($event.target).value })"/>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+        <mat-label>Label</mat-label>
+        <input matInput type="text" placeholder="Subathon ends in" [value]="style().label" (input)="restyle({ label: $any($event.target).value })"/>
+        <mat-hint>Shown above the time, leave empty for none</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <mat-slide-toggle
+      class="timer-page-toggle"
+      [checked]="style().shadow"
+      (change)="restyle({ shadow: $event.checked })"
+    >
+      Drop shadow, so it stays readable over a bright scene
+    </mat-slide-toggle>
+
+    <div class="timer-page-row">
+      <button mat-flat-button type="button" [disabled]="busy()" (click)="saveStyle()">
+        <mat-icon aria-hidden="true">save</mat-icon>
+        <span>Save</span>
+      </button>
+
+      <button mat-stroked-button type="button" [disabled]="busy() || atDefaults()" (click)="resetStyle()">
+        <mat-icon aria-hidden="true">restart_alt</mat-icon>
+        <span>Reset to defaults</span>
+      </button>
+
+      <button mat-stroked-button type="button" (click)="copyStyleCss()">
+        <mat-icon aria-hidden="true">content_copy</mat-icon>
+        <span>Copy custom CSS</span>
+      </button>
+    </div>
+  </section>
+</section>

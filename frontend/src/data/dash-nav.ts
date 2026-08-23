@@ -112,6 +112,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         path: `${BASE}/wheel`,
       },
       {
+        label: 'Subathon Timer',
+        icon: 'timer',
+        description: 'Count down live on an OBS overlay, driven from chat.',
+        path: `${BASE}/timer`,
+      },
+      {
         label: 'BDSM Test',
         icon: 'psychology',
         // 128px rather than the smallest fitting size: the browser scales it down to the icon's
