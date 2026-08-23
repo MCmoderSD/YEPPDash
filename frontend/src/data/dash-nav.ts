@@ -6,6 +6,10 @@ export interface NavItem {
   label: string;
   // A Material Icons ligature, ignored when `mask` is set.
   icon: string;
+  // Draws that ligature from the outlined cut of the icon font rather than the filled one.
+  // Same drawing, hollow instead of solid, for entries where a solid block of colour sits
+  // heavier in the rail than the ones around it.
+  outlined?: boolean;
   // An image drawn as a CSS mask rather than placed as one. The icon font's entries take their
   // colour from the row around them, and a plain <img> could not — it would sit at whatever colour
   // it was drawn in while its neighbours went from grey to the brand colour with the active state.
@@ -114,6 +118,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       {
         label: 'Subathon Timer',
         icon: 'timer',
+        outlined: true,
         description: 'Count down live on an OBS overlay, driven from chat.',
         path: `${BASE}/timer`,
       },

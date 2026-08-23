@@ -33,7 +33,7 @@
                 @if (item.mask; as mask) {
                   <span class="dash-home-card-glyph" [style.--icon]="'url(' + mask + ')'"></span>
                 } @else {
-                  <mat-icon>{{ item.icon }}</mat-icon>
+                  <mat-icon [fontSet]="item.outlined ? 'material-icons-outlined' : 'material-icons'">{{ item.icon }}</mat-icon>
                 }
               </span>
 
