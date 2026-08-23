@@ -195,10 +195,13 @@ table.wheel-page-table {
   font: var(--mat-sys-body-medium);
 }
 
+// align-items: flex-start rather than center, because a wrapped name is taller than the badge beside
+// it and centring would leave that badge floating against the middle of the paragraph.
 .wheel-page-entry-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 // The same chip the command table puts its aliases in, so a count reads as a tag on the name rather
@@ -214,7 +217,15 @@ table.wheel-page-table {
   white-space: nowrap;
 }
 
+// An entry may now run to five hundred characters, and a row that tall pushes everything after it
+// out of view. Three lines is enough to tell which entry a row is; the whole of it stays in the DOM,
+// so a screen reader still reads it and find-in-page still lands on a word past the third line.
 .wheel-page-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   overflow-wrap: anywhere;
 }
 
@@ -285,4 +296,10 @@ table.wheel-page-table {
   // On top of the section's own gap: the two paragraphs above belong together, the field is the
   // next thing along and should not look wedged under them.
   margin-block-start: 0.5rem;
+}
+
+// Swapped in where the hint sits rather than added beside it, so telling someone what is wrong
+// does not push the table down a line and back up again as they type.
+.wheel-page-hint-problem {
+  color: var(--mat-sys-error);
 }

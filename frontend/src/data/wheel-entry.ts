@@ -3,12 +3,33 @@ export interface WheelEntry {
   count: number;
 }
 
-export const WHEEL_LABEL_MAX_LENGTH: number = 60;
+export const WHEEL_LABEL_MAX_LENGTH: number = 500;
 
-export const WHEEL_SEPARATOR: string = ',';
+const ENTRY_SPLIT: RegExp = /[\r\n,]+/;
 
-export function hasSeparator(label: string): boolean {
-  return label.includes(WHEEL_SEPARATOR);
+export function splitLabels(text: string): string[] {
+  return text.split(ENTRY_SPLIT)
+    .map((piece: string): string => piece.trim().replace(/\s+/g, ' '))
+    .filter((piece: string): boolean => piece.length > 0);
+}
+
+export function splitEntries(text: string): string[] {
+  return splitLabels(text).map(cleanLabel);
+}
+
+export function entryProblem(text: string): string | null {
+  if (!text.trim()) return null;
+
+  const labels: string[] = splitLabels(text);
+
+  if (labels.length === 0) return 'That is only separators — write a name to add.';
+
+  const overlong: string | undefined = labels.find(
+    (label: string): boolean => label.length > WHEEL_LABEL_MAX_LENGTH);
+
+  return overlong === undefined
+    ? null
+    : `An entry cannot be longer than ${WHEEL_LABEL_MAX_LENGTH} characters — that one is ${overlong.length}.`;
 }
 
 export const WHEEL_MAX_SLICES: number = 200;
@@ -116,13 +137,9 @@ export function parseWheelFile(text: string): WheelFile {
   const entries: string[] = [];
   const rejected: string[] = [];
 
-  for (const line of text.split(/\r?\n/)) {
-    const label: string = cleanLabel(line);
-
-    if (!label) continue;
-
-    if (hasSeparator(label) || entries.length >= WHEEL_MAX_SLICES) {
-      rejected.push(line.trim());
+  for (const label of splitEntries(text)) {
+    if (entries.length >= WHEEL_MAX_SLICES) {
+      rejected.push(label);
       continue;
     }
 
@@ -130,8 +147,4 @@ export function parseWheelFile(text: string): WheelFile {
   }
 
   return { entries, rejected };
-}
-
-export function separatorMessage(): string {
-  return `An entry cannot contain a "${WHEEL_SEPARATOR}".`;
 }
