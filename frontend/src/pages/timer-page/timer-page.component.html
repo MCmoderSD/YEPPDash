@@ -17,7 +17,7 @@
     </p>
 
     <div class="timer-page-controls">
-      <button mat-flat-button type="button" [disabled]="busy()" (click)="toggle()">
+      <button mat-flat-button type="button" [disabled]="busy() || (!timer().running && !canStart())" (click)="toggle()">
         <mat-icon aria-hidden="true">{{ timer().running ? 'pause' : 'play_arrow' }}</mat-icon>
         <span>{{ timer().running ? 'Pause' : 'Start' }}</span>
       </button>
@@ -100,11 +100,16 @@
         <dd>Takes time off, never below zero</dd>
 
         <dt>!timer set 8h</dt>
-        <dd>Replaces whatever is left</dd>
+        <dd>Replaces whatever is left, paused</dd>
 
         <dt>!timer reset</dt>
         <dd>Back to the start value above, paused</dd>
       </dl>
+
+      <p class="timer-page-panel-note">
+        <mat-icon class="timer-page-note-icon" aria-hidden="true">shield</mat-icon>
+        <span>Only you and your moderators can use these — chat cannot touch the timer.</span>
+      </p>
     </section>
   </div>
 
@@ -183,18 +188,15 @@
       </mat-form-field>
     </div>
 
-    <mat-slide-toggle
-      class="timer-page-toggle"
-      [checked]="style().shadow"
-      (change)="restyle({ shadow: $event.checked })"
-    >
-      Drop shadow, so it stays readable over a bright scene
-    </mat-slide-toggle>
-
-    <div class="timer-page-row">
+    <div class="timer-page-row timer-page-actions">
       <button mat-flat-button type="button" [disabled]="busy()" (click)="saveStyle()">
         <mat-icon aria-hidden="true">save</mat-icon>
         <span>Save</span>
+      </button>
+
+      <button mat-stroked-button type="button" (click)="copyStyleCss()">
+        <mat-icon aria-hidden="true">content_copy</mat-icon>
+        <span>Copy custom CSS</span>
       </button>
 
       <button mat-stroked-button type="button" [disabled]="busy() || atDefaults()" (click)="resetStyle()">
@@ -202,10 +204,13 @@
         <span>Reset to defaults</span>
       </button>
 
-      <button mat-stroked-button type="button" (click)="copyStyleCss()">
-        <mat-icon aria-hidden="true">content_copy</mat-icon>
-        <span>Copy custom CSS</span>
-      </button>
+      <mat-slide-toggle
+        class="timer-page-toggle"
+        [checked]="style().shadow"
+        (change)="restyle({ shadow: $event.checked })"
+      >
+        Drop shadow, so it stays readable over a bright scene
+      </mat-slide-toggle>
     </div>
   </section>
 </section>

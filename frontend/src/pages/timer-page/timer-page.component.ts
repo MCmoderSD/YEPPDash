@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, signal, Signal, WritableSignal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, signal, Signal, viewChild, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -45,6 +45,15 @@ export class TimerPageComponent {
   protected readonly start: WritableSignal<string> = signal('');
 
   protected readonly style: WritableSignal<TimerStyle> = signal<TimerStyle>(DEFAULT_TIMER_STYLE);
+
+  // Read off the readout rather than worked out again here: it already ticks, so this follows the
+  // clock down to zero on its own instead of needing a second interval to notice.
+  private readonly display: Signal<TimerDisplayComponent | undefined> = viewChild(TimerDisplayComponent);
+
+  // Starting a timer with nothing on it does nothing anyone can see — the deadline would be now, and
+  // the readout would sit at 00:00 as before. Set a time first, or add some.
+  protected readonly canStart: Signal<boolean> = computed((): boolean =>
+    !(this.display()?.over() ?? this.timer().remaining === 0));
 
   protected readonly atDefaults: Signal<boolean> = computed((): boolean => {
     const style: TimerStyle = this.style();

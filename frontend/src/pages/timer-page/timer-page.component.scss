@@ -56,10 +56,12 @@
   gap: 0.75rem;
 }
 
+// No align-items here on purpose: the panels stretch to the taller of the two, so the pair reads as
+// one band rather than as two cards that happen to start at the same line and stop wherever their
+// content runs out.
 .timer-page-panels {
   display: grid;
   gap: 1rem;
-  align-items: start;
   grid-template-columns: minmax(0, 1fr);
 
   // Side by side once the commands can sit next to the controls without either going narrow.
@@ -87,6 +89,29 @@
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
+}
+
+// No auto margin to push it down: the list above already takes the slack, so this sits directly
+// under the last row wherever that lands.
+.timer-page-panel-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  line-height: 1.5;
+}
+
+.timer-page-note-icon {
+  flex: none;
+
+  // Material sizes its icons at 24px; this one sits beside small text and would tower over it.
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
 }
 
 // Wraps rather than shrinks: below this the field and its buttons end up too narrow to read, and a
@@ -159,14 +184,41 @@
 // The panel behind the swatch — presets, saturation square, hue slider — lives in
 // components/color-picker-component and brings its own styles.
 
+// A row of controls with no form field in it. The half-rem nudge every button in a .timer-page-row
+// carries is there to meet a field box, and with no field it only pushes the row off its own top
+// edge — so it comes back off here.
+//
+// Centred rather than top-aligned, because a slide toggle and a button are not the same height: on
+// flex-start their tops meet and everything else about them — the track, the label, the button text
+// — sits at a different level.
+.timer-page-actions {
+  align-items: center;
+
+  > button {
+    margin-block-start: 0;
+  }
+}
+
+// Sits in the button row rather than on a line of its own — one row instead of two, and nothing left
+// stranded between the fields and the actions. Directly after the last button rather than pushed to
+// the far edge: it belongs to the same group, and a gap the width of the panel read as two unrelated
+// halves. The half rem of extra gap is what keeps it from looking like a fourth button.
 .timer-page-toggle {
-  align-self: flex-start;
+  margin-inline-start: 0.5rem;
 }
 
 // A description list rather than a table: each command has exactly one explanation, and a table
 // would announce a column header before every one of them.
+//
+// This panel is stretched to whatever height its neighbour has, and the leftover used to pool at the
+// bottom as one blank band. `flex: 1 1 auto` hands that leftover to the list and `space-between`
+// spreads it between the rows — growing only into space that already exists, so the list never makes
+// the panel taller than the one beside it. Without the auto basis the rows would be squashed to
+// nothing when there is no slack to take.
 .timer-page-commands {
   display: grid;
+  flex: 1 1 auto;
+  align-content: space-between;
   gap: 0.25rem 1rem;
   margin: 0;
   grid-template-columns: max-content minmax(0, 1fr);
