@@ -17,7 +17,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
 import { WheelResultsService } from '../../services/wheel-results.service';
-import { addEntry, cleanLabel, entriesFrom, entryText, flattenEntries, hasSeparator, parseWheelFile, removeOne, separatorMessage, shuffleEntries, sliceCount, sortEntries, WHEEL_FILE_NAME, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
+import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, parseWheelFile, removeOne, shuffleEntries, sliceCount, sortEntries, splitEntries, WHEEL_FILE_NAME, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
 import { resultWonAt, WheelResult } from '../../data/wheel-result';
 import { wheelOverlayUrl } from '../../data/wheel-overlay';
 
@@ -51,8 +51,6 @@ export class WheelPageComponent {
 
   protected readonly columns: string[] = ['entry', 'actions'];
 
-  protected readonly maxLength: number = WHEEL_LABEL_MAX_LENGTH;
-
   protected readonly slices: Signal<string[]> = computed((): string[] => wheelSlices(this.entries()));
 
   protected readonly total: Signal<number> = computed((): number => sliceCount(this.entries()));
@@ -85,23 +83,70 @@ export class WheelPageComponent {
     });
   }
 
+  protected readonly problem: Signal<string | null> = computed((): string | null => {
+    const problem: string | null = entryProblem(this.draft());
+    if (problem !== null) return problem;
+
+    return this.full() ? `A wheel holds at most ${WHEEL_MAX_SLICES} slices.` : null;
+  });
+
+  protected readonly canAdd: Signal<boolean> = computed((): boolean =>
+    !this.busy() && this.draft().trim().length > 0 && this.problem() === null);
+
   protected add(): void {
-    const label: string = cleanLabel(this.draft());
-    if (!label) return;
+    // Guarded as well as disabled: pressing Enter in the field submits the form in its own right,
+    // and not every engine holds that back for a disabled submit button.
+    if (!this.canAdd()) return;
 
-    if (hasSeparator(label)) {
-      this.notifications.failure(separatorMessage());
+    if (this.addAll(splitEntries(this.draft()))) this.draft.set('');
+  }
+
+  protected pasted(event: ClipboardEvent): void {
+    const text: string | undefined = event.clipboardData?.getData('text');
+    if (!text) return;
+
+    const labels: string[] = splitEntries(text);
+    if (labels.length < 2) return;
+
+    event.preventDefault();
+
+    const problem: string | null = entryProblem(text);
+
+    if (problem !== null) {
+      this.notifications.failure(problem);
       return;
     }
 
-    if (this.full()) {
+    if (this.addAll(labels)) this.draft.set('');
+  }
+
+  private addAll(labels: readonly string[]): boolean {
+    if (labels.length === 0) return false;
+
+    let added = 0;
+    let next: WheelEntry[] = this.entries();
+
+    for (const label of labels) {
+      if (sliceCount(next) >= WHEEL_MAX_SLICES) break;
+
+      next = addEntry(next, label);
+      added++;
+    }
+
+    if (added === 0) {
       this.notifications.failure(`A wheel holds at most ${WHEEL_MAX_SLICES} slices.`);
-      return;
+      return false;
     }
 
-    this.entries.update((entries: WheelEntry[]): WheelEntry[] => addEntry(entries, label));
-    this.draft.set('');
+    this.entries.set(next);
     void this.persist();
+
+    if (added < labels.length) {
+      this.notifications.failure(
+        `Added ${added} of ${labels.length} — a wheel holds at most ${WHEEL_MAX_SLICES} slices.`);
+    }
+
+    return true;
   }
 
   protected addOne(label: string): void {

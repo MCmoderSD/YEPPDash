@@ -79,27 +79,31 @@
                     matInput
                     type="text"
                     autocomplete="off"
-                    [attr.maxlength]="maxLength"
                     [value]="draft()"
                     [disabled]="busy()"
                     (input)="draft.set($any($event.target).value)"
+                    (paste)="pasted($event)"
                   />
                 </mat-form-field>
 
                 <button
                   mat-flat-button
                   type="submit"
-                  [disabled]="busy() || draft().trim().length === 0"
+                  [disabled]="!canAdd()"
                 >
                   <mat-icon aria-hidden="true">add</mat-icon>
                   <span>Add</span>
                 </button>
               </form>
 
-              <p class="wheel-page-hint">
-                Adding a name that is already listed makes it 2x instead of a second row. Commas are
-                what separate the entries when they are stored, so a name cannot contain one.
-              </p>
+              @if (problem(); as reason) {
+                <p class="wheel-page-hint wheel-page-hint-problem" role="alert">{{ reason }}</p>
+              } @else {
+                <p class="wheel-page-hint">
+                  Adding a name that is already listed makes it 2x instead of a second row. Paste a
+                  list and every line becomes its own entry — commas split the same way.
+                </p>
+              }
             </div>
 
             <div #scroll class="wheel-page-scroll">

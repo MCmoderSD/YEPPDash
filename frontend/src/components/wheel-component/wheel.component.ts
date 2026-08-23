@@ -39,6 +39,8 @@ const CHARACTER_WIDTH: number = 0.52;
 const MAX_FONT_SIZE: number = 6.5;
 const MIN_FONT_SIZE: number = 1.6;
 
+const MIN_READABLE_FONT_SIZE: number = 2.4;
+
 const SPIN_TURNS: number = 6;
 
 const PALETTE: readonly Color[] = [
@@ -81,10 +83,13 @@ export function wheelFontSize(count: number): number {
 }
 
 export function fitLabel(label: string, fontSize: number): Label {
-  const fitted: number = Math.max(fontSize * 0.5, Math.min(fontSize, LABEL_ROOM / Math.max(label.length * CHARACTER_WIDTH, 1)));
+  const floor: number = Math.min(fontSize, MIN_READABLE_FONT_SIZE);
+  const wanted: number = LABEL_ROOM / Math.max(label.length * CHARACTER_WIDTH, 1);
+
+  const fitted: number = Math.max(floor, Math.min(fontSize, wanted));
 
   const room: number = Math.max(3, Math.floor(LABEL_ROOM / (fitted * CHARACTER_WIDTH)));
-  const text: string = label.length <= room ? label : `${label.slice(0, room - 1)}…`;
+  const text: string = label.length <= room ? label : `${label.slice(0, room - 1).trimEnd()}…`;
 
   return { text, fontSize: Number(fitted.toFixed(2)) };
 }
