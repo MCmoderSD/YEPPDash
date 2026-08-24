@@ -6,8 +6,7 @@ import { PrivacyPageComponent } from '../pages/privacy-page/privacy-page.compone
 import { TermsPageComponent } from '../pages/terms-page/terms-page.component';
 import { authGuard } from '../services/auth.guard';
 import { isDashHost } from '../services/dash-host';
-import { WHEEL_OVERLAY_PATH } from '../data/wheel-overlay';
-import { TIMER_OVERLAY_PATH } from '../data/timer-overlay';
+import { TIMER_OVERLAY_PATH, WHEEL_OVERLAY_PATH } from '../data/overlay';
 import { environment } from '../environments/environment';
 
 const dashHostMatch: CanMatchFn = (): boolean => isDashHost();

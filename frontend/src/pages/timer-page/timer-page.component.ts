@@ -13,7 +13,7 @@ import { NotificationService } from '../../services/notification.service';
 import { TimerService } from '../../services/timer.service';
 import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
 import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
-import { timerOverlayUrl } from '../../data/timer-overlay';
+import { overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
 
 @Component({
   selector: 'app-timer-page',
@@ -63,7 +63,7 @@ export class TimerPageComponent {
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const channelId: string | null = this.channelId();
-    return channelId === null ? null : timerOverlayUrl(channelId);
+    return channelId === null ? null : overlayUrl(TIMER_OVERLAY_PATH, channelId);
   });
 
   constructor() {
