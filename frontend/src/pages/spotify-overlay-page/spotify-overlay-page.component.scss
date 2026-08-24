@@ -1,0 +1,155 @@
+// Every custom property here is meant to be overridden from OBS's own "Custom CSS" box, which is the
+// escape hatch for anything this page does not offer a setting for — and which also wins when OBS is
+// holding on to an older version of the page.
+:host {
+  display: block;
+  background: transparent;
+
+  --spotify-color: #ffffff;
+  --spotify-muted: #b3b3b3;
+  --spotify-accent: #1db954;
+  --spotify-font-family: system-ui, sans-serif;
+
+  // The whole card is sized off this one number, so a single override rescales all of it rather
+  // than needing a value per element.
+  --spotify-scale: 6vmin;
+
+  // Transparent, and unpadded to match: with no panel behind it, padding would only push the card
+  // in from an edge the streamer has already positioned by hand. Setting a background from OBS is
+  // the moment padding starts to mean something, so the two are separate knobs.
+  --spotify-background: transparent;
+  --spotify-card-padding: 0;
+  --spotify-radius: 1vmin;
+  --spotify-padding: 2vmin;
+  --spotify-shadow: 0 0.4vmin 0.8vmin rgb(0 0 0 / 80%);
+
+  // How long the card takes to fade in and out as playback starts and stops.
+  --spotify-fade: 400ms;
+}
+
+// Taken out of the flow entirely rather than sized to fill the page. A browser source must never
+// scroll, and anything that merely fills the viewport can still be pushed past it by a stray pixel;
+// fixed to the viewport, this cannot contribute to the page's height at all.
+//
+// It also keeps to CSS that the browser OBS embeds actually has. That browser is several years
+// behind Chrome — dvh units and the standalone translate property both postdate it, and a source
+// that quietly drops them ends up with no height limit and scroll bars at both edges.
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: var(--spotify-padding);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.overlay-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spotify-padding);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spotify-card-padding);
+  border-radius: var(--spotify-radius);
+  background: var(--spotify-background);
+  font-family: var(--spotify-font-family);
+  transition: opacity var(--spotify-fade) ease;
+}
+
+// Faded rather than hidden, so starting a track brings the card up instead of snapping it in.
+// `visibility` rides along on the same transition so a fully transparent card cannot still catch a
+// click in a browser used to preview the link.
+.overlay-card-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--spotify-fade) ease, visibility 0s linear var(--spotify-fade);
+}
+
+// Square, and tied to the same scale as the text beside it. `aspect-ratio` is deliberately not used
+// — it postdates the browser OBS ships with, and a cover that silently loses its ratio there is the
+// kind of thing only noticed on stream.
+.overlay-art {
+  flex: none;
+  width: calc(var(--spotify-scale) * 2);
+  height: calc(var(--spotify-scale) * 2);
+  border-radius: var(--spotify-radius);
+  object-fit: cover;
+  box-shadow: var(--spotify-shadow);
+}
+
+.overlay-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--spotify-scale) * 0.15);
+  flex: 1;
+  min-width: 0;
+}
+
+// Everything is measured off --spotify-scale rather than in rem, which is what makes it grow and
+// shrink with the browser source. rem is tied to the root font size instead, which does not move
+// when the source is set to 1920x1080 — the card would stay at its 16px and then be scaled down
+// with everything else until it was unreadable.
+.overlay-title {
+  margin: 0;
+  color: var(--spotify-color);
+  font-size: var(--spotify-scale);
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: var(--spotify-shadow);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay-artist {
+  margin: 0;
+  color: var(--spotify-muted);
+  font-size: calc(var(--spotify-scale) * 0.7);
+  line-height: 1.2;
+  text-shadow: var(--spotify-shadow);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay-bar {
+  height: calc(var(--spotify-scale) * 0.2);
+  margin-top: calc(var(--spotify-scale) * 0.2);
+  border-radius: calc(var(--spotify-scale) * 0.1);
+  background: rgb(255 255 255 / 25%);
+  overflow: hidden;
+}
+
+// Widened by a style binding rather than a transform, because it has to be able to jump: a skip
+// moves it backwards by minutes, and a transition on that would show a long slide to the new track's
+// position. The half-second tick is fine enough that ordinary playback still reads as smooth.
+.overlay-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--spotify-accent);
+}
+
+.overlay-times {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  color: var(--spotify-muted);
+  font-size: calc(var(--spotify-scale) * 0.5);
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--spotify-shadow);
+}
+
+// Only ever seen by someone who opened the link by hand without the query string, so it is sized to
+// be read in a browser rather than from across a room.
+.overlay-hint {
+  max-width: min(90%, 55vmin);
+  margin: 0 auto;
+  color: #ffffff;
+  font-family: var(--spotify-font-family);
+  font-size: max(0.875rem, 2.4vmin);
+  line-height: 1.4;
+  text-align: center;
+  text-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 80%);
+}

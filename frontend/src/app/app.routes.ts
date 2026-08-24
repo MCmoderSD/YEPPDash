@@ -6,7 +6,7 @@ import { PrivacyPageComponent } from '../pages/privacy-page/privacy-page.compone
 import { TermsPageComponent } from '../pages/terms-page/terms-page.component';
 import { authGuard } from '../services/auth.guard';
 import { isDashHost } from '../services/dash-host';
-import { TIMER_OVERLAY_PATH, WHEEL_OVERLAY_PATH } from '../data/overlay';
+import { SPOTIFY_OVERLAY_PATH, TIMER_OVERLAY_PATH, WHEEL_OVERLAY_PATH } from '../data/overlay';
 import { environment } from '../environments/environment';
 
 const dashHostMatch: CanMatchFn = (): boolean => isDashHost();
@@ -23,6 +23,11 @@ export const routes: Routes = [
     path: TIMER_OVERLAY_PATH,
     loadComponent: () => import('../pages/timer-overlay-page/timer-overlay-page.component').then((module) => module.TimerOverlayPageComponent),
     title: 'Subathon Timer',
+  },
+  {
+    path: SPOTIFY_OVERLAY_PATH,
+    loadComponent: () => import('../pages/spotify-overlay-page/spotify-overlay-page.component').then((module) => module.SpotifyOverlayPageComponent),
+    title: 'Now Playing',
   },
   {
     path: '',

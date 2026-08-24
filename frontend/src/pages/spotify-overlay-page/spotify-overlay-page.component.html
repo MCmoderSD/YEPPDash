@@ -1,0 +1,31 @@
+<div class="overlay">
+  @if (channel()) {
+    <!--
+      Kept in the DOM and faded rather than removed, so a track change that happens to pass through
+      "nothing playing" for a moment does not tear the card out and put it straight back.
+    -->
+    <div class="overlay-card" [class.overlay-card-hidden]="!visible()" [attr.aria-hidden]="!visible()">
+      @if (playback().track; as track) {
+        @if (track.artworkUrl; as artwork) {
+          <img class="overlay-art" [src]="artwork" alt=""/>
+        }
+
+        <div class="overlay-body">
+          <p class="overlay-title">{{ track.name }}</p>
+          <p class="overlay-artist">{{ track.artists }}</p>
+
+          <div class="overlay-bar">
+            <div class="overlay-bar-fill" [style.width.%]="percent()"></div>
+          </div>
+
+          <p class="overlay-times">
+            <span>{{ elapsed() }}</span>
+            <span>{{ total() }}</span>
+          </p>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="overlay-hint">This link has no channel on it. Copy the overlay link again from the Spotify page.</p>
+  }
+</div>

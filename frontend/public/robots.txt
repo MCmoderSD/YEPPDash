@@ -12,6 +12,8 @@ Allow: /
 # anything but a redirect to the login, so there is nothing here to index.
 Disallow: /dash/
 
-# A per-channel OBS browser source rather than a page. It carries no session and is meant to be
-# opened by one streaming setup, not found in a search result.
+# Per-channel OBS browser sources rather than pages. They carry no session and are meant to be
+# opened by one streaming setup, not found in a search result. Every overlay added to the route
+# table belongs here too.
 Disallow: /wheel/overlay
+Disallow: /spotify/overlay
