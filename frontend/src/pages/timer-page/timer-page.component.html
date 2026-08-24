@@ -171,13 +171,47 @@
       <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
         <mat-label>Size</mat-label>
         <input matInput type="number" min="1" [value]="style().fontSize" (input)="restyle({ fontSize: +$any($event.target).value })"/>
+
+        <app-number-stepper
+          matSuffix
+          [value]="style().fontSize"
+          [min]="1"
+          (valueChange)="restyle({ fontSize: $event })"
+        />
+
         <mat-hint>Share of the source, not pixels</mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
         <mat-label>Font</mat-label>
-        <input matInput type="text" [value]="style().fontFamily" (input)="restyle({ fontFamily: $any($event.target).value })"/>
-        <mat-hint>Any family OBS can load</mat-hint>
+
+        <input
+          matInput
+          type="text"
+          spellcheck="false"
+          [value]="style().fontFamily"
+          [matAutocomplete]="fonts"
+          (input)="restyle({ fontFamily: $any($event.target).value })"
+        />
+
+        <mat-autocomplete #fonts="matAutocomplete" (optionSelected)="restyle({ fontFamily: $event.option.value })">
+          @for (font of fontMatches(); track font) {
+            <mat-option [value]="font">
+              <!--
+                Drawn in the family it names, which is the only way to choose one without applying
+                it first. The sample beside it is digits rather than more words, because this font
+                will spend its life showing a countdown and the shape of a zero is what decides
+                whether that reads from across a room.
+              -->
+              <span class="timer-page-font">
+                <span class="timer-page-font-name" [style.font-family]="font">{{ font }}</span>
+                <span class="timer-page-font-sample" [style.font-family]="font" aria-hidden="true">12:34:56</span>
+              </span>
+            </mat-option>
+          }
+        </mat-autocomplete>
+
+        <mat-hint>Suggestions are the fonts this machine has — any family OBS can load also works</mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">

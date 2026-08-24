@@ -278,3 +278,34 @@
     }
   }
 }
+
+// The two halves of a font suggestion: the family's name, and a countdown drawn in it. Pushed apart
+// so the samples line up in a column of their own and can be compared down the list rather than
+// each one being read on its own.
+//
+// ::ng-deep because the panel is rendered into an overlay outside this component, which is where
+// Material puts every autocomplete. The class names are the component's own, so nothing else on the
+// page can be reached by these rules.
+::ng-deep .timer-page-font {
+  display: flex;
+  align-items: baseline;
+  inline-size: 100%;
+}
+
+::ng-deep .timer-page-font-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+::ng-deep .timer-page-font-sample {
+  flex: none;
+  margin-inline-start: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  // Held at the row's own size rather than the family's natural one, so a display face cannot push
+  // the option taller than its neighbours and leave the list uneven.
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}

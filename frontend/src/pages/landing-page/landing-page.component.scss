@@ -65,6 +65,13 @@
   color: var(--mat-sys-on-primary-container);
 }
 
+// Shipped and working, but young enough that it is still being changed. Neither "Stable", which
+// would be a promise, nor "Works, buggy", which would be a warning it has not earned.
+.feature-badge-new {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
 .feature-badge-buggy {
   background: var(--mat-sys-error-container);
   color: var(--mat-sys-on-error-container);

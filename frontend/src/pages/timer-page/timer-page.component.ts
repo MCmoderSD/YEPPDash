@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, signal, Signal, viewChild, WritableSignal } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, signal, Signal, viewChild, WritableSignal } from '@angular/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,19 +8,21 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ColorPickerComponent } from '../../components/color-picker-component/color-picker.component';
+import { NumberStepperComponent } from '../../components/number-stepper-component/number-stepper.component';
 import { TimerDisplayComponent } from '../../components/timer-display-component/timer-display.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { TimerService } from '../../services/timer.service';
 import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
 import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
+import { FONT_FAMILIES, installedFonts } from '../../data/fonts';
 import { overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
 
 @Component({
   selector: 'app-timer-page',
   templateUrl: './timer-page.component.html',
   styleUrl: './timer-page.component.scss',
-  imports: [ColorPickerComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, TimerDisplayComponent],
+  imports: [ColorPickerComponent, MatAutocompleteModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, NumberStepperComponent, TimerDisplayComponent],
   host: {
     '[style.--timer-animation-duration]': 'animation()',
   },
@@ -66,7 +69,25 @@ export class TimerPageComponent {
     return channelId === null ? null : overlayUrl(TIMER_OVERLAY_PATH, channelId);
   });
 
+  // Narrowed to what this machine can render once the DOM exists. Starts as the whole list so the
+  // server, which cannot measure anything, still renders a field with suggestions in it.
+  private readonly fonts: WritableSignal<readonly string[]> = signal(FONT_FAMILIES);
+
+  protected readonly fontMatches: Signal<readonly string[]> = computed((): readonly string[] => {
+    const fonts: readonly string[] = this.fonts();
+    const query: string = this.style().fontFamily.trim().toLowerCase();
+
+    const matches: readonly string[] = fonts.filter((font: string): boolean => font.toLowerCase().includes(query));
+
+    // Everything, rather than an empty panel, once the field holds something no family matches -
+    // which is where a stack like the default 'system-ui, sans-serif' leaves it, and exactly the
+    // moment someone is most likely to want to see what else there is.
+    return matches.length === 0 ? fonts : matches;
+  });
+
   constructor() {
+    afterNextRender((): void => this.fonts.set(installedFonts(this.document)));
+
     effect((onCleanup: EffectCleanupRegisterFn): void => {
       const channelId: string | null = this.channelId();
       if (channelId === null) return;
