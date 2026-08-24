@@ -178,6 +178,25 @@ body {
   }
 }
 
+// The same panel as a select's, opted into the same way — see the note above. Separate because
+// Material gives the two panels different base classes and neither selector reaches the other.
+//
+// The bar down its edge is the app's own, mounted by OverlayScrollBarDirective rather than styled
+// here: the platform's bar cannot be made to fade in and out the way every other scrolling box in
+// the dashboard does.
+.mat-mdc-autocomplete-panel.app-autocomplete-panel {
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+  padding: 0.25rem;
+  background-color: var(--mat-sys-surface-container-high);
+  box-shadow: var(--app-elevation-3);
+
+  .mat-mdc-option {
+    min-height: 2.5rem;
+    border-radius: var(--app-radius-sm);
+  }
+}
+
 // Material wraps a drawer's projected content in its own scrolling div, which would catch the
 // navigation's overflow before the nav itself could — leaving the platform's bar down the drawer's
 // edge while the app's own bar, drawn over the nav, had nothing left to report. The nav runs its

@@ -26,14 +26,7 @@
 
 // Centred by the flex parent rather than a top/left and translate pair: one less thing for the old
 // engine to get wrong, and it is the only child.
-.overlay-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1vmin;
-  max-width: 100%;
-}
-
+//
 // Everything here is measured in vmin rather than rem, which is what makes it grow and shrink with
 // the browser source. rem is tied to the root font size instead, which does not move when the source
 // is set to 1920x1080 — the readout would stay at its 36px and then be scaled down with everything
@@ -54,19 +47,6 @@
 
 .overlay-time-paused {
   opacity: 0.6;
-}
-
-// Scaled off the same measure as the readout, at roughly a quarter of it, so the pair keeps its
-// proportions at any source size.
-.overlay-label {
-  margin: 0;
-  color: var(--timer-color, #ffffff);
-  font-family: var(--timer-font-family, system-ui, sans-serif);
-  font-size: max(0.875rem, min(calc(var(--timer-font-size, 18vmin) / 4), 3.5vw));
-  line-height: 1.2;
-  text-align: center;
-  text-shadow: var(--timer-shadow, 0 0.4vmin 0.8vmin rgb(0 0 0 / 80%));
-  overflow-wrap: break-word;
 }
 
 // Only ever seen by someone who opened the link by hand without the query string, so it is sized to

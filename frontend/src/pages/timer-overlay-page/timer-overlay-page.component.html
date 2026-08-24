@@ -1,14 +1,8 @@
 <div class="overlay">
   @if (channel()) {
-    <div class="overlay-stack">
-      @if (style().label) {
-        <p class="overlay-label">{{ style().label }}</p>
-      }
-
-      <p class="overlay-time" [class.overlay-time-paused]="!timer().running" role="timer">
-        <app-timer-display [timer]="timer()"/>
-      </p>
-    </div>
+    <p class="overlay-time" [class.overlay-time-paused]="!timer().running" role="timer">
+      <app-timer-display [timer]="timer()"/>
+    </p>
   } @else {
     <p class="overlay-hint">This link has no channel on it. Copy the overlay link again from the Subathon Timer page.</p>
   }

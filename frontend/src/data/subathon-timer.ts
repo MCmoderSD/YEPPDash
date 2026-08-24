@@ -11,7 +11,6 @@ export interface TimerStyle {
   color: string;
   fontFamily: string;
   fontSize: number;
-  label: string;
   shadow: boolean;
   animate: boolean;
 }
@@ -29,7 +28,6 @@ export const DEFAULT_TIMER_STYLE: TimerStyle = {
   color: '#ffffff',
   fontFamily: 'system-ui, sans-serif',
   fontSize: 18,
-  label: '',
   shadow: true,
   animate: true,
 };
@@ -84,7 +82,6 @@ export function parseTimerStyle(raw: string): TimerStyle {
       color: text(source.color, DEFAULT_TIMER_STYLE.color),
       fontFamily: text(source.fontFamily, DEFAULT_TIMER_STYLE.fontFamily),
       fontSize: size(source.fontSize),
-      label: text(source.label, DEFAULT_TIMER_STYLE.label),
       shadow: typeof source.shadow === 'boolean' ? source.shadow : DEFAULT_TIMER_STYLE.shadow,
       animate: typeof source.animate === 'boolean' ? source.animate : DEFAULT_TIMER_STYLE.animate,
     };

@@ -194,7 +194,12 @@
           (input)="restyle({ fontFamily: $any($event.target).value })"
         />
 
-        <mat-autocomplete #fonts="matAutocomplete" (optionSelected)="restyle({ fontFamily: $event.option.value })">
+        <mat-autocomplete
+          #fonts="matAutocomplete"
+          appOverlayScrollBar
+          class="app-autocomplete-panel"
+          (optionSelected)="restyle({ fontFamily: $event.option.value })"
+        >
           @for (font of fontMatches(); track font) {
             <mat-option [value]="font">
               <!--
@@ -212,12 +217,6 @@
         </mat-autocomplete>
 
         <mat-hint>Suggestions are the fonts this machine has — any family OBS can load also works</mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
-        <mat-label>Label</mat-label>
-        <input matInput type="text" placeholder="Subathon ends in" [value]="style().label" (input)="restyle({ label: $any($event.target).value })"/>
-        <mat-hint>Optional, shown above the time</mat-hint>
       </mat-form-field>
     </div>
 

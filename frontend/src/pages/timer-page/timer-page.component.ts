@@ -9,6 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ColorPickerComponent } from '../../components/color-picker-component/color-picker.component';
 import { NumberStepperComponent } from '../../components/number-stepper-component/number-stepper.component';
+import { OverlayScrollBarDirective } from '../../components/scroll-bar-component/overlay-scroll-bar.directive';
 import { TimerDisplayComponent } from '../../components/timer-display-component/timer-display.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -22,7 +23,7 @@ import { overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
   selector: 'app-timer-page',
   templateUrl: './timer-page.component.html',
   styleUrl: './timer-page.component.scss',
-  imports: [ColorPickerComponent, MatAutocompleteModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, NumberStepperComponent, TimerDisplayComponent],
+  imports: [ColorPickerComponent, MatAutocompleteModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, NumberStepperComponent, OverlayScrollBarDirective, TimerDisplayComponent],
   host: {
     '[style.--timer-animation-duration]': 'animation()',
   },
