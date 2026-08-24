@@ -13,9 +13,6 @@ public sealed class SubathonTimerSubscription(ChannelReader<string> reader, Acti
     }
 }
 
-// Deliberately a copy of WheelHub rather than a shared base class. With two of them the abstraction
-// would be guesswork, and the wheel's is the one that has been running in front of viewers; when a
-// third overlay turns up, that is the moment to pull them together.
 public sealed class SubathonTimerHub
 {
     private const int Backlog = 32;
@@ -45,9 +42,6 @@ public sealed class SubathonTimerHub
         }
     }
 
-    // Which channels anyone is actually watching. The wheel never needed this because only a request
-    // to this process can change a wheel; the timer is also driven from chat, so a watcher has to go
-    // and look. Asking first is what keeps it from touching the database when nobody is watching.
     public IReadOnlyCollection<int> WatchedChannels()
     {
         return [.. _listeners.Values.Select(listener => listener.ChannelId).Distinct()];

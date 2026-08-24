@@ -1,16 +1,9 @@
 import { Component, computed, effect, input, InputSignal, output, OutputEmitterRef, Signal, signal, WritableSignal } from '@angular/core';
 import { clamp, COLOR_PRESETS, ColorPreset, hexToHsv, Hsv, hsvToHex } from '../../data/color';
 
-// How far one arrow press moves the square's thumb (of the 0-1 range) and the hue slider (degrees).
-// Big enough that crossing the whole range is not a hundred presses, small enough to land on a shade.
 const KEY_STEP: number = 0.04;
 const KEY_STEP_HUE: number = 6;
 
-/**
- * The whole colour choice in one panel: the presets that are usually the answer, and a
- * saturation/brightness square with a hue slider for everything else. Replaces the browser's own
- * picker, which cannot be styled and drags a native window over the page.
- */
 @Component({
   selector: 'app-color-picker',
   templateUrl: './color-picker.component.html',
@@ -21,28 +14,18 @@ export class ColorPickerComponent {
   readonly color: InputSignal<string> = input.required<string>();
   readonly presets: InputSignal<readonly ColorPreset[]> = input<readonly ColorPreset[]>(COLOR_PRESETS);
 
-  // Every change as it happens — a drag emits continuously, so the field beside the menu tracks live.
   readonly colorChange: OutputEmitterRef<string> = output<string>();
 
-  // A deliberate single choice (a preset click), which is the caller's cue to close whatever this
-  // picker is sitting in. Drags do not fire it: closing mid-drag would tear the panel out from
-  // under the pointer.
   readonly picked: OutputEmitterRef<string> = output<string>();
 
-  // Held as HSV rather than re-derived from the hex, because hex cannot carry a hue once saturation
-  // is zero: dragged to white and back, a derived hue would have snapped to red. The stored one
-  // survives the trip.
   private readonly hsv: WritableSignal<Hsv> = signal<Hsv>({ h: 0, s: 0, v: 1 });
 
-  private draggingArea = false;
-  private draggingHue = false;
+  private draggingArea: boolean = false;
+  private draggingHue: boolean = false;
 
   protected readonly hex: Signal<string> = computed((): string => hsvToHex(this.hsv()));
 
-  // The square's base colour: the current hue at full strength. Saturation and brightness are the
-  // gradients painted over it, so only the hue moves this.
-  protected readonly hueColor: Signal<string> = computed((): string =>
-    hsvToHex({ h: this.hsv().h, s: 1, v: 1 }));
+  protected readonly hueColor: Signal<string> = computed((): string => hsvToHex({ h: this.hsv().h, s: 1, v: 1 }));
 
   protected readonly areaBackground: Signal<string> = computed((): string =>
     `linear-gradient(to top, rgb(0 0 0), rgb(0 0 0 / 0%)), linear-gradient(to right, rgb(255 255 255), ${this.hueColor()})`);
@@ -60,14 +43,11 @@ export class ColorPickerComponent {
       const incoming: string = this.color().toLowerCase();
       const current: Hsv = this.hsv();
 
-      // Our own emission coming back around — same colour, nothing to sync.
       if (hsvToHex(current) === incoming) return;
 
       const parsed: Hsv | null = hexToHsv(incoming);
       if (parsed === null) return;
 
-      // An achromatic colour arriving from outside (typed "#ffffff", or a reset) keeps the hue the
-      // slider is on, for the same reason the state is HSV in the first place.
       this.hsv.set(parsed.s === 0 ? { ...parsed, h: current.h } : parsed);
     });
   }
@@ -106,9 +86,6 @@ export class ColorPickerComponent {
     this.draggingHue = false;
   }
 
-  // The square is a two-axis control, which ARIA has no native shape for; arrows moving both axes is
-  // the convention pickers settle on. Stopped from bubbling because this sits inside a menu, and the
-  // menu's own arrow-key handling would move focus away mid-adjustment.
   protected areaKey(event: KeyboardEvent): void {
     const step: number = this.stepFor(event);
     if (step === 0) return;
@@ -166,9 +143,6 @@ export class ColorPickerComponent {
   }
 }
 
-// What keeps a drag delivering moves after the pointer leaves the control. Applied after the press
-// has already taken effect, and allowed to fail quietly: a pointer that vanished between the press
-// and this call (or a synthetic event from a test) should cost the drag, never the click.
 function capture(event: PointerEvent): void {
   try {
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);

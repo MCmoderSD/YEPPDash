@@ -28,8 +28,6 @@ export class TimerSyncService {
 
     source.onmessage = (event: MessageEvent<string>): void => {
       try {
-        // Converted here rather than by each caller, so nobody can take the state and forget the
-        // clock reading that came with it — which is what keeps a viewer's own clock out of the sum.
         receive(timerFrom(JSON.parse(event.data) as SubathonTimerResponse));
       } catch {
         // A payload this build does not understand is not worth taking the overlay down for.

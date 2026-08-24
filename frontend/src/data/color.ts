@@ -1,15 +1,6 @@
-// Colour conversions for the picker, kept pure and free of Angular so they can be reasoned about
-// (and one day tested) on their own.
-//
-// HSV rather than HSL, because HSV is the space every familiar picker drags in: the square is
-// saturation across and brightness up, and the slider is hue. Hex is only the storage format.
-
 export interface Hsv {
-  // Degrees, 0-360.
   h: number;
-  // 0-1.
   s: number;
-  // 0-1.
   v: number;
 }
 
@@ -18,12 +9,6 @@ export interface ColorPreset {
   value: string;
 }
 
-// Colours that read well over a stream scene, one click each. The square and slider stay available
-// for anything not on this list — presets are the common case, not a cap.
-//
-// Fourteen on purpose: the picker lays them out seven to a row, so this count is exactly two full
-// rows. Neutrals first, then the spectrum in hue order, so the grid reads like a palette rather
-// than a grab bag.
 export const COLOR_PRESETS: readonly ColorPreset[] = [
   { label: 'White', value: '#ffffff' },
   { label: 'Black', value: '#000000' },
@@ -53,7 +38,7 @@ export function hexToHsv(hex: string): Hsv | null {
   const min: number = Math.min(r, g, b);
   const delta: number = max - min;
 
-  let h = 0;
+  let h: number = 0;
   if (delta > 0) {
     if (max === r) h = 60 * (((g - b) / delta) % 6);
     else if (max === g) h = 60 * ((b - r) / delta + 2);
@@ -82,8 +67,7 @@ export function hsvToHex(hsv: Hsv): string {
       : sector === 4 ? [x, 0, chroma]
       : [chroma, 0, x];
 
-  const channel = (value: number): string =>
-    Math.round((value + base) * 255).toString(16).padStart(2, '0');
+  const channel: (value: number) => string = (value: number): string => Math.round((value + base) * 255).toString(16).padStart(2, '0');
 
   return `#${channel(r)}${channel(g)}${channel(b)}`;
 }

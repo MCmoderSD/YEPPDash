@@ -25,7 +25,6 @@ export class TimerService extends ApiService {
     return this.command(channelId, 'reset');
   }
 
-  // One call for add and remove: a negative delta is the only difference between them.
   adjust(channelId: string, seconds: number): Promise<SubathonTimer> {
     return this.command(channelId, 'adjust', { seconds });
   }
@@ -52,12 +51,8 @@ export class TimerService extends ApiService {
       `${encodeURIComponent(channelId)}/${action}`);
   }
 
-  // Notes when the request left so the reply's server time can be corrected for half the round trip.
-  private async timed(
-    call: (path: string) => Promise<SubathonTimerResponse>, path: string
-  ): Promise<SubathonTimer> {
+  private async timed(call: (path: string) => Promise<SubathonTimerResponse>, path: string): Promise<SubathonTimer> {
     const sentAt: number = Date.now();
-
     return timerFrom(await call(path), sentAt);
   }
 }

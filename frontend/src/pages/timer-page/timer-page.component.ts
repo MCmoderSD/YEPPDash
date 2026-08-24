@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { TimerService } from '../../services/timer.service';
 import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
-import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TIMER_MAX_SECONDS, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
+import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
 import { timerOverlayUrl } from '../../data/timer-overlay';
 
 @Component({
@@ -30,8 +30,7 @@ export class TimerPageComponent {
   private readonly document: Document = inject(DOCUMENT);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
-  private readonly channelId: Signal<string | null> =
-    computed((): string | null => this.auth.currentUser()?.id ?? null);
+  private readonly channelId: Signal<string | null> = computed((): string | null => this.auth.currentUser()?.id ?? null);
 
   private listener: TimerListener | null = null;
 
@@ -46,14 +45,9 @@ export class TimerPageComponent {
 
   protected readonly style: WritableSignal<TimerStyle> = signal<TimerStyle>(DEFAULT_TIMER_STYLE);
 
-  // Read off the readout rather than worked out again here: it already ticks, so this follows the
-  // clock down to zero on its own instead of needing a second interval to notice.
   private readonly display: Signal<TimerDisplayComponent | undefined> = viewChild(TimerDisplayComponent);
 
-  // Starting a timer with nothing on it does nothing anyone can see — the deadline would be now, and
-  // the readout would sit at 00:00 as before. Set a time first, or add some.
-  protected readonly canStart: Signal<boolean> = computed((): boolean =>
-    !(this.display()?.over() ?? this.timer().remaining === 0));
+  protected readonly canStart: Signal<boolean> = computed((): boolean => !(this.display()?.over() ?? this.timer().remaining === 0));
 
   protected readonly atDefaults: Signal<boolean> = computed((): boolean => {
     const style: TimerStyle = this.style();
@@ -64,13 +58,10 @@ export class TimerPageComponent {
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const channelId: string | null = this.channelId();
-
     return channelId === null ? null : timerOverlayUrl(channelId);
   });
 
   constructor() {
-    // The page listens on the same stream the overlay does, so a `!timer add` in chat moves this
-    // readout too. Without it the dashboard would quietly disagree with the overlay next to it.
     effect((onCleanup: EffectCleanupRegisterFn): void => {
       const channelId: string | null = this.channelId();
       if (channelId === null) return;
@@ -109,7 +100,6 @@ export class TimerPageComponent {
     void this.run(this.timers.reset(channelId));
   }
 
-  // sign is +1 for add and -1 for remove; the API takes a signed delta and clamps at zero itself.
   protected adjust(sign: number): void {
     const channelId: string | null = this.channelId();
     const seconds: number | null = parseDuration(this.delta());
@@ -128,7 +118,7 @@ export class TimerPageComponent {
     const seconds: number | null = parseDuration(this.target());
 
     if (channelId === null) return;
-    if (seconds === null || seconds > TIMER_MAX_SECONDS) {
+    if (seconds === null) {
       this.notifications.failure('That is not a duration — try 1h30m or 01:30:00.');
       return;
     }
@@ -141,7 +131,7 @@ export class TimerPageComponent {
     const seconds: number | null = parseDuration(this.start());
 
     if (channelId === null) return;
-    if (seconds === null || seconds > TIMER_MAX_SECONDS) {
+    if (seconds === null) {
       this.notifications.failure('That is not a duration — try 8h or 08:00:00.');
       return;
     }
@@ -156,8 +146,6 @@ export class TimerPageComponent {
     void this.run(this.timers.saveStyle(channelId, this.style()), 'Overlay settings saved.');
   }
 
-  // Saved rather than only put back in the fields: the overlay changing is the confirmation that the
-  // reset happened, and there is nothing to lose by it — the old look is four fields away.
   protected resetStyle(): void {
     const channelId: string | null = this.channelId();
 
@@ -172,12 +160,8 @@ export class TimerPageComponent {
     this.style.update((style: TimerStyle): TimerStyle => ({ ...style, ...change }));
   }
 
-  // The picker and the text box both write here, so a pasted hex behaves the same as a picked one.
-  // Anything that is not a full six-digit hex is dropped rather than stored: the field keeps what was
-  // typed either way, so half-finished input survives being ignored on its way past.
   protected recolour(value: string): void {
     if (!/^#[0-9a-f]{6}$/i.test(value.trim())) return;
-
     this.restyle({ color: value.trim().toLowerCase() });
   }
 
@@ -203,9 +187,6 @@ export class TimerPageComponent {
     }
   }
 
-  // The fields are only filled from the server while they are untouched. Overwriting them on every
-  // pushed state would take a half-typed duration out from under whoever was typing it — and this
-  // page is pushed to whenever the bot does anything.
   private show(timer: SubathonTimer): void {
     this.timer.set(timer);
     this.style.set(timer.style);
@@ -213,11 +194,6 @@ export class TimerPageComponent {
     if (!this.start()) this.start.set(durationText(timer.startSeconds));
   }
 
-  /**
-   * Serialised rather than fired off as they come: two clicks in quick succession are ordinary here
-   * — start then add, or add twice — and letting them race would mean the later reply could be an
-   * older state and quietly undo what the newer one showed.
-   */
   private run(command: Promise<SubathonTimer>, success?: string): Promise<void> {
     this.busy.set(true);
 

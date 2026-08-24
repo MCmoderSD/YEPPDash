@@ -18,9 +18,6 @@ public sealed class SubathonTimerController(
 {
     private static readonly TimeSpan KeepAlive = TimeSpan.FromSeconds(20);
 
-
-    // Anonymous, like the wheel's: an OBS browser source is nobody, on whatever machine the stream
-    // runs on, and it still has to be able to read the timer it was given a link to.
     [AllowAnonymous]
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetTimer(string userId, CancellationToken cancellationToken)
@@ -31,7 +28,6 @@ public sealed class SubathonTimerController(
 
         return Ok(SubathonTimerResponse.From(state, DateTime.UtcNow));
     }
-
 
     [AllowAnonymous]
     [HttpGet("{userId}/stream")]
@@ -98,43 +94,31 @@ public sealed class SubathonTimerController(
         return CommandAsync(userId, token => timers.ResetAsync(userId, token), cancellationToken);
     }
 
-    // One route for both add and remove: the sign of the delta is the only difference, and splitting
-    // it in two would mean the same clamping written twice.
     [HttpPost("{userId}/adjust")]
-    public Task<IActionResult> Adjust(
-        string userId, [FromBody] SubathonTimerSecondsRequest request, CancellationToken cancellationToken)
+    public Task<IActionResult> Adjust(string userId, [FromBody] SubathonTimerSecondsRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.AdjustAsync(userId, request.Seconds, token), cancellationToken);
     }
 
     [HttpPost("{userId}/set")]
-    public Task<IActionResult> Set(
-        string userId, [FromBody] SubathonTimerSecondsRequest request, CancellationToken cancellationToken)
+    public Task<IActionResult> Set(string userId, [FromBody] SubathonTimerSecondsRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.SetAsync(userId, request.Seconds, token), cancellationToken);
     }
 
     [HttpPut("{userId}/config")]
-    public Task<IActionResult> SaveConfig(
-        string userId, [FromBody] SubathonTimerConfigRequest request, CancellationToken cancellationToken)
+    public Task<IActionResult> SaveConfig(string userId, [FromBody] SubathonTimerConfigRequest request, CancellationToken cancellationToken)
     {
-        return CommandAsync(
-            userId, token => timers.SaveConfigAsync(userId, request.StartSeconds, token), cancellationToken);
+        return CommandAsync(userId, token => timers.SaveConfigAsync(userId, request.StartSeconds, token), cancellationToken);
     }
 
     [HttpPut("{userId}/style")]
-    public Task<IActionResult> SaveStyle(
-        string userId, [FromBody] SubathonTimerStyleRequest request, CancellationToken cancellationToken)
+    public Task<IActionResult> SaveStyle(string userId, [FromBody] SubathonTimerStyleRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.SaveStyleAsync(userId, request.Style, token), cancellationToken);
     }
 
-    // Every command answers with the whole timer rather than 204, so the page that sent it can take
-    // what came back as the truth instead of guessing at what its click did.
-    private async Task<IActionResult> CommandAsync(
-        string userId,
-        Func<CancellationToken, Task<SubathonTimerState>> command,
-        CancellationToken cancellationToken)
+    private async Task<IActionResult> CommandAsync(string userId, Func<CancellationToken, Task<SubathonTimerState>> command, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
 

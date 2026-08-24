@@ -12,10 +12,6 @@ const TRANSPARENT: string = 'app-transparent';
   templateUrl: './timer-overlay-page.component.html',
   styleUrl: './timer-overlay-page.component.scss',
   imports: [TimerDisplayComponent],
-  // The saved settings are handed to the stylesheet as custom properties rather than applied to the
-  // elements directly, so the stylesheet keeps deciding how they are used and this only says what
-  // they are. Pasting the copied CSS into OBS overrides them, because an important declaration
-  // outranks the inline ones written here.
   host: {
     '[style.--timer-color]': 'style().color',
     '[style.--timer-font-family]': 'style().fontFamily',
@@ -72,7 +68,7 @@ export class TimerOverlayPageComponent {
     try {
       this.timer.set(await this.timers.getTimer(channelId));
     } catch {
-      // Fetched again on every connect, so a stream that outlives a restart of the API picks the
+      // Fetched again on every connection, so a stream that outlives a restart of the API picks the
       // timer back up by itself rather than sitting on an error for the rest of the stream.
     }
   }

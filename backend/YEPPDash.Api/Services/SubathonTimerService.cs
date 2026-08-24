@@ -13,8 +13,6 @@ public sealed class SubathonTimerService(
     {
         var id = ParseChannelId(channelId);
 
-        // A channel the bot has never joined has no row, and that is not an error worth showing an
-        // overlay: a timer nobody has set is a timer at zero.
         return await repository.GetAsync(id, cancellationToken) ?? Empty(id);
     }
 
@@ -35,12 +33,6 @@ public sealed class SubathonTimerService(
 
     public Task<SubathonTimerState> AdjustAsync(string channelId, int seconds, CancellationToken cancellationToken)
     {
-        if (Math.Abs((long)seconds) > SubathonTimerLimits.MaxSeconds)
-        {
-            throw new InvalidSubathonTimerException(
-                $"A timer cannot be moved by more than {SubathonTimerLimits.MaxSeconds} seconds at once.");
-        }
-
         return MutateAsync(
             channelId,
             $"moved by {seconds}s",
@@ -57,8 +49,7 @@ public sealed class SubathonTimerService(
             cancellationToken);
     }
 
-    public Task<SubathonTimerState> SaveConfigAsync(
-        string channelId, int startSeconds, CancellationToken cancellationToken)
+    public Task<SubathonTimerState> SaveConfigAsync(string channelId, int startSeconds, CancellationToken cancellationToken)
     {
         return MutateAsync(
             channelId,
@@ -67,15 +58,8 @@ public sealed class SubathonTimerService(
             cancellationToken);
     }
 
-    public Task<SubathonTimerState> SaveStyleAsync(
-        string channelId, string style, CancellationToken cancellationToken)
+    public Task<SubathonTimerState> SaveStyleAsync(string channelId, string style, CancellationToken cancellationToken)
     {
-        if (style.Length > SubathonTimerLimits.MaxStyleLength)
-        {
-            throw new InvalidSubathonTimerException(
-                $"The overlay settings cannot be longer than {SubathonTimerLimits.MaxStyleLength} characters.");
-        }
-
         return MutateAsync(
             channelId,
             "restyled",
@@ -83,19 +67,6 @@ public sealed class SubathonTimerService(
             cancellationToken);
     }
 
-    /// <summary>
-    /// Makes sure the row exists, runs the command, and tells every open overlay what came back.
-    /// </summary>
-    /// <remarks>
-    /// Publishing happens here rather than in the controller, which is where the wheel does it. The
-    /// timer has a second writer that this process never sees — the bot, straight into the table —
-    /// and a watcher that turns those writes into the same events. Keeping both halves of that on the
-    /// one shape means an overlay cannot tell a click from a chat command, which is the point.
-    ///
-    /// It also means a dashboard click does not wait on the watcher's next pass: this fires at once,
-    /// and the watcher only ever picks up what the bot did. The occasional duplicate is harmless,
-    /// because every message carries the whole state.
-    /// </remarks>
     private async Task<SubathonTimerState> MutateAsync(
         string channelId,
         string what,
@@ -110,10 +81,7 @@ public sealed class SubathonTimerService(
 
         if (state is null)
         {
-            // The table is keyed on Channel, which is YEPPBot's, and the INSERT that would have made
-            // room here is dropped rather than raised when that channel is not one the bot knows. So
-            // reaching this means the bot has never been in it — and every command from here on would
-            // quietly touch nothing, leaving a timer on screen that never moves and never explains why.
+
             logger.LogWarning("Channel {ChannelId} has no timer row — YEPPBot has never joined it", id);
 
             throw new InvalidSubathonTimerException(
@@ -131,12 +99,6 @@ public sealed class SubathonTimerService(
         if (seconds < 0)
         {
             throw new InvalidSubathonTimerException("A timer cannot be set to a negative duration.");
-        }
-
-        if (seconds > SubathonTimerLimits.MaxSeconds)
-        {
-            throw new InvalidSubathonTimerException(
-                $"A timer cannot be set to more than {SubathonTimerLimits.MaxSeconds} seconds.");
         }
 
         return seconds;

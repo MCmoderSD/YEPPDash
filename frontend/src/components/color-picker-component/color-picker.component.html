@@ -1,6 +1,4 @@
-<!-- Material's menu panel treats any click that reaches it as "an item was chosen" and closes.
-     Stopped here so adjusting the square or the slider keeps the panel open; the one deliberate
-     close — picking a preset — goes through the picked output instead. -->
+
 <div class="picker" (click)="$event.stopPropagation()">
   <div class="picker-presets" role="group" aria-label="Colour presets">
     @for (preset of presets(); track preset.value) {
