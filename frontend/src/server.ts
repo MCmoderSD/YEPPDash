@@ -17,6 +17,32 @@ const angularApp = new AngularNodeAppEngine();
 const dashHost = new URL(environment.frontendBaseUrl).hostname;
 const isProd = process.env['NODE_ENV'] === 'production';
 
+// Store it, but ask before using it - not, despite the name, a refusal to cache.
+const REVALIDATE = 'no-cache';
+
+/**
+ * How long a file may be used without asking, decided by two questions: can the content behind this
+ * name still change, and what breaks if a client uses a stale copy anyway.
+ *
+ * - Hashed bundles answer no to the first - a deploy never rewrites one, it publishes new names -
+ *   so they are cached for the longest span convention allows and, thanks to immutable, not even
+ *   revalidated on an explicit reload.
+ * - Documents keep their names and are the index into those hashed ones, which makes a stale copy a
+ *   dead app rather than an old one: it goes on naming bundles the new build no longer publishes.
+ *   A few kilobytes, so asking every time is cheaper than a deploy that half arrives.
+ * - robots.txt and llms.txt are instructions rather than content. Their whole point is to be
+ *   changeable, and an hour is about the shortest notice a crawler will act on.
+ * - Everything left is artwork: stable in name, replaceable in principle, harmless when a day out
+ *   of date.
+ */
+const LIFETIMES: readonly (readonly [RegExp, string])[] = [
+  [/-[A-Za-z0-9_-]{8,}\.(?:js|css)$/, 'public, max-age=31536000, immutable'],
+  [/\.html$/, REVALIDATE],
+  [/(?:robots|llms)\.txt$/, 'public, max-age=3600'],
+];
+
+const ARTWORK = 'public, max-age=86400';
+
 /**
  * Has to stay ahead of the host rewrite below: bundles and assets live at real paths in the
  * browser folder and are requested that way from every host, so rewriting them to /dash/* would
@@ -25,9 +51,13 @@ const isProd = process.env['NODE_ENV'] === 'production';
  */
 app.use(
   express.static(browserDistFolder, {
-    maxAge: '1y',
     index: false,
     redirect: false,
+    setHeaders: (res, path) => {
+      const match = LIFETIMES.find(([name]) => name.test(path));
+
+      res.setHeader('Cache-Control', match ? match[1] : ARTWORK);
+    },
   }),
 );
 
@@ -80,6 +110,25 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+  /**
+   * Angular sends these documents without a word about caching, which leaves every client free to
+   * invent its own answer - and the one embedded in OBS answers badly. An overlay therefore says
+   * no-store in every dialect there is: the modern header, the HTTP/1.0 one the bundled Chromium is
+   * old enough to still consult, and an expiry already in the past for whatever ignores both. It is
+   * the one page on the site with no address bar and no working reload, so a copy that settles into
+   * that cache stays there for the rest of the stream.
+   *
+   * Everything else revalidates instead of refusing storage outright: a conditional request is
+   * cheap, and being a build behind matters far less on a page someone can simply reload.
+   */
+  if (isOverlayUrl(req.url)) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  } else {
+    res.setHeader('Cache-Control', REVALIDATE);
+  }
+
   angularApp
     .handle(req)
     .then((response) =>
