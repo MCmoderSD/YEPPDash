@@ -2,7 +2,7 @@
 
 Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot) — a monolithic Twitch chat bot with no interactive console of its own. YEPPDash lets broadcasters control YEPPBot from a browser instead of only via Twitch chat commands, without weakening the bot's security posture: end users never talk to the bot directly, only to this dashboard's backend.
 
-Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, BDSM test results, and two OBS overlays (a lucky wheel and a subathon timer) are live. The UI, and the feature set, are still changing.
+Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, BDSM test results, two OBS overlays (a lucky wheel and a subathon timer), and Spotify song requests are live. The UI, and the feature set, are still changing.
 
 ## Features
 
@@ -15,16 +15,17 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 - **BDSM test results** — view your own and your followers' results
 - **Lucky wheel** — build a wheel of entries and spin it, live on an OBS browser source
 - **Subathon timer** — a countdown OBS shows and chat drives, with the appearance set from the dashboard
+- **Spotify** — connect a Spotify account, see and control what is playing, and let chat request tracks with cooldowns, a length limit and a blocklist
 
 ## Tech Stack
 
 | | |
 |---|---|
-| Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector, ClosedXML |
+| Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector, ClosedXML, SpotifyAPI.Web |
 | Frontend | Angular 22 + Angular Material, SSR (`@angular/ssr` + Express) |
-| Auth | Twitch OAuth2 (authorization code) + Helix `/users` — no local passwords/user table |
-| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot, plus YEPPDash's own `TwitchToken` and `Wheel` tables |
-| Overlays | Server-Sent Events, one in-process hub per overlay — assumes a single backend instance, which `docker-compose.yaml` runs |
+| Auth | Twitch OAuth2 (authorization code) + Helix `/users` — no local passwords/user table. Spotify OAuth2 per broadcaster, optional |
+| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot, plus YEPPDash's own `TwitchToken`, `Wheel` and Spotify tables |
+| Live updates | Server-Sent Events, one in-process hub per feature — assumes a single backend instance, which `docker-compose.yaml` runs |
 | Reverse proxy | Caddy, run by the operator outside this repo — subdomain routing (`dash.yeppbot.com`/`.dev` → frontend, `api.yeppbot.com`/`.dev` → backend) |
 
 ## Repository Structure
@@ -47,12 +48,15 @@ Reverse proxying (Caddy) is not part of this repo — it's handled by the operat
 - [`docs/twitch-api-client.md`](docs/twitch-api-client.md) — endpoints and features of the two Twitch API wrappers (Helix + OAuth)
 - [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) — the HTTP client YEPPDash uses to talk to a running YEPPBot instance (join/leave a channel, reload custom commands)
 - [`docs/subathon-timer.md`](docs/subathon-timer.md) — the table the subathon timer shares with YEPPBot: the statements each chat command is, and what either side must not touch
+- [`docs/spotify.md`](docs/spotify.md) — why the backend owns Spotify outright, the internal API YEPPBot calls, and the guards a song request has to pass
 
 ## Relationship to YEPPBot
 
 Actions that change how the running bot behaves — join/leave a channel, reload custom commands — go through a small HTTP API on YEPPBot itself rather than being written into its state behind its back; see [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) for the contract. That keeps YEPPBot's inputs to "its own HTTP API" and "the Twitch API," matching its existing security model.
 
 The subathon timer is the one exception, and deliberately so: both sides write the same row of one shared table, with no call in either direction. There is nothing to reload — the row *is* the state, and the bot reads it when it answers a command. [`docs/subathon-timer.md`](docs/subathon-timer.md) is the contract that keeps the two halves in step.
+
+Spotify runs the other way round: YEPPBot calls *this* backend, on `/internal/spotify/*`, authenticated with the same derived key it presents outbound. The bot holds no Spotify credentials and parses nothing — it forwards the raw text a viewer typed and turns the answer into a chat line. That is not tidiness: a Spotify refresh can rotate the refresh token, so two processes sharing one connection would invalidate each other's. [`docs/spotify.md`](docs/spotify.md) has the contract and the reasoning.
 
 ## License
 
