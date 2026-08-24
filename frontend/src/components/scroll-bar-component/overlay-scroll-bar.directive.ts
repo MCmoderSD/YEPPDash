@@ -1,4 +1,4 @@
-import { ComponentRef, DestroyRef, Directive, inject, ViewContainerRef } from '@angular/core';
+import { afterNextRender, ComponentRef, DestroyRef, Directive, inject, Injector, ViewContainerRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatAutocomplete } from '@angular/material/autocomplete';
 import { ScrollBarComponent } from './scroll-bar.component';
@@ -18,6 +18,7 @@ export class OverlayScrollBarDirective {
 
   private readonly autocomplete: MatAutocomplete = inject(MatAutocomplete);
   private readonly container: ViewContainerRef = inject(ViewContainerRef);
+  private readonly injector: Injector = inject(Injector);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
   private bars: ComponentRef<ScrollBarComponent> | null = null;
@@ -33,6 +34,17 @@ export class OverlayScrollBarDirective {
     // A panel reopened without a close in between would otherwise leave the first bar behind,
     // measuring an element that is no longer on the page.
     this.clear();
+
+    // `opened` announces the panel one render before Material has resolved its own reference to it,
+    // so asking now would find nothing and quietly give up - which is exactly what it did. Waiting
+    // for the render also means the panel has been laid out by the time the bar measures it.
+    afterNextRender((): void => this.mount(), { injector: this.injector });
+  }
+
+  private mount(): void {
+    // The panel can be gone again already: a click that opens and closes in the same breath, or a
+    // route left while it was down.
+    if (!this.autocomplete.isOpen) return;
 
     const panel: HTMLElement | undefined = this.autocomplete.panel?.nativeElement;
     const pane: HTMLElement | null | undefined = panel?.parentElement;
