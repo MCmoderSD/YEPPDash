@@ -38,6 +38,16 @@
       the features you use. Tokens are never shared with anyone other than Twitch's own API.
     </li>
     <li>
+      <strong>Spotify account link (only if you connect one).</strong> Connecting Spotify is
+      optional and off until you start it yourself. If you do, YEPPDash stores your Spotify user ID,
+      your Spotify display name, and the OAuth access and refresh tokens — encrypted at rest
+      (AES-256-GCM), keyed to your Twitch user ID. The link is scoped to playback control only
+      (<code>user-read-playback-state</code>, <code>user-modify-playback-state</code>,
+      <code>user-read-currently-playing</code>): it cannot read your library, your playlists, your
+      saved tracks or your listening history. Disconnecting on the Spotify page deletes the stored
+      row, tokens included.
+    </li>
+    <li>
       <strong>Session cookie.</strong> A single <code>yeppdash.session</code> cookie
       (HttpOnly, Secure, SameSite=Lax, valid up to 14 days) keeps you signed in. It contains no
       tracking identifiers and is not used for advertising or analytics.
@@ -62,6 +72,26 @@
     through the dashboard.
   </p>
 
+  <h3>Spotify data read live and not stored</h3>
+  <p>
+    While your Spotify account is connected, YEPPDash asks Spotify what is playing — the track,
+    artist, cover art, how far into it playback is, and the name of the device it is playing on —
+    together with the upcoming queue, and the results of any search you or your chat run. This is
+    read on demand and pushed to your open dashboard; none of it is written to the database. Note
+    that a Spotify device name is whatever the device is called, which is often a person's own name.
+  </p>
+  <p>
+    Spotify is only asked at all while a dashboard page is open or a chat command comes in, and the
+    connection stops being used the moment you disconnect it.
+  </p>
+  <p>
+    If you add the Spotify overlay to OBS, that link works without a login — a browser source cannot
+    sign in — so anyone who has it can see what you are currently playing. It is limited to the
+    track, the artists, the cover and the playback position; the device name and the names of people
+    who requested tracks are deliberately never sent to it. The same is true of the lucky wheel and
+    subathon timer overlay links.
+  </p>
+
   <h3>Channel data stored in the shared database</h3>
   <ul>
     <li>
@@ -76,6 +106,21 @@
     <li>
       <strong>Custom commands.</strong> Command name, aliases, response message, active flag,
       response type and required user level, per channel.
+    </li>
+    <li>
+      <strong>Song requests.</strong> Every request that reaches the Spotify queue is logged with the
+      requester's Twitch user ID and display name, the track (Spotify ID, title, artists, length), a
+      timestamp, and whether it came from chat or from the dashboard. This is what puts a name next
+      to a queued track, enforces the per-user cooldown, and catches duplicates — none of the three
+      is possible without remembering who asked for what. The broadcaster of the channel can see
+      this list for their own channel; nobody else can read it through YEPPDash. It is a log only:
+      Spotify owns the queue itself, and YEPPDash cannot remove anything from it.
+    </li>
+    <li>
+      <strong>Spotify request settings and blocklist.</strong> Per channel: whether chat may request
+      at all, the cooldown, the maximum track length, whether requests are limited to live streams,
+      and the Spotify track and artist IDs the broadcaster has blocked, with an optional reason.
+      These describe the channel, not a person.
     </li>
     <li>
       <strong>BDSM test results.</strong> Where a user has taken YEPPBot's BDSM test in chat, the
@@ -105,6 +150,7 @@
   <ul>
     <li>Art. 6(1)(b) GDPR — account, token, session and channel data needed to provide the dashboard you asked for;</li>
     <li>Art. 6(1)(f) GDPR — server logs, for the legitimate interest in operating a secure, reliable service;</li>
+    <li>Art. 6(1)(f) GDPR — the song request log, for the legitimate interest in attributing requests, enforcing the cooldown a broadcaster set, and keeping the queue from being spammed; requesting a track is voluntary, and nothing is logged unless you do;</li>
     <li>Art. 6(1)(a) and Art. 9(2)(a) GDPR — BDSM test results, on explicit consent given in chat.</li>
   </ul>
 
@@ -117,6 +163,13 @@
     see the channel data described above for their own channel. Your data is otherwise not sold,
     rented, or shared with any third party.
   </p>
+  <p>
+    If you connect Spotify, Spotify AB receives the requests YEPPDash makes on your behalf — reading
+    what is playing, and adding to, skipping, starting or stopping your playback — see
+    <a href="https://www.spotify.com/legal/privacy-policy/" target="_blank" rel="noopener">Spotify's Privacy Policy</a>
+    for how they handle that. Only the playback command itself is sent: the Twitch identity of
+    whoever asked for a track is never passed on, so Spotify is not told who requested what.
+  </p>
 
   <h2>Data retention</h2>
   <p>
@@ -125,6 +178,12 @@
     and BDSM results — belongs to YEPPBot and stays in the shared database until it is deleted in the
     dashboard, in chat, or on request; revoking YEPPDash's Twitch access alone does not remove it.
     The live channel lists live only in memory, and server logs are rotated out after a short period.
+  </p>
+  <p>
+    Spotify tokens are kept until you disconnect Spotify in the dashboard, revoke YEPPDash from your
+    Spotify account, or request deletion — any of the three removes the stored row. Song requests
+    stay in the log until they are deleted on request; disconnecting Spotify stops new ones being
+    written but does not clear the ones already there.
   </p>
 
   <h2>Your rights</h2>
@@ -141,7 +200,9 @@
     To exercise any of these, or to have your account data deleted, contact
     <a href="mailto:business@mcmodersd.de">business&#64;mcmodersd.de</a>. You can also revoke
     YEPPDash's access at any time from your
-    <a href="https://www.twitch.tv/settings/connections" target="_blank" rel="noopener">Twitch connected-apps settings</a>.
+    <a href="https://www.twitch.tv/settings/connections" target="_blank" rel="noopener">Twitch connected-apps settings</a>,
+    and, if you connected one, from your
+    <a href="https://www.spotify.com/account/apps/" target="_blank" rel="noopener">Spotify connected apps</a>.
   </p>
 
   <h2>Security</h2>
@@ -161,5 +222,5 @@
     date below.
   </p>
 
-  <p class="legal-updated">Last updated: 2026-08-02</p>
+  <p class="legal-updated">Last updated: 2026-08-24</p>
 </section>
