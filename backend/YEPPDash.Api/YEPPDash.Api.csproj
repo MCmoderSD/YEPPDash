@@ -8,10 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BDSM-Test-API" Version="1.0.0"/>
-        <PackageReference Include="ClosedXML" Version="0.105.1"/>
-        <PackageReference Include="Dapper" Version="2.1.79"/>
-        <PackageReference Include="MySqlConnector" Version="2.6.2"/>
+        <PackageReference Include="BDSM-Test-API" Version="1.0.0" />
+        <PackageReference Include="ClosedXML" Version="0.105.1" />
+        <PackageReference Include="Dapper" Version="2.1.79" />
+        <PackageReference Include="MySqlConnector" Version="2.6.2" />
+        <PackageReference Include="SpotifyAPI.Web" Version="7.4.2" />
     </ItemGroup>
 
 </Project>
