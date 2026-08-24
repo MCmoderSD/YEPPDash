@@ -1,0 +1,409 @@
+<section class="spotify-page">
+
+  <header class="spotify-page-header">
+    <h1 class="spotify-page-title">Spotify</h1>
+    <p class="spotify-page-state">
+      @if (!status().configured) {
+        Not available on this server — no Spotify credentials are configured
+      } @else if (connected()) {
+        Connected as {{ status().displayName }} — chat can request tracks with !spotify
+      } @else if (status().status === 'Revoked') {
+        Spotify revoked the link — connect again to bring it back
+      } @else {
+        Not connected — link your Spotify account to get started
+      }
+    </p>
+  </header>
+
+  @if (!status().configured) {
+    <section class="spotify-page-panel">
+      <p class="spotify-page-panel-hint">
+        This dashboard was started without Spotify credentials, so the feature is switched off for
+        everyone on it. Nothing here can be turned on from the dashboard side.
+      </p>
+    </section>
+  } @else if (!connected()) {
+
+    <section class="spotify-page-panel spotify-page-connect">
+      <span class="spotify-page-mark" aria-hidden="true"></span>
+
+      <h2 class="spotify-page-panel-title">Connect Spotify</h2>
+      <p class="spotify-page-panel-hint">
+        You will be sent to Spotify to approve the link. YEPPDash asks for playback control and
+        nothing else — no library, no playlists, no listening history. It stays linked afterwards, so
+        chat can request tracks while you are streaming without you being on this page.
+      </p>
+      <p class="spotify-page-panel-hint">
+        Controlling playback needs Spotify Premium. Spotify no longer says up front whether an
+        account has it, so a free account links successfully and then refuses the first command.
+      </p>
+
+      <div class="spotify-page-actions">
+        <button mat-flat-button type="button" (click)="connect()">
+          <mat-icon aria-hidden="true">link</mat-icon>
+          <span>Connect Spotify</span>
+        </button>
+      </div>
+
+      <p class="spotify-page-panel-note">
+        <mat-icon class="spotify-page-note-icon" aria-hidden="true">group</mat-icon>
+        <span>
+          Spotify allows this app five accounts besides the operator's own, and each has to be
+          entered by hand before it can be linked. If Spotify refuses to let you approve the app,
+          that is why — ask to be added rather than trying again.
+        </span>
+      </p>
+    </section>
+
+  } @else {
+
+    <div class="spotify-page-stage">
+      <app-now-playing [playback]="playback()"/>
+
+      <div class="spotify-page-controls">
+        <button mat-flat-button type="button" [disabled]="busy()" (click)="toggle()">
+          <mat-icon aria-hidden="true">{{ playback().isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+          <span>{{ playback().isPlaying ? 'Pause' : 'Play' }}</span>
+        </button>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="next()">
+          <mat-icon aria-hidden="true">skip_next</mat-icon>
+          <span>Skip</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="spotify-page-panels">
+
+      <section class="spotify-page-panel">
+        <h2 class="spotify-page-panel-title">Up next</h2>
+        <p class="spotify-page-panel-hint">
+          Straight from Spotify, so it includes whatever you queued there yourself — those simply
+          have nobody to credit. Nothing can be taken back out: Spotify has no endpoint for it.
+        </p>
+
+        @if (queue().length === 0) {
+          <p class="spotify-page-empty">
+            <mat-icon aria-hidden="true">queue_music</mat-icon>
+            <span>The queue is empty.</span>
+          </p>
+        } @else {
+          <ol class="spotify-page-queue">
+            @for (entry of queue(); track entry.track.id) {
+              <li class="spotify-page-queue-entry">
+                <span class="spotify-page-queue-body">
+                  <span class="spotify-page-queue-title">{{ entry.track.name }}</span>
+                  <span class="spotify-page-queue-artist">
+                    {{ entry.track.artists }}
+                    @if (entry.requestedBy; as requester) {
+                      <span class="spotify-page-queue-requester">· asked for by {{ requester }}</span>
+                    }
+                  </span>
+                </span>
+
+                <span class="spotify-page-queue-length">{{ duration(entry.track.durationMs) }}</span>
+
+                <button
+                  mat-icon-button
+                  type="button"
+                  [disabled]="busy()"
+                  [matTooltip]="'Block ' + entry.track.name"
+                  [attr.aria-label]="'Block ' + entry.track.name"
+                  (click)="block('Track', entry.track.id, entry.track.name)"
+                >
+                  <mat-icon aria-hidden="true">block</mat-icon>
+                </button>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+
+      <section class="spotify-page-panel">
+        <h2 class="spotify-page-panel-title">Chat commands</h2>
+        <p class="spotify-page-panel-hint">
+          The bot reaches the same queue this page does, so anything here can be done from chat.
+        </p>
+
+        <dl class="spotify-page-commands">
+          <dt>!spotify</dt>
+          <dd>What is playing right now</dd>
+
+          <dt>!spotify queue</dt>
+          <dd>The next few tracks</dd>
+
+          <dt>!spotify &lt;link&gt;</dt>
+          <dd>Adds a track by link, URI or id</dd>
+
+          <dt>!spotify &lt;search&gt;</dt>
+          <dd>Adds the best match for a search</dd>
+
+          <dt>!spotify skip</dt>
+          <dd>Skips the current track</dd>
+
+          <dt>!spotify play / pause</dt>
+          <dd>Starts and stops playback</dd>
+        </dl>
+
+        <p class="spotify-page-panel-note">
+          <mat-icon class="spotify-page-note-icon" aria-hidden="true">shield</mat-icon>
+          <span>Anyone can look and request; only you and your moderators can skip, play or pause.</span>
+        </p>
+      </section>
+    </div>
+
+    <section class="spotify-page-panel">
+      <h2 class="spotify-page-panel-title">OBS browser source</h2>
+      <p class="spotify-page-panel-hint">
+        Shows the current track on stream. This link is yours and stays the same — add it as a
+        browser source and resize it freely, the card scales with it. It hides itself whenever
+        nothing is playing, so there is no empty box to remember to switch off.
+      </p>
+
+      @if (overlayUrl(); as url) {
+        <div class="spotify-page-row">
+          <mat-form-field appearance="outline" class="spotify-page-field" subscriptSizing="dynamic">
+            <mat-label>Overlay link</mat-label>
+            <input matInput type="text" readonly [value]="url"/>
+          </mat-form-field>
+
+          <button mat-stroked-button type="button" (click)="copyOverlayUrl()">
+            <mat-icon aria-hidden="true">content_copy</mat-icon>
+            <span>Copy</span>
+          </button>
+
+          <button mat-stroked-button type="button" (click)="copyOverlayCss()">
+            <mat-icon aria-hidden="true">palette</mat-icon>
+            <span>Copy custom CSS</span>
+          </button>
+        </div>
+      }
+
+      <p class="spotify-page-panel-note">
+        <mat-icon class="spotify-page-note-icon" aria-hidden="true">visibility</mat-icon>
+        <span>
+          The link needs no login, so anyone who has it can see what you are playing — keep it out
+          of your scene exports and off screen. It shows the track, the artist and the cover, and
+          deliberately not the device you are playing on or who requested what.
+        </span>
+      </p>
+    </section>
+
+    <section class="spotify-page-panel">
+      <h2 class="spotify-page-panel-title">Add a track</h2>
+      <p class="spotify-page-panel-hint">
+        A search, a link or a Spotify URI — the same input chat uses. Your own additions ignore the
+        request rules below; the blocklist still applies.
+      </p>
+
+      <div class="spotify-page-row">
+        <mat-form-field appearance="outline" class="spotify-page-field" subscriptSizing="dynamic">
+          <mat-label>Search or paste a link</mat-label>
+          <input
+            matInput
+            type="search"
+            spellcheck="false"
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+            (keydown.enter)="search()"
+          />
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" [disabled]="searching()" (click)="search()">
+          <mat-icon aria-hidden="true">search</mat-icon>
+          <span>Search</span>
+        </button>
+
+        <button mat-flat-button type="button" [disabled]="busy() || !query().trim()" (click)="addTyped()">
+          <mat-icon aria-hidden="true">playlist_add</mat-icon>
+          <span>Add</span>
+        </button>
+      </div>
+
+      @if (matches().length > 0) {
+        <ul class="spotify-page-results">
+          @for (track of matches(); track track.id) {
+            <li class="spotify-page-result">
+              @if (track.artworkUrl; as artwork) {
+                <img class="spotify-page-result-art" [src]="artwork" alt="" width="40" height="40"/>
+              }
+
+              <span class="spotify-page-result-body">
+                <span class="spotify-page-result-title">{{ track.name }}</span>
+                <span class="spotify-page-result-artist">{{ track.artists }}</span>
+              </span>
+
+              <span class="spotify-page-result-length">{{ duration(track.durationMs) }}</span>
+
+              <button
+                mat-icon-button
+                type="button"
+                [disabled]="busy()"
+                [matTooltip]="'Add ' + track.name"
+                [attr.aria-label]="'Add ' + track.name"
+                (click)="add(track)"
+              >
+                <mat-icon aria-hidden="true">add</mat-icon>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="spotify-page-panel">
+      <h2 class="spotify-page-panel-title">Request rules</h2>
+      <p class="spotify-page-panel-hint">
+        These hold your chat back, not you. They are checked here rather than in the bot, so nothing
+        can go round them.
+      </p>
+
+      <div class="spotify-page-switches">
+        <mat-slide-toggle
+          [checked]="settings().requestsEnabled"
+          (change)="adjust({ requestsEnabled: $event.checked })"
+        >Chat may request tracks</mat-slide-toggle>
+
+        <mat-slide-toggle
+          [checked]="settings().requestsLiveOnly"
+          (change)="adjust({ requestsLiveOnly: $event.checked })"
+        >Only while the stream is live</mat-slide-toggle>
+      </div>
+
+      <div class="spotify-page-row">
+        <mat-form-field appearance="outline" class="spotify-page-field" subscriptSizing="dynamic">
+          <mat-label>Cooldown</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            [max]="maxCooldown"
+            [value]="settings().cooldownSeconds"
+            (input)="setCooldown($any($event.target).value)"
+          />
+          <mat-hint>Seconds between one viewer's requests — 0 turns it off</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="spotify-page-field" subscriptSizing="dynamic">
+          <mat-label>Longest track</mat-label>
+          <input
+            matInput
+            type="number"
+            min="1"
+            [max]="maxDurationMinutes"
+            [value]="maxDuration()"
+            (input)="setMaxDuration($any($event.target).value)"
+          />
+          <mat-hint>Minutes</mat-hint>
+        </mat-form-field>
+
+        <button mat-flat-button type="button" [disabled]="busy()" (click)="saveSettings()">
+          <mat-icon aria-hidden="true">save</mat-icon>
+          <span>Save</span>
+        </button>
+      </div>
+
+      <p class="spotify-page-panel-note">
+        <mat-icon class="spotify-page-note-icon" aria-hidden="true">info</mat-icon>
+        <span>
+          Skipping takes whatever is next, including tracks from the playlist you had running rather
+          than only requested ones. Adding is asynchronous too — Spotify confirms that it took the
+          command, not that the track has landed.
+        </span>
+      </p>
+    </section>
+
+    <section class="spotify-page-panel">
+      <h2 class="spotify-page-panel-title">Blocklist</h2>
+      <p class="spotify-page-panel-hint">
+        Tracks and artists nobody gets to request, yourself included. Add them with the block button
+        beside a queue entry.
+      </p>
+
+      @if (blocklist().length === 0) {
+        <p class="spotify-page-empty">
+          <mat-icon aria-hidden="true">block</mat-icon>
+          <span>Nothing is blocked.</span>
+        </p>
+      } @else {
+        <ul class="spotify-page-blocklist">
+          @for (entry of blocklist(); track entry.id) {
+            <li class="spotify-page-blocked">
+              <mat-icon class="spotify-page-blocked-kind" aria-hidden="true">
+                {{ entry.entryType === 'Artist' ? 'person' : 'music_note' }}
+              </mat-icon>
+
+              <span class="spotify-page-blocked-name">{{ entry.name || entry.entryId }}</span>
+
+              <button
+                mat-icon-button
+                type="button"
+                [disabled]="busy()"
+                [matTooltip]="'Unblock ' + (entry.name || entry.entryId)"
+                [attr.aria-label]="'Unblock ' + (entry.name || entry.entryId)"
+                (click)="unblock(entry)"
+              >
+                <mat-icon aria-hidden="true">close</mat-icon>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="spotify-page-panel">
+      <h2 class="spotify-page-panel-title">Request history</h2>
+      <p class="spotify-page-panel-hint">
+        Everything that made it into the queue through YEPPDash or the bot, newest first.
+      </p>
+
+      <div class="spotify-page-row">
+        <mat-form-field appearance="outline" class="spotify-page-field" subscriptSizing="dynamic">
+          <mat-label>Twitch user ID</mat-label>
+          <input
+            matInput
+            type="text"
+            spellcheck="false"
+            [value]="historyFilter()"
+            (input)="historyFilter.set($any($event.target).value)"
+            (keydown.enter)="filterHistory()"
+          />
+          <mat-hint>Leave empty for everyone</mat-hint>
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" (click)="filterHistory()">
+          <mat-icon aria-hidden="true">filter_alt</mat-icon>
+          <span>Filter</span>
+        </button>
+      </div>
+
+      @if (history().length === 0) {
+        <p class="spotify-page-empty">
+          <mat-icon aria-hidden="true">history</mat-icon>
+          <span>Nothing has been requested yet.</span>
+        </p>
+      } @else {
+        <ul class="spotify-page-history">
+          @for (entry of history(); track entry.id) {
+            <li class="spotify-page-history-entry">
+              <span class="spotify-page-history-body">
+                <span class="spotify-page-history-title">{{ entry.trackName }}</span>
+                <span class="spotify-page-history-artist">{{ entry.artists }}</span>
+              </span>
+
+              <span class="spotify-page-history-who">{{ entry.requestedByName }}</span>
+              <span class="spotify-page-history-when">{{ entry.requestedAt | localeDate }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <div class="spotify-page-actions spotify-page-actions-end">
+      <button mat-stroked-button type="button" [disabled]="busy()" (click)="disconnect()">
+        <mat-icon aria-hidden="true">link_off</mat-icon>
+        <span>Disconnect Spotify</span>
+      </button>
+    </div>
+  }
+</section>

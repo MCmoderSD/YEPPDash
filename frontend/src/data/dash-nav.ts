@@ -104,6 +104,13 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         path: `${BASE}/timer`,
       },
       {
+        label: 'Spotify',
+        icon: 'music_note',
+        mask: 'spotify.svg',
+        description: 'What is playing, and what your chat asked for next.',
+        path: `${BASE}/spotify`,
+      },
+      {
         label: 'BDSM Test',
         icon: 'psychology',
         mask: 'BDSM-Test-128px.png',
