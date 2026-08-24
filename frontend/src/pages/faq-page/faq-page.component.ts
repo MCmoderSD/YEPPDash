@@ -66,10 +66,21 @@ export class FaqPageComponent {
     },
     {
       question: 'Which features actually work right now?',
-      answer: 'Bot join and leave, moderator and VIP management, quotes, follower birthdays and BDSM test results are all live. Custom commands work but are still buggy, and auto-shoutouts for raids do not exist yet.',
+      answer: 'Bot join and leave, moderator and VIP management, quotes, follower birthdays, BDSM test results, the two OBS overlays and Spotify song requests are all live. Custom commands work but are still buggy, and auto-shoutouts for raids do not exist yet.',
       details: [
         'The landing page carries a badge next to each feature saying how far along it is. Anything marked "Coming soon" is genuinely not built yet rather than hidden somewhere.',
         'Features will keep being added and some existing ones will change shape as the dashboard settles down.',
+      ],
+    },
+    {
+      question: 'How do Spotify song requests work, and what do I need for them?',
+      answer: 'Connect your Spotify account once on the Spotify page, and chat can request tracks with !spotify. It needs Spotify Premium — that is Spotify\'s rule for controlling playback, not ours.',
+      details: [
+        'Connecting is optional and asks for playback control only: what is playing, and adding to, skipping, starting or stopping it. It cannot see your library, your playlists or your listening history, and you can unlink it from the dashboard or from Spotify at any time.',
+        'You decide the rules: whether chat may request at all, how long between one viewer\'s requests, how long a track may be, whether it only works while you are live, and which tracks and artists are blocked outright.',
+        'Two things worth knowing before you point it at a live stream. Spotify\'s developer policy does not actually bless playing its music over a broadcast, even though plenty of people do it. And Twitch mutes or removes VODs and clips that contain copyrighted music, whatever put it there.',
+        'Tracks cannot be taken back out of the queue once they are in it. Spotify simply offers no way to do that, so neither does this.',
+        'One catch, and it comes from Spotify rather than from us: an app in development mode may only be authorized by five accounts besides the one that owns it, and the route past that is effectively closed to anyone below a quarter of a million monthly users. So this feature is limited to a handful of channels, and each one has to be added by hand. Ask if you want a slot.',
       ],
     },
     {
