@@ -1,0 +1,280 @@
+.timer-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(72rem, 100%);
+  margin-inline: auto;
+}
+
+.timer-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.timer-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.timer-page-state {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.timer-page-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+// clamp rather than a fixed size: the readout is the point of the page on a wide screen, and eight
+// characters at a headline size still have to fit a phone.
+.timer-page-readout {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  font-size: clamp(2.5rem, 12vw, 5rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.timer-page-readout-paused {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.timer-page-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+// No align-items here on purpose: the panels stretch to the taller of the two, so the pair reads as
+// one band rather than as two cards that happen to start at the same line and stop wherever their
+// content runs out.
+.timer-page-panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+
+  // Side by side once the commands can sit next to the controls without either going narrow.
+  @media (min-width: 60rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.timer-page-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.timer-page-panel-title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.timer-page-panel-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+// No auto margin to push it down: the list above already takes the slack, so this sits directly
+// under the last row wherever that lands.
+.timer-page-panel-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  line-height: 1.5;
+}
+
+.timer-page-note-icon {
+  flex: none;
+
+  // Material sizes its icons at 24px; this one sits beside small text and would tower over it.
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+}
+
+// Wraps rather than shrinks: below this the field and its buttons end up too narrow to read, and a
+// stacked row is easier to use than a cramped one.
+.timer-page-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  // Centring the buttons against the field's visible box, by hand. `align-items: center` would
+  // centre against the field's whole wrapper instead, and a hint under a field makes that wrapper
+  // taller than the box — the button would drift down with it. The field box is 3.5rem, the buttons
+  // 2.5rem, so half the difference tops each one; in the rows that are only buttons the shift is
+  // uniform and reads as ordinary spacing.
+  > button {
+    margin-block-start: 0.5rem;
+  }
+
+  // Narrow enough that a field and its buttons cannot share a line without one of them being
+  // squeezed. The field takes the row outright, which pushes every button below it — and there they
+  // share the next line evenly rather than one tagging along beside the field and the rest wrapping
+  // under it. The nudge goes too: there is no field beside them left to line up with.
+  @media (max-width: 30rem) {
+    > .timer-page-field {
+      flex-basis: 100%;
+    }
+
+    > button {
+      flex: 1 1 0;
+      margin-block-start: 0;
+    }
+  }
+}
+
+.timer-page-field {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.timer-page-appearance {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+
+  // Without this the grid stretches every field to the tallest in the row, and a field carrying a
+  // hint is taller than one without — so the boxes of the two that have none grew to match the
+  // hint's line and sat visibly deeper than their neighbours. Aligned to the top they keep their own
+  // height and the hints hang below, where they belong.
+  align-items: start;
+}
+
+// The swatch in the field's suffix: a plain button painted in the current colour, opening the preset
+// menu. The two-tone ring — surface first, then outline — is what keeps it legible at both extremes:
+// a white swatch gets its edge from the outer outline ring, a black one from the gap of surface
+// between itself and that ring.
+.timer-page-swatch {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  flex: none;
+  margin-inline-end: 0.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--mat-sys-surface-container-low),
+    0 0 0 3px var(--mat-sys-outline);
+  cursor: pointer;
+  transition: box-shadow 120ms ease;
+
+  &:hover {
+    box-shadow:
+      0 0 0 2px var(--mat-sys-surface-container-low),
+      0 0 0 3px var(--mat-sys-primary);
+  }
+
+  // The suffix sits outside the input, so it is skipped when the field is tabbed into and needs a
+  // focus ring of its own to be usable from the keyboard at all.
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 3px;
+  }
+}
+
+// The panel behind the swatch — presets, saturation square, hue slider — lives in
+// components/color-picker-component and brings its own styles.
+
+// Switches at one end, actions at the other, so the panel's width carries something at both edges
+// rather than three left-aligned rows of shrinking length with half the panel empty beside them.
+//
+// Two groups rather than one flat row: mixed together the switches and buttons broke wherever the
+// labels happened to run out, because a toggle is neither the height nor the width of a button.
+// Grouped, the whole button set drops below the whole switch set when the room runs out.
+.timer-page-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+// Sized by their labels rather than stretched to share the row, which left each one sitting in a
+// column of empty space with its neighbour half a panel away.
+.timer-page-switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+}
+
+.timer-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+
+  // Below this the three buttons break two-and-one and leave a gap the width of the third. A column
+  // of full-width buttons is both tidier and an easier target on a phone.
+  @media (max-width: 30rem) {
+    flex: 1 1 100%;
+
+    > button {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+// A description list rather than a table: each command has exactly one explanation, and a table
+// would announce a column header before every one of them.
+//
+// This panel is stretched to whatever height its neighbour has, and the leftover used to pool at the
+// bottom as one blank band. `flex: 1 1 auto` hands that leftover to the list and `space-between`
+// spreads it between the rows — growing only into space that already exists, so the list never makes
+// the panel taller than the one beside it. Without the auto basis the rows would be squashed to
+// nothing when there is no slack to take.
+.timer-page-commands {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: space-between;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  grid-template-columns: max-content minmax(0, 1fr);
+
+  dt {
+    color: var(--mat-sys-primary);
+    font-family: var(--mat-sys-body-medium-font), monospace;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-medium);
+  }
+
+  // Two columns of nowrap command names do not survive a phone; stacked, each command keeps its
+  // explanation directly under it.
+  @media (max-width: 30rem) {
+    grid-template-columns: minmax(0, 1fr);
+
+    dd {
+      margin-block-end: 0.5rem;
+    }
+  }
+}

@@ -1,0 +1,58 @@
+
+<div class="picker" (click)="$event.stopPropagation()">
+  <div class="picker-presets" role="group" aria-label="Colour presets">
+    @for (preset of presets(); track preset.value) {
+      <button
+        type="button"
+        class="picker-preset"
+        [class.picker-preset-selected]="hex() === preset.value"
+        [attr.aria-label]="preset.label"
+        [attr.aria-pressed]="hex() === preset.value"
+        [style.background]="preset.value"
+        (click)="pick(preset.value)"
+      ></button>
+    }
+  </div>
+
+  <div
+    class="picker-area"
+    role="slider"
+    tabindex="0"
+    aria-label="Saturation and brightness"
+    [attr.aria-valuetext]="areaText()"
+    [style.background]="areaBackground()"
+    (pointerdown)="areaDown($event)"
+    (pointermove)="areaMove($event)"
+    (pointerup)="dragEnd()"
+    (pointercancel)="dragEnd()"
+    (keydown)="areaKey($event)"
+  >
+    <div
+      class="picker-thumb"
+      [style.left.%]="thumbLeft()"
+      [style.top.%]="thumbTop()"
+      [style.background]="hex()"
+    ></div>
+  </div>
+
+  <div
+    class="picker-hue"
+    role="slider"
+    tabindex="0"
+    aria-label="Hue"
+    aria-valuemin="0"
+    aria-valuemax="360"
+    [attr.aria-valuenow]="hueDegrees()"
+    (pointerdown)="hueDown($event)"
+    (pointermove)="hueMove($event)"
+    (pointerup)="dragEnd()"
+    (pointercancel)="dragEnd()"
+    (keydown)="hueKey($event)"
+  >
+    <div
+      class="picker-hue-thumb"
+      [style.left.%]="huePercent()"
+      [style.background]="hueColor()"
+    ></div>
+  </div>
+</div>

@@ -7,6 +7,7 @@ import { TermsPageComponent } from '../pages/terms-page/terms-page.component';
 import { authGuard } from '../services/auth.guard';
 import { isDashHost } from '../services/dash-host';
 import { WHEEL_OVERLAY_PATH } from '../data/wheel-overlay';
+import { TIMER_OVERLAY_PATH } from '../data/timer-overlay';
 import { environment } from '../environments/environment';
 
 const dashHostMatch: CanMatchFn = (): boolean => isDashHost();
@@ -18,6 +19,11 @@ export const routes: Routes = [
     path: WHEEL_OVERLAY_PATH,
     loadComponent: () => import('../pages/wheel-overlay-page/wheel-overlay-page.component').then((module) => module.WheelOverlayPageComponent),
     title: 'Lucky Wheel',
+  },
+  {
+    path: TIMER_OVERLAY_PATH,
+    loadComponent: () => import('../pages/timer-overlay-page/timer-overlay-page.component').then((module) => module.TimerOverlayPageComponent),
+    title: 'Subathon Timer',
   },
   {
     path: '',

@@ -50,6 +50,14 @@ builder.Services.AddScoped<WheelRepository>();
 builder.Services.AddScoped<WheelService>();
 // Singleton: it is what holds the open overlay connections, which outlive any one request.
 builder.Services.AddSingleton<WheelHub>();
+builder.Services.AddScoped<SubathonTimerRepository>();
+builder.Services.AddScoped<SubathonTimerService>();
+// Singleton for the same reason as the wheel's: it is what holds the open overlay connections,
+// which outlive any one request.
+builder.Services.AddSingleton<SubathonTimerHub>();
+// The bot drives the timer by writing to the table this shares with it, and has no way to tell us
+// it did. This worker is what turns those writes into the events an overlay is waiting on.
+builder.Services.AddHostedService<SubathonTimerWatcher>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

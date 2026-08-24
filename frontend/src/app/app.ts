@@ -7,7 +7,7 @@ import { NavbarComponent } from '../components/navbar-component/navbar.component
 import { FooterComponent } from '../components/footer-component/footer.component';
 import { NotificationsComponent } from '../components/notifications-component/notifications.component';
 import { PageScrollBarComponent } from '../components/page-scroll-bar-component/page-scroll-bar.component';
-import { isWheelOverlayUrl } from '../data/wheel-overlay';
+import { isOverlayUrl } from '../data/overlay';
 
 @Component({
   selector: 'app-root',
@@ -28,7 +28,7 @@ export class App {
     { initialValue: this.document.location?.pathname ?? '/' },
   );
 
-  protected readonly chrome: Signal<boolean> = computed((): boolean => !isWheelOverlayUrl(this.url()));
+  protected readonly chrome: Signal<boolean> = computed((): boolean => !isOverlayUrl(this.url()));
 
   private readonly footer: Signal<ElementRef<HTMLElement> | undefined> =
     viewChild('footer', { read: ElementRef });
