@@ -425,6 +425,20 @@ public sealed class TwitchChannelService(
         return page.All(entry => known.Contains(idOf(entry)));
     }
 
+    /// <summary>
+    /// Whether the channel is live, asked straight rather than subscribed to. An EventSub
+    /// subscription would be cheaper per check but needs a public callback, a secret and a
+    /// reconciliation path for events missed while the API was down — for a guard that runs once per
+    /// song request, on a cached answer, a poll is the smaller thing to own.
+    /// </summary>
+    public async Task<bool> IsLiveAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var stream = await apiClient.GetStreamAsync(broadcasterId, accessToken, cancellationToken);
+
+        return stream is not null && stream.Type.Equals("live", StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task<string> GetAccessTokenAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var token = await authService.GetValidTokenAsync(twitchUserId, cancellationToken);

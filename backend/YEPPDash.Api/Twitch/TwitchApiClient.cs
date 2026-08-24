@@ -164,6 +164,20 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
     #endregion
 
+    #region Streams
+    /// <summary>
+    /// The channel's live stream, or null when it is offline. Needs no scope beyond a valid token,
+    /// which is why the channel's own stored token is enough and nothing had to be re-authorized.
+    /// </summary>
+    public async Task<TwitchStream?> GetStreamAsync(string broadcasterId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"streams?user_id={Uri.EscapeDataString(broadcasterId)}&first=1";
+
+        var page = await GetPageAsync<TwitchStream>(query, accessToken, cancellationToken);
+        return page.Items.FirstOrDefault();
+    }
+    #endregion
+
     #region Chat
     public Task<HelixPage<TwitchChannelUser>> GetChattersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
