@@ -130,6 +130,21 @@
   > button {
     margin-block-start: 0.5rem;
   }
+
+  // Narrow enough that a field and its buttons cannot share a line without one of them being
+  // squeezed. The field takes the row outright, which pushes every button below it — and there they
+  // share the next line evenly rather than one tagging along beside the field and the rest wrapping
+  // under it. The nudge goes too: there is no field beside them left to line up with.
+  @media (max-width: 30rem) {
+    > .timer-page-field {
+      flex-basis: 100%;
+    }
+
+    > button {
+      flex: 1 1 0;
+      margin-block-start: 0;
+    }
+  }
 }
 
 .timer-page-field {
@@ -184,27 +199,44 @@
 // The panel behind the swatch — presets, saturation square, hue slider — lives in
 // components/color-picker-component and brings its own styles.
 
-// A row of controls with no form field in it. The half-rem nudge every button in a .timer-page-row
-// carries is there to meet a field box, and with no field it only pushes the row off its own top
-// edge — so it comes back off here.
+// Switches at one end, actions at the other, so the panel's width carries something at both edges
+// rather than three left-aligned rows of shrinking length with half the panel empty beside them.
 //
-// Centred rather than top-aligned, because a slide toggle and a button are not the same height: on
-// flex-start their tops meet and everything else about them — the track, the label, the button text
-// — sits at a different level.
-.timer-page-actions {
+// Two groups rather than one flat row: mixed together the switches and buttons broke wherever the
+// labels happened to run out, because a toggle is neither the height nor the width of a button.
+// Grouped, the whole button set drops below the whole switch set when the room runs out.
+.timer-page-controls {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-
-  > button {
-    margin-block-start: 0;
-  }
+  justify-content: space-between;
+  gap: 1rem 2rem;
 }
 
-// Sits in the button row rather than on a line of its own — one row instead of two, and nothing left
-// stranded between the fields and the actions. Directly after the last button rather than pushed to
-// the far edge: it belongs to the same group, and a gap the width of the panel read as two unrelated
-// halves. The half rem of extra gap is what keeps it from looking like a fourth button.
-.timer-page-toggle {
-  margin-inline-start: 0.5rem;
+// Sized by their labels rather than stretched to share the row, which left each one sitting in a
+// column of empty space with its neighbour half a panel away.
+.timer-page-switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+}
+
+.timer-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+
+  // Below this the three buttons break two-and-one and leave a gap the width of the third. A column
+  // of full-width buttons is both tidier and an easier target on a phone.
+  @media (max-width: 30rem) {
+    flex: 1 1 100%;
+
+    > button {
+      flex: 1 1 100%;
+    }
+  }
 }
 
 // A description list rather than a table: each command has exactly one explanation, and a table

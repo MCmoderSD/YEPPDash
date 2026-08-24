@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, signal, Signal, WritableSignal } from '@angular/core';
 import { TimerDisplayComponent } from '../../components/timer-display-component/timer-display.component';
-import { EMPTY_TIMER, SubathonTimer, TimerStyle } from '../../data/subathon-timer';
+import { EMPTY_TIMER, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle } from '../../data/subathon-timer';
 import { TimerService } from '../../services/timer.service';
 import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
 
@@ -17,6 +17,7 @@ const TRANSPARENT: string = 'app-transparent';
     '[style.--timer-font-family]': 'style().fontFamily',
     '[style.--timer-font-size]': 'fontSize()',
     '[style.--timer-shadow]': 'shadow()',
+    '[style.--timer-animation-duration]': 'animation()',
   },
 })
 export class TimerOverlayPageComponent {
@@ -34,8 +35,8 @@ export class TimerOverlayPageComponent {
 
   protected readonly style: Signal<TimerStyle> = computed((): TimerStyle => this.timer().style);
   protected readonly fontSize: Signal<string> = computed((): string => `${this.style().fontSize}vmin`);
-  protected readonly shadow: Signal<string> = computed((): string =>
-    this.style().shadow ? '0 0.4vmin 0.8vmin rgb(0 0 0 / 80%)' : 'none');
+  protected readonly shadow: Signal<string> = computed((): string => this.style().shadow ? '0 0.4vmin 0.8vmin rgb(0 0 0 / 80%)' : 'none');
+  protected readonly animation: Signal<string> = computed((): string => `${this.style().animate ? TIMER_ANIMATION_MS : 0}ms`);
 
   constructor() {
     const root: HTMLElement = this.document.documentElement;

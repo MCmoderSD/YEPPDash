@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { TimerService } from '../../services/timer.service';
 import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
-import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
+import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
 import { timerOverlayUrl } from '../../data/timer-overlay';
 
 @Component({
@@ -20,6 +20,9 @@ import { timerOverlayUrl } from '../../data/timer-overlay';
   templateUrl: './timer-page.component.html',
   styleUrl: './timer-page.component.scss',
   imports: [ColorPickerComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, TimerDisplayComponent],
+  host: {
+    '[style.--timer-animation-duration]': 'animation()',
+  },
 })
 export class TimerPageComponent {
 
@@ -48,6 +51,8 @@ export class TimerPageComponent {
   private readonly display: Signal<TimerDisplayComponent | undefined> = viewChild(TimerDisplayComponent);
 
   protected readonly canStart: Signal<boolean> = computed((): boolean => !(this.display()?.over() ?? this.timer().remaining === 0));
+
+  protected readonly animation: Signal<string> = computed((): string => `${this.style().animate ? TIMER_ANIMATION_MS : 0}ms`);
 
   protected readonly atDefaults: Signal<boolean> = computed((): boolean => {
     const style: TimerStyle = this.style();

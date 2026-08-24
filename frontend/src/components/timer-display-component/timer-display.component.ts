@@ -6,14 +6,18 @@ const TICK_MS: number = 250;
 
 @Component({
   selector: 'app-timer-display',
-  template: `<span class="timer-display-value">{{ text() }}</span>`,
-  styles: `
-    :host {
-      display: inline-block;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
+  template: `
+    <span class="timer-display-value">
+      @for (slot of slots(); track $index) {
+        <span class="timer-display-slot">
+          @for (character of slot; track character) {
+            <span class="timer-display-character" animate.enter="timer-display-enter">{{ character }}</span>
+          }
+        </span>
+      }
+    </span>
   `,
+  styleUrl: './timer-display.component.scss',
 })
 export class TimerDisplayComponent {
 
@@ -29,6 +33,8 @@ export class TimerDisplayComponent {
   readonly over: Signal<boolean> = computed((): boolean => this.remaining() === 0);
 
   protected readonly text: Signal<string> = computed((): string => formatDuration(this.remaining()));
+
+  protected readonly slots: Signal<string[][]> = computed((): string[][] => [...this.text()].map((character: string): string[] => [character]));
 
   constructor() {
     afterNextRender((): void => this.rendered.set(true));

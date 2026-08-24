@@ -13,6 +13,7 @@ export interface TimerStyle {
   fontSize: number;
   label: string;
   shadow: boolean;
+  animate: boolean;
 }
 
 export interface SubathonTimer {
@@ -30,7 +31,10 @@ export const DEFAULT_TIMER_STYLE: TimerStyle = {
   fontSize: 18,
   label: '',
   shadow: true,
+  animate: true,
 };
+
+export const TIMER_ANIMATION_MS: number = 260;
 
 export const EMPTY_TIMER: SubathonTimer = {
   running: false,
@@ -82,6 +86,7 @@ export function parseTimerStyle(raw: string): TimerStyle {
       fontSize: size(source.fontSize),
       label: text(source.label, DEFAULT_TIMER_STYLE.label),
       shadow: typeof source.shadow === 'boolean' ? source.shadow : DEFAULT_TIMER_STYLE.shadow,
+      animate: typeof source.animate === 'boolean' ? source.animate : DEFAULT_TIMER_STYLE.animate,
     };
   } catch {
     return DEFAULT_TIMER_STYLE;
@@ -97,6 +102,7 @@ export function timerStyleCss(style: TimerStyle): string {
     `  --timer-font-family: ${style.fontFamily} !important;`,
     `  --timer-font-size: ${style.fontSize}vmin !important;`,
     `  --timer-shadow: ${style.shadow ? '0 0.4vmin 0.8vmin rgb(0 0 0 / 80%)' : 'none'} !important;`,
+    `  --timer-animation-duration: ${style.animate ? TIMER_ANIMATION_MS : 0}ms !important;`,
     '}',
   ].join('\n');
 }
