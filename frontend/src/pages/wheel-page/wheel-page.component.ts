@@ -19,7 +19,7 @@ import { WheelService } from '../../services/wheel.service';
 import { WheelResultsService } from '../../services/wheel-results.service';
 import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, parseWheelFile, removeOne, shuffleEntries, sliceCount, sortEntries, splitEntries, WHEEL_FILE_NAME, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
 import { resultWonAt, WheelResult } from '../../data/wheel-result';
-import { wheelOverlayUrl } from '../../data/wheel-overlay';
+import { overlayUrl, WHEEL_OVERLAY_PATH } from '../../data/overlay';
 
 @Component({
   selector: 'app-wheel-page',
@@ -65,7 +65,7 @@ export class WheelPageComponent {
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const channelId: string | null = this.channelId();
-    return channelId === null ? null : wheelOverlayUrl(channelId);
+    return channelId === null ? null : overlayUrl(WHEEL_OVERLAY_PATH, channelId);
   });
 
   protected readonly label: (entry: WheelEntry) => string = entryText;
