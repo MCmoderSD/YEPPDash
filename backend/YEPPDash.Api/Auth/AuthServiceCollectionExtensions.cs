@@ -21,6 +21,10 @@ public static class AuthServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSingleton<ITokenCipher>(new AesGcmTokenCipher(options.ClientSecret));
+        // What YEPPBot presents on the endpoints it calls. Derived from the same secret, the same
+        // way, as the key YEPPDash presents when calling the bot — one value, agreed on by both
+        // halves without either configuring it.
+        services.AddSingleton(new ServiceToken(options.ClientSecret));
         services.AddScoped<TwitchAuthService>();
         
         services.AddHttpClient<TwitchOAuthClient>(client =>

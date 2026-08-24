@@ -18,6 +18,12 @@ services:
       Twitch__ClientSecretDev: ${TWITCH__CLIENTSECRETDEV:-}
       Twitch__ClientSecretProd: ${TWITCH__CLIENTSECRETPROD:-}
       Twitch__RedirectUri: ${TWITCH__REDIRECTURI}
+      Spotify__ClientIdDev: ${SPOTIFY__CLIENTIDDEV:-}
+      Spotify__ClientIdProd: ${SPOTIFY__CLIENTIDPROD:-}
+      Spotify__ClientSecretDev: ${SPOTIFY__CLIENTSECRETDEV:-}
+      Spotify__ClientSecretProd: ${SPOTIFY__CLIENTSECRETPROD:-}
+      Spotify__RedirectUriDev: ${SPOTIFY__REDIRECTURIDEV:-}
+      Spotify__RedirectUriProd: ${SPOTIFY__REDIRECTURIPROD:-}
       AllowedFrontendOrigins__0: ${ALLOWEDFRONTENDORIGINS__0}
       AllowedFrontendOrigins__1: ${ALLOWEDFRONTENDORIGINS__1}
       AllowedFrontendOrigins__2: ${ALLOWEDFRONTENDORIGINS__2}

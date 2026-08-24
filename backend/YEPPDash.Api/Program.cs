@@ -4,6 +4,7 @@ using YEPPDash.Api.Bot;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services;
+using YEPPDash.Api.Spotify;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +59,9 @@ builder.Services.AddSingleton<SubathonTimerHub>();
 // The bot drives the timer by writing to the table this shares with it, and has no way to tell us
 // it did. This worker is what turns those writes into the events an overlay is waiting on.
 builder.Services.AddHostedService<SubathonTimerWatcher>();
+// Optional, unlike every other block here: without Spotify credentials this registers the same
+// services and they all answer "not configured", so the rest of the dashboard is unaffected.
+builder.Services.AddSpotify(builder.Configuration, dbTarget);
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
