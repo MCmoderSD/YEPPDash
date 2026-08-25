@@ -104,6 +104,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         path: `${BASE}/timer`,
       },
       {
+        label: 'Queue',
+        icon: 'format_list_numbered',
+        description: 'Who is lined up, in order, driven from chat.',
+        path: `${BASE}/queue`,
+      },
+      {
         label: 'BDSM Test',
         icon: 'psychology',
         mask: 'BDSM-Test-128px.png',
