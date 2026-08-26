@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Exceptions.Twitch;
 
@@ -164,6 +165,56 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
     #endregion
 
+    #region Channel
+    public async Task<ChannelInformation?> GetChannelAsync(string broadcasterId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channels?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<ChannelInformation>>(TwitchJson.Options, cancellationToken);
+
+        // A channel that does not exist is an empty list and a 200, not a 404, so the caller has to
+        // be told the difference rather than reading it off the status code.
+        return payload?.Data.FirstOrDefault();
+    }
+
+    public async Task ModifyChannelAsync(string broadcasterId, ChannelUpdate update, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channels?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
+        var body = JsonContent.Create(update, options: TwitchJson.Options);
+
+        // 204 with no body: the new values are not echoed back, so whoever cares has to read again.
+        using var response = await SendAsync(HttpMethod.Patch, query, accessToken, cancellationToken, body);
+    }
+
+    // Get Channel Information answers with a game id and a name but no art, so the only way to show
+    // a cover for the category already set is to ask for the game itself.
+    public async Task<IReadOnlyList<ChannelCategory>> GetGamesAsync(IReadOnlyCollection<string> gameIds, string accessToken, CancellationToken cancellationToken)
+    {
+        if (gameIds.Count is 0 or > MaxBatchSize)
+        {
+            throw new ArgumentException($"Get Games takes between 1 and {MaxBatchSize} ids.", nameof(gameIds));
+        }
+
+        var query = string.Join('&', gameIds.Select(id => $"id={Uri.EscapeDataString(id)}"));
+        using var response = await SendAsync(HttpMethod.Get, $"games?{query}", accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<ChannelCategory>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data ?? [];
+    }
+
+    // Not built with PagedQuery: that one pins a broadcaster_id and a page size of 100, and a
+    // category search has no broadcaster and wants a page small enough to sit in a dropdown.
+    public Task<HelixPage<ChannelCategory>> SearchCategoriesAsync(string search, int first, string? cursor, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"search/categories?query={Uri.EscapeDataString(search)}&first={first}";
+        if (cursor is not null) query += $"&after={Uri.EscapeDataString(cursor)}";
+
+        return GetPageAsync<ChannelCategory>(query, accessToken, cancellationToken);
+    }
+    #endregion
+
     #region Chat
     public Task<HelixPage<TwitchChannelUser>> GetChattersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
@@ -211,9 +262,11 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string accessToken, CancellationToken cancellationToken)
+    // content is optional because every write in here until now went through the query string. The
+    // request owns it once it is attached, so the `using` disposes both together.
+    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string accessToken, CancellationToken cancellationToken, HttpContent? content = null)
     {
-        using var request = new HttpRequestMessage(method, path);
+        using var request = new HttpRequestMessage(method, path) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Add("Client-Id", options.ClientId);
 
