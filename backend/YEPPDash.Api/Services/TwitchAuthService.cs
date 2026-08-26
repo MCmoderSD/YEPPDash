@@ -109,6 +109,18 @@ public sealed class TwitchAuthService(
         }
     }
 
+    // Whether the stored token actually carries a scope, which is not the same question as whether
+    // TwitchScopes asks for one. A token keeps the scopes it was issued with, and refreshing keeps
+    // them as well — a scope added to the list after somebody logged in reaches them only when they
+    // authorise again. Asking here turns that into an answer we can explain instead of a 401 from
+    // Twitch halfway through a save.
+    public async Task<bool> HasScopeAsync(string twitchUserId, string scope, CancellationToken cancellationToken)
+    {
+        var token = await GetValidTokenAsync(twitchUserId, cancellationToken);
+
+        return token is not null && token.Scopes.Contains(scope, StringComparer.OrdinalIgnoreCase);
+    }
+
     public async Task SignOutAsync(string twitchUserId, CancellationToken cancellationToken)
     {
         var stored = await tokenStore.GetAsync(twitchUserId, cancellationToken);
