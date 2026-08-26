@@ -327,6 +327,41 @@ public sealed class TwitchChannelService(
     }
     #endregion
 
+    #region Channel
+    public async Task<ChannelInformation?> GetChannelAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetChannelAsync(broadcasterId, accessToken, cancellationToken);
+    }
+
+    public async Task UpdateChannelAsync(string broadcasterId, ChannelUpdate update, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        await apiClient.ModifyChannelAsync(broadcasterId, update, accessToken, cancellationToken);
+
+        logger.LogInformation("Updated the channel information of {BroadcasterId}", broadcasterId);
+    }
+
+    public async Task<IReadOnlyList<ChannelCategory>> GetGamesAsync(
+        string broadcasterId, IReadOnlyCollection<string> gameIds, CancellationToken cancellationToken)
+    {
+        if (gameIds.Count is 0) return [];
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetGamesAsync(gameIds, accessToken, cancellationToken);
+    }
+
+    // Deliberately not cached, unlike the role lists above. Those describe one channel and change
+    // rarely; this is a search over everything on Twitch, where the second page of "mario" has
+    // nothing to do with the first page of "minecraft" and a cache would only ever hold noise.
+    public async Task<HelixPage<ChannelCategory>> SearchCategoriesAsync(
+        string broadcasterId, string search, int first, string? cursor, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.SearchCategoriesAsync(search, first, cursor, accessToken, cancellationToken);
+    }
+    #endregion
+
     #region Chat
     public async Task<IReadOnlyList<TwitchUser>> GetChatterProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {

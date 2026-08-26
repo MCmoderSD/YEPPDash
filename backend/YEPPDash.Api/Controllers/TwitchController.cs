@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Twitch;
@@ -10,10 +11,27 @@ namespace YEPPDash.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("twitch")]
-public sealed class TwitchController(
+public sealed partial class TwitchController(
     TwitchChannelService channelService,
+    TwitchAuthService authService,
     ILogger<TwitchController> logger) : ControllerBase
 {
+    // Modify Channel Information is the only thing on this controller that needs a scope the
+    // dashboard has not always asked for.
+    private const string BroadcastScope = "channel:manage:broadcast";
+
+    private const int TitleMaxLength = 140;
+
+    private const int TagMaxCount = 10;
+
+    private const int TagMaxLength = 25;
+
+    // Twitch's ceiling for the stream delay, in seconds.
+    private const int DelayMaxSeconds = 900;
+
+    // Twitch defaults to 20 and allows up to 100. The dropdown shows a handful at a time and pages
+    // on scroll, so a small page keeps the first result on screen sooner.
+    private const int CategoryPageSize = 20;
 
     #region Users
     
@@ -246,6 +264,146 @@ public sealed class TwitchController(
     #endregion
 
     
+    #region Channel
+
+    [HttpGet("channel")]
+    public async Task<IActionResult> GetChannel(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var channel = await channelService.GetChannelAsync(twitchId, cancellationToken);
+
+            // Helix answers an unknown channel with 200 and an empty list, so this is the only place
+            // the difference can be turned back into a status code.
+            return channel is null ? NotFound("Twitch has no channel under this account.") : Ok(channel);
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "read the channel information");
+        }
+    }
+
+    [HttpPatch("channel")]
+    public async Task<IActionResult> UpdateChannel([FromBody] ChannelUpdate update, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        if (update is { Title: null, GameId: null, Tags: null, IsBrandedContent: null,
+                        BroadcasterLanguage: null, Delay: null, ContentClassificationLabels: null })
+        {
+            return BadRequest("Pass something to change — an empty change is not one.");
+        }
+
+        // Checked here rather than left to Twitch: the rules hold whatever the caller is, and a
+        // sentence beats a passed-through Helix error. An empty title is not "clear the title" to
+        // Twitch, it is simply rejected.
+        if (update.Title is not null)
+        {
+            if (string.IsNullOrWhiteSpace(update.Title)) return BadRequest("A stream title cannot be empty.");
+            if (update.Title.Length > TitleMaxLength) return BadRequest($"A stream title cannot be longer than {TitleMaxLength} characters.");
+        }
+
+        // Only the rules Twitch documents outright are checked here. It also runs tags through
+        // AutoMod and has its own idea of which characters count as special, and guessing at those
+        // would reject tags it would have accepted.
+        if (update.Tags is { } tags)
+        {
+            if (tags.Count > TagMaxCount) return BadRequest($"A channel can have at most {TagMaxCount} tags.");
+
+            if (tags.Any(string.IsNullOrWhiteSpace)) return BadRequest("A tag cannot be empty.");
+            if (tags.Any(tag => tag.Any(char.IsWhiteSpace))) return BadRequest("A tag cannot contain spaces.");
+            if (tags.Any(tag => tag.Length > TagMaxLength)) return BadRequest($"A tag cannot be longer than {TagMaxLength} characters.");
+        }
+
+        // Checked because Twitch does not object to a code it does not know — it keeps the old value
+        // and reports success, which looks exactly like the save having been ignored.
+        //
+        // Loosely, though, and not as strict ISO 639-1: Twitch's own list includes zh-hk and asl,
+        // neither of which is two letters. This rejects obvious nonsense without turning away
+        // something Twitch itself offers.
+        if (update.BroadcasterLanguage is { } language && !LanguageCode().IsMatch(language))
+        {
+            return BadRequest("A language has to be a Twitch language code, or 'other'.");
+        }
+
+        if (update.Delay is { } delay && delay is < 0 or > DelayMaxSeconds)
+        {
+            return BadRequest($"A stream delay has to be between 0 and {DelayMaxSeconds} seconds.");
+        }
+
+        if (update.ContentClassificationLabels is { } labels
+            && labels.FirstOrDefault(label => !Data.Twitch.ContentClassificationLabels.Known.Contains(label.Id)) is { } unknown)
+        {
+            return BadRequest($"'{unknown.Id}' is not a content classification label Twitch knows.");
+        }
+
+        if (!await authService.HasScopeAsync(twitchId, BroadcastScope, cancellationToken))
+        {
+            logger.LogInformation("User {TwitchId} has no {Scope}, their token predates it", twitchId, BroadcastScope);
+
+            return StatusCode(StatusCodes.Status403Forbidden, new ScopeRequired(
+                BroadcastScope,
+                "Your Twitch sign-in is older than this feature. Sign in again to grant permission to change your title and game."));
+        }
+
+        try
+        {
+            await channelService.UpdateChannelAsync(twitchId, update, cancellationToken);
+            return NoContent();
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "update the channel information");
+        }
+    }
+
+    [HttpGet("games")]
+    public async Task<IActionResult> GetGames([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var gameIds = Clean(id);
+        if (gameIds.Count is 0) return BadRequest("Pass at least one game id.");
+
+        try
+        {
+            return Ok(await channelService.GetGamesAsync(twitchId, gameIds, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"look up {gameIds.Count} games");
+        }
+    }
+
+    [HttpGet("categories")]
+    public async Task<IActionResult> SearchCategories([FromQuery] string? query, [FromQuery] string? after, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var search = query?.Trim();
+        if (string.IsNullOrEmpty(search)) return BadRequest("Pass something to search for.");
+
+        try
+        {
+            var page = await channelService.SearchCategoriesAsync(
+                twitchId, search, CategoryPageSize, string.IsNullOrEmpty(after) ? null : after, cancellationToken);
+
+            return Ok(page);
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"search categories for '{search}'");
+        }
+    }
+    #endregion
+
+
     #region Chat
     
     [HttpGet("chatters")]
@@ -313,6 +471,10 @@ public sealed class TwitchController(
             return HandleTwitchFailure(exception, description);
         }
     }
+
+    // Two or three letters, optionally a region after a dash, or the literal "other".
+    [GeneratedRegex("^(other|[a-z]{2,3}(-[a-z]{2,4})?)$", RegexOptions.IgnoreCase)]
+    private static partial Regex LanguageCode();
 
     private IActionResult HandleTwitchFailure(Exception exception, string description)
     {
