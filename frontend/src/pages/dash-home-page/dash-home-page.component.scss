@@ -38,6 +38,26 @@
   font: var(--mat-sys-body-medium);
 }
 
+// Two of a kind at the top, and the same height as each other: they sit side by side, so one card
+// ending short of the other reads as something missing rather than as a shorter card.
+.dash-home-row {
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 62rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+// The stretch has to be passed down: a grid item fills its row on its own, but the card inside each
+// section is a child of that section and would otherwise keep its content height.
+.dash-home-row > .dash-home-section > app-bot-manage,
+.dash-home-row > .dash-home-section > app-stream-manage {
+  display: flex;
+  flex: 1 1 auto;
+}
+
 // --- Sections ---------------------------------------------------------------------------------
 
 .dash-home-section {

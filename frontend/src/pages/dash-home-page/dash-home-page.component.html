@@ -12,10 +12,19 @@
     <p class="dash-home-subtitle">Everything YEPPBot runs in your channel, in one place.</p>
   </header>
 
-  <section class="dash-home-section" aria-labelledby="dash-home-bot">
-    <h2 class="dash-home-section-title" id="dash-home-bot">Bot status</h2>
-    <app-bot-manage [botUserId]="botUserId"/>
-  </section>
+  <!-- The two things worth seeing on arrival, beside each other where there is room: whether the
+       bot is in the channel, and what the channel is currently saying about itself. -->
+  <div class="dash-home-row">
+    <section class="dash-home-section" aria-labelledby="dash-home-broadcast">
+      <h2 class="dash-home-section-title" id="dash-home-broadcast">Broadcast</h2>
+      <app-stream-manage/>
+    </section>
+
+    <section class="dash-home-section" aria-labelledby="dash-home-bot">
+      <h2 class="dash-home-section-title" id="dash-home-bot">Bot status</h2>
+      <app-bot-manage [botUserId]="botUserId"/>
+    </section>
+  </div>
 
   @for (group of groups; track group.id) {
     <section class="dash-home-section" [attr.aria-labelledby]="'dash-home-' + group.id">
