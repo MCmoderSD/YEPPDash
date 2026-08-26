@@ -14,9 +14,6 @@
         }
       </h2>
 
-      <!-- An icon rather than a filled button: this card is a summary somebody reads, and a large
-           green call to action beside the title made editing look like the point of the page. The
-           label survives for anyone not looking at the pencil. -->
       <button
         mat-icon-button
         type="button"
@@ -64,8 +61,6 @@
         </span>
       </dd>
 
-      <!-- Only listed when there is something to list: "None" is the ordinary case, and a row
-           saying so on every channel is a row nobody needs to read. -->
       @if (labelNames().length > 0) {
         <dt>Content classification</dt>
         <dd>
@@ -83,8 +78,6 @@
       }
     </dl>
 
-    <!-- Same reasoning as the labels, and one step further: off is the normal state, while on is
-         worth pointing at, because Twitch is telling viewers something about the stream. -->
     @if (channel().isBrandedContent) {
       <p class="stream-manage-branded">
         <mat-icon class="stream-manage-branded-icon" aria-hidden="true">campaign</mat-icon>

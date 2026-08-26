@@ -13,26 +13,19 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
-import { isDashHost } from '../../services/dash-host';
 import {
   boxArtUrl, BROADCAST_LANGUAGES, CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate,
-  CONTENT_LABELS, ContentClassificationLabel, DELAY_MAX_SECONDS, delayText, isScopeRequired,
+  CONTENT_LABELS, ContentClassificationLabel, DELAY_MAX_SECONDS, delayText,
   cleanTag, isValidTag, sameLabels, sameTags, settableLabels, TAG_MAX_COUNT, TAG_MAX_LENGTH,
   TITLE_MAX_LENGTH,
 } from '../../data/channel';
 
 export interface ManageBroadcastData {
   channel: ChannelInformation;
-
-  // Passed in rather than looked up again: the page already resolved the cover for the category that
-  // is set, and Get Channel Information does not carry one.
   game: ChannelCategory | null;
 }
 
 const DEBOUNCE_MS: number = 250;
-
-// How close to the bottom of the dropdown counts as "at the end", in pixels. Generous enough that
-// the next page is on its way before the last row is reached.
 const LOAD_MORE_MARGIN: number = 48;
 
 @Component({
@@ -56,9 +49,6 @@ export class ManageBroadcastDialogComponent {
 
   private debounce: ReturnType<typeof setTimeout> | null = null;
 
-  // Every search carries a number, and an answer whose number is no longer the current one is
-  // dropped. Without it a slow reply to an earlier keystroke can land after a fast reply to a later
-  // one and leave the list showing results for a word nobody typed any more.
   private run: number = 0;
 
   private panelScroll: (() => void) | null = null;
@@ -79,16 +69,9 @@ export class ManageBroadcastDialogComponent {
 
   private readonly cursor: WritableSignal<string | null> = signal<string | null>(null);
 
-  // What has been typed into the language box, which filters the list rather than searching
-  // anything: all of Twitch's stream languages fit in the bundle, so there is nothing to ask for.
   protected readonly languageQuery: WritableSignal<string> = signal('');
 
-  // What is being typed into the tag box, before it becomes a chip. Held here rather than read off
-  // the input so the add button and the Enter key work from the same value.
   protected readonly tagDraft: WritableSignal<string> = signal('');
-
-  // Set only when a save came back as 403 with the missing-scope marker.
-  protected readonly reconnect: WritableSignal<string | null> = signal<string | null>(null);
 
   protected readonly maxLength: number = TITLE_MAX_LENGTH;
   protected readonly tagLimit: number = TAG_MAX_COUNT;
@@ -96,40 +79,27 @@ export class ManageBroadcastDialogComponent {
   protected readonly delayMax: number = DELAY_MAX_SECONDS;
   protected readonly contentLabels: readonly { id: string; label: string; hint: string }[] = CONTENT_LABELS;
 
-  // Back to the dashboard, which is where the broadcast card lives now.
-  protected readonly loginUrl: string = this.auth.loginUrl(isDashHost() ? '/' : '/dash');
-
-  // Twitch refuses a delay from anyone who is not a partner, so it is not offered to them.
-  protected readonly partner: Signal<boolean> = computed((): boolean =>
-    this.auth.currentUser()?.broadcasterType === 'partner');
+  protected readonly partner: Signal<boolean> = computed((): boolean => this.auth.currentUser()?.broadcasterType === 'partner');
 
   protected readonly delayHint: Signal<string> = computed((): string => delayText(this.delay()));
 
-  protected readonly languages: Signal<readonly { code: string; name: string }[]> = computed(() => {
+  protected readonly languages: Signal<readonly { code: string; name: string }[]> = computed((): readonly { code: string; name: string }[] => {
     const term: string = this.languageQuery().trim().toLowerCase();
     if (!term) return BROADCAST_LANGUAGES;
 
-    const matches: readonly { code: string; name: string }[] = BROADCAST_LANGUAGES.filter((option): boolean =>
-      option.name.toLowerCase().includes(term) || option.code.toLowerCase() === term);
+    const matches: readonly { code: string; name: string }[] = BROADCAST_LANGUAGES.filter((option: { code: string; name: string }): boolean => option.name.toLowerCase().includes(term) || option.code.toLowerCase() === term);
 
-    // A language Twitch does not carry is not a dead end — "other" is the answer it defines for
-    // exactly that case, so a search with no match offers it rather than nothing.
     return matches.length > 0
       ? matches
-      : BROADCAST_LANGUAGES.filter((option): boolean => option.code === 'other');
+      : BROADCAST_LANGUAGES.filter((option: { code: string; name: string }): boolean => option.code === 'other');
   });
 
-  // The names behind the ids, for the closed multi-select. Without a trigger of its own it would
-  // read out the raw ids, which are Twitch's spelling and not anybody's words.
-  //
-  // No empty case: Material only renders a custom trigger once something is selected, so with an
-  // empty list the field falls back to its own label and this is never asked.
   protected readonly labelSummary: Signal<string> = computed((): string => {
     const chosen: string[] = this.labels();
 
     return CONTENT_LABELS
-      .filter((label): boolean => chosen.includes(label.id))
-      .map((label): string => label.label)
+      .filter((label: { id: string; label: string; hint: string }): boolean => chosen.includes(label.id))
+      .map((label: { id: string; label: string; hint: string }): string => label.label)
       .join(', ');
   });
 
@@ -144,13 +114,10 @@ export class ManageBroadcastDialogComponent {
       || this.branded() !== channel.isBrandedContent
       || this.language() !== channel.broadcasterLanguage
       || this.delay() !== channel.delay
-      // Compared against the settable ones only: a label Twitch applies itself is never part of
-      // what this dialog is offering to change.
       || !sameLabels(this.labels(), settableLabels(channel.contentClassificationLabels));
   });
 
-  protected readonly canSave: Signal<boolean> = computed((): boolean =>
-    this.changed() && !this.tooLong() && this.title().trim().length > 0 && !this.busy());
+  protected readonly canSave: Signal<boolean> = computed((): boolean => this.changed() && !this.tooLong() && this.title().trim().length > 0 && !this.busy());
 
   protected readonly more: Signal<boolean> = computed((): boolean => this.cursor() !== null);
 
@@ -191,8 +158,6 @@ export class ManageBroadcastDialogComponent {
       });
   }
 
-  // --- the game search ---------------------------------------------------------------------
-
   protected retype(value: string): void {
     this.query.set(value);
 
@@ -206,16 +171,10 @@ export class ManageBroadcastDialogComponent {
       return;
     }
 
-    // Marked as searching for the length of the debounce as well, not just the request. Otherwise
-    // the panel spends those 250ms claiming it found nothing, which is a different statement from
-    // "has not looked yet".
     this.searching.set(true);
     this.debounce = setTimeout((): void => void this.search(term), DEBOUNCE_MS);
   }
 
-  // What the input shows once an option is chosen. Without it the trigger writes String(value) into
-  // the field, and the value is a category object.
-  // An arrow property rather than a method, because Material calls it detached from the component.
   protected readonly gameName = (value: ChannelCategory | string | null): string => {
     if (value === null) return '';
     return typeof value === 'string' ? value : value.name;
@@ -235,11 +194,6 @@ export class ManageBroadcastDialogComponent {
     this.cursor.set(null);
   }
 
-  // Listens on the document during the capture phase rather than on the panel itself. The panel is
-  // the obvious place, but MatAutocomplete only fills in its `panel` reference once its own change
-  // detection has run, and `opened` fires before that — measured: the reference is undefined in
-  // that handler. Scroll events do not bubble, but they do capture, so one listener on the document
-  // sees the panel's scrolling without needing a reference to it.
   protected attach(): void {
     this.detach();
 
@@ -264,15 +218,6 @@ export class ManageBroadcastDialogComponent {
     return boxArtUrl(category.boxArtUrl, width, height);
   }
 
-  // --- the rest of the form ----------------------------------------------------------------
-
-  // Refuses the keystroke outright, before the character is in the field. `input` fires after the
-  // insertion, so filtering there let a space appear and vanish again a frame later; `beforeinput`
-  // is cancelable, so nothing is ever shown.
-  //
-  // Only single-character insertions are blocked this way. A paste is left to go through and is
-  // cleaned by the handler below instead: refusing the whole paste because one character in it is
-  // wrong would throw away the rest of what somebody meant to put in.
   protected blockTag(event: InputEvent): void {
     if (event.inputType !== 'insertText') return;
 
@@ -280,15 +225,10 @@ export class ManageBroadcastDialogComponent {
     if (typed && cleanTag(typed) !== typed) event.preventDefault();
   }
 
-  // The net under the above: paste, drag-and-drop and composed input all arrive here, where what
-  // did land in the field is cleaned.
   protected retypeTag(value: string): void {
     this.tagDraft.set(cleanTag(value));
   }
 
-  // The box holds one tag at a time and the field's own maxlength keeps it inside Twitch's 25
-  // characters, so there is nothing to split and nothing to truncate here — only the duplicate and
-  // the count to refuse.
   protected addTag(): void {
     if (!this.canAddTag()) return;
 
@@ -318,11 +258,9 @@ export class ManageBroadcastDialogComponent {
     this.languageQuery.set('');
   }
 
-  // Shown in the language box: the name for whatever code is chosen, so the field reads as a
-  // selection rather than as leftover search text.
-  protected readonly languageLabel = (code: string | null): string => {
+  protected readonly languageLabel: (code: string | null) => string = (code: string | null): string => {
     if (!code) return '';
-    return BROADCAST_LANGUAGES.find((option): boolean => option.code === code)?.name ?? code;
+    return BROADCAST_LANGUAGES.find((option: { code: string; name: string }): boolean => option.code === code)?.name ?? code;
   };
 
   protected async save(): Promise<void> {
@@ -331,20 +269,14 @@ export class ManageBroadcastDialogComponent {
     const channel: ChannelInformation = this.data.channel;
     const gameId: string = this.game()?.id ?? '';
 
-    // Only what actually changed. A field left out is left alone; a game cleared is an empty string,
-    // because leaving it out would mean "keep the old one".
     const update: ChannelUpdate = {};
     if (this.title() !== channel.title) update.title = this.title();
     if (gameId !== channel.gameId) update.gameId = gameId;
     if (!sameTags(this.tags(), channel.tags)) update.tags = this.tags();
     if (this.branded() !== channel.isBrandedContent) update.isBrandedContent = this.branded();
     if (this.language() !== channel.broadcasterLanguage) update.broadcasterLanguage = this.language();
-
-    // Only a partner can set this, so for everyone else it is never part of the change.
     if (this.partner() && this.delay() !== channel.delay) update.delay = this.delay();
 
-    // Every label goes, not just the ones switched on: turning one off is only expressible by
-    // naming it with is_enabled false, so a list of the enabled ones would silently keep the rest.
     if (!sameLabels(this.labels(), settableLabels(channel.contentClassificationLabels))) {
       update.contentClassificationLabels = CONTENT_LABELS.map((label): ContentClassificationLabel =>
         ({ id: label.id, isEnabled: this.labels().includes(label.id) }));
@@ -355,18 +287,12 @@ export class ManageBroadcastDialogComponent {
     try {
       await this.twitch.updateChannel(update);
 
-      // Read back rather than assumed: the endpoint answers 204 with no body, and Twitch quietly
-      // keeps the old value for a language it does not carry.
       const saved: ChannelInformation = await this.twitch.getChannel();
 
       this.notifications.success('Channel updated.');
       this.dialogRef.close(saved);
-    } catch (error: unknown) {
-      if (isScopeRequired(error)) {
-        this.reconnect.set(error.error.message);
-      } else if (update.tags !== undefined) {
-        // Tags are the one field Twitch judges rather than validates, so when they were part of the
-        // change they are the likeliest thing it objected to — said as a suspicion, not a verdict.
+    } catch {
+      if (update.tags !== undefined) {
         this.notifications.failure('Twitch would not take that change — one of the tags may have failed its review.');
       } else {
         this.notifications.failure('Twitch would not take that change.');
@@ -408,13 +334,11 @@ export class ManageBroadcastDialogComponent {
     try {
       const page: CategoryPage = await this.twitch.searchCategories(term, cursor);
 
-      // A page that arrived after the search term moved on belongs to the previous word.
       if (mine !== this.run) return;
 
       this.results.update((results: ChannelCategory[]): ChannelCategory[] => [...results, ...page.items]);
       this.cursor.set(page.cursor);
     } catch {
-      // Stop paging rather than asking for the same cursor on every further scroll event.
       if (mine === this.run) this.cursor.set(null);
     } finally {
       if (mine === this.run) this.searching.set(false);

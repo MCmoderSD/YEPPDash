@@ -111,21 +111,15 @@ export class TwitchService extends ApiService {
     return this.get<ChannelInformation>('channel');
   }
 
-  // Resolves with nothing: Modify Channel Information answers 204, so the new values have to be
-  // read back rather than taken from the reply.
   updateChannel(update: ChannelUpdate): Promise<void> {
     return this.patch<void>('channel', update);
   }
 
-  // The channel answers with a game id and name but no cover, so this is how the category already
-  // set gets one to show.
   getGames(gameIds: readonly string[]): Promise<ChannelCategory[]> {
     if (gameIds.length === 0) return Promise.resolve([]);
     return this.get<ChannelCategory[]>('games', this.repeated({ id: gameIds }));
   }
 
-  // One page per call, and no cache anywhere in between — a search over every category on Twitch
-  // has nothing worth keeping between two different search terms.
   searchCategories(query: string, cursor: string | null = null): Promise<CategoryPage> {
     let params: HttpParams = new HttpParams().set('query', query);
     if (cursor !== null) params = params.set('after', cursor);

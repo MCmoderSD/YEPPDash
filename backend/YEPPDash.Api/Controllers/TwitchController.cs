@@ -13,24 +13,12 @@ namespace YEPPDash.Api.Controllers;
 [Route("twitch")]
 public sealed partial class TwitchController(
     TwitchChannelService channelService,
-    TwitchAuthService authService,
     ILogger<TwitchController> logger) : ControllerBase
 {
-    // Modify Channel Information is the only thing on this controller that needs a scope the
-    // dashboard has not always asked for.
-    private const string BroadcastScope = "channel:manage:broadcast";
-
     private const int TitleMaxLength = 140;
-
     private const int TagMaxCount = 10;
-
     private const int TagMaxLength = 25;
-
-    // Twitch's ceiling for the stream delay, in seconds.
     private const int DelayMaxSeconds = 900;
-
-    // Twitch defaults to 20 and allows up to 100. The dropdown shows a handful at a time and pages
-    // on scroll, so a small page keeps the first result on screen sooner.
     private const int CategoryPageSize = 20;
 
     #region Users
@@ -276,8 +264,6 @@ public sealed partial class TwitchController(
         {
             var channel = await channelService.GetChannelAsync(twitchId, cancellationToken);
 
-            // Helix answers an unknown channel with 200 and an empty list, so this is the only place
-            // the difference can be turned back into a status code.
             return channel is null ? NotFound("Twitch has no channel under this account.") : Ok(channel);
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
@@ -298,18 +284,12 @@ public sealed partial class TwitchController(
             return BadRequest("Pass something to change — an empty change is not one.");
         }
 
-        // Checked here rather than left to Twitch: the rules hold whatever the caller is, and a
-        // sentence beats a passed-through Helix error. An empty title is not "clear the title" to
-        // Twitch, it is simply rejected.
         if (update.Title is not null)
         {
             if (string.IsNullOrWhiteSpace(update.Title)) return BadRequest("A stream title cannot be empty.");
             if (update.Title.Length > TitleMaxLength) return BadRequest($"A stream title cannot be longer than {TitleMaxLength} characters.");
         }
 
-        // Only the rules Twitch documents outright are checked here. It also runs tags through
-        // AutoMod and has its own idea of which characters count as special, and guessing at those
-        // would reject tags it would have accepted.
         if (update.Tags is { } tags)
         {
             if (tags.Count > TagMaxCount) return BadRequest($"A channel can have at most {TagMaxCount} tags.");
@@ -319,12 +299,6 @@ public sealed partial class TwitchController(
             if (tags.Any(tag => tag.Length > TagMaxLength)) return BadRequest($"A tag cannot be longer than {TagMaxLength} characters.");
         }
 
-        // Checked because Twitch does not object to a code it does not know — it keeps the old value
-        // and reports success, which looks exactly like the save having been ignored.
-        //
-        // Loosely, though, and not as strict ISO 639-1: Twitch's own list includes zh-hk and asl,
-        // neither of which is two letters. This rejects obvious nonsense without turning away
-        // something Twitch itself offers.
         if (update.BroadcasterLanguage is { } language && !LanguageCode().IsMatch(language))
         {
             return BadRequest("A language has to be a Twitch language code, or 'other'.");
@@ -335,19 +309,9 @@ public sealed partial class TwitchController(
             return BadRequest($"A stream delay has to be between 0 and {DelayMaxSeconds} seconds.");
         }
 
-        if (update.ContentClassificationLabels is { } labels
-            && labels.FirstOrDefault(label => !Data.Twitch.ContentClassificationLabels.Known.Contains(label.Id)) is { } unknown)
+        if (update.ContentClassificationLabels is { } labels && labels.FirstOrDefault(label => !ContentClassificationLabels.Known.Contains(label.Id)) is { } unknown)
         {
             return BadRequest($"'{unknown.Id}' is not a content classification label Twitch knows.");
-        }
-
-        if (!await authService.HasScopeAsync(twitchId, BroadcastScope, cancellationToken))
-        {
-            logger.LogInformation("User {TwitchId} has no {Scope}, their token predates it", twitchId, BroadcastScope);
-
-            return StatusCode(StatusCodes.Status403Forbidden, new ScopeRequired(
-                BroadcastScope,
-                "Your Twitch sign-in is older than this feature. Sign in again to grant permission to change your title and game."));
         }
 
         try
@@ -391,8 +355,7 @@ public sealed partial class TwitchController(
 
         try
         {
-            var page = await channelService.SearchCategoriesAsync(
-                twitchId, search, CategoryPageSize, string.IsNullOrEmpty(after) ? null : after, cancellationToken);
+            var page = await channelService.SearchCategoriesAsync(twitchId, search, CategoryPageSize, string.IsNullOrEmpty(after) ? null : after, cancellationToken);
 
             return Ok(page);
         }
@@ -472,7 +435,6 @@ public sealed partial class TwitchController(
         }
     }
 
-    // Two or three letters, optionally a region after a dash, or the literal "other".
     [GeneratedRegex("^(other|[a-z]{2,3}(-[a-z]{2,4})?)$", RegexOptions.IgnoreCase)]
     private static partial Regex LanguageCode();
 

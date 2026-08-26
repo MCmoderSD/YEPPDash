@@ -10,9 +10,6 @@ public static class TwitchScopes
     private static readonly string[] Prod =
     [
         "channel:edit:commercial",
-        // Modify Channel Information, and the only scope on this page. Adding it here does not
-        // reach anyone already logged in: a stored token keeps the scopes it was issued with, and a
-        // refresh keeps them too. Everyone has to authorise once more before they can save.
         "channel:manage:broadcast",
         "channel:read:editors",
         "channel:manage:moderators",
@@ -89,6 +86,7 @@ public static class TwitchScopes
         "moderator:read:shoutouts",
         "moderator:manage:shoutouts",
         "moderator:read:suspicious_users",
+        "moderator:manage:suspicious_users",
         "moderator:read:unban_requests",
         "moderator:manage:unban_requests",
         "moderator:read:vips",

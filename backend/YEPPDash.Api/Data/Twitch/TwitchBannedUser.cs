@@ -7,7 +7,7 @@ public sealed record TwitchBannedUser
 {
     public required string UserId { get; init; }
 
-    // Empty for a permanent ban — only a timeout ever has an expiry.
+    // Empty for a permanent ban — only a timeout ever has expiry.
     [JsonConverter(typeof(EmptyStringToNullDateTimeOffsetConverter))]
     public DateTimeOffset? ExpiresAt { get; init; }
 

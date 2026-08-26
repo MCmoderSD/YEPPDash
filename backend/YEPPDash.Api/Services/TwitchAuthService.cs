@@ -20,7 +20,6 @@ public sealed class TwitchAuthService(
     {
         return oauthClient.BuildAuthorizationUrl(state);
     }
-
     
     public async Task<(ClaimsPrincipal Principal, TwitchUser User)> CompleteLoginAsync(string code, CancellationToken cancellationToken)
     {
@@ -43,9 +42,6 @@ public sealed class TwitchAuthService(
 
         try
         {
-            // Started together rather than one after the other: the colour is looked up by id, and
-            // the id came out of the auth cookie, so it does not have to wait for the profile. Two
-            // requests cost what the one used to.
             var profile = apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
             var color = ChatColorAsync(twitchUserId, token.AccessToken, cancellationToken);
 
@@ -59,8 +55,6 @@ public sealed class TwitchAuthService(
         }
     }
 
-    // A missing colour is not a reason to fail the session — the name simply renders in the default
-    // text colour, which is what happens for everyone who never picked one anyway.
     private async Task<string?> ChatColorAsync(string twitchUserId, string accessToken, CancellationToken cancellationToken)
     {
         try
@@ -107,18 +101,6 @@ public sealed class TwitchAuthService(
             await tokenStore.DeleteAsync(twitchUserId, cancellationToken);
             return null;
         }
-    }
-
-    // Whether the stored token actually carries a scope, which is not the same question as whether
-    // TwitchScopes asks for one. A token keeps the scopes it was issued with, and refreshing keeps
-    // them as well — a scope added to the list after somebody logged in reaches them only when they
-    // authorise again. Asking here turns that into an answer we can explain instead of a 401 from
-    // Twitch halfway through a save.
-    public async Task<bool> HasScopeAsync(string twitchUserId, string scope, CancellationToken cancellationToken)
-    {
-        var token = await GetValidTokenAsync(twitchUserId, cancellationToken);
-
-        return token is not null && token.Scopes.Contains(scope, StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task SignOutAsync(string twitchUserId, CancellationToken cancellationToken)

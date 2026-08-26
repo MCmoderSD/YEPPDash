@@ -118,14 +118,12 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     #region Followers
     public Task<HelixPage<TwitchFollower>> GetFollowersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        return GetPageAsync<TwitchFollower>(
-            PagedQuery("channels/followers", broadcasterId, cursor), accessToken, cancellationToken);
+        return GetPageAsync<TwitchFollower>(PagedQuery("channels/followers", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
     public async Task<TwitchFollower?> GetFollowerAsync(string broadcasterId, string userId, string accessToken, CancellationToken cancellationToken)
     {
-        var query = $"channels/followers?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
-                    $"&user_id={Uri.EscapeDataString(userId)}";
+        var query = $"channels/followers?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" + $"&user_id={Uri.EscapeDataString(userId)}";
 
         var page = await GetPageAsync<TwitchFollower>(query, accessToken, cancellationToken);
         return page.Items.FirstOrDefault();
@@ -173,8 +171,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
 
         var payload = await response.Content.ReadFromJsonAsync<HelixResponse<ChannelInformation>>(TwitchJson.Options, cancellationToken);
 
-        // A channel that does not exist is an empty list and a 200, not a 404, so the caller has to
-        // be told the difference rather than reading it off the status code.
         return payload?.Data.FirstOrDefault();
     }
 
@@ -183,12 +179,9 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         var query = $"channels?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
         var body = JsonContent.Create(update, options: TwitchJson.Options);
 
-        // 204 with no body: the new values are not echoed back, so whoever cares has to read again.
         using var response = await SendAsync(HttpMethod.Patch, query, accessToken, cancellationToken, body);
     }
 
-    // Get Channel Information answers with a game id and a name but no art, so the only way to show
-    // a cover for the category already set is to ask for the game itself.
     public async Task<IReadOnlyList<ChannelCategory>> GetGamesAsync(IReadOnlyCollection<string> gameIds, string accessToken, CancellationToken cancellationToken)
     {
         if (gameIds.Count is 0 or > MaxBatchSize)
@@ -204,8 +197,6 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return payload?.Data ?? [];
     }
 
-    // Not built with PagedQuery: that one pins a broadcaster_id and a page size of 100, and a
-    // category search has no broadcaster and wants a page small enough to sit in a dropdown.
     public Task<HelixPage<ChannelCategory>> SearchCategoriesAsync(string search, int first, string? cursor, string accessToken, CancellationToken cancellationToken)
     {
         var query = $"search/categories?query={Uri.EscapeDataString(search)}&first={first}";
@@ -218,8 +209,7 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     #region Chat
     public Task<HelixPage<TwitchChannelUser>> GetChattersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        var query = PagedQuery("chat/chatters", broadcasterId, cursor) +
-                    $"&moderator_id={Uri.EscapeDataString(broadcasterId)}";
+        var query = PagedQuery("chat/chatters", broadcasterId, cursor) + $"&moderator_id={Uri.EscapeDataString(broadcasterId)}";
 
         return GetPageAsync<TwitchChannelUser>(query, accessToken, cancellationToken);
     }
@@ -262,11 +252,10 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
     }
 
-    // content is optional because every write in here until now went through the query string. The
-    // request owns it once it is attached, so the `using` disposes both together.
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string accessToken, CancellationToken cancellationToken, HttpContent? content = null)
     {
-        using var request = new HttpRequestMessage(method, path) { Content = content };
+        using var request = new HttpRequestMessage(method, path);
+        request.Content = content;
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Add("Client-Id", options.ClientId);
 

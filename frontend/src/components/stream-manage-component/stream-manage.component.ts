@@ -9,10 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { ManageBroadcastDialogComponent } from '../manage-broadcast-dialog-component/manage-broadcast-dialog.component';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
-import {
-  boxArtUrl, BROADCAST_LANGUAGES, ChannelCategory, ChannelInformation, CONTENT_LABELS, delayText,
-  EMPTY_CHANNEL,
-} from '../../data/channel';
+import { boxArtUrl, BROADCAST_LANGUAGES, ChannelCategory, ChannelInformation, CONTENT_LABELS, delayText, EMPTY_CHANNEL } from '../../data/channel';
 
 @Component({
   selector: 'app-stream-manage',
@@ -28,9 +25,6 @@ export class StreamManageComponent {
 
   protected readonly channel: WritableSignal<ChannelInformation> = signal<ChannelInformation>(EMPTY_CHANNEL);
   protected readonly loading: WritableSignal<boolean> = signal(true);
-
-  // The cover for the category that is set. Kept beside the channel rather than in it, because Get
-  // Channel Information does not carry one and it takes a second request to find.
   protected readonly game: WritableSignal<ChannelCategory | null> = signal<ChannelCategory | null>(null);
 
   protected readonly languageName: Signal<string> = computed((): string => {
@@ -38,15 +32,12 @@ export class StreamManageComponent {
     return BROADCAST_LANGUAGES.find((option): boolean => option.code === code)?.name ?? code;
   });
 
-  // Only the labels this dashboard can set. Twitch adds others of its own — MatureGame comes from
-  // the category's age rating — and listing those here read as a setting somebody had made, when
-  // nothing on this page can touch them. Viewers still see them; this card simply does not.
   protected readonly labelNames: Signal<string[]> = computed((): string[] => {
     const enabled: string[] = this.channel().contentClassificationLabels;
 
     return CONTENT_LABELS
-      .filter((label): boolean => enabled.includes(label.id))
-      .map((label): string => label.label);
+      .filter((label: typeof CONTENT_LABELS[number]): boolean => enabled.includes(label.id))
+      .map((label: typeof CONTENT_LABELS[number]): string => label.label);
   });
 
   protected readonly delayText: Signal<string> = computed((): string => delayText(this.channel().delay));
@@ -65,7 +56,6 @@ export class StreamManageComponent {
         .open(this.dialog, { channel: this.channel(), game: this.game() })
         .afterClosed());
 
-    // Undefined means the dialog was dismissed without saving, and nothing on the channel moved.
     if (!saved) return;
 
     this.channel.set(saved);
@@ -91,9 +81,6 @@ export class StreamManageComponent {
     await this.loadBoxArt();
   }
 
-  // A second call on purpose, and only when there is a category: the cover is the one thing the
-  // channel does not carry, and the preview would otherwise sit empty. A failure here costs the
-  // artwork, not the page.
   private async loadBoxArt(): Promise<void> {
     const current: ChannelCategory | null = this.game();
     if (current === null || current.boxArtUrl) return;
