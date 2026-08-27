@@ -161,44 +161,6 @@ table.command-table-grid {
 // nothing has to be overridden on the header.
 .command-table-active {
   width: 5rem;
-
-  // M3's switch is 52x32 with a 24px handle, which beside a row of 14px text is the loudest thing
-  // in the table. Scaled through Material's own tokens rather than a transform, so the handle, the
-  // focus ring and the state layer all shrink together instead of being drawn small and hit large.
-  //
-  // The touch target token is deliberately left alone: it is a separate overlay that keeps the tap
-  // area at its full size, which is what holds the control above the 24x24 minimum.
-  --mat-slide-toggle-track-width: 36px;
-  --mat-slide-toggle-track-height: 20px;
-
-  // Not the drawn size — the travel budget. Material moves the handle by
-  // `track-width - handle-width`, so this has to be the handle plus the inset it should keep at
-  // each end (14 + 3 + 3). Leaving it unset makes that calc() invalid, which collapses the travel
-  // to zero and leaves the handle sitting wherever the margins below put it.
-  --mat-slide-toggle-handle-width: 20px;
-  --mat-slide-toggle-handle-height: 14px;
-
-  // One size in both states rather than M3's grow-on-select: at this scale the change reads as the
-  // handle jittering rather than as feedback. The margins are what set the 3px inset — equal on
-  // both, so the handle sits the same distance from each end of the track.
-  --mat-slide-toggle-unselected-handle-size: 14px;
-  --mat-slide-toggle-selected-handle-size: 14px;
-  --mat-slide-toggle-with-icon-handle-size: 14px;
-  --mat-slide-toggle-unselected-handle-horizontal-margin: 0 3px;
-  --mat-slide-toggle-selected-handle-horizontal-margin: 0 3px;
-
-  // Held down: the handle grows into its inset by a pixel at each end and stays centred.
-  --mat-slide-toggle-pressed-handle-size: 16px;
-  --mat-slide-toggle-unselected-pressed-handle-horizontal-margin: 0 2px;
-  --mat-slide-toggle-selected-pressed-handle-horizontal-margin: 0 2px;
-
-  --mat-slide-toggle-state-layer-size: 32px;
-
-  // A 2px outline on a 20px track is most of the gap between track and handle. The on state carries
-  // none at all: it is a filled pill, and an outline only muddies its edge.
-  --mat-slide-toggle-track-outline-width: 1px;
-  --mat-slide-toggle-selected-track-outline-width: 0;
-  --mat-slide-toggle-disabled-unselected-track-outline-width: 1px;
 }
 
 .command-table-actions {

@@ -189,11 +189,21 @@
 
     <div class="timer-page-controls">
       <div class="timer-page-switches">
-        <mat-slide-toggle [checked]="style().shadow" (change)="restyle({ shadow: $event.checked })">
+        <mat-slide-toggle
+          class="app-toggle-compact"
+          hideIcon="true"
+          [checked]="style().shadow"
+          (change)="restyle({ shadow: $event.checked })"
+        >
           Drop shadow for bright scenes
         </mat-slide-toggle>
 
-        <mat-slide-toggle [checked]="style().animate" (change)="restyle({ animate: $event.checked })">
+        <mat-slide-toggle
+          class="app-toggle-compact"
+          hideIcon="true"
+          [checked]="style().animate"
+          (change)="restyle({ animate: $event.checked })"
+        >
           Animate digit changes
         </mat-slide-toggle>
       </div>

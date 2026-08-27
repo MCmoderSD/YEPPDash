@@ -157,7 +157,13 @@
   }
 
   <div class="manage-broadcast-toggle">
-    <mat-slide-toggle [checked]="branded()" [disabled]="busy()" (change)="branded.set($event.checked)">
+    <mat-slide-toggle
+      class="app-toggle-compact"
+      hideIcon="true"
+      [checked]="branded()"
+      [disabled]="busy()"
+      (change)="branded.set($event.checked)"
+    >
       Branded content
     </mat-slide-toggle>
 
