@@ -58,6 +58,14 @@ builder.Services.AddSingleton<SubathonTimerHub>();
 // The bot drives the timer by writing to the table this shares with it, and has no way to tell us
 // it did. This worker is what turns those writes into the events an overlay is waiting on.
 builder.Services.AddHostedService<SubathonTimerWatcher>();
+builder.Services.AddScoped<QueueRepository>();
+builder.Services.AddScoped<QueueService>();
+// Singleton for the same reason as the wheel's and the timer's: it is what holds the open
+// dashboard connections, which outlive any one request.
+builder.Services.AddSingleton<QueueHub>();
+// Chat is where the queue is joined and left, and the bot does that by writing to the table this
+// shares with it. This worker is what turns those writes into the events a dashboard is waiting on.
+builder.Services.AddHostedService<QueueWatcher>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

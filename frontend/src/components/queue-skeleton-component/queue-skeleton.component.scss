@@ -1,0 +1,183 @@
+// The page's own geometry, from the same file the page reads it from. Everything below it only
+// paints the grey stand-ins that sit inside that frame.
+@use '../../pages/queue-page/queue-page-shell' as shell;
+
+// The wrapper stands in for everything between the page title and the command list, so it repeats
+// the page's own vertical rhythm. The negative margin gives back the difference between the page
+// gap it sits in and the header gap the state pill really lives in — both read from the shell, so
+// retuning the page retunes this.
+//
+// Held back for a breath before it appears: a queue that answers fast should never flash a
+// skeleton on the way. The fade is a one-off, so it may run under reduced motion — it is the
+// endless pulse below that must not.
+.queue-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: shell.$page-gap;
+  margin-block-start: calc(shell.$header-gap - shell.$page-gap);
+  opacity: 0;
+  animation: queue-skeleton-appear 200ms var(--app-ease) 150ms forwards;
+}
+
+// The global utility stays in normal flow on purpose — the table header needs its column kept —
+// but here that would make the announcement a real flex item: one pixel tall, plus a full page gap
+// before the pill, and the whole skeleton would stand that much lower than what replaces it.
+.queue-skeleton > .app-visually-hidden {
+  position: absolute;
+}
+
+// --- the grey stand-ins ---------------------------------------------------------------------
+
+// One animation on one rule, so every shape breathes in step and the whole thing reads as one
+// surface waiting rather than a chase across the page.
+.queue-skeleton-bar,
+.queue-skeleton-shape {
+  display: block;
+  flex: none;
+  background: var(--mat-sys-surface-container-high);
+  animation: queue-skeleton-pulse 1400ms ease-in-out infinite;
+}
+
+// The motion tokens are no help here: they shorten a transition, and shortening a loop only makes
+// it flicker. This one has to stop.
+@media (prefers-reduced-motion: reduce) {
+  .queue-skeleton-bar,
+  .queue-skeleton-shape {
+    animation: none;
+  }
+}
+
+.queue-skeleton-bar {
+  border-radius: var(--mat-sys-corner-full);
+}
+
+// A bar standing where text will: 1lh is the line box of whatever font its parent sets, which is
+// exactly the height the words will take. The rem height underneath is for the odd browser that
+// does not know the unit yet.
+.queue-skeleton-text {
+  height: 1.25rem;
+  height: 1lh;
+}
+
+// In the state pill, whose padding and line height do the rest. One tone above the usual grey: the
+// pill is itself painted the bars' colour, and a bar that matches its background is no bar at all.
+.queue-skeleton-state {
+  width: min(16.5rem, 70vw);
+  height: 1.25rem;
+  height: 1lh;
+  background: var(--mat-sys-surface-container-highest);
+}
+
+// "Up now", in label-large capitals.
+.queue-skeleton-stage-label {
+  width: 3.5rem;
+}
+
+// "Nobody is waiting", and the line under it — the stage's shape while nobody knows yet whether
+// anyone is standing in it.
+.queue-skeleton-stage-waiting {
+  width: 9rem;
+}
+
+.queue-skeleton-stage-line {
+  width: min(19rem, 80vw);
+}
+
+// A name at headline size. The height rides the stage-name font around it, so the fallback is
+// font-relative too — the shared 1.25rem would leave a browser without lh a bar at half height.
+.queue-skeleton-stage-name {
+  width: min(16rem, 55vw);
+  height: 1.15em;
+  height: 1lh;
+}
+
+.queue-skeleton-stage-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+}
+
+// Material's flat buttons: 40px tall, fully rounded, as wide as their label.
+.queue-skeleton-button {
+  height: 2.5rem;
+  border-radius: var(--mat-sys-corner-full);
+}
+
+.queue-skeleton-button-done {
+  width: 6.5rem;
+}
+
+.queue-skeleton-button-toggle {
+  width: 11.5rem;
+}
+
+.queue-skeleton-button-clear {
+  width: 7rem;
+}
+
+.queue-skeleton-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.queue-skeleton-row-name {
+  width: min(9rem, 50%);
+  height: 1.25rem;
+}
+
+// Names are not all the same length, and rows that were would read as a pattern, not a list.
+.queue-page-entry:nth-child(3n) .queue-skeleton-row-name {
+  width: min(6.5rem, 40%);
+}
+
+.queue-page-entry:nth-child(3n + 2) .queue-skeleton-row-name {
+  width: min(11rem, 60%);
+}
+
+// Standing where the remove button's icon sits — Material's 24px default, centred in its 2rem
+// column by the margin.
+.queue-skeleton-remove {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-inline: auto;
+  border-radius: 50%;
+}
+
+// "Nothing to show yet." — or the first row of a list this browser has not counted yet.
+.queue-skeleton-empty {
+  width: 8.5rem;
+}
+
+// The form field and its hint are one child of the panel, like the real mat-form-field is — as two
+// they would pick up the panel's 0.75rem gap between them instead of the field's own few pixels.
+.queue-skeleton-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// An outlined Material field: 56px of box.
+.queue-skeleton-field-box {
+  height: 3.5rem;
+  border-radius: 0.5rem;
+}
+
+// The hint under it, indented by the field's own 1rem of padding.
+.queue-skeleton-field-hint {
+  width: min(12rem, 70%);
+  height: 1rem;
+  margin-inline-start: 1rem;
+}
+
+@keyframes queue-skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes queue-skeleton-appear {
+  to {
+    opacity: 1;
+  }
+}

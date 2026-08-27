@@ -8,6 +8,7 @@ import { RaidPageComponent } from './raid-page/raid-page.component';
 import { CommandPageComponent } from './command-page/command-page.component';
 import { WheelPageComponent } from './wheel-page/wheel-page.component';
 import { TimerPageComponent } from './timer-page/timer-page.component';
+import { QueuePageComponent } from './queue-page/queue-page.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
 import { BirthdayListComponent } from '../components/birthday-list-component/birthday-list.component';
@@ -24,6 +25,7 @@ export const DASH_ROUTES: Routes = [
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'community', component: CommunityPageComponent, title: 'Community' },
       { path: 'raids', component: RaidPageComponent, title: 'Raid Overview' },
+      { path: 'queue', component: QueuePageComponent, title: 'Queue' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'timer', component: TimerPageComponent, title: 'Subathon Timer' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
