@@ -1,0 +1,191 @@
+.queue-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  // The state pill belongs to the header, which sets 0.25rem under the title; this stands one
+  // level out, in the page's own 1rem. Without the difference given back, the pill and everything
+  // under it would sit three quarters of a rem lower than what replaces them.
+  margin-block-start: -0.75rem;
+}
+
+.queue-skeleton-pill {
+  align-self: center;
+  width: min(21rem, 100%);
+  height: 1.875rem;
+}
+
+.queue-skeleton-stage,
+.queue-skeleton-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.queue-skeleton-stage {
+  align-items: center;
+  padding: 1.5rem 1rem;
+}
+
+.queue-skeleton-panel {
+  padding: 1.25rem;
+}
+
+.queue-skeleton-stage-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.queue-skeleton-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+// The same breakpoint and the same ratio as the panels underneath it, so the two columns do not
+// jump sideways at the moment the real page takes over.
+.queue-skeleton-panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 60rem) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+// Column for column what the real rows use, so the avatars stand in the same place before and
+// after. The fourth column is left empty: the remove button only exists once there is a row to
+// remove, and an outline of one would be a control that never arrives.
+.queue-skeleton-row {
+  display: grid;
+  align-items: center;
+  padding: 0.375rem 0.25rem;
+  column-gap: 0.25rem;
+  grid-template-columns: 2rem 1.5rem minmax(0, 1fr) 2rem;
+}
+
+.queue-skeleton-head {
+  padding: 0 0.25rem 0.5rem;
+  border-block-end: 1px solid var(--mat-sys-outline-variant);
+}
+
+.queue-skeleton-rows {
+  padding-block-start: 0.25rem;
+}
+
+.queue-skeleton-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.queue-skeleton-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--mat-sys-outline-variant);
+}
+
+// Every grey shape breathes together rather than in a chase across the page: one animation on one
+// rule, so nothing has to be staggered by hand and the whole thing reads as one surface waiting.
+.queue-skeleton-bar,
+.queue-skeleton-dot {
+  display: block;
+  background: var(--mat-sys-surface-container-high);
+  animation: queue-skeleton-pulse 1400ms ease-in-out infinite;
+}
+
+// The motion tokens are no help here: they shorten a transition, and shortening a loop only makes
+// it flicker. This one has to stop.
+@media (prefers-reduced-motion: reduce) {
+  .queue-skeleton-bar,
+  .queue-skeleton-dot {
+    animation: none;
+  }
+}
+
+.queue-skeleton-bar {
+  border-radius: var(--mat-sys-corner-full);
+}
+
+.queue-skeleton-dot {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.queue-skeleton-face {
+  width: 4rem;
+  height: 4rem;
+}
+
+.queue-skeleton-label {
+  width: 5rem;
+  height: 1.25rem;
+}
+
+.queue-skeleton-name {
+  width: min(16rem, 50vw);
+  height: 2.75rem;
+}
+
+.queue-skeleton-button {
+  width: 8rem;
+  height: 2.5rem;
+}
+
+.queue-skeleton-button-wide {
+  width: 11.5rem;
+}
+
+.queue-skeleton-button-narrow {
+  width: 7rem;
+}
+
+.queue-skeleton-title {
+  width: 8rem;
+  height: 1.5rem;
+}
+
+.queue-skeleton-line {
+  width: 100%;
+  height: 0.875rem;
+}
+
+.queue-skeleton-line-short {
+  width: 65%;
+}
+
+.queue-skeleton-place {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.queue-skeleton-column {
+  width: 3rem;
+  height: 0.75rem;
+}
+
+.queue-skeleton-row-name {
+  width: 40%;
+  height: 1rem;
+}
+
+.queue-skeleton-field {
+  width: 100%;
+  height: 3.5rem;
+  border-radius: 0.5rem;
+}
+
+@keyframes queue-skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}

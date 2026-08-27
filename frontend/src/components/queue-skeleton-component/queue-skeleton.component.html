@@ -1,0 +1,63 @@
+<div class="queue-skeleton" role="status">
+  <span class="app-visually-hidden">Loading your queue…</span>
+
+  <span class="queue-skeleton-bar queue-skeleton-pill" aria-hidden="true"></span>
+
+  <div class="queue-skeleton-stage" aria-hidden="true">
+    <span class="queue-skeleton-bar queue-skeleton-label"></span>
+
+    <div class="queue-skeleton-stage-identity">
+      <span class="queue-skeleton-dot queue-skeleton-face"></span>
+      <span class="queue-skeleton-bar queue-skeleton-name"></span>
+    </div>
+
+    <span class="queue-skeleton-bar queue-skeleton-button"></span>
+  </div>
+
+  <div class="queue-skeleton-controls" aria-hidden="true">
+    <span class="queue-skeleton-bar queue-skeleton-button queue-skeleton-button-wide"></span>
+    <span class="queue-skeleton-bar queue-skeleton-button queue-skeleton-button-narrow"></span>
+  </div>
+
+  <div class="queue-skeleton-panels" aria-hidden="true">
+    <div class="queue-skeleton-panel">
+      <span class="queue-skeleton-bar queue-skeleton-title"></span>
+      <span class="queue-skeleton-bar queue-skeleton-line"></span>
+      <span class="queue-skeleton-bar queue-skeleton-line queue-skeleton-line-short"></span>
+
+      <div class="queue-skeleton-table">
+        <div class="queue-skeleton-row queue-skeleton-head">
+          <span></span>
+          <span class="queue-skeleton-bar queue-skeleton-place"></span>
+          <span class="queue-skeleton-bar queue-skeleton-column"></span>
+        </div>
+
+        <div class="queue-skeleton-rows">
+          @for (line of lines(); track line) {
+            <div class="queue-skeleton-row">
+              <span></span>
+              <span class="queue-skeleton-bar queue-skeleton-place"></span>
+
+              <span class="queue-skeleton-identity">
+                <span class="queue-skeleton-dot"></span>
+                <span class="queue-skeleton-bar queue-skeleton-row-name"></span>
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="queue-skeleton-panel">
+      <span class="queue-skeleton-bar queue-skeleton-title"></span>
+      <span class="queue-skeleton-bar queue-skeleton-field"></span>
+      <span class="queue-skeleton-bar queue-skeleton-line queue-skeleton-line-short"></span>
+
+      <div class="queue-skeleton-note">
+        <span class="queue-skeleton-bar queue-skeleton-line"></span>
+        <span class="queue-skeleton-bar queue-skeleton-line"></span>
+        <span class="queue-skeleton-bar queue-skeleton-line queue-skeleton-line-short"></span>
+      </div>
+    </div>
+  </div>
+</div>

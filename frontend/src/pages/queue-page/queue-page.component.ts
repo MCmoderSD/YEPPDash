@@ -7,6 +7,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
+import { QueueSkeletonComponent } from '../../components/queue-skeleton-component/queue-skeleton.component';
+import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -20,13 +22,14 @@ export interface QueueRow {
   position: number;
   userId: string;
   user: TwitchUser | null;
+  pending: boolean;
 }
 
 @Component({
   selector: 'app-queue-page',
   templateUrl: './queue-page.component.html',
   styleUrl: './queue-page.component.scss',
-  imports: [CdkDrag, CdkDragHandle, CdkDropList, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, NgOptimizedImage],
+  imports: [CdkDrag, CdkDragHandle, CdkDropList, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, NgOptimizedImage, QueueSkeletonComponent, UserBadgesComponent],
 })
 export class QueuePageComponent {
 
@@ -44,24 +47,23 @@ export class QueuePageComponent {
 
   private writing: Promise<void> = Promise.resolve();
 
-  // IDs we have already asked Twitch about, whether or not it had anything to say. A deleted
-  // account is never going to resolve, and without this it would be looked up again on every event.
   private readonly attempted: Set<string> = new Set<string>();
 
   protected readonly queue: WritableSignal<Queue> = signal<Queue>(EMPTY_QUEUE);
   protected readonly busy: WritableSignal<boolean> = signal(false);
+  protected readonly loaded: WritableSignal<boolean> = signal(false);
   protected readonly missing: WritableSignal<boolean> = signal(false);
 
-  private readonly profiles: WritableSignal<ReadonlyMap<string, TwitchUser>> =
-    signal<ReadonlyMap<string, TwitchUser>>(new Map<string, TwitchUser>());
+  private readonly profiles: WritableSignal<ReadonlyMap<string, TwitchUser | null>> = signal<ReadonlyMap<string, TwitchUser | null>>(new Map<string, TwitchUser | null>());
 
   protected readonly rows: Signal<QueueRow[]> = computed((): QueueRow[] => {
-    const profiles: ReadonlyMap<string, TwitchUser> = this.profiles();
+    const profiles: ReadonlyMap<string, TwitchUser | null> = this.profiles();
 
     return this.queue().entries.map((userId: string, index: number): QueueRow => ({
       position: index + 1,
       userId,
       user: profiles.get(userId) ?? null,
+      pending: !profiles.has(userId),
     }));
   });
 
@@ -78,9 +80,14 @@ export class QueuePageComponent {
       const channelId: string | null = this.channelId();
       if (channelId === null) return;
 
+      let connected = false;
+
       const listener: QueueListener = this.sync.listen(
-        channelId, (queue: Queue): void => this.show(queue),
-        (): void => void this.load(channelId)
+        channelId, (queue: Queue): void => void this.show(queue),
+        (): void => {
+          if (connected) void this.load(channelId);
+          connected = true;
+        }
       );
 
       this.listener = listener;
@@ -116,8 +123,6 @@ export class QueuePageComponent {
     this.moveTo(event.item.data as QueueRow, event.currentIndex);
   }
 
-  // The keyboard's way in. Dragging is a mouse gesture and the CDK gives it no keyboard equivalent,
-  // so the handle is a button that also answers to the arrows, Home and End.
   protected nudge(event: KeyboardEvent, row: QueueRow): void {
     const last: number = this.rows().length - 1;
 
@@ -137,8 +142,6 @@ export class QueuePageComponent {
     const channelId: string | null = this.channelId();
     if (channelId === null || index === row.position - 1) return;
 
-    // Shown in the new order straight away rather than after the round trip, so the row does not
-    // spring back under the cursor. Whatever the server answers replaces this a moment later.
     this.queue.update((queue: Queue): Queue => {
       const entries: string[] = [...queue.entries];
       moveItemInArray(entries, row.position - 1, index);
@@ -175,16 +178,11 @@ export class QueuePageComponent {
   protected changeRequirement(requirement: QueueRequirement): void {
     const channelId: string | null = this.channelId();
     if (channelId === null || requirement === this.queue().requirement) return;
-
     void this.run(this.queues.saveRequirement(channelId, requirement), 'Requirement saved.');
   }
 
-  // Clicking anywhere on the row opens the details. The guard is what keeps the buttons inside it
-  // working: their own click has already run and bubbled up to here, and without this the dialog
-  // would open a second time on top of itself — or open at all when somebody meant to remove a row.
   protected open(event: MouseEvent, row: QueueRow): void {
     if ((event.target as HTMLElement).closest('button') !== null) return;
-
     this.details(row);
   }
 
@@ -198,19 +196,19 @@ export class QueuePageComponent {
 
   private async load(channelId: string): Promise<void> {
     try {
-      this.show(await this.queues.getQueue(channelId));
+      await this.show(await this.queues.getQueue(channelId));
     } catch {
       this.notifications.failure('Could not load your queue.');
+    } finally {
+      this.loaded.set(true);
     }
   }
 
-  private show(queue: Queue): void {
+  private async show(queue: Queue): Promise<void> {
     this.queue.set(queue);
-    void this.resolve(queue.entries);
+    await this.resolve(queue.entries);
   }
 
-  // Only ever the names we do not have yet. Re-resolving the whole list on every event would turn
-  // one person joining in chat into a Helix call for everybody already waiting.
   private async resolve(userIds: readonly string[]): Promise<void> {
     const missing: string[] = userIds.filter((userId: string): boolean => !this.attempted.has(userId));
     if (missing.length === 0) return;
@@ -220,14 +218,14 @@ export class QueuePageComponent {
     try {
       const users: TwitchUser[] = await this.twitch.getUsers(missing);
 
-      this.profiles.update((profiles: ReadonlyMap<string, TwitchUser>): ReadonlyMap<string, TwitchUser> => {
-        const next: Map<string, TwitchUser> = new Map<string, TwitchUser>(profiles);
+      this.profiles.update((profiles: ReadonlyMap<string, TwitchUser | null>): ReadonlyMap<string, TwitchUser | null> => {
+        const next: Map<string, TwitchUser | null> = new Map<string, TwitchUser | null>(profiles);
+
+        missing.forEach((userId: string): void => void next.set(userId, null));
         users.forEach((user: TwitchUser): void => void next.set(user.id, user));
         return next;
       });
     } catch {
-      // Let a later change try again rather than leaving these as bare IDs for the session. Events
-      // only arrive when the queue actually changes, so this cannot turn into a retry storm.
       missing.forEach((userId: string): void => void this.attempted.delete(userId));
     }
   }
@@ -239,18 +237,13 @@ export class QueuePageComponent {
       .then((): Promise<Queue> => command)
       .then((queue: Queue): void => {
         this.missing.set(false);
-        this.show(queue);
+        void this.show(queue);
         if (success) this.notifications.success(success);
       })
       .catch((error: unknown): void => {
-        // A 400 from this controller only ever means the one thing: there is no row to change,
-        // because YEPPBot has never been in the channel. Anything else is a request that did not
-        // arrive, which is not something to explain with a wrong reason.
         this.missing.set((error as { status?: number } | null)?.status === 400);
         this.notifications.failure('The queue would not take that.');
 
-        // Dragging shows the new order before the server has agreed to it. Without this the page
-        // would keep showing an order that only ever existed in this browser.
         const channelId: string | null = this.channelId();
         if (channelId !== null) void this.load(channelId);
       })

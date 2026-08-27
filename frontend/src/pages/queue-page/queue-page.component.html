@@ -1,19 +1,18 @@
 <section class="queue-page">
-
   <header class="queue-page-header">
     <h1 class="queue-page-title">Queue</h1>
-    <p class="queue-page-state" [class.queue-page-state-holding]="!queue().isOpen && rows().length > 0">
-      <mat-icon class="queue-page-state-icon" aria-hidden="true">{{ queue().isOpen ? 'lock_open' : 'lock' }}</mat-icon>
-      @if (queue().isOpen) {
-        <span>Open — chat can join with !queue join</span>
-      } @else if (rows().length > 0) {
-        <!-- The state worth pointing at: people are still queued, but nobody can join them any
-             more. Easy to leave behind by accident after calling the last person in. -->
-        <span>Closed — {{ rows().length }} still waiting, but nobody new can join</span>
-      } @else {
-        <span>Closed — nobody new can join</span>
-      }
-    </p>
+    @if (loaded()) {
+      <p class="queue-page-state app-fade-in" [class.queue-page-state-holding]="!queue().isOpen && rows().length > 0">
+        <mat-icon class="queue-page-state-icon" aria-hidden="true">{{ queue().isOpen ? 'lock_open' : 'lock' }}</mat-icon>
+        @if (queue().isOpen) {
+          <span>Open — chat can join with !queue join</span>
+        } @else if (rows().length > 0) {
+          <span>Closed — {{ rows().length }} still waiting, but nobody new can join</span>
+        } @else {
+          <span>Closed — nobody new can join</span>
+        }
+      </p>
+    }
   </header>
 
   @if (missing()) {
@@ -26,190 +25,193 @@
     </p>
   }
 
-  <!-- Announced politely: whoever is up changes on its own when chat drives the queue, and that is
-       the one change on this page somebody not looking at it still has to hear about. -->
-  <div class="queue-page-stage" role="status">
-    @if (current(); as up) {
-      <p class="queue-page-stage-label">Up now</p>
+  @if (loaded()) {
+    <div class="queue-page-stage app-fade-in" role="status">
+      @if (current(); as up) {
+        <p class="queue-page-stage-label">Up now</p>
 
-      <div class="queue-page-stage-identity">
-        @if (up.user; as user) {
-          <!-- priority, not just eager: this is the page's largest element, and Angular warns about
-               it being discovered late otherwise. -->
-          <img class="queue-page-stage-avatar" [ngSrc]="user.profileImageUrl" [width]=64 [height]=64 priority alt=""/>
-        }
-        <span class="queue-page-stage-name">{{ name(up) }}</span>
-      </div>
+        <div class="queue-page-stage-identity">
+          @if (up.user; as user) {
+            <img class="queue-page-stage-avatar" [ngSrc]="user.profileImageUrl" [width]=64 [height]=64 [priority]="true" alt=""/>
+          }
+          <span class="queue-page-stage-name">
+            @if (up.pending) {
+              …
+            } @else {
+              {{ name(up) }}
+            }
+          </span>
+        </div>
 
-      <div class="queue-page-controls">
-        <button
-          mat-flat-button
-          type="button"
-          [disabled]="busy()"
-          [attr.aria-label]="'Done with ' + name(up) + ' — take them off the queue'"
-          (click)="next()"
-        >
-          <mat-icon aria-hidden="true">check</mat-icon>
-          <span>Done</span>
-        </button>
-      </div>
-    } @else {
-      <p class="queue-page-stage-label">Nobody is waiting</p>
-      <p class="queue-page-empty">
-        @if (queue().isOpen) {
-          The queue is open, so the next !queue join lands here.
-        } @else {
-          Open the queue and chat can start lining up.
-        }
-      </p>
-    }
-  </div>
-
-  <div class="queue-page-controls">
-    <button mat-flat-button type="button" [disabled]="busy()" (click)="toggle()">
-      <mat-icon aria-hidden="true">{{ queue().isOpen ? 'lock' : 'lock_open' }}</mat-icon>
-      <span>{{ queue().isOpen ? 'Close the queue' : 'Open the queue' }}</span>
-    </button>
-
-    <button mat-stroked-button type="button" [disabled]="busy() || rows().length === 0" (click)="clear()">
-      <mat-icon aria-hidden="true">playlist_remove</mat-icon>
-      <span>Clear</span>
-    </button>
-  </div>
-
-  <div class="queue-page-panels">
-
-    <section class="queue-page-panel">
-      <h2 class="queue-page-panel-title">The order</h2>
-      <p class="queue-page-panel-hint">
-        Everyone who has joined, first at the top. Drag by the handle to move somebody, or focus a
-        handle and use the arrow keys, Home and End. Chat sees whatever order you leave it in.
-      </p>
-
-      @if (rows().length === 0) {
-        <p class="queue-page-empty">Nothing to show yet.</p>
+        <div class="queue-page-controls">
+          <button
+            mat-flat-button
+            type="button"
+            [disabled]="busy()"
+            [attr.aria-label]="'Done with ' + name(up) + ' — take them off the queue'"
+            (click)="next()"
+          >
+            <mat-icon aria-hidden="true">check</mat-icon>
+            <span>Done</span>
+          </button>
+        </div>
       } @else {
-        <div class="queue-page-table" role="table" aria-label="The queue, in order">
-          <div role="rowgroup">
-            <div class="queue-page-row queue-page-head" role="row">
-              <!-- Neither icon column has room for a heading, and neither needs explaining. They
-                   still carry one: a table with nameless columns is one a screen reader cannot
-                   describe, and both words are wider than the button underneath them. -->
-              <span class="queue-page-column app-visually-hidden" role="columnheader">Move</span>
-              <!-- Shown as a symbol because the column is only as wide as the numbers under it;
-                   the label is what a screen reader reads out instead. -->
-              <span class="queue-page-column queue-page-position" role="columnheader" aria-label="Place">#</span>
-              <span class="queue-page-column" role="columnheader">Name</span>
-              <span class="queue-page-column app-visually-hidden" role="columnheader">Remove</span>
+        <p class="queue-page-stage-label">Nobody is waiting</p>
+        <p class="queue-page-empty">
+          @if (queue().isOpen) {
+            The queue is open, so the next !queue join lands here.
+          } @else {
+            Open the queue and chat can start lining up.
+          }
+        </p>
+      }
+    </div>
+
+    <div class="queue-page-controls app-fade-in">
+      <button mat-flat-button type="button" [disabled]="busy()" (click)="toggle()">
+        <mat-icon aria-hidden="true">{{ queue().isOpen ? 'lock' : 'lock_open' }}</mat-icon>
+        <span>{{ queue().isOpen ? 'Close the queue' : 'Open the queue' }}</span>
+      </button>
+
+      <button mat-stroked-button type="button" [disabled]="busy() || rows().length === 0" (click)="clear()">
+        <mat-icon aria-hidden="true">playlist_remove</mat-icon>
+        <span>Clear</span>
+      </button>
+    </div>
+
+    <div class="queue-page-panels app-fade-in">
+
+      <section class="queue-page-panel">
+        <h2 class="queue-page-panel-title">The order</h2>
+        <p class="queue-page-panel-hint">
+          Everyone who has joined, first at the top. Drag by the handle to move somebody, or focus a
+          handle and use the arrow keys, Home and End. Chat sees whatever order you leave it in.
+        </p>
+
+        @if (rows().length === 0) {
+          <p class="queue-page-empty">Nothing to show yet.</p>
+        } @else {
+          <div class="queue-page-table" role="table" aria-label="The queue, in order">
+            <div role="rowgroup">
+              <div class="queue-page-row queue-page-head" role="row">
+                <span class="queue-page-column app-visually-hidden" role="columnheader">Move</span>
+                <span class="queue-page-column queue-page-position" role="columnheader" aria-label="Place">#</span>
+                <span class="queue-page-column" role="columnheader">Name</span>
+                <span class="queue-page-column app-visually-hidden" role="columnheader">Remove</span>
+              </div>
+            </div>
+
+            <div
+              class="queue-page-rows"
+              role="rowgroup"
+              cdkDropList
+              cdkDropListLockAxis="y"
+              (cdkDropListDropped)="drop($event)"
+            >
+              @for (row of rows(); track row.userId) {
+                <div
+                  class="queue-page-row queue-page-entry"
+                  [class.queue-page-entry-known]="row.user !== null"
+                  role="row"
+                  (click)="open($event, row)"
+                  cdkDrag
+                  [cdkDragData]="row"
+                  [cdkDragDisabled]="rows().length < 2"
+                >
+                  <span role="cell">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="queue-page-handle"
+                      cdkDragHandle
+                      [disabled]="busy() || rows().length < 2"
+                      [attr.aria-label]="'Move ' + name(row) + ', currently place ' + row.position"
+                      (keydown)="nudge($event, row)"
+                    >
+                      <mat-icon aria-hidden="true">drag_indicator</mat-icon>
+                    </button>
+                  </span>
+
+                  <span class="queue-page-position" role="cell">{{ row.position }}</span>
+
+                  <span class="queue-page-identity" role="cell">
+                    @if (row.user; as user) {
+                      <img class="queue-page-avatar" [ngSrc]="user.profileImageUrl" [width]=32 [height]=32 loading="eager" alt=""/>
+
+                      <app-user-badges [user]="user"/>
+
+                      <button
+                        type="button"
+                        class="queue-page-name"
+                        [attr.aria-label]="'Details for ' + user.displayName"
+                        (click)="details(row)"
+                      >
+                        <span class="queue-page-display-name" [style.--chat-color]="user.color">
+                          {{ user.displayName }}
+                        </span>
+                      </button>
+                    } @else {
+                      <span class="queue-page-avatar queue-page-avatar-blank" aria-hidden="true"></span>
+
+                      <span class="queue-page-name queue-page-name-unknown">
+                        @if (row.pending) {
+                          <span class="queue-page-unknown-hint">Looking this one up…</span>
+                        } @else {
+                          {{ row.userId }}
+                          <span class="queue-page-unknown-hint">Twitch has no account under this ID</span>
+                        }
+                      </span>
+                    }
+                  </span>
+
+                  <span role="cell">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      [disabled]="busy()"
+                      [attr.aria-label]="'Remove ' + name(row) + ' from the queue'"
+                      (click)="remove(row)"
+                    >
+                      <mat-icon aria-hidden="true">close</mat-icon>
+                    </button>
+                  </span>
+                </div>
+              }
             </div>
           </div>
+        }
+      </section>
 
-          <div
-            class="queue-page-rows"
-            role="rowgroup"
-            cdkDropList
-            cdkDropListLockAxis="y"
-            (cdkDropListDropped)="drop($event)"
+      <section class="queue-page-panel">
+        <h2 class="queue-page-panel-title">Who may join</h2>
+
+        <mat-form-field appearance="outline" class="queue-page-field" subscriptSizing="dynamic">
+          <mat-label>Requirement</mat-label>
+          <mat-select
+            panelClass="app-select-panel"
+            [value]="queue().requirement"
+            [disabled]="busy()"
+            (valueChange)="changeRequirement($event)"
           >
-            @for (row of rows(); track row.userId) {
-              <div
-                class="queue-page-row queue-page-entry"
-                [class.queue-page-entry-known]="row.user !== null"
-                role="row"
-                (click)="open($event, row)"
-                cdkDrag
-                [cdkDragData]="row"
-                [cdkDragDisabled]="rows().length < 2"
-              >
-                <span role="cell">
-                  <!-- Also a button, and not only a grip: the CDK gives dragging no keyboard
-                       equivalent of its own, so this is where the arrow keys hang. -->
-                  <button
-                    mat-icon-button
-                    type="button"
-                    class="queue-page-handle"
-                    cdkDragHandle
-                    [disabled]="busy() || rows().length < 2"
-                    [attr.aria-label]="'Move ' + name(row) + ', currently place ' + row.position"
-                    (keydown)="nudge($event, row)"
-                  >
-                    <mat-icon aria-hidden="true">drag_indicator</mat-icon>
-                  </button>
-                </span>
-
-                <span class="queue-page-position" role="cell">{{ row.position }}</span>
-
-                <span class="queue-page-identity" role="cell">
-                  @if (row.user; as user) {
-                    <img class="queue-page-avatar" [ngSrc]="user.profileImageUrl" [width]=32 [height]=32 loading="eager" alt=""/>
-
-                    <!-- The row as a whole is clickable, but a div is not reachable by keyboard.
-                         This button is that path; the row's handler steps aside for it. -->
-                    <button
-                      type="button"
-                      class="queue-page-name"
-                      [attr.aria-label]="'Details for ' + user.displayName"
-                      (click)="details(row)"
-                    >
-                      <span class="queue-page-display-name" [style.--chat-color]="user.color">
-                        {{ user.displayName }}
-                      </span>
-                    </button>
-                  } @else {
-                    <span class="queue-page-avatar queue-page-avatar-blank" aria-hidden="true"></span>
-
-                    <span class="queue-page-name queue-page-name-unknown">
-                      {{ row.userId }}
-                      <span class="queue-page-unknown-hint">Twitch has no account under this ID</span>
-                    </span>
-                  }
-                </span>
-
-                <span role="cell">
-                  <button
-                    mat-icon-button
-                    type="button"
-                    [disabled]="busy()"
-                    [attr.aria-label]="'Remove ' + name(row) + ' from the queue'"
-                    (click)="remove(row)"
-                  >
-                    <mat-icon aria-hidden="true">close</mat-icon>
-                  </button>
-                </span>
-              </div>
+            @for (requirement of requirements; track requirement) {
+              <mat-option [value]="requirement">{{ labels[requirement] }}</mat-option>
             }
-          </div>
-        </div>
-      }
-    </section>
+          </mat-select>
+          <mat-hint>{{ requirementHint() }}</mat-hint>
+        </mat-form-field>
 
-    <section class="queue-page-panel">
-      <h2 class="queue-page-panel-title">Who may join</h2>
-
-      <mat-form-field appearance="outline" class="queue-page-field" subscriptSizing="dynamic">
-        <mat-label>Requirement</mat-label>
-        <mat-select
-          panelClass="app-select-panel"
-          [value]="queue().requirement"
-          [disabled]="busy()"
-          (valueChange)="changeRequirement($event)"
-        >
-          @for (requirement of requirements; track requirement) {
-            <mat-option [value]="requirement">{{ labels[requirement] }}</mat-option>
-          }
-        </mat-select>
-        <mat-hint>{{ requirementHint() }}</mat-hint>
-      </mat-form-field>
-
-      <p class="queue-page-panel-note">
-        <mat-icon class="queue-page-note-icon" aria-hidden="true">info</mat-icon>
-        <span>
-          One level, not a floor: someone who does not hold exactly that role is turned away, even
-          if they hold a higher one. You and your moderators always get in.
-        </span>
-      </p>
-    </section>
-  </div>
+        <p class="queue-page-panel-note">
+          <mat-icon class="queue-page-note-icon" aria-hidden="true">info</mat-icon>
+          <span>
+            One level, not a floor: someone who does not hold exactly that role is turned away, even
+            if they hold a higher one. You and your moderators always get in.
+          </span>
+        </p>
+      </section>
+    </div>
+  } @else {
+    <app-queue-skeleton [rows]="queue().entries.length"/>
+  }
 
   <section class="queue-page-panel">
     <h2 class="queue-page-panel-title">Chat commands</h2>
@@ -220,27 +222,36 @@
 
     <dl class="queue-page-commands">
       <dt>!queue join</dt>
-      <dd>Takes a place at the back, if the queue is open</dd>
+      <dd>Takes a place at the back, if the queue is open and the requirement is met</dd>
 
       <dt>!queue leave</dt>
       <dd>Gives that place up</dd>
 
-      <dt>!queue status</dt>
-      <dd>Answers with the caller's place</dd>
+      <dt>!queue open</dt>
+      <dd>Lets chat join</dd>
 
-      <dt>!queue list</dt>
-      <dd>Reads out the order</dd>
+      <dt>!queue close</dt>
+      <dd>Turns anyone new away — everybody already waiting keeps their place</dd>
+
+      <dt>!queue reset</dt>
+      <dd>Empties it, without asking twice — <strong>!queue clear</strong> does the same</dd>
 
       <dt>!queue next</dt>
       <dd>Says who is up — it does not move the queue on</dd>
+
+      <dt>!queue list</dt>
+      <dd>Reads out the order — <strong>!queue status</strong>, and <strong>!queue</strong> on its own, do the same</dd>
+
+      <dt>!queue position</dt>
+      <dd>Answers with the caller's place</dd>
     </dl>
 
     <p class="queue-page-panel-note">
       <mat-icon class="queue-page-note-icon" aria-hidden="true">shield</mat-icon>
       <span>
-        <strong>!queue open</strong>, <strong>close</strong>, <strong>reset</strong> and
-        <strong>clear</strong> are yours and your moderators'. Taking the person at the front off,
-        and changing the order, are only possible from this page.
+        <strong>open</strong>, <strong>close</strong> and <strong>reset</strong> are yours and your
+        moderators'. Taking the person at the front off, and changing the order, are only possible
+        from this page.
       </span>
     </p>
   </section>
