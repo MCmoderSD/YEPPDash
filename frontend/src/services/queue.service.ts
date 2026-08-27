@@ -34,9 +34,7 @@ export class QueueService extends ApiService {
   }
 
   move(channelId: string, userId: string, position: number): Promise<Queue> {
-    return this.put<Queue>(
-      `${encodeURIComponent(channelId)}/entries/${encodeURIComponent(userId)}/position`,
-      { position });
+    return this.put<Queue>(`${encodeURIComponent(channelId)}/entries/${encodeURIComponent(userId)}/position`, { position });
   }
 
   saveRequirement(channelId: string, requirement: QueueRequirement): Promise<Queue> {

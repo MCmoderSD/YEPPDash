@@ -25,9 +25,9 @@ export const DASH_ROUTES: Routes = [
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'community', component: CommunityPageComponent, title: 'Community' },
       { path: 'raids', component: RaidPageComponent, title: 'Raid Overview' },
+      { path: 'queue', component: QueuePageComponent, title: 'Queue' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'timer', component: TimerPageComponent, title: 'Subathon Timer' },
-      { path: 'queue', component: QueuePageComponent, title: 'Queue' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }

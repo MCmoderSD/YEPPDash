@@ -8,8 +8,6 @@ public sealed class QueueWatcher(
     ILogger<QueueWatcher> logger
 ) : BackgroundService {
 
-    // Slower than the timer's tick on purpose: a countdown has to keep step with the second it
-    // renders, a list of names does not, and nobody sees the difference between one second and two.
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(2);
 
     private readonly Dictionary<int, DateTime> _published = [];

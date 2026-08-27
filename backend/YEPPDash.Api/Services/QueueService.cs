@@ -45,10 +45,7 @@ public sealed class QueueService(
             cancellationToken);
     }
 
-    // Position is 1-based on the way in, because that is what the page shows and what chat is told.
-    // The statement underneath counts from zero, and clamps whatever it is given.
-    public Task<QueueState> MoveAsync(
-        string channelId, string userId, int position, CancellationToken cancellationToken)
+    public Task<QueueState> MoveAsync(string channelId, string userId, int position, CancellationToken cancellationToken)
     {
         return MutateAsync(
             channelId,
@@ -57,8 +54,7 @@ public sealed class QueueService(
             cancellationToken);
     }
 
-    public Task<QueueState> SaveRequirementAsync(
-        string channelId, QueueRequirement requirement, CancellationToken cancellationToken)
+    public Task<QueueState> SaveRequirementAsync(string channelId, QueueRequirement requirement, CancellationToken cancellationToken)
     {
         return MutateAsync(
             channelId,
@@ -89,13 +85,11 @@ public sealed class QueueService(
         }
 
         hub.Publish(id, QueueEvents.Serialize(state));
-        logger.LogInformation("The queue of channel {ChannelId} was {Change}", id, what);
+        logger.LogInformation("The queue of the channel {ChannelId} was {Change}", id, what);
 
         return state;
     }
 
-    // Only ever a Twitch user ID reaches this, but it is put together into a log line, so it gets
-    // the same treatment as any other value that came in over the wire.
     private static string Entry(string userId)
     {
         return int.TryParse(userId, out var id) ? id.ToString() : "an entry that is not a user ID";

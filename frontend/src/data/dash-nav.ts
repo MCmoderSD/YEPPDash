@@ -90,6 +90,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     icon: 'sports_esports',
     items: [
       {
+        label: 'Queue',
+        icon: 'format_list_numbered',
+        description: 'Who is lined up, in order, driven from chat.',
+        path: `${BASE}/queue`,
+      },
+      {
         label: 'Lucky Wheel',
         icon: 'casino',
         mask: 'lucky-wheel.svg',
@@ -102,12 +108,6 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         outlined: true,
         description: 'Count down live on an OBS overlay, driven from chat.',
         path: `${BASE}/timer`,
-      },
-      {
-        label: 'Queue',
-        icon: 'format_list_numbered',
-        description: 'Who is lined up, in order, driven from chat.',
-        path: `${BASE}/queue`,
       },
       {
         label: 'BDSM Test',

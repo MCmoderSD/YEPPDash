@@ -8,9 +8,6 @@ using YEPPDash.Api.Services;
 
 namespace YEPPDash.Api.Controllers;
 
-// Nothing here is anonymous, not even the reads. The timer hands out a number; a queue hands out
-// which viewers are lined up, which is other people's data and belongs behind the owner check.
-// There is no overlay that would need a way in without a session.
 [ApiController]
 [Authorize]
 [Route("queue")]
@@ -41,7 +38,7 @@ public sealed class QueueController(
 
         if (!string.Equals(User.GetTwitchId(), userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to watch the queue of channel {UserId}", User.GetTwitchId(), userId);
+            logger.LogWarning("User {TwitchId} tried to watch the queue of the channel {UserId}", User.GetTwitchId(), userId);
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return;
         }
@@ -52,7 +49,7 @@ public sealed class QueueController(
         Response.Headers["X-Accel-Buffering"] = "no";
 
         using var subscription = hub.Subscribe(channelId);
-        logger.LogDebug("A dashboard is watching the queue of channel {ChannelId}", channelId);
+        logger.LogDebug("A dashboard is watching the queue of the channel {ChannelId}", channelId);
 
         await WriteAsync(": connected\n\n", cancellationToken);
 
@@ -80,7 +77,7 @@ public sealed class QueueController(
             await WriteAsync($"data: {payload}\n\n", cancellationToken);
         }
 
-        logger.LogDebug("A dashboard stopped watching the queue of channel {ChannelId}", channelId);
+        logger.LogDebug("A dashboard stopped watching the queue of the channel {ChannelId}", channelId);
     }
 
     [HttpPost("{userId}/open")]
@@ -152,7 +149,7 @@ public sealed class QueueController(
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the queue of channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the queue of the channel {UserId}", twitchId, userId);
             return Forbid();
         }
 

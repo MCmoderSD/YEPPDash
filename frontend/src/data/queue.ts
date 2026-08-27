@@ -25,9 +25,6 @@ export const QUEUE_REQUIREMENT_LABELS: Readonly<Record<QueueRequirement, string>
   [QueueRequirement.Vip]: 'VIPs',
 };
 
-// The four levels are not a ladder, and that surprises people: a VIP who has never subscribed is
-// turned away by Subscribers, and every subscriber is turned away by VIPs. The hints say so rather
-// than leaving it to be discovered live.
 export const QUEUE_REQUIREMENT_HINTS: Readonly<Record<QueueRequirement, string>> = {
   [QueueRequirement.Everyone]: 'Anyone in chat can join the queue.',
   [QueueRequirement.Follower]: 'Only people who follow the channel can join.',

@@ -22,8 +22,6 @@ export class QueueSyncService {
     const supported: typeof EventSource | undefined = this.view?.EventSource;
     if (!supported) return CLOSED;
 
-    // Unlike the wheel and the timer, this stream sits behind the owner check — without the session
-    // cookie it answers 401 rather than a queue.
     const source: EventSource = new supported(
       `${environment.apiBaseUrl}/queue/${encodeURIComponent(channelId)}/stream`,
       { withCredentials: true });
