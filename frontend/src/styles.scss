@@ -270,8 +270,9 @@ body {
 
 // For content that arrives all at once where a skeleton was standing. Every piece carrying this
 // starts its animation in the same frame, so a page that fills in several places at once still
-// reads as one arrival rather than a queue of them. The duration is a token, and reduced motion
-// takes that to 1ms — the swap happens either way, it just stops being a fade.
+// reads as one arrival rather than a queue of them. The rise is small enough to read as settling,
+// not as movement. The duration is a token, and reduced motion takes that to 1ms — the swap
+// happens either way, it just stops being a fade.
 .app-fade-in {
   animation: app-fade-in var(--app-motion-base) var(--app-ease);
 }
@@ -279,5 +280,6 @@ body {
 @keyframes app-fade-in {
   from {
     opacity: 0;
+    translate: 0 0.375rem;
   }
 }

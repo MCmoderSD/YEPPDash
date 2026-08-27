@@ -1,0 +1,180 @@
+// The queue page's load-bearing geometry — every rule that decides where something stands and how
+// much room it takes. Shared with the skeleton, which renders the same classes with grey shapes in
+// the data's place: because both read this one file, the two cannot drift apart, and the moment the
+// real page takes over nothing moves.
+//
+// Behaviour stays out. Hover states, cursors, focus rings and the drag handle belong to the page
+// alone — a skeleton that invited pointing would be promising interaction it cannot deliver.
+
+// The page's two vertical rhythms. The skeleton cannot render .queue-page or its header — it lives
+// inside them — but its wrapper has to repeat the page gap and give back the difference to the
+// header gap, so the numbers that arithmetic reads live here rather than twice.
+$page-gap: 1rem;
+$header-gap: 0.25rem;
+
+// The three quiet lines on the page — the state under the title, a panel's introduction, and what
+// stands in for a list that has nothing in it — are the same text, so they are the same rule.
+.queue-page-state,
+.queue-page-panel-hint,
+.queue-page-empty {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.queue-page-state {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-high);
+}
+
+// Material sizes its icons at 24px, which towers over the text all three of these sit next to.
+.queue-page-warning-icon,
+.queue-page-note-icon,
+.queue-page-state-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+}
+
+// The one thing the page exists to answer — who is up — gets the treatment the timer's readout
+// gets: its own surface, centred, above everything that only supports it.
+.queue-page-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-low);
+  text-align: center;
+}
+
+.queue-page-stage-label,
+.queue-page-column {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.queue-page-stage-label {
+  font: var(--mat-sys-label-large);
+}
+
+.queue-page-stage-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+// clamp rather than a fixed size: this is the page's headline on a wide screen, and a 25-character
+// Twitch name still has to fit a phone.
+.queue-page-stage-name {
+  color: var(--mat-sys-on-surface);
+  font-size: clamp(1.75rem, 7vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.queue-page-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+// The order is the wider half: it holds names and three columns, the panel beside it holds one
+// setting that stays the same width whatever is in it.
+.queue-page-panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 60rem) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.queue-page-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.queue-page-panel-title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+// No auto margin to push it down: the content above already takes the slack, so this sits directly
+// under the last row wherever that lands.
+.queue-page-panel-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  line-height: 1.5;
+}
+
+// The header and every row share this definition, so the columns line up without a real <table> —
+// a table element would fight the drag preview, which has to survive being lifted out of its row.
+//
+// Every column is a fixed width except the name. Each row is its own grid, so a `max-content` column
+// would measure its own row and leave the header sitting a few pixels off from the rows beneath it.
+// Both icon buttons are shrunk to 2rem to match, below Material's own 40px.
+.queue-page-row {
+  display: grid;
+  align-items: center;
+  gap: 0.5rem;
+  grid-template-columns: 2rem 1.5rem minmax(0, 1fr) 2rem;
+  column-gap: 0.25rem;
+}
+
+.queue-page-head {
+  padding: 0 0.25rem 0.5rem;
+  border-block-end: 1px solid var(--mat-sys-outline-variant);
+  font: var(--mat-sys-label-medium);
+}
+
+.queue-page-rows {
+  padding-block-start: 0.25rem;
+}
+
+.queue-page-entry {
+  padding: 0.375rem 0.25rem;
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+// Tabular figures so the names line up whether the place is 2 or 200. Aligned to the start of its
+// column on purpose: the number belongs to the grip beside it, and the room left over belongs in
+// front of the avatar.
+.queue-page-position {
+  color: var(--mat-sys-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.queue-page-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
