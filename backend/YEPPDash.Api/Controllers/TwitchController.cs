@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Twitch;
@@ -10,10 +11,15 @@ namespace YEPPDash.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("twitch")]
-public sealed class TwitchController(
+public sealed partial class TwitchController(
     TwitchChannelService channelService,
     ILogger<TwitchController> logger) : ControllerBase
 {
+    private const int TitleMaxLength = 140;
+    private const int TagMaxCount = 10;
+    private const int TagMaxLength = 25;
+    private const int DelayMaxSeconds = 900;
+    private const int CategoryPageSize = 20;
 
     #region Users
     
@@ -246,6 +252,121 @@ public sealed class TwitchController(
     #endregion
 
     
+    #region Channel
+
+    [HttpGet("channel")]
+    public async Task<IActionResult> GetChannel(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            var channel = await channelService.GetChannelAsync(twitchId, cancellationToken);
+
+            return channel is null ? NotFound("Twitch has no channel under this account.") : Ok(channel);
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "read the channel information");
+        }
+    }
+
+    [HttpPatch("channel")]
+    public async Task<IActionResult> UpdateChannel([FromBody] ChannelUpdate update, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        if (update is { Title: null, GameId: null, Tags: null, IsBrandedContent: null,
+                        BroadcasterLanguage: null, Delay: null, ContentClassificationLabels: null })
+        {
+            return BadRequest("Pass something to change — an empty change is not one.");
+        }
+
+        if (update.Title is not null)
+        {
+            if (string.IsNullOrWhiteSpace(update.Title)) return BadRequest("A stream title cannot be empty.");
+            if (update.Title.Length > TitleMaxLength) return BadRequest($"A stream title cannot be longer than {TitleMaxLength} characters.");
+        }
+
+        if (update.Tags is { } tags)
+        {
+            if (tags.Count > TagMaxCount) return BadRequest($"A channel can have at most {TagMaxCount} tags.");
+
+            if (tags.Any(string.IsNullOrWhiteSpace)) return BadRequest("A tag cannot be empty.");
+            if (tags.Any(tag => tag.Any(char.IsWhiteSpace))) return BadRequest("A tag cannot contain spaces.");
+            if (tags.Any(tag => tag.Length > TagMaxLength)) return BadRequest($"A tag cannot be longer than {TagMaxLength} characters.");
+        }
+
+        if (update.BroadcasterLanguage is { } language && !LanguageCode().IsMatch(language))
+        {
+            return BadRequest("A language has to be a Twitch language code, or 'other'.");
+        }
+
+        if (update.Delay is { } delay && delay is < 0 or > DelayMaxSeconds)
+        {
+            return BadRequest($"A stream delay has to be between 0 and {DelayMaxSeconds} seconds.");
+        }
+
+        if (update.ContentClassificationLabels is { } labels && labels.FirstOrDefault(label => !ContentClassificationLabels.Known.Contains(label.Id)) is { } unknown)
+        {
+            return BadRequest($"'{unknown.Id}' is not a content classification label Twitch knows.");
+        }
+
+        try
+        {
+            await channelService.UpdateChannelAsync(twitchId, update, cancellationToken);
+            return NoContent();
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "update the channel information");
+        }
+    }
+
+    [HttpGet("games")]
+    public async Task<IActionResult> GetGames([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var gameIds = Clean(id);
+        if (gameIds.Count is 0) return BadRequest("Pass at least one game id.");
+
+        try
+        {
+            return Ok(await channelService.GetGamesAsync(twitchId, gameIds, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"look up {gameIds.Count} games");
+        }
+    }
+
+    [HttpGet("categories")]
+    public async Task<IActionResult> SearchCategories([FromQuery] string? query, [FromQuery] string? after, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var search = query?.Trim();
+        if (string.IsNullOrEmpty(search)) return BadRequest("Pass something to search for.");
+
+        try
+        {
+            var page = await channelService.SearchCategoriesAsync(twitchId, search, CategoryPageSize, string.IsNullOrEmpty(after) ? null : after, cancellationToken);
+
+            return Ok(page);
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"search categories for '{search}'");
+        }
+    }
+    #endregion
+
+
     #region Chat
     
     [HttpGet("chatters")]
@@ -313,6 +434,9 @@ public sealed class TwitchController(
             return HandleTwitchFailure(exception, description);
         }
     }
+
+    [GeneratedRegex("^(other|[a-z]{2,3}(-[a-z]{2,4})?)$", RegexOptions.IgnoreCase)]
+    private static partial Regex LanguageCode();
 
     private IActionResult HandleTwitchFailure(Exception exception, string description)
     {

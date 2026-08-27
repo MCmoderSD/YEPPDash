@@ -3,8 +3,6 @@ using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Data.Twitch;
 
-// Unsealed so the enriched profiles can inherit it and pick up every field through the record copy
-// constructor. Anything added here reaches the browser, so an internal-only field wants [JsonIgnore].
 public record TwitchUser
 {
     public required string Id { get; init; }
@@ -28,8 +26,6 @@ public record TwitchUser
 
     public string? Email { get; init; }
 
-    // Not Helix fields: Get Users answers without them, so they stay null until the channel
-    // service fills them in from Get User Chat Color and the channel's role lists.
     public string? Color { get; init; }
 
     public TwitchUserRoles? Roles { get; init; }

@@ -4,6 +4,7 @@ import { Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
 import { BanStatus } from '../data/banned-user';
+import { CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate } from '../data/channel';
 import { ApiService } from './api.service';
 
 @Service()
@@ -104,6 +105,26 @@ export class TwitchService extends ApiService {
 
   unbanUser(userId: string): Promise<void> {
     return this.delete(`banned/${encodeURIComponent(userId)}`);
+  }
+
+  getChannel(): Promise<ChannelInformation> {
+    return this.get<ChannelInformation>('channel');
+  }
+
+  updateChannel(update: ChannelUpdate): Promise<void> {
+    return this.patch<void>('channel', update);
+  }
+
+  getGames(gameIds: readonly string[]): Promise<ChannelCategory[]> {
+    if (gameIds.length === 0) return Promise.resolve([]);
+    return this.get<ChannelCategory[]>('games', this.repeated({ id: gameIds }));
+  }
+
+  searchCategories(query: string, cursor: string | null = null): Promise<CategoryPage> {
+    let params: HttpParams = new HttpParams().set('query', query);
+    if (cursor !== null) params = params.set('after', cursor);
+
+    return this.get<CategoryPage>('categories', params);
   }
 
   private checkChannelRole<T>(path: string, userIds: readonly string[]): Promise<T[]> {

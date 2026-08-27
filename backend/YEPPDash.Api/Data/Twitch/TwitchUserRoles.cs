@@ -5,4 +5,5 @@ public sealed record TwitchUserRoles(
     bool Moderator,
     bool Vip,
     bool Editor,
-    bool Verified);
+    bool Verified
+);

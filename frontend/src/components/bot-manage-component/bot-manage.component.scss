@@ -3,8 +3,13 @@
 // Capped rather than filling the dashboard column: the card is a stack of one-line sentences, and
 // run out to the full width of a desktop each of them would trail off into empty space.
 .bot-manage {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 42rem;
+
+  // Fills whatever height the host is given, so that standing beside another card the two end level.
+  flex: 1 1 auto;
   overflow: hidden;
   border: var(--app-border);
   border-radius: var(--app-radius-lg);
@@ -19,8 +24,16 @@
 .bot-manage-body {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   gap: 1rem;
   padding-block: 1.25rem;
+}
+
+// Everything from the status heading down is pushed to the foot of the card. Standing beside a
+// taller card the extra height lands somewhere, and under the account it reads as room rather than
+// as a gap torn in the middle of the status.
+.bot-manage-heading:first-of-type {
+  margin-block-start: auto;
 }
 
 .bot-manage-identity {

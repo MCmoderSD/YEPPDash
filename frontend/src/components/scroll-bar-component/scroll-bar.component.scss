@@ -16,6 +16,12 @@
   // underneath, which must stay clickable.
   pointer-events: none;
 
+  // A hidden track waits a few pixels past the edge it belongs to, and those pixels count as
+  // overflow in whatever scrolls underneath: inside a scrolling panel they raise its scrollWidth
+  // and summon a scrollbar for the bar's own hiding place. Clipped here, the slide-in starts off
+  // the edge of this box instead of off the edge of the content.
+  overflow: clip;
+
   // The visible width of the thumb, which is narrower than the strip it can be grabbed by. Widened
   // on hover so the bar thickens under the pointer that is aiming for it.
   --scroll-bar-thumb-size: 0.375rem;

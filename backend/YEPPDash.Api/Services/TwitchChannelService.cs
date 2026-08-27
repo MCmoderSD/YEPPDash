@@ -97,16 +97,14 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var moderators = await GetModeratorsAsync(broadcasterId, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
     }
 
     public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesByIdAsync(
         string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var moderators = await GetModeratorsByIdAsync(broadcasterId, userIds, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -134,7 +132,7 @@ public sealed class TwitchChannelService(
         await apiClient.AddModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
         cache.Invalidate(ChannelRole.Moderator, broadcasterId);
 
-        logger.LogInformation("Added {UserId} as moderator in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Added {UserId} as moderator in the channel {BroadcasterId}", userId, broadcasterId);
     }
 
     public async Task RemoveModeratorAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -143,7 +141,7 @@ public sealed class TwitchChannelService(
         await apiClient.RemoveModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
         cache.Invalidate(ChannelRole.Moderator, broadcasterId);
 
-        logger.LogInformation("Removed {UserId} as moderator in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Removed {UserId} as moderator in the channel {BroadcasterId}", userId, broadcasterId);
     }
     #endregion
 
@@ -186,7 +184,7 @@ public sealed class TwitchChannelService(
         await apiClient.AddVipAsync(broadcasterId, userId, accessToken, cancellationToken);
         cache.Invalidate(ChannelRole.Vip, broadcasterId);
 
-        logger.LogInformation("Added {UserId} as VIP in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Added {UserId} as VIP in the channel {BroadcasterId}", userId, broadcasterId);
     }
 
     public async Task RemoveVipAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -195,7 +193,7 @@ public sealed class TwitchChannelService(
         await apiClient.RemoveVipAsync(broadcasterId, userId, accessToken, cancellationToken);
         cache.Invalidate(ChannelRole.Vip, broadcasterId);
 
-        logger.LogInformation("Removed {UserId} as VIP in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Removed {UserId} as VIP in the channel {BroadcasterId}", userId, broadcasterId);
     }
     #endregion
 
@@ -261,8 +259,7 @@ public sealed class TwitchChannelService(
 
         var users = await GetUserProfilesAsync(broadcasterId, [follow.UserId], [], cancellationToken);
 
-        return new FollowStatusResponse(
-            true, users.Count is 0 ? null : new TwitchFollowerProfile(users[0], follow.FollowedAt));
+        return new FollowStatusResponse(true, users.Count is 0 ? null : new TwitchFollowerProfile(users[0], follow.FollowedAt));
     }
 
     public Task<IReadOnlyList<TwitchFollower>> GetFollowersAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -306,7 +303,6 @@ public sealed class TwitchChannelService(
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
 
-        // The token belongs to the broadcaster, so they are their own moderator of record here.
         await apiClient.UnbanUserAsync(broadcasterId, broadcasterId, userId, accessToken, cancellationToken);
 
         logger.LogInformation("Unbanned {UserId} in channel {BroadcasterId}", userId, broadcasterId);
@@ -337,6 +333,38 @@ public sealed class TwitchChannelService(
         cache.Invalidate(ChannelRole.Blocked, broadcasterId);
 
         logger.LogInformation("Unblocked {UserId} for user {BroadcasterId}", userId, broadcasterId);
+    }
+    #endregion
+
+    #region Channel
+    public async Task<ChannelInformation?> GetChannelAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetChannelAsync(broadcasterId, accessToken, cancellationToken);
+    }
+
+    public async Task UpdateChannelAsync(string broadcasterId, ChannelUpdate update, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        await apiClient.ModifyChannelAsync(broadcasterId, update, accessToken, cancellationToken);
+
+        logger.LogInformation("Updated the channel information of {BroadcasterId}", broadcasterId);
+    }
+
+    public async Task<IReadOnlyList<ChannelCategory>> GetGamesAsync(
+        string broadcasterId, IReadOnlyCollection<string> gameIds, CancellationToken cancellationToken)
+    {
+        if (gameIds.Count is 0) return [];
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetGamesAsync(gameIds, accessToken, cancellationToken);
+    }
+
+    public async Task<HelixPage<ChannelCategory>> SearchCategoriesAsync(
+        string broadcasterId, string search, int first, string? cursor, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.SearchCategoriesAsync(search, first, cursor, accessToken, cancellationToken);
     }
     #endregion
 

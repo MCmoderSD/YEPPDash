@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Exceptions.Twitch;
 
@@ -117,14 +118,12 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     #region Followers
     public Task<HelixPage<TwitchFollower>> GetFollowersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        return GetPageAsync<TwitchFollower>(
-            PagedQuery("channels/followers", broadcasterId, cursor), accessToken, cancellationToken);
+        return GetPageAsync<TwitchFollower>(PagedQuery("channels/followers", broadcasterId, cursor), accessToken, cancellationToken);
     }
 
     public async Task<TwitchFollower?> GetFollowerAsync(string broadcasterId, string userId, string accessToken, CancellationToken cancellationToken)
     {
-        var query = $"channels/followers?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
-                    $"&user_id={Uri.EscapeDataString(userId)}";
+        var query = $"channels/followers?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" + $"&user_id={Uri.EscapeDataString(userId)}";
 
         var page = await GetPageAsync<TwitchFollower>(query, accessToken, cancellationToken);
         return page.Items.FirstOrDefault();
@@ -164,11 +163,53 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
     #endregion
 
+    #region Channel
+    public async Task<ChannelInformation?> GetChannelAsync(string broadcasterId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channels?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<ChannelInformation>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault();
+    }
+
+    public async Task ModifyChannelAsync(string broadcasterId, ChannelUpdate update, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channels?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
+        var body = JsonContent.Create(update, options: TwitchJson.Options);
+
+        using var response = await SendAsync(HttpMethod.Patch, query, accessToken, cancellationToken, body);
+    }
+
+    public async Task<IReadOnlyList<ChannelCategory>> GetGamesAsync(IReadOnlyCollection<string> gameIds, string accessToken, CancellationToken cancellationToken)
+    {
+        if (gameIds.Count is 0 or > MaxBatchSize)
+        {
+            throw new ArgumentException($"Get Games takes between 1 and {MaxBatchSize} ids.", nameof(gameIds));
+        }
+
+        var query = string.Join('&', gameIds.Select(id => $"id={Uri.EscapeDataString(id)}"));
+        using var response = await SendAsync(HttpMethod.Get, $"games?{query}", accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<ChannelCategory>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data ?? [];
+    }
+
+    public Task<HelixPage<ChannelCategory>> SearchCategoriesAsync(string search, int first, string? cursor, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"search/categories?query={Uri.EscapeDataString(search)}&first={first}";
+        if (cursor is not null) query += $"&after={Uri.EscapeDataString(cursor)}";
+
+        return GetPageAsync<ChannelCategory>(query, accessToken, cancellationToken);
+    }
+    #endregion
+
     #region Chat
     public Task<HelixPage<TwitchChannelUser>> GetChattersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
-        var query = PagedQuery("chat/chatters", broadcasterId, cursor) +
-                    $"&moderator_id={Uri.EscapeDataString(broadcasterId)}";
+        var query = PagedQuery("chat/chatters", broadcasterId, cursor) + $"&moderator_id={Uri.EscapeDataString(broadcasterId)}";
 
         return GetPageAsync<TwitchChannelUser>(query, accessToken, cancellationToken);
     }
@@ -211,9 +252,10 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string accessToken, CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string accessToken, CancellationToken cancellationToken, HttpContent? content = null)
     {
         using var request = new HttpRequestMessage(method, path);
+        request.Content = content;
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Add("Client-Id", options.ClientId);
 
