@@ -11,9 +11,9 @@
   flex: 1 1 auto;
   gap: 1rem;
   padding: 1.25rem;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 1rem;
-  background: var(--mat-sys-surface-container-low);
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container);
 }
 
 // The title takes the room and the button keeps its own, so a long title wraps rather than pushing
