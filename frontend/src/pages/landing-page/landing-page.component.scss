@@ -60,6 +60,11 @@
   white-space: nowrap;
 }
 
+.feature-badge-new {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
 .feature-badge-stable {
   background: var(--mat-sys-primary-container);
   color: var(--mat-sys-on-primary-container);
