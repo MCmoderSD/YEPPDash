@@ -142,8 +142,6 @@ export const EMPTY_CHANNEL: ChannelInformation = {
   isBrandedContent: false,
 };
 
-export function boxArtUrl(template: string, width: number, height: number): string {
-  return template
-    .replace('{width}', String(width))
-    .replace('{height}', String(height));
+export function boxArtUrl(template: string): string {
+  return template.replace(/-?\{width}x\{height}/, '');
 }

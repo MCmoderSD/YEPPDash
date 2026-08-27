@@ -214,8 +214,8 @@ export class ManageBroadcastDialogComponent {
     this.panelScroll = null;
   }
 
-  protected art(category: ChannelCategory, width: number, height: number): string {
-    return boxArtUrl(category.boxArtUrl, width, height);
+  protected art(category: ChannelCategory): string {
+    return boxArtUrl(category.boxArtUrl);
   }
 
   protected blockTag(event: InputEvent): void {

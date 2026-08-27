@@ -46,8 +46,8 @@ export class StreamManageComponent {
     void this.load();
   }
 
-  protected art(category: ChannelCategory, width: number, height: number): string {
-    return boxArtUrl(category.boxArtUrl, width, height);
+  protected art(category: ChannelCategory): string {
+    return boxArtUrl(category.boxArtUrl);
   }
 
   protected async manage(): Promise<void> {

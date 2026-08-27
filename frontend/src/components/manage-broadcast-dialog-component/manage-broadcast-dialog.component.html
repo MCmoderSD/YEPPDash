@@ -44,7 +44,7 @@
       @if (picked.boxArtUrl) {
         <img
           class="manage-broadcast-art"
-          [ngSrc]="art(picked, 45, 60)"
+          [ngSrc]="art(picked)"
           [width]=45
           [height]=60
           alt=""
@@ -196,7 +196,7 @@
     <mat-option [value]="category">
       <span class="manage-broadcast-option">
         @if (category.boxArtUrl) {
-          <img class="manage-broadcast-option-art" [ngSrc]="art(category, 30, 40)" [width]=30 [height]=40 alt=""/>
+          <img class="manage-broadcast-option-art" [ngSrc]="art(category)" [width]=30 [height]=40 alt=""/>
         }
         <span class="manage-broadcast-option-name">{{ category.name }}</span>
       </span>
