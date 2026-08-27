@@ -51,21 +51,18 @@ public sealed class TwitchChannelService(
         if (users.Count is 0) return users;
 
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
-        var colors = new Dictionary<string, string?>(users.Count, StringComparer.Ordinal);
 
-        foreach (var batch in users.Chunk(TwitchApiClient.MaxBatchSize))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        var colorTask = GetChatColorsAsync(users, accessToken, cancellationToken);
+        var moderatorTask = GetModeratorsAsync(broadcasterId, cancellationToken);
+        var vipTask = GetVipsAsync(broadcasterId, cancellationToken);
+        var editorTask = GetEditorsAsync(broadcasterId, cancellationToken);
 
-            var found = await apiClient.GetChatColorsAsync(
-                [.. batch.Select(user => user.Id)], accessToken, cancellationToken);
+        await Task.WhenAll(colorTask, moderatorTask, vipTask, editorTask);
 
-            foreach (var color in found) colors[color.UserId] = color.Color;
-        }
-
-        var moderators = (await GetModeratorsAsync(broadcasterId, cancellationToken)).Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
-        var vips = (await GetVipsAsync(broadcasterId, cancellationToken)).Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
-        var editors = (await GetEditorsAsync(broadcasterId, cancellationToken)).Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
+        var colors = await colorTask;
+        var moderators = (await moderatorTask).Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
+        var vips = (await vipTask).Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
+        var editors = (await editorTask).Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
 
         return users.Select(user => user with
         {
@@ -77,6 +74,22 @@ public sealed class TwitchChannelService(
                 Editor: editors.Contains(user.Id),
                 Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase)),
         }).ToList();
+    }
+
+    private async Task<Dictionary<string, string?>> GetChatColorsAsync(IReadOnlyList<TwitchUser> users, string accessToken, CancellationToken cancellationToken)
+    {
+        var colors = new Dictionary<string, string?>(users.Count, StringComparer.Ordinal);
+
+        foreach (var batch in users.Chunk(TwitchApiClient.MaxBatchSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var found = await apiClient.GetChatColorsAsync([.. batch.Select(user => user.Id)], accessToken, cancellationToken);
+
+            foreach (var color in found) colors[color.UserId] = color.Color;
+        }
+
+        return colors;
     }
     #endregion
 

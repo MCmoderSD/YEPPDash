@@ -268,3 +268,68 @@ body {
     display: none;
   }
 }
+// How a row being dragged and the gap it will drop into look. Global because the CDK writes these
+// classes onto elements it moves out of their component — a preview is reparented to the body, where
+// a component's scoped styles cannot reach it. They are also the app's answer for any list that
+// becomes draggable later, rather than one page's.
+.cdk-drag-preview {
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface-container-highest);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 45%);
+  opacity: 0.95;
+}
+
+// Dashed rather than blank, so it reads as a destination and not as something having gone missing.
+.cdk-drag-placeholder {
+  border: 1px dashed var(--mat-sys-outline);
+  border-radius: 0.5rem;
+  background: none;
+  box-shadow: none;
+  opacity: 0.4;
+
+  * {
+    visibility: hidden;
+  }
+}
+
+// Held in a custom property so the reduced-motion case is one number rather than a second copy of
+// the selector.
+.cdk-drop-list {
+  --app-shuffle: 200ms;
+
+  @media (prefers-reduced-motion: reduce) {
+    --app-shuffle: 0ms;
+  }
+}
+
+.cdk-drag-animating,
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform var(--app-shuffle, 200ms) cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Readable to a screen reader, invisible on screen, and — unlike display: none — still announced.
+// Deliberately not absolutely positioned, so it keeps its place in a flex or grid line: an
+// out-of-flow item claims no column, which silently shifts everything beside it.
+.app-visually-hidden {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// For content that arrives all at once where a skeleton was standing. Every piece carrying this
+// starts its animation in the same frame, so a page that fills in several places at once still
+// reads as one arrival rather than a queue of them. The rise is small enough to read as settling,
+// not as movement. The duration is a token, and reduced motion takes that to 1ms — the swap
+// happens either way, it just stops being a fade.
+.app-fade-in {
+  animation: app-fade-in var(--app-motion-base) var(--app-ease);
+}
+
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
+  }
+}
