@@ -72,9 +72,6 @@ public sealed class QueueRepository(MySqlConnection connection)
             cancellationToken);
     }
 
-    // Removing one entry is a single self-referential UPDATE, so two moderators clicking at the
-    // same moment cannot lose each other's work: the row lock comes with the statement, and
-    // neither side ever holds a stale copy of the list in memory.
     public Task<QueueState?> RemoveAsync(int channelId, string userId, CancellationToken cancellationToken)
     {
         return MutateAsync(
@@ -89,22 +86,10 @@ public sealed class QueueRepository(MySqlConnection connection)
             cancellationToken);
     }
 
-    // The list with @userId taken out of it, however deep it sat.
-    private const string Without =
-        "TRIM(BOTH ',' FROM REPLACE(CONCAT(',', queue, ','), CONCAT(',', @userId, ','), ','))";
-
-    // How many are left once it is out.
-    private const string Length =
-        $"IF({Without} = '', 0, LENGTH({Without}) - LENGTH(REPLACE({Without}, ',', '')) + 1)";
-
-    // Where it lands, clamped here rather than by the caller: a statement that cannot be handed an
-    // index off the end cannot duplicate the tail, which is exactly what an unclamped one does.
+    private const string Without = "TRIM(BOTH ',' FROM REPLACE(CONCAT(',', queue, ','), CONCAT(',', @userId, ','), ','))";
+    private const string Length = $"IF({Without} = '', 0, LENGTH({Without}) - LENGTH(REPLACE({Without}, ',', '')) + 1)";
     private const string Landing = $"GREATEST(0, LEAST(@index, {Length}))";
 
-    // Still a single UPDATE, like every other mutation: take the entry out, cut the remainder at the
-    // landing place, and put the three pieces back together. CONCAT_WS drops the NULLs, which is what
-    // keeps the two ends — moved to the very front, moved to the very back — from growing a stray
-    // comma instead of an entry.
     public Task<QueueState?> MoveAsync(
         int channelId, string userId, int index, CancellationToken cancellationToken)
     {
@@ -133,8 +118,6 @@ public sealed class QueueRepository(MySqlConnection connection)
 
         if (string.IsNullOrEmpty(head)) return await GetAsync(channelId, cancellationToken);
 
-        // Only drop the head we just read. Without that guard a second moderator advancing between
-        // these two statements would have us remove somebody nobody has looked at yet.
         return await MutateAsync(
             channelId,
             """
@@ -164,8 +147,6 @@ public sealed class QueueRepository(MySqlConnection connection)
         return await GetAsync(channelId, cancellationToken);
     }
 
-    // The table spells its enum in lower case and the C# one differs only in that, so the name is
-    // what carries across rather than the position — reordering either side stays harmless.
     private static string ToColumn(QueueRequirement value)
     {
         return value.ToString().ToLowerInvariant();
@@ -173,8 +154,6 @@ public sealed class QueueRepository(MySqlConnection connection)
 
     private static QueueRequirement ToRequirement(string value)
     {
-        // A value the table allows but this app does not know yet reads as the default rather than
-        // throwing: one unfamiliar row should not take the whole page down.
         return Enum.TryParse<QueueRequirement>(value, ignoreCase: true, out var parsed)
             ? parsed
             : QueueRequirement.Everyone;
@@ -191,7 +170,7 @@ public sealed class QueueRepository(MySqlConnection connection)
         public QueueState ToState()
         {
             var entries = Queue.Split(
-                QueueLimits.Separator,
+                ',',
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             return new QueueState(
