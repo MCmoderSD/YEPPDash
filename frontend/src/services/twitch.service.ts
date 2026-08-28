@@ -100,9 +100,6 @@ export class TwitchService extends ApiService {
     return this.get<TwitchUser[]>('chatters');
   }
 
-  // Membership rather than the whole list. Asking whether one account is in chat used to mean
-  // paginating every viewer of a live channel and resolving a profile for each of them; this stops
-  // at the first page carrying the answer and never asks for a profile at all.
   async isChatter(userId: string): Promise<boolean> {
     return (await this.checkChannelRole<ChannelMember>('chatters', [userId])).length > 0;
   }

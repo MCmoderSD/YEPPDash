@@ -157,9 +157,6 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      // Three membership questions, asked as three membership questions. This used to pull the
-      // channel's entire block list, moderator list and chatter list -- each one fully enriched with
-      // avatars, colours and badges for every account on it -- and then look up a single id in each.
       const [users, ban, blocked, moderator, inChat, shoutout]: [TwitchUser[], BanStatus, boolean, boolean, boolean, ShoutoutSettings | null] = await Promise.all([
         this.twitch.getUsers([botUserId]),
         this.twitch.getBanStatus(botUserId),
