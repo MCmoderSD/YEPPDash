@@ -30,6 +30,7 @@ builder.Services.AddYeppBot(builder.Configuration, dbTarget);
 builder.Services.AddSingleton(new UptimeTracker());
 builder.Services.AddSingleton<TwitchChannelCache>();
 builder.Services.AddSingleton<TwitchUserCache>();
+builder.Services.AddHostedService<TwitchUserCacheSweeper>();
 builder.Services.AddSingleton<TwitchChannelWarmup>();
 builder.Services.AddHostedService<TwitchChannelWarmupWorker>();
 builder.Services.AddScoped<TwitchChannelService>();
