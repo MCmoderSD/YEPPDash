@@ -15,10 +15,6 @@ import { TwitchUser } from '../../data/twitch-user';
 import { BanStatus } from '../../data/banned-user';
 import { ShoutoutSettings } from '../../data/shoutout';
 
-function contains(users: readonly TwitchUser[], userId: string): boolean {
-  return users.some((user: TwitchUser): boolean => user.id === userId);
-}
-
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse)) return null;
   const message: unknown = (error.error as BotResult | null)?.message;
@@ -161,21 +157,24 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const [users, ban, blocked, moderators, chatters, shoutout]: [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[], ShoutoutSettings | null] = await Promise.all([
+      // Three membership questions, asked as three membership questions. This used to pull the
+      // channel's entire block list, moderator list and chatter list -- each one fully enriched with
+      // avatars, colours and badges for every account on it -- and then look up a single id in each.
+      const [users, ban, blocked, moderator, inChat, shoutout]: [TwitchUser[], BanStatus, boolean, boolean, boolean, ShoutoutSettings | null] = await Promise.all([
         this.twitch.getUsers([botUserId]),
         this.twitch.getBanStatus(botUserId),
-        this.twitch.getBlocked(),
-        this.twitch.getModerators(),
-        this.twitch.getChatters(),
+        this.twitch.isBlocked(botUserId),
+        this.twitch.isModerator(botUserId),
+        this.twitch.isChatter(botUserId),
         this.shoutouts.getSettings().catch((): null => null)
       ]);
 
       this.bot.set(users[0] ?? null);
       this.chatColor.set(users[0]?.color ?? null);
       this.banned.set(ban.banned);
-      this.blocked.set(contains(blocked, botUserId));
-      this.moderator.set(contains(moderators, botUserId));
-      this.inChat.set(contains(chatters, botUserId));
+      this.blocked.set(blocked);
+      this.moderator.set(moderator);
+      this.inChat.set(inChat);
       this.shoutout.set(shoutout);
       this.unreachable.set(false);
     } catch {

@@ -269,6 +269,16 @@ public sealed partial class TwitchController(
             "list the blocked users");
     }
 
+
+    [HttpGet("blocked/check")]
+    public Task<IActionResult> CheckBlockedUsers([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        return CheckChannelUsersAsync(
+            id,
+            (broadcasterId, userIds) => channelService.GetBlockedUsersByIdAsync(broadcasterId, userIds, cancellationToken),
+            "are blocked");
+    }
+
     
     [HttpDelete("blocked/{userId}")]
     public Task<IActionResult> UnblockUser(string userId, CancellationToken cancellationToken)
@@ -404,6 +414,16 @@ public sealed partial class TwitchController(
         return ListUserProfilesAsync(
             broadcasterId => channelService.GetChatterProfilesAsync(broadcasterId, cancellationToken),
             "list the chatters");
+    }
+
+
+    [HttpGet("chatters/check")]
+    public Task<IActionResult> CheckChatters([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        return CheckChannelUsersAsync(
+            id,
+            (broadcasterId, userIds) => channelService.GetChattersByIdAsync(broadcasterId, userIds, cancellationToken),
+            "are in chat");
     }
     #endregion
 
