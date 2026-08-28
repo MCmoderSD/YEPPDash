@@ -28,6 +28,22 @@
   font: var(--mat-sys-body-medium);
 }
 
+// The count line is centred by its ancestor's text-align, which only ever steers inline content —
+// .app-skeleton fixes this bar's own display to block, so it needs its own margin to land in the
+// middle instead of pinned to the start edge. Sized for the longest real sentence this line ever
+// shows ("N commands in your channel, N active") so the swap to real text does not change width.
+.command-page-count-skeleton {
+  width: min(14rem, 70vw);
+  margin-inline: auto;
+}
+
+// app-fade-in's rise is a translate, and translate does not move a plain inline box — every other
+// page hangs the class on a block element for exactly that reason, and the paragraph itself cannot
+// be it here without the fade replaying every time the sentence's own wording changes underneath.
+.command-page-count-text {
+  display: block;
+}
+
 .command-page-toolbar {
   display: flex;
   flex-wrap: wrap;

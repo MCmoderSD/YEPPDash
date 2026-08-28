@@ -21,6 +21,13 @@ import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, parseWh
 import { resultWonAt, WheelResult } from '../../data/wheel-result';
 import { overlayUrl, WHEEL_OVERLAY_PATH } from '../../data/overlay';
 
+type WheelEntryRow = WheelEntry & { readonly ghost?: true };
+
+function ghostRows(count: number | null): WheelEntryRow[] {
+  if (count === null || count <= 0) return [];
+  return Array.from({ length: Math.min(count, 25) }, (): WheelEntryRow => ({ label: '', count: 1, ghost: true }));
+}
+
 @Component({
   selector: 'app-wheel-page',
   templateUrl: './wheel-page.component.html',
@@ -60,6 +67,13 @@ export class WheelPageComponent {
   protected readonly spinning: Signal<boolean> = computed((): boolean => this.wheel()?.spinning() ?? false);
 
   protected readonly busy: Signal<boolean> = computed((): boolean => this.spinning() || this.loading());
+
+  protected readonly initialLoad: Signal<boolean> = computed((): boolean => this.loading() && this.entries().length === 0);
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly rows: Signal<WheelEntryRow[]> = computed((): WheelEntryRow[] =>
+    this.initialLoad() ? ghostRows(this.expected()) : this.entries());
 
   private readonly channelId: Signal<string | null> = computed((): string | null => this.auth.currentUser()?.id ?? null);
 

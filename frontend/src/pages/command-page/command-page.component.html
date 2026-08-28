@@ -3,12 +3,18 @@
   <header class="command-page-header">
     <h1 class="command-page-title">Custom Commands</h1>
     <p class="command-page-count">
-      @if (count() === 0) {
-        No commands in your channel yet
-      } @else if (count() === activeCount()) {
-        {{ count() }} command{{ count() === 1 ? '' : 's' }} in your channel
+      @if (loading() && count() === 0) {
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text command-page-count-skeleton" aria-hidden="true"></span>
       } @else {
-        {{ count() }} command{{ count() === 1 ? '' : 's' }} in your channel, {{ activeCount() }} active
+        <span class="command-page-count-text app-fade-in">
+          @if (count() === 0) {
+            No commands in your channel yet
+          } @else if (count() === activeCount()) {
+            {{ count() }} command{{ count() === 1 ? '' : 's' }} in your channel
+          } @else {
+            {{ count() }} command{{ count() === 1 ? '' : 's' }} in your channel, {{ activeCount() }} active
+          }
+        </span>
       }
     </p>
   </header>
@@ -28,8 +34,8 @@
   <mat-progress-bar
     class="command-page-progress"
     mode="indeterminate"
-    [attr.aria-hidden]="!(loading() || busy())"
-    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+    [attr.aria-hidden]="!busy()"
+    [style.visibility]="busy() ? 'visible' : 'hidden'"
   />
 
   <app-command-table

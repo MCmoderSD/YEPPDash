@@ -59,6 +59,19 @@ table.command-table-grid {
   }
 }
 
+// A ghost row is not a row yet — pointer-events removes it from the click and hover paths outright
+// rather than trusting the disabled cursor alone, so nothing here can be mistaken for a command
+// that is one tap away from opening.
+.command-table-row-skeleton {
+  cursor: default;
+  pointer-events: none;
+
+  &:hover,
+  &:focus-within {
+    background: none;
+  }
+}
+
 // The row whose form is open reads as the heading of that form rather than as one row among the
 // rest, and loses its bottom rule so the two read as one block.
 .command-table-row-open {
@@ -167,6 +180,72 @@ table.command-table-grid {
   width: 6.5rem;
   text-align: end;
   white-space: nowrap;
+}
+
+// --- initial-load ghosts ---------------------------------------------------------------------
+// Six rows standing in the same cells the columns above already size, so the surface and pulse
+// from .app-skeleton are all that is missing to read as "a table, loading" rather than a sketch of
+// one. Only the shapes are declared here — colour, motion and the held-back appearance are the
+// shared utilities'.
+
+.command-table-skeleton-name {
+  width: 5rem;
+}
+
+// A command that is followed by its own empty editor row (height: 0, see below), so every real row
+// lands on an odd position among its table siblings — 1st, 3rd, 5th… Splitting those three ways in
+// steps of six keeps every third *row*, not every third element, from matching the one before it.
+.command-table-row:nth-child(6n+3) .command-table-skeleton-name {
+  width: 7.5rem;
+}
+
+.command-table-row:nth-child(6n+5) .command-table-skeleton-name {
+  width: 3.5rem;
+}
+
+// Most commands carry zero or one alias, so two chips — one shorter than the other — reads truer
+// than guessing a row will have a whole row of them.
+.command-table-skeleton-chip {
+  width: 3rem;
+  height: 1.25rem;
+  height: 1lh;
+  border-radius: var(--mat-sys-corner-extra-small);
+}
+
+.command-table-skeleton-chip-narrow {
+  width: 2rem;
+}
+
+// The one column that grows, so its ghost is sized against the space that is actually on screen
+// rather than a fixed rem width. Varied the same way and on the same rows as the name bar, so the
+// two do not read as a matched pair repeating down the table.
+.command-table-skeleton-message {
+  width: 70%;
+}
+
+.command-table-row:nth-child(6n+3) .command-table-skeleton-message {
+  width: 45%;
+}
+
+.command-table-row:nth-child(6n+5) .command-table-skeleton-message {
+  width: 90%;
+}
+
+// Roughly the compact slide-toggle's own footprint (app-toggle-compact), start-aligned the way the
+// real control is in this column.
+.command-table-skeleton-toggle {
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: var(--mat-sys-corner-full);
+}
+
+// Standing where the expand icon sits, Material's 24px centred by the column's own end alignment —
+// margin rather than text-align, since a block-level .app-skeleton shape ignores that property.
+.command-table-skeleton-action {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-inline-start: auto;
+  border-radius: 50%;
 }
 
 // The row holding a command's form. Closed, it holds nothing — so it has to take up nothing either,
