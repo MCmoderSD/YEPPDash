@@ -249,7 +249,7 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         var payload = await response.Content.ReadFromJsonAsync<HelixResponse<T>>(TwitchJson.Options, cancellationToken);
 
         var items = payload?.Data ?? [];
-        return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor);
+        return new HelixPage<T>(items, items.Length == 0 ? null : payload?.Pagination?.Cursor, payload?.Total);
     }
 
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, string accessToken, CancellationToken cancellationToken, HttpContent? content = null)
@@ -278,6 +278,8 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         public T[] Data { get; init; } = [];
 
         public HelixPagination? Pagination { get; init; }
+
+        public int? Total { get; init; }
     }
 
     private sealed record HelixPagination
