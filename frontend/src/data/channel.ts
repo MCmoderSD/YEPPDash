@@ -5,6 +5,7 @@ export interface ChannelInformation {
   broadcasterLanguage: string;
   gameId: string;
   gameName: string;
+  boxArtUrl: string;
   title: string;
   delay: number;
   tags: string[];
@@ -135,6 +136,7 @@ export const EMPTY_CHANNEL: ChannelInformation = {
   broadcasterLanguage: '',
   gameId: '',
   gameName: '',
+  boxArtUrl: '',
   title: '',
   delay: 0,
   tags: [],
