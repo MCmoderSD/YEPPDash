@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using YEPPDash.Api.Data;
 using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Exceptions.Twitch;
 using YEPPDash.Api.Helpers;
@@ -61,6 +62,15 @@ public sealed partial class TwitchController(
     }
 
     
+    [HttpGet("moderators/count")]
+    public Task<IActionResult> CountModerators(CancellationToken cancellationToken)
+    {
+        return CountAsync(
+            broadcasterId => channelService.GetModeratorCountAsync(broadcasterId, cancellationToken),
+            "count the moderators");
+    }
+
+
     [HttpGet("moderators/check")]
     public Task<IActionResult> CheckModerators([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
     {
@@ -102,6 +112,15 @@ public sealed partial class TwitchController(
     }
 
     
+    [HttpGet("vips/count")]
+    public Task<IActionResult> CountVips(CancellationToken cancellationToken)
+    {
+        return CountAsync(
+            broadcasterId => channelService.GetVipCountAsync(broadcasterId, cancellationToken),
+            "count the VIPs");
+    }
+
+
     [HttpGet("vips/check")]
     public Task<IActionResult> CheckVips([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
     {
@@ -184,6 +203,15 @@ public sealed partial class TwitchController(
     }
 
     
+    [HttpGet("followers/count")]
+    public Task<IActionResult> CountFollowers(CancellationToken cancellationToken)
+    {
+        return CountAsync(
+            broadcasterId => channelService.GetFollowerCountAsync(broadcasterId, cancellationToken),
+            "count the followers");
+    }
+
+
     [HttpGet("followers/{userId}")]
     public async Task<IActionResult> GetFollowStatus(string userId, CancellationToken cancellationToken)
     {
@@ -316,8 +344,9 @@ public sealed partial class TwitchController(
 
         try
         {
-            await channelService.UpdateChannelAsync(twitchId, update, cancellationToken);
-            return NoContent();
+            var channel = await channelService.UpdateChannelAsync(twitchId, update, cancellationToken);
+
+            return channel is null ? NotFound("Twitch has no channel under this account.") : Ok(channel);
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
@@ -394,6 +423,21 @@ public sealed partial class TwitchController(
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
             return HandleTwitchFailure(exception, $"check whether {userIds.Count} users {role}");
+        }
+    }
+
+    private async Task<IActionResult> CountAsync(Func<string, Task<int>> count, string description)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            return Ok(new CountResponse(await count(twitchId)));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, description);
         }
     }
 

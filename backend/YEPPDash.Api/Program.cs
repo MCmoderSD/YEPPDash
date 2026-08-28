@@ -29,6 +29,7 @@ builder.Services.AddYeppBot(builder.Configuration, dbTarget);
 // first request that happens to ask for it.
 builder.Services.AddSingleton(new UptimeTracker());
 builder.Services.AddSingleton<TwitchChannelCache>();
+builder.Services.AddSingleton<TwitchUserCache>();
 builder.Services.AddSingleton<TwitchChannelWarmup>();
 builder.Services.AddHostedService<TwitchChannelWarmupWorker>();
 builder.Services.AddScoped<TwitchChannelService>();

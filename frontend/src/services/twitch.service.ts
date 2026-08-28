@@ -5,6 +5,7 @@ import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
 import { BanStatus } from '../data/banned-user';
 import { CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate } from '../data/channel';
+import { CountResponse } from '../data/count';
 import { ApiService } from './api.service';
 
 @Service()
@@ -21,6 +22,10 @@ export class TwitchService extends ApiService {
 
   getModerators(): Promise<Moderator[]> {
     return this.get<Moderator[]>('moderators');
+  }
+
+  async countModerators(): Promise<number> {
+    return (await this.get<CountResponse>('moderators/count')).count;
   }
 
   getModeratorsById(userIds: readonly string[]): Promise<Moderator[]> {
@@ -41,6 +46,10 @@ export class TwitchService extends ApiService {
 
   getVips(): Promise<Vip[]> {
     return this.get<Vip[]>('vips');
+  }
+
+  async countVips(): Promise<number> {
+    return (await this.get<CountResponse>('vips/count')).count;
   }
 
   getVipsById(userIds: readonly string[]): Promise<Vip[]> {
@@ -73,6 +82,10 @@ export class TwitchService extends ApiService {
 
   getFollowers(): Promise<FollowerProfile[]> {
     return this.get<FollowerProfile[]>('followers');
+  }
+
+  async countFollowers(): Promise<number> {
+    return (await this.get<CountResponse>('followers/count')).count;
   }
 
   getFollowStatus(userId: string): Promise<FollowStatus> {
@@ -111,8 +124,8 @@ export class TwitchService extends ApiService {
     return this.get<ChannelInformation>('channel');
   }
 
-  updateChannel(update: ChannelUpdate): Promise<void> {
-    return this.patch<void>('channel', update);
+  updateChannel(update: ChannelUpdate): Promise<ChannelInformation> {
+    return this.patch<ChannelInformation>('channel', update);
   }
 
   getGames(gameIds: readonly string[]): Promise<ChannelCategory[]> {
