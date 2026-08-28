@@ -1,9 +1,20 @@
 <section class="community-page">
 
+  @if (skeleton()) {
+    <p class="app-visually-hidden" role="status">Loading your community…</p>
+  }
+
   <header class="community-page-header">
     <h1 class="community-page-title">Community</h1>
-    <p class="community-page-count">
-      {{ count() }} follower{{ count() === 1 ? '' : 's' }}
+    <p class="community-page-count" [class.app-fade-in]="!skeleton()">
+      @if (skeleton()) {
+        <span
+          class="app-skeleton app-skeleton-bar app-skeleton-text community-page-count-skeleton"
+          aria-hidden="true"
+        ></span>
+      } @else {
+        {{ count() }} follower{{ count() === 1 ? '' : 's' }}
+      }
     </p>
   </header>
 
@@ -22,8 +33,8 @@
   <mat-progress-bar
     class="community-page-progress"
     mode="indeterminate"
-    [attr.aria-hidden]="!loading()"
-    [style.visibility]="loading() ? 'visible' : 'hidden'"
+    [attr.aria-hidden]="!refreshing()"
+    [style.visibility]="refreshing() ? 'visible' : 'hidden'"
   />
 
   <mat-form-field appearance="outline" class="community-page-search">
@@ -89,26 +100,43 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
+
       <tr
         mat-row
         *matRowDef="let entry; columns: columns"
-        class="community-page-row"
+        class="community-page-row app-fade-in"
         (click)="showDetails(entry)"
       ></tr>
 
-      <tr class="community-page-empty-row" *matNoDataRow>
-        <td class="community-page-empty" [attr.colspan]="columns.length">
-          @if (loading()) {
-            Loading your community…
-          } @else if (unreachable()) {
-            Could not load your community. Please try again.
-          } @else if (query()) {
-            No follower matches “{{ query() }}”.
-          } @else {
-            Nobody follows your channel yet.
+      <ng-container *matNoDataRow>
+        @if (skeleton()) {
+          @for (row of ghostRows(); track row) {
+            <tr class="community-page-ghost-row" aria-hidden="true">
+              <td class="community-page-ghost-cell">
+                <div class="community-page-identity">
+                  <span class="app-skeleton community-page-ghost-avatar"></span>
+                  <span class="app-skeleton app-skeleton-bar app-skeleton-text community-page-ghost-name"></span>
+                </div>
+              </td>
+              <td class="community-page-date community-page-ghost-cell">
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text community-page-ghost-date"></span>
+              </td>
+            </tr>
           }
-        </td>
-      </tr>
+        } @else {
+          <tr class="community-page-empty-row" role="row">
+            <td class="community-page-empty" [attr.colspan]="columns.length">
+              @if (unreachable()) {
+                Could not load your community. Please try again.
+              } @else if (query()) {
+                No follower matches “{{ query() }}”.
+              } @else {
+                Nobody follows your channel yet.
+              }
+            </td>
+          </tr>
+        }
+      </ng-container>
     </table>
   </div>
 

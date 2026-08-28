@@ -141,3 +141,92 @@ table.raid-page-grid {
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
 }
+
+// --- The first-load skeleton -----------------------------------------------------------------
+// Surface, pulse, pill corners, text heights and the held-back appearance all come from the
+// global .app-skeleton utilities in styles.scss; everything below only sizes and places this
+// page's own stand-ins. The count line's placeholder needs no rule of its own beyond a width —
+// app-skeleton-text already reads its height from the paragraph around it.
+
+// Roughly "N raids, M viewers brought along" at its shortest real length.
+.raid-page-count-skeleton {
+  width: min(16rem, 70vw);
+}
+
+// The centred padding is for a short line of text, not a tableful of rows — the skeleton grid
+// below supplies its own edge spacing to match the real cells instead.
+.raid-page-empty-skeleton {
+  padding: 0;
+  text-align: initial;
+}
+
+// Plain block flow: .app-visually-hidden already stays out of the way on its own here, and only
+// needs the absolute-positioning escape hatch when it would otherwise sit inside a flex/grid row.
+.raid-page-skeleton-rows {
+  display: block;
+}
+
+// Stacked with no gap: each ghost row already reserves a full row's height, the same way adjacent
+// real rows do. A wrapper of its own, so :nth-child below counts ghost rows and nothing else —
+// the announcement sentence above is a sibling of this, not one of these.
+.raid-page-skeleton-list {
+  display: flex;
+  flex-direction: column;
+}
+
+// One ghost row, laid out as a grid because there is no second <tr> to give it: the three columns
+// mirror the real ones (flexible Raider column, 6rem Viewers, 13rem Raided at), the 1rem gap
+// mirrors two adjacent cells' 0.5rem paddings meeting in the middle, and the 0 0.5rem edge padding
+// mirrors the real table's own first/last cell padding (scss above, table.raid-page-grid). The
+// height is Material's own ~52px data-table row.
+.raid-page-skeleton-row {
+  display: grid;
+  grid-template-columns: 1fr 6rem 13rem;
+  align-items: center;
+  column-gap: 1rem;
+  height: 3.25rem;
+  padding: 0 0.5rem;
+}
+
+.raid-page-skeleton-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  // Lets the name bar shrink inside its own flexible column instead of overflowing it.
+  min-width: 0;
+}
+
+// The real avatar is a 32x32 NgOptimizedImage circle.
+.raid-page-skeleton-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+// Display names vary a lot in length, and eight identical bars would read as a barcode rather
+// than a list of people.
+.raid-page-skeleton-name {
+  width: min(9rem, 60%);
+  height: 1.25rem;
+}
+
+.raid-page-skeleton-row:nth-child(3n) .raid-page-skeleton-name {
+  width: min(6rem, 45%);
+}
+
+.raid-page-skeleton-row:nth-child(3n + 2) .raid-page-skeleton-name {
+  width: min(11rem, 70%);
+}
+
+// A viewer count is a short, tabular-nums number — two or three digits wide.
+.raid-page-skeleton-viewers {
+  width: 2.5rem;
+  height: 1.25rem;
+}
+
+// A localised medium date and short time, e.g. "Aug 27, 2026, 3:45 PM".
+.raid-page-skeleton-date {
+  width: 9rem;
+  height: 1.25rem;
+}

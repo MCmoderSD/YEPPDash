@@ -14,6 +14,13 @@
   margin-inline: auto;
 }
 
+// The global utility stays in normal flow on purpose — elsewhere that column is worth keeping —
+// but the status line here has nothing next to it to keep aligned, and in flow it would buy
+// itself a full flex gap on both sides and push the header down while the skeleton is up.
+.community-page > .app-visually-hidden {
+  position: absolute;
+}
+
 .community-page-header {
   display: flex;
   flex-direction: column;
@@ -30,6 +37,12 @@
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
+}
+
+// "128 followers" at its own body-medium size — wide enough to read as a count, not a whole
+// sentence.
+.community-page-count-skeleton {
+  width: 6.5rem;
 }
 
 .community-page-toolbar {
@@ -134,4 +147,47 @@ table.community-page-grid {
   padding: 1.5rem 1rem;
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
+}
+
+// --- Ghost rows -------------------------------------------------------------------------------
+// Plain <tr>/<td> standing in the *matNoDataRow slot, not the mat-row/mat-cell directives real
+// rows use — so none of Material's MDC row classes land on them, and their height, padding and
+// centering have to be set by hand to still land on the same 52px-tall, 0.5rem-padded, middle-
+// aligned row the real one draws. Deliberately bare of .community-page-row: that class is what
+// gives a real row its pointer cursor and hover fill, and a row that looks clickable but goes
+// nowhere would be the wrong promise.
+.community-page-ghost-row {
+  height: 3.25rem;
+}
+
+.community-page-ghost-cell {
+  padding: 0 0.5rem;
+  vertical-align: middle;
+}
+
+// 32px, matching the real avatar's [width]/[height] attributes.
+.community-page-ghost-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.community-page-ghost-name {
+  width: min(9rem, 50%);
+}
+
+// A display name is not always the same length, and eight rows of the same bar would read as a
+// barcode rather than a list of people.
+.community-page-ghost-row:nth-child(3n) .community-page-ghost-name {
+  width: min(6rem, 40%);
+}
+
+.community-page-ghost-row:nth-child(3n + 2) .community-page-ghost-name {
+  width: min(12rem, 60%);
+}
+
+// "Following since" dates are all roughly the same width, so one size reads honestly here where
+// varying the name bars does not.
+.community-page-ghost-date {
+  width: 5rem;
 }

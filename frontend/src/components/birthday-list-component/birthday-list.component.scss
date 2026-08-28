@@ -162,3 +162,101 @@ table.birthday-list-grid {
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
 }
+
+// While the ghost rows fill the cell, none of the empty state's own padding or centering applies —
+// the rows carry their own spacing, matching the real ones cell for cell.
+.birthday-list-empty-skeleton {
+  padding: 0;
+  text-align: initial;
+}
+
+// --- initial-load skeleton -------------------------------------------------------------------
+// Surface, pulse, corners and text heights all come from the global .app-skeleton utilities in
+// styles.scss; everything below only sets the shapes of this table's stand-ins.
+//
+// Ghost rows live inside the *matNoDataRow cell rather than as extra <tr>s — see the comment on
+// that cell in the template for why. A div grid stands in for the missing rows instead, its tracks
+// mirroring the real columns: the flexible name column, then the fixed 10rem/4rem/7rem of
+// date/age/next.
+
+// The containing block for the visually-hidden announcement below, positioned out of flow.
+.birthday-list-skeleton {
+  position: relative;
+}
+
+// The global utility stays in normal flow so its text still exists for assistive tech, but here
+// that would make the announcement a real flex item ahead of the rows — a 1px line nudging every
+// one of them down by its height.
+.birthday-list-skeleton > .app-visually-hidden {
+  position: absolute;
+}
+
+.birthday-list-skeleton-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.birthday-list-skeleton-row {
+  display: grid;
+  grid-template-columns: 1fr 10rem 4rem 7rem;
+  align-items: center;
+  height: 52px; // Material's own default data-table row height, so the ghosts measure the same as real rows
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+}
+
+.birthday-list-skeleton-cell {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem; // matches .mdc-data-table__cell exactly
+}
+
+// The real identity cell's own gap between avatar and name.
+.birthday-list-skeleton-cell-user {
+  gap: 0.5rem;
+}
+
+// The age column is centered, header included — see the ::ng-deep rule above.
+.birthday-list-skeleton-cell-age {
+  justify-content: center;
+}
+
+.birthday-list-skeleton-avatar {
+  width: 2rem; // the real avatar is 32×32
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.birthday-list-skeleton-name {
+  width: 8rem;
+}
+
+// Names are not all the same length, and rows that were would read as a barcode, not a list.
+.birthday-list-skeleton-row:nth-child(3n) .birthday-list-skeleton-name {
+  width: 6rem;
+}
+
+.birthday-list-skeleton-row:nth-child(3n + 2) .birthday-list-skeleton-name {
+  width: 9.5rem;
+}
+
+.birthday-list-skeleton-date {
+  width: 6rem;
+}
+
+.birthday-list-skeleton-age {
+  width: 1.5rem;
+}
+
+.birthday-list-skeleton-next {
+  width: 4rem;
+}
+
+// Block, like every .app-skeleton shape, so it needs its own centering rather than the header's
+// text-align — a fixed-width block ignores that.
+.birthday-list-skeleton-count {
+  width: 12rem;
+  margin-inline: auto;
+}

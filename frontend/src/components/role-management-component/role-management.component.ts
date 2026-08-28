@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, InputSignalWithTransform, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, input, InputSignalWithTransform, Signal, signal, untracked, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -66,13 +66,25 @@ export class RoleManagementComponent {
 
   protected readonly loading: WritableSignal<boolean> = signal(false);
 
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
   protected readonly busy: WritableSignal<boolean> = signal(false);
 
+
+  protected readonly initialLoading: Signal<boolean> = computed((): boolean => this.loading() && this.users().length === 0);
+  protected readonly showProgress: Signal<boolean> = computed((): boolean => (this.loading() || this.busy()) && !this.initialLoading());
+
   constructor() {
+    // The mode is the only thing this effect reacts to. Everything it then does is a side effect,
+    // and it runs untracked so nothing load() happens to read on its way to the first await — the
+    // row count, for one — becomes a dependency: load() ends by writing users(), so an effect that
+    // had read it would wake itself, clear the list and start over, forever.
     effect((): void => {
       const mode: RoleManagementMode = this.mode();
-      this.users.set([]);
-      void this.load(mode);
+
+      untracked((): void => {
+        this.users.set([]);
+        void this.load(mode);
+      });
     });
   }
 
@@ -120,7 +132,19 @@ export class RoleManagementComponent {
   }
 
   private async load(mode: RoleManagementMode): Promise<void> {
-    this.loading.set(true);
+    if (this.mode() === mode) {
+      this.loading.set(true);
+      this.expected.set(null);
+    }
+
+    if (this.users().length === 0) {
+      void this.twitch[mode === RoleManagementMode.Vip ? 'countVips' : 'countModerators']()
+        .then((count: number): void => {
+          if (this.mode() === mode && this.loading()) this.expected.set(count);
+        })
+        .catch((): void => void 0);
+    }
+
     try {
       const users: TwitchUser[] = mode === RoleManagementMode.Vip
         ? await this.twitch.getVips()
