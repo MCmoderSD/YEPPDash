@@ -23,6 +23,8 @@ export class UserInfoDialogComponent {
 
   private readonly born: WritableSignal<Birthday | null> = signal<Birthday | null>(null);
 
+  protected readonly pending: WritableSignal<boolean> = signal(true);
+
   protected readonly chatColor: string | null = this.user.color ?? null;
 
   protected readonly badgeSize: BadgeSize = BadgeSize.Medium;
@@ -50,6 +52,8 @@ export class UserInfoDialogComponent {
       this.born.set(await this.birthdays.getBirthday(this.user.id));
     } catch {
       this.born.set(null);
+    } finally {
+      this.pending.set(false);
     }
   }
 }

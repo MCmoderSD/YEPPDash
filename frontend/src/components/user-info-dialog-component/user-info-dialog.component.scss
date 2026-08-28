@@ -82,3 +82,20 @@
   font: var(--mat-sys-body-large);
   overflow-wrap: anywhere;
 }
+
+// --- the birthday stand-in ------------------------------------------------------------------
+// Surface, pulse, pill corners and the held-back appearance all come from the global
+// .app-skeleton utilities in styles.scss; the two rules below are only this row's geometry.
+
+// The announcement is clipped to a pixel but, left inline in the value, it would still claim a
+// full line box and stand the row a line taller than the date that replaces it. Out of flow it
+// costs nothing — there is no flex column here for it to hold open.
+.user-info-skeleton-birthday .app-visually-hidden {
+  position: absolute;
+}
+
+// A date at body-large — "March 14, 2000" territory: wide enough to promise a date, not an
+// essay. The height is the shared 1lh, the line box the date itself will take.
+.user-info-skeleton-date {
+  width: min(8.5rem, 70%);
+}

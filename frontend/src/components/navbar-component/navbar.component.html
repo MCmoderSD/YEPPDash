@@ -1,12 +1,17 @@
 <header class="navbar">
   <nav class="navbar-inner" aria-label="Main">
     <div class="navbar-start">
-      @if (auth.currentUser()) {
+      @if (pending()) {
+        <span class="navbar-skeleton-toggle app-skeleton-appear" aria-hidden="true">
+          <span class="app-skeleton navbar-skeleton-toggle-fill"></span>
+        </span>
+      } @else if (auth.currentUser()) {
         <button
           mat-icon-button
           type="button"
           aria-label="Toggle dashboard navigation"
           (click)="sidebar.toggle()"
+          class="app-fade-in"
         >
           <mat-icon aria-hidden="true">menu</mat-icon>
         </button>
@@ -27,10 +32,16 @@
         </a>
       }
 
-      @if (auth.currentUser(); as user) {
-        <app-user-menu [user]="user" />
+      @if (pending()) {
+        <span class="navbar-skeleton-chip app-skeleton-appear" role="status">
+          <span class="app-visually-hidden">Checking your Twitch session…</span>
+          <span class="app-skeleton navbar-skeleton-chip-avatar" aria-hidden="true"></span>
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text navbar-skeleton-chip-name" aria-hidden="true"></span>
+        </span>
+      } @else if (auth.currentUser(); as user) {
+        <app-user-menu [user]="user" class="app-fade-in" />
       } @else {
-        <a mat-flat-button [href]="loginUrl">
+        <a mat-flat-button [href]="loginUrl" class="app-fade-in">
           <mat-icon aria-hidden="true">login</mat-icon>
           <span>Login<span class="navbar-login-service"> with Twitch</span></span>
         </a>
