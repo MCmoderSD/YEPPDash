@@ -179,3 +179,48 @@
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
 }
+
+// --- Initial-load skeleton -------------------------------------------------------------------
+// The real page with the data blanked out, and no further: the count line is the only thing on
+// either tab certain to be on screen whatever the answer turns out to be, so it is the only thing
+// stood in for. Result cards used to be drawn here too, at a guessed count — neither tab learns
+// how many results exist before the results themselves arrive, which made every one of those
+// frames a claim the page had no basis for. The pulse, surface tone and held-back appearance all
+// come from the global .app-skeleton utilities in styles.scss; only widths are set here.
+
+// display: flex only to keep the hidden status sentence out of the count bar's stacking order
+// without a class of its own; no gap is set, because .bdsm-page-count already spaces itself with
+// its own margin exactly as it does outside the skeleton, and a 1px hidden span costs nothing
+// extra to sit ahead of it.
+.bdsm-page-skeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+// "You have taken the test N times" / "N people in your channel shared a result" — a bar rather
+// than the wrong number while N is still unknown.
+.bdsm-page-skeleton-count {
+  width: min(15rem, 70%);
+}
+
+// Shared by the per-row match chip patched in once the score fan-out resolves (see the community
+// tab's @else if (entry.matchPending) above) and the generic card below: both stand in for "87%"
+// alone, never for the "compatible" label beside it, which .bdsm-page-match-label already hides at
+// this width.
+.bdsm-page-match-skeleton {
+  width: 2.25rem;
+}
+
+// The chip's own status region has no box of its own — contents keeps its two children (the
+// hidden sentence and the bar) sitting directly in .bdsm-page-summary's flex row, exactly where
+// the bar sat alone before. Without this the wrapper would be an extra flex item, adding a gap
+// the real "87%" chip never has.
+.bdsm-page-match-pending {
+  display: contents;
+}
+
+// Clipped to a pixel but, left inline, it would still be a flex item in that row — the gap beside
+// it would shove the visible bar over from where the figure it announces is going to land.
+.bdsm-page-match-pending .app-visually-hidden {
+  position: absolute;
+}

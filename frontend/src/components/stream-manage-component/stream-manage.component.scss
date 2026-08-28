@@ -34,6 +34,13 @@
   overflow-wrap: anywhere;
 }
 
+// Stands in for the title while it is still unknown whether it will run short or wrap. The
+// percentage resolves against the h2 itself, whose width the flex row has already settled by the
+// time this child is laid out, so it reads as one unfinished line rather than the full row.
+.stream-manage-skeleton-title {
+  width: min(20rem, 68%);
+}
+
 .stream-manage-game {
   display: flex;
   align-items: center;
@@ -57,6 +64,12 @@
 .stream-manage-game-name {
   font: var(--mat-sys-body-large);
   overflow-wrap: anywhere;
+}
+
+// A category name's usual length — not a percentage, because this span sits in a flex row where a
+// shrink-to-fit item with no width of its own would collapse to nothing.
+.stream-manage-skeleton-game {
+  width: 9rem;
 }
 
 // Label and value in two columns, stacked once there is no room for them side by side.
@@ -84,6 +97,12 @@
   }
 }
 
+// The Language value is one short word or two — fixed rather than a fraction of the dd's own
+// 1fr track, which would otherwise stretch this to the full width of the card.
+.stream-manage-skeleton-language {
+  width: 5rem;
+}
+
 .stream-manage-tags {
   display: flex;
   flex-wrap: wrap;
@@ -98,6 +117,14 @@
   background: var(--mat-sys-surface-container-high);
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
+}
+
+// One bar for the whole line rather than pills for individual tags — a channel carries anywhere
+// from none to ten of them, and drawing a fixed number of pills would be claiming a count nobody
+// knows yet. Width is the only thing set here: the height comes from .app-skeleton-text, which is
+// the line box this row will occupy either way, whether it ends up holding tags or the word "None".
+.stream-manage-skeleton-tags {
+  width: min(12rem, 80%);
 }
 
 .stream-manage-empty {

@@ -2,32 +2,54 @@
 
   <header class="timer-page-header">
     <h1 class="timer-page-title">Subathon Timer</h1>
-    <p class="timer-page-state">
-      @if (timer().running) {
-        Running — chat can add to it with !timer add
-      } @else {
-        Paused — nothing is counting down
-      }
-    </p>
+
+    @if (loaded()) {
+      <p class="timer-page-state app-fade-in">
+        @if (timer().running) {
+          Running — chat can add to it with !timer add
+        } @else {
+          Paused — nothing is counting down
+        }
+      </p>
+    } @else {
+      <p class="timer-page-state app-skeleton-appear" aria-hidden="true">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text timer-page-skeleton-state"></span>
+      </p>
+    }
   </header>
 
-  <div class="timer-page-stage">
-    <p class="timer-page-readout" [class.timer-page-readout-paused]="!timer().running" role="timer">
-      <app-timer-display [timer]="timer()"/>
-    </p>
+  @if (loaded()) {
+    <div class="timer-page-stage app-fade-in">
+      <p class="timer-page-readout" [class.timer-page-readout-paused]="!timer().running" role="timer">
+        <app-timer-display [timer]="timer()"/>
+      </p>
 
-    <div class="timer-page-controls">
-      <button mat-flat-button type="button" [disabled]="busy() || (!timer().running && !canStart())" (click)="toggle()">
-        <mat-icon aria-hidden="true">{{ timer().running ? 'pause' : 'play_arrow' }}</mat-icon>
-        <span>{{ timer().running ? 'Pause' : 'Start' }}</span>
-      </button>
+      <div class="timer-page-controls">
+        <button mat-flat-button type="button" [disabled]="busy() || (!timer().running && !canStart())" (click)="toggle()">
+          <mat-icon aria-hidden="true">{{ timer().running ? 'pause' : 'play_arrow' }}</mat-icon>
+          <span>{{ timer().running ? 'Pause' : 'Start' }}</span>
+        </button>
 
-      <button mat-stroked-button type="button" [disabled]="busy()" (click)="reset()">
-        <mat-icon aria-hidden="true">restart_alt</mat-icon>
-        <span>Reset</span>
-      </button>
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="reset()">
+          <mat-icon aria-hidden="true">restart_alt</mat-icon>
+          <span>Reset</span>
+        </button>
+      </div>
     </div>
-  </div>
+  } @else {
+    <div class="timer-page-stage app-skeleton-appear" role="status">
+      <span class="app-visually-hidden">Loading your timer…</span>
+
+      <p class="timer-page-readout" aria-hidden="true">
+        <span class="app-skeleton timer-page-skeleton-readout"></span>
+      </p>
+
+      <div class="timer-page-controls" aria-hidden="true">
+        <span class="app-skeleton timer-page-skeleton-button timer-page-skeleton-button-toggle"></span>
+        <span class="app-skeleton timer-page-skeleton-button timer-page-skeleton-button-reset"></span>
+      </div>
+    </div>
+  }
 
   <div class="timer-page-panels">
 
@@ -142,88 +164,132 @@
       from inside OBS — handy if OBS is holding on to an older version of the page.
     </p>
 
-    <div class="timer-page-appearance">
-      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
-        <mat-label>Colour</mat-label>
-        <input matInput type="text" spellcheck="false" [value]="style().color" (input)="recolour($any($event.target).value)"/>
+    @if (loaded()) {
+      <div class="timer-page-appearance app-fade-in">
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Colour</mat-label>
+          <input matInput type="text" spellcheck="false" [value]="style().color" (input)="recolour($any($event.target).value)"/>
 
-        <button
-          matSuffix
-          type="button"
-          class="timer-page-swatch"
-          aria-label="Pick the colour"
-          #paletteTrigger="matMenuTrigger"
-          [matMenuTriggerFor]="palette"
-          [style.background]="style().color"
-        ></button>
+          <button
+            matSuffix
+            type="button"
+            class="timer-page-swatch"
+            aria-label="Pick the colour"
+            #paletteTrigger="matMenuTrigger"
+            [matMenuTriggerFor]="palette"
+            [style.background]="style().color"
+          ></button>
 
-        <mat-hint>Hex, or pick with the swatch</mat-hint>
-      </mat-form-field>
+          <mat-hint>Hex, or pick with the swatch</mat-hint>
+        </mat-form-field>
 
-      <mat-menu #palette="matMenu">
-        <app-color-picker
-          [color]="style().color"
-          (colorChange)="recolour($event)"
-          (picked)="paletteTrigger.closeMenu()"
-        />
-      </mat-menu>
+        <mat-menu #palette="matMenu">
+          <app-color-picker
+            [color]="style().color"
+            (colorChange)="recolour($event)"
+            (picked)="paletteTrigger.closeMenu()"
+          />
+        </mat-menu>
 
-      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
-        <mat-label>Size</mat-label>
-        <input matInput type="number" min="1" [value]="style().fontSize" (input)="restyle({ fontSize: +$any($event.target).value })"/>
-        <mat-hint>Share of the source, not pixels</mat-hint>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Size</mat-label>
+          <input matInput type="number" min="1" [value]="style().fontSize" (input)="restyle({ fontSize: +$any($event.target).value })"/>
+          <mat-hint>Share of the source, not pixels</mat-hint>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
-        <mat-label>Font</mat-label>
-        <input matInput type="text" [value]="style().fontFamily" (input)="restyle({ fontFamily: $any($event.target).value })"/>
-        <mat-hint>Any family OBS can load</mat-hint>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Font</mat-label>
+          <input matInput type="text" [value]="style().fontFamily" (input)="restyle({ fontFamily: $any($event.target).value })"/>
+          <mat-hint>Any family OBS can load</mat-hint>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
-        <mat-label>Label</mat-label>
-        <input matInput type="text" placeholder="Subathon ends in" [value]="style().label" (input)="restyle({ label: $any($event.target).value })"/>
-        <mat-hint>Optional, shown above the time</mat-hint>
-      </mat-form-field>
-    </div>
-
-    <div class="timer-page-controls">
-      <div class="timer-page-switches">
-        <mat-slide-toggle
-          class="app-toggle-compact"
-          hideIcon="true"
-          [checked]="style().shadow"
-          (change)="restyle({ shadow: $event.checked })"
-        >
-          Drop shadow for bright scenes
-        </mat-slide-toggle>
-
-        <mat-slide-toggle
-          class="app-toggle-compact"
-          hideIcon="true"
-          [checked]="style().animate"
-          (change)="restyle({ animate: $event.checked })"
-        >
-          Animate digit changes
-        </mat-slide-toggle>
+        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
+          <mat-label>Label</mat-label>
+          <input matInput type="text" placeholder="Subathon ends in" [value]="style().label" (input)="restyle({ label: $any($event.target).value })"/>
+          <mat-hint>Optional, shown above the time</mat-hint>
+        </mat-form-field>
       </div>
 
-      <div class="timer-page-actions">
-        <button mat-flat-button type="button" [disabled]="busy()" (click)="saveStyle()">
-          <mat-icon aria-hidden="true">save</mat-icon>
-          <span>Save</span>
-        </button>
+      <div class="timer-page-controls app-fade-in">
+        <div class="timer-page-switches">
+          <mat-slide-toggle
+            class="app-toggle-compact"
+            hideIcon="true"
+            [checked]="style().shadow"
+            (change)="restyle({ shadow: $event.checked })"
+          >
+            Drop shadow for bright scenes
+          </mat-slide-toggle>
 
-        <button mat-stroked-button type="button" (click)="copyStyleCss()">
-          <mat-icon aria-hidden="true">content_copy</mat-icon>
-          <span>Copy custom CSS</span>
-        </button>
+          <mat-slide-toggle
+            class="app-toggle-compact"
+            hideIcon="true"
+            [checked]="style().animate"
+            (change)="restyle({ animate: $event.checked })"
+          >
+            Animate digit changes
+          </mat-slide-toggle>
+        </div>
 
-        <button mat-stroked-button type="button" [disabled]="busy() || atDefaults()" (click)="resetStyle()">
-          <mat-icon aria-hidden="true">restart_alt</mat-icon>
-          <span>Reset to defaults</span>
-        </button>
+        <div class="timer-page-actions">
+          <button mat-flat-button type="button" [disabled]="busy()" (click)="saveStyle()">
+            <mat-icon aria-hidden="true">save</mat-icon>
+            <span>Save</span>
+          </button>
+
+          <button mat-stroked-button type="button" (click)="copyStyleCss()">
+            <mat-icon aria-hidden="true">content_copy</mat-icon>
+            <span>Copy custom CSS</span>
+          </button>
+
+          <button mat-stroked-button type="button" [disabled]="busy() || atDefaults()" (click)="resetStyle()">
+            <mat-icon aria-hidden="true">restart_alt</mat-icon>
+            <span>Reset to defaults</span>
+          </button>
+        </div>
       </div>
-    </div>
+    } @else {
+      <div class="timer-page-appearance app-skeleton-appear" aria-hidden="true">
+        <span class="timer-page-skeleton-field">
+          <span class="app-skeleton timer-page-skeleton-field-box"></span>
+          <span class="app-skeleton app-skeleton-bar timer-page-skeleton-field-hint"></span>
+        </span>
+
+        <span class="timer-page-skeleton-field">
+          <span class="app-skeleton timer-page-skeleton-field-box"></span>
+          <span class="app-skeleton app-skeleton-bar timer-page-skeleton-field-hint"></span>
+        </span>
+
+        <span class="timer-page-skeleton-field">
+          <span class="app-skeleton timer-page-skeleton-field-box"></span>
+          <span class="app-skeleton app-skeleton-bar timer-page-skeleton-field-hint"></span>
+        </span>
+
+        <span class="timer-page-skeleton-field">
+          <span class="app-skeleton timer-page-skeleton-field-box"></span>
+          <span class="app-skeleton app-skeleton-bar timer-page-skeleton-field-hint"></span>
+        </span>
+      </div>
+
+      <div class="timer-page-controls app-skeleton-appear" aria-hidden="true">
+        <div class="timer-page-switches">
+          <span class="timer-page-skeleton-switch">
+            <span class="app-skeleton timer-page-skeleton-toggle"></span>
+            <span class="app-skeleton app-skeleton-bar app-skeleton-text timer-page-skeleton-switch-shadow"></span>
+          </span>
+
+          <span class="timer-page-skeleton-switch">
+            <span class="app-skeleton timer-page-skeleton-toggle"></span>
+            <span class="app-skeleton app-skeleton-bar app-skeleton-text timer-page-skeleton-switch-animate"></span>
+          </span>
+        </div>
+
+        <div class="timer-page-actions">
+          <span class="app-skeleton timer-page-skeleton-button timer-page-skeleton-button-save"></span>
+          <span class="app-skeleton timer-page-skeleton-button timer-page-skeleton-button-copy"></span>
+          <span class="app-skeleton timer-page-skeleton-button timer-page-skeleton-button-reset-defaults"></span>
+        </div>
+      </div>
+    }
   </section>
 </section>

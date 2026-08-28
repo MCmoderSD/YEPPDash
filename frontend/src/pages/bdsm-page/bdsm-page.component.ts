@@ -30,8 +30,8 @@ export interface BdsmMatch {
 export interface BdsmCommunityEntry extends BdsmResultEntry {
   user: TwitchUser | null;
   name: string;
-  // Null for anyone the score could not be worked out for.
   match: BdsmMatch | null;
+  matchPending: boolean;
 }
 
 const OWN_TAB: number = 0;
@@ -75,6 +75,9 @@ export class BdsmPageComponent {
 
   protected readonly loading: Signal<boolean> = computed((): boolean =>
     this.selected() === COMMUNITY_TAB ? this.communityLoading() : this.ownLoading());
+
+  protected readonly showProgress: Signal<boolean> = computed((): boolean =>
+    this.loading() && (this.selected() === COMMUNITY_TAB ? this.communityRows().length > 0 : this.ownRows().length > 0));
 
   constructor() {
     void this.load();
@@ -120,30 +123,33 @@ export class BdsmPageComponent {
     this.communityLoading.set(true);
     this.communityFailed.set(false);
     try {
-      // The follower list doubles as the profile lookup, so the names and avatars below need no
-      // second request. A broadcaster does not follow themselves, but their own result belongs in
-      // their channel's list.
       const followers: FollowerProfile[] = await this.twitch.getFollowers();
       const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
       byId.set(me.id, me);
 
       const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
-      const matches: Map<string, number> = await this.matchesAgainst(me.id, results);
-
-      this.communityRows.set(results
+      const entries: BdsmCommunityEntry[] = results
         .map((result: BdsmResult): BdsmCommunityEntry => {
           const user: TwitchUser | undefined = byId.get(result.userId);
-          const percent: number | undefined = matches.get(result.userId);
 
           return {
             result,
             takenAt: resultTakenAt(result),
             user: user ?? null,
             name: user?.displayName ?? result.userId,
-            match: percent === undefined ? null : { percent, color: traitColor(percent) },
+            match: null,
+            matchPending: true,
           };
         })
-        .sort((left: BdsmCommunityEntry, right: BdsmCommunityEntry): number => right.takenAt.getTime() - left.takenAt.getTime()));
+        .sort((left: BdsmCommunityEntry, right: BdsmCommunityEntry): number => right.takenAt.getTime() - left.takenAt.getTime());
+      this.communityRows.set(entries);
+
+      const matches: Map<string, number> = await this.matchesAgainst(me.id, results);
+      this.communityRows.update((rows: BdsmCommunityEntry[]): BdsmCommunityEntry[] =>
+        rows.map((entry: BdsmCommunityEntry): BdsmCommunityEntry => {
+          const percent: number | undefined = matches.get(entry.result.userId);
+          return { ...entry, match: percent === undefined ? null : { percent, color: traitColor(percent) }, matchPending: false };
+        }));
     } catch {
       this.communityRows.set([]);
       this.communityFailed.set(true);
@@ -154,11 +160,7 @@ export class BdsmPageComponent {
     }
   }
 
-  // Compatibility is what the list is nicer for, not what it is for, so a failure here leaves the
-  // results standing rather than emptying the tab.
   private async matchesAgainst(userId: string, results: BdsmResult[]): Promise<Map<string, number>> {
-    // The viewer's own row is asked for too: BDSMTest.org scores a result against itself like any
-    // other pair, and what that comes to is worth seeing next to the rest.
     const partnerIds: string[] = results.map((result: BdsmResult): string => result.userId);
 
     if (!partnerIds.length) return new Map();

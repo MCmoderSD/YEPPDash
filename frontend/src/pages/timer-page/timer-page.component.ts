@@ -41,6 +41,7 @@ export class TimerPageComponent {
 
   protected readonly timer: WritableSignal<SubathonTimer> = signal<SubathonTimer>(EMPTY_TIMER);
   protected readonly busy: WritableSignal<boolean> = signal(false);
+  protected readonly loaded: WritableSignal<boolean> = signal(false);
 
   protected readonly delta: WritableSignal<string> = signal('5m');
   protected readonly target: WritableSignal<string> = signal('');
@@ -189,12 +190,14 @@ export class TimerPageComponent {
       this.show(await this.timers.getTimer(channelId));
     } catch {
       this.notifications.failure('Could not load your timer.');
+      this.loaded.set(true);
     }
   }
 
   private show(timer: SubathonTimer): void {
     this.timer.set(timer);
     this.style.set(timer.style);
+    this.loaded.set(true);
 
     if (!this.start()) this.start.set(durationText(timer.startSeconds));
   }
