@@ -334,6 +334,72 @@ body {
   }
 }
 
+// --- Skeletons ------------------------------------------------------------------------------
+// The one loading language for the whole app. A skeleton is the real view with the data blanked
+// out: it renders the page's own layout classes, shows outright whatever is static — titles,
+// hints, table headers, chrome — and stands a grey shape wherever the server has yet to answer.
+// Three rules, written once here so every skeleton breathes, appears and leaves the same way:
+//
+//   .app-skeleton        on every grey stand-in — the surface and the shared pulse
+//   .app-skeleton-bar    a stand-in for a line of text — adds the pill corners and, with
+//                        .app-skeleton-text, the height of the line it replaces
+//   .app-skeleton-appear on the skeleton's wrapper — holds it back for a breath, so a request
+//                        that answers fast never flashes a skeleton on the way
+//
+// The swap back is .app-fade-in above, on the content that takes the skeleton's place — one
+// arrival, everywhere the same. Accessibility is part of the pattern: the wrapper carries
+// role="status" with an .app-visually-hidden sentence saying what is loading, and everything
+// grey inside is aria-hidden.
+
+// One animation on one rule, so every shape on a page breathes in step and the whole thing reads
+// as one surface waiting rather than a chase across the screen.
+.app-skeleton {
+  display: block;
+  flex: none;
+  background: var(--mat-sys-surface-container-high);
+  animation: app-skeleton-pulse 1400ms ease-in-out infinite;
+}
+
+// The motion tokens are no help here: they shorten a transition, and shortening a loop only makes
+// it flicker. This one has to stop.
+@media (prefers-reduced-motion: reduce) {
+  .app-skeleton {
+    animation: none;
+  }
+}
+
+.app-skeleton-bar {
+  border-radius: var(--mat-sys-corner-full);
+}
+
+// A bar standing where text will: 1lh is the line box of whatever font its parent sets, which is
+// exactly the height the words will take. The rem height underneath is for the odd browser that
+// does not know the unit yet.
+.app-skeleton-text {
+  height: 1.25rem;
+  height: 1lh;
+}
+
+// The delay is the point: a skeleton that shows up instantly turns every fast answer into a
+// flicker. The fade is a one-off, so it may run under reduced motion — it is the endless pulse
+// above that must not.
+.app-skeleton-appear {
+  opacity: 0;
+  animation: app-skeleton-appear 200ms var(--app-ease) 150ms forwards;
+}
+
+@keyframes app-skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes app-skeleton-appear {
+  to {
+    opacity: 1;
+  }
+}
+
 // M3 draws a switch at 52x32 with a 24px handle, which is sized for a settings screen where the
 // switch is the row. Everywhere this app uses one it sits beside 14px body text — in a table cell,
 // on a card row, next to a dialog field — and at full size it is the loudest thing in the block.

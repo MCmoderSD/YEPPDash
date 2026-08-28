@@ -6,17 +6,11 @@
 // the page's own vertical rhythm. The negative margin gives back the difference between the page
 // gap it sits in and the header gap the state pill really lives in — both read from the shell, so
 // retuning the page retunes this.
-//
-// Held back for a breath before it appears: a queue that answers fast should never flash a
-// skeleton on the way. The fade is a one-off, so it may run under reduced motion — it is the
-// endless pulse below that must not.
 .queue-skeleton {
   display: flex;
   flex-direction: column;
   gap: shell.$page-gap;
   margin-block-start: calc(shell.$header-gap - shell.$page-gap);
-  opacity: 0;
-  animation: queue-skeleton-appear 200ms var(--app-ease) 150ms forwards;
 }
 
 // The global utility stays in normal flow on purpose — the table header needs its column kept —
@@ -27,37 +21,9 @@
 }
 
 // --- the grey stand-ins ---------------------------------------------------------------------
-
-// One animation on one rule, so every shape breathes in step and the whole thing reads as one
-// surface waiting rather than a chase across the page.
-.queue-skeleton-bar,
-.queue-skeleton-shape {
-  display: block;
-  flex: none;
-  background: var(--mat-sys-surface-container-high);
-  animation: queue-skeleton-pulse 1400ms ease-in-out infinite;
-}
-
-// The motion tokens are no help here: they shorten a transition, and shortening a loop only makes
-// it flicker. This one has to stop.
-@media (prefers-reduced-motion: reduce) {
-  .queue-skeleton-bar,
-  .queue-skeleton-shape {
-    animation: none;
-  }
-}
-
-.queue-skeleton-bar {
-  border-radius: var(--mat-sys-corner-full);
-}
-
-// A bar standing where text will: 1lh is the line box of whatever font its parent sets, which is
-// exactly the height the words will take. The rem height underneath is for the odd browser that
-// does not know the unit yet.
-.queue-skeleton-text {
-  height: 1.25rem;
-  height: 1lh;
-}
+// Surface, pulse, corners, text heights and the held-back appearance all come from the global
+// .app-skeleton utilities in styles.scss. Everything below only sets the widths and shapes of
+// this page's stand-ins.
 
 // In the state pill, whose padding and line height do the rest. One tone above the usual grey: the
 // pill is itself painted the bars' colour, and a bar that matches its background is no bar at all.
@@ -170,14 +136,3 @@
   margin-inline-start: 1rem;
 }
 
-@keyframes queue-skeleton-pulse {
-  50% {
-    opacity: 0.45;
-  }
-}
-
-@keyframes queue-skeleton-appear {
-  to {
-    opacity: 1;
-  }
-}
