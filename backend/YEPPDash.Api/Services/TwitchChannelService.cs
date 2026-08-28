@@ -43,28 +43,50 @@ public sealed class TwitchChannelService(
 
     public async Task<IReadOnlyList<TwitchUser>> GetUserProfilesAsync(string broadcasterId, IReadOnlyCollection<string> userIds, IReadOnlyCollection<string> logins, CancellationToken cancellationToken)
     {
-        var found = new List<TwitchUser>(userIds.Count);
-        var missing = new List<string>();
-
+        // The order asked for is the order answered in, whatever the cache happened to hold: the
+        // role tables have no sort of their own, so they show this order directly, and letting cache
+        // hits drift to the front would reshuffle a list that had not changed.
+        var ordered = new List<string>(userIds.Count);
         var seen = new HashSet<string>(StringComparer.Ordinal);
+        var resolved = new Dictionary<string, TwitchUser>(userIds.Count, StringComparer.Ordinal);
+        var missing = new List<string>();
 
         foreach (var userId in userIds)
         {
             if (!seen.Add(userId)) continue;
+            ordered.Add(userId);
 
             var cached = userCache.Get(broadcasterId, userId);
             if (cached is null) missing.Add(userId);
-            else found.Add(cached);
+            else resolved[userId] = cached;
         }
 
-        if (missing.Count + logins.Count is 0) return found;
+        if (missing.Count + logins.Count > 0)
+        {
+            var fetched = await GetUsersAsync(broadcasterId, missing, logins, cancellationToken);
+            var enriched = await EnrichAsync(broadcasterId, fetched, cancellationToken);
 
-        var fetched = await GetUsersAsync(broadcasterId, missing, logins, cancellationToken);
-        var enriched = await EnrichAsync(broadcasterId, fetched, cancellationToken);
+            foreach (var user in enriched)
+            {
+                userCache.Set(broadcasterId, user);
 
-        foreach (var user in enriched) userCache.Set(broadcasterId, user);
+                // Keyed by id, so somebody asked for twice — once by id and once by login — is
+                // answered once, at the place their id was asked for. Helix used to do this
+                // deduplicating for us, back when both halves went to it in the same request.
+                resolved[user.Id] = user;
+                if (seen.Add(user.Id)) ordered.Add(user.Id);
+            }
+        }
 
-        return [.. found, .. enriched];
+        var profiles = new List<TwitchUser>(ordered.Count);
+
+        // An id Twitch would not resolve simply drops out, which is what it did before as well.
+        foreach (var userId in ordered)
+        {
+            if (resolved.TryGetValue(userId, out var user)) profiles.Add(user);
+        }
+
+        return profiles;
     }
 
     private async Task<IReadOnlyList<TwitchUser>> EnrichAsync(string broadcasterId, IReadOnlyList<TwitchUser> users, CancellationToken cancellationToken)
@@ -366,6 +388,19 @@ public sealed class TwitchChannelService(
         return await GetUserProfilesAsync(broadcasterId, [.. blocked.Select(user => user.UserId)], [], cancellationToken);
     }
 
+    // Membership only, in ids: the caller asking whether one account is on this list has no use for
+    // the avatars and badges of everybody on it, which is what the full list costs to build. The
+    // block list is cached, so this is usually the one page fetch that keeps that cache honest.
+    public async Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0) return [];
+
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        var blocked = await GetBlockedUsersAsync(broadcasterId, cancellationToken);
+
+        return [.. blocked.Where(user => wanted.Contains(user.UserId))];
+    }
+
     public Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         return GetChannelListAsync(
@@ -444,6 +479,43 @@ public sealed class TwitchChannelService(
     {
         var chatters = await GetChattersAsync(broadcasterId, cancellationToken);
         return await GetUserProfilesAsync(broadcasterId, [.. chatters.Select(chatter => chatter.UserId)], [], cancellationToken);
+    }
+
+    // Twitch has no way to ask whether one account is in chat, so this still walks the list -- but it
+    // stops the moment everybody asked about has turned up, and never resolves a profile for any of
+    // the thousands it passed on the way. Asking whether the bot is in chat used to paginate every
+    // viewer of a live channel and then enrich all of them, for one boolean.
+    //
+    // A viewer who is present is normally on the first page. Somebody genuinely absent still costs a
+    // full walk, which is the honest price of the question.
+    public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0) return [];
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        var found = new List<TwitchChannelUser>();
+
+        string? cursor = null;
+
+        do
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var page = await apiClient.GetChattersAsync(broadcasterId, accessToken, cursor, cancellationToken);
+
+            foreach (var chatter in page.Items)
+            {
+                if (wanted.Remove(chatter.UserId)) found.Add(chatter);
+            }
+
+            if (wanted.Count is 0) break;
+
+            cursor = page.Cursor;
+        }
+        while (cursor is not null);
+
+        return found;
     }
 
     public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersAsync(string broadcasterId, CancellationToken cancellationToken)
