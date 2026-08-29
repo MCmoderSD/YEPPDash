@@ -206,6 +206,18 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
     #endregion
 
+    #region Streams
+    public async Task<TwitchStream?> GetStreamAsync(string broadcasterId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"streams?user_id={Uri.EscapeDataString(broadcasterId)}&first=1";
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchStream>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault();
+    }
+    #endregion
+
     #region Chat
     public Task<HelixPage<TwitchChannelUser>> GetChattersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
     {
