@@ -67,7 +67,7 @@ export class WheelOverlayPageComponent {
     try {
       this.show(await this.wheels.getWheel(channelId));
     } catch {
-      // A stream that outlives a restart of the API picks the list up on the next connect rather
+      // A stream that outlives a restart of the API picks the list up on the next connection rather
       // than sitting on an error.
     } finally {
       this.loaded.set(true);

@@ -41,7 +41,7 @@
       <span class="app-visually-hidden">Loading your timer…</span>
 
       <p class="timer-page-readout" aria-hidden="true">
-        <span class="app-skeleton timer-page-skeleton-readout"></span>
+        <span class="app-skeleton app-skeleton-text timer-page-skeleton-readout"></span>
       </p>
 
       <div class="timer-page-controls" aria-hidden="true">
@@ -108,7 +108,7 @@
         The bot drives the same timer this page does, so anything here can be done from chat instead.
       </p>
 
-      <dl class="timer-page-commands">
+      <dl class="app-command-list">
         <dt>!timer start</dt>
         <dd>Starts it counting down</dd>
 
@@ -193,7 +193,7 @@
 
         <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
           <mat-label>Size</mat-label>
-          <input matInput type="number" min="1" [value]="style().fontSize" (input)="restyle({ fontSize: +$any($event.target).value })"/>
+          <input matInput type="number" min="1" #fontSize [value]="style().fontSize" (input)="restyle({ fontSize: +fontSize.value })"/>
           <mat-hint>Share of the source, not pixels</mat-hint>
         </mat-form-field>
 

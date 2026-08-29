@@ -108,7 +108,7 @@ public sealed class TwitchChannelService(
                 Moderator: moderators.Contains(user.Id),
                 Vip: vips.Contains(user.Id),
                 Editor: editors.Contains(user.Id),
-                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase)),
+                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase))
         }).ToList();
     }
 
@@ -133,7 +133,7 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var moderators = await GetModeratorsAsync(broadcasterId, cancellationToken);
-        return await GetUserProfilesAsync(broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. moderators.Select(moderator => moderator.UserId)], [], cancellationToken);
     }
 
     public async Task<int> GetModeratorCountAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -145,7 +145,7 @@ public sealed class TwitchChannelService(
         string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var moderators = await GetModeratorsByIdAsync(broadcasterId, userIds, cancellationToken);
-        return await GetUserProfilesAsync(broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. moderators.Select(moderator => moderator.UserId)], [], cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsAsync(string broadcasterId, CancellationToken cancellationToken)

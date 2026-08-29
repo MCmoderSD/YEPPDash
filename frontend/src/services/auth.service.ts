@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, signal, Signal, WritableSignal } from "@angular/core";
+import { Injectable, signal, Signal, WritableSignal } from "@angular/core";
 import { environment } from '../environments/environment';
 import { Broadcaster } from '../data/broadcaster';
 import { ApiService } from './api.service';
@@ -17,7 +17,6 @@ export class AuthService extends ApiService {
   private readonly checking: WritableSignal<boolean> = signal(false);
 
   readonly currentUser: Signal<Broadcaster | null> = this.user.asReadonly();
-  readonly isAuthenticated: Signal<boolean> = computed((): boolean => this.user() !== null);
   readonly unreachable: Signal<boolean> = this.failed.asReadonly();
 
   readonly pending: Signal<boolean> = this.checking.asReadonly();

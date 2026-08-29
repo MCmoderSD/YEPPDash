@@ -342,7 +342,7 @@ public sealed partial class TwitchController(
             return BadRequest("A language has to be a Twitch language code, or 'other'.");
         }
 
-        if (update.Delay is { } and (< 0 or > DelayMaxSeconds))
+        if (update.Delay is < 0 or > DelayMaxSeconds)
         {
             return BadRequest($"A stream delay has to be between 0 and {DelayMaxSeconds} seconds.");
         }

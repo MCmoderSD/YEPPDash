@@ -130,6 +130,7 @@
   width: 1.5rem;
   height: 1.5rem;
   background: currentcolor;
+  //noinspection CssUnknownTarget
   mask: url('/Moderator-Icon.png') center / contain no-repeat;
 }
 
@@ -194,12 +195,9 @@
   border-radius: 50%;
 }
 
-// A name at title-large. The height rides the font around it, so the fallback is font-relative
-// too — the shared 1.25rem would leave a browser without lh a bar at half height.
+// A name at title-large; the shared 1lh rides that font.
 .bot-manage-skeleton-name {
   width: min(11rem, 55vw);
-  height: 1.15em;
-  height: 1lh;
 }
 
 // "Status" and "Settings" in title-small, each about as wide as its word will run.
@@ -225,12 +223,5 @@
 .bot-manage-skeleton-button {
   width: 5.5rem;
   height: 2.5rem;
-  border-radius: var(--mat-sys-corner-full);
-}
-
-// The compact toggle's own track — 36 by 20, from the .app-toggle-compact tokens in styles.scss.
-.bot-manage-skeleton-toggle {
-  width: 2.25rem;
-  height: 1.25rem;
   border-radius: var(--mat-sys-corner-full);
 }

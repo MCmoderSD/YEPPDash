@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   gap: shell.$page-gap;
-  margin-block-start: calc(shell.$header-gap - shell.$page-gap);
+  margin-block-start: shell.$header-gap - shell.$page-gap;
 }
 
 // The global utility stays in normal flow on purpose — the table header needs its column kept —
@@ -29,8 +29,6 @@
 // pill is itself painted the bars' colour, and a bar that matches its background is no bar at all.
 .queue-skeleton-state {
   width: min(16.5rem, 70vw);
-  height: 1.25rem;
-  height: 1lh;
   background: var(--mat-sys-surface-container-highest);
 }
 
@@ -49,12 +47,9 @@
   width: min(19rem, 80vw);
 }
 
-// A name at headline size. The height rides the stage-name font around it, so the fallback is
-// font-relative too — the shared 1.25rem would leave a browser without lh a bar at half height.
+// A name at headline size; the shared 1lh rides that font.
 .queue-skeleton-stage-name {
   width: min(16rem, 55vw);
-  height: 1.15em;
-  height: 1lh;
 }
 
 .queue-skeleton-stage-avatar {
@@ -135,4 +130,3 @@
   height: 1rem;
   margin-inline-start: 1rem;
 }
-

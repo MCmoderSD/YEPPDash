@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,7 @@ import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll
 import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
+import { wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { RaidService } from '../../services/raid.service';
 import { Raid } from '../../data/raid';
@@ -87,16 +88,7 @@ export class RaidPageComponent {
       }
     };
 
-    effect((): RaidEntry[] => this.dataSource.data = this.rows());
-    effect((): void => {
-      const sorter: MatSort | undefined = this.sorter();
-      if (sorter) this.dataSource.sort = sorter;
-    });
-
-    effect((): void => {
-      const pager: MatPaginator | undefined = this.pager();
-      if (pager) this.dataSource.paginator = pager;
-    });
+    wireDataSource(this.dataSource, this.rows, this.sorter, this.pager);
 
     void this.load();
   }

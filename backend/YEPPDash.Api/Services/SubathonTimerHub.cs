@@ -26,7 +26,7 @@ public sealed class SubathonTimerHub
         var queue = Channel.CreateBounded<string>(new BoundedChannelOptions(Backlog)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
-            SingleReader = true,
+            SingleReader = true
         });
 
         _listeners[id] = new Listener(channelId, queue);

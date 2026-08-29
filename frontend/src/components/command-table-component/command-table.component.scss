@@ -44,6 +44,7 @@ table.command-table-grid {
   width: 100%;
   background: transparent;
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.5rem;
@@ -74,9 +75,11 @@ table.command-table-grid {
 
 // The row whose form is open reads as the heading of that form rather than as one row among the
 // rest, and loses its bottom rule so the two read as one block.
+//noinspection CssUnusedSymbol
 .command-table-row-open {
   background: var(--mat-sys-surface-container-high);
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell {
     border-bottom-color: transparent;
   }
@@ -87,6 +90,7 @@ table.command-table-grid {
 //
 // 0.7 rather than a heavier fade: the alias chips are the faintest thing in the row to begin with,
 // and dimming them further puts them under the 4.5:1 they need.
+//noinspection CssUnusedSymbol
 .command-table-row-inactive {
   .command-table-name,
   .command-table-aliases,
@@ -207,8 +211,6 @@ table.command-table-grid {
 // than guessing a row will have a whole row of them.
 .command-table-skeleton-chip {
   width: 3rem;
-  height: 1.25rem;
-  height: 1lh;
   border-radius: var(--mat-sys-corner-extra-small);
 }
 

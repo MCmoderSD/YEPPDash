@@ -45,13 +45,14 @@
 .overlay-time {
   margin: 0;
   color: var(--timer-color, #ffffff);
-  font-family: var(--timer-font-family, system-ui, sans-serif);
+  font-family: var(--timer-font-family, system-ui), sans-serif;
   font-size: max(1.5rem, min(var(--timer-font-size, 18vmin), 13vw));
   font-weight: 700;
   line-height: 1.1;
   text-shadow: var(--timer-shadow, 0 0.4vmin 0.8vmin rgb(0 0 0 / 80%));
 }
 
+//noinspection CssUnusedSymbol
 .overlay-time-paused {
   opacity: 0.6;
 }
@@ -61,7 +62,7 @@
 .overlay-label {
   margin: 0;
   color: var(--timer-color, #ffffff);
-  font-family: var(--timer-font-family, system-ui, sans-serif);
+  font-family: var(--timer-font-family, system-ui), sans-serif;
   font-size: max(0.875rem, min(calc(var(--timer-font-size, 18vmin) / 4), 3.5vw));
   line-height: 1.2;
   text-align: center;

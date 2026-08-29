@@ -102,11 +102,6 @@ public sealed class QueueService(
 
     private static int ParseChannelId(string channelId)
     {
-        if (!int.TryParse(channelId, out var id))
-        {
-            throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId));
-        }
-
-        return id;
+        return !int.TryParse(channelId, out var id) ? throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId)) : id;
     }
 }

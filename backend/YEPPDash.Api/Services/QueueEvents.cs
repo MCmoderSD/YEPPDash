@@ -15,7 +15,7 @@ public static class QueueEvents
                 type = "state",
                 state.IsOpen,
                 state.Requirement,
-                state.Entries,
+                state.Entries
             },
             EventJson);
     }

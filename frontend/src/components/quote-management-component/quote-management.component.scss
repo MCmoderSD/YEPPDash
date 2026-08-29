@@ -93,6 +93,7 @@ table.quote-management-grid {
   width: 100%;
   background: transparent;
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.5rem;
@@ -199,6 +200,7 @@ table.quote-management-grid {
 // Gated behind `hover: hover` because a touch screen never reports a hover state — there the
 // buttons simply stay visible, otherwise they would be unreachable.
 @media (hover: hover) {
+  //noinspection CssUnusedSymbol
   .quote-management-actions .mat-mdc-icon-button {
     opacity: 0;
     transition: opacity 120ms var(--mat-sys-easing-standard, ease);
@@ -206,12 +208,14 @@ table.quote-management-grid {
 
   // focus-within covers the keyboard: tabbing into a button reveals the whole set, so nobody has
   // to aim at a control they cannot see.
+  //noinspection CssUnusedSymbol
   .quote-management-row:hover .mat-mdc-icon-button,
   .quote-management-row:focus-within .mat-mdc-icon-button {
     opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    //noinspection CssUnusedSymbol
     .quote-management-actions .mat-mdc-icon-button {
       transition: none;
     }

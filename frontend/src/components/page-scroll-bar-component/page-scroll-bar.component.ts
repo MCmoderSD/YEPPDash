@@ -1,52 +1,16 @@
 import { DOCUMENT } from '@angular/common';
-import {
-  afterNextRender,
-  Component,
-  computed,
-  DestroyRef,
-  ElementRef,
-  inject,
-  input,
-  InputSignal,
-  NgZone,
-  Signal,
-  signal,
-  WritableSignal,
-} from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, input, InputSignal, NgZone, Signal, signal, WritableSignal } from '@angular/core';
 import { scrollBarAxis, ScrollBarAxis } from '../scroll-bar-component/scroll-bar.component';
 
-// How close to the right edge the pointer has to come before the bar reveals itself. Wider than the
-// bar's own hit area so it can be found without pixel-perfect aim, narrow enough that it still
-// reads as having gone to the edge rather than merely hovering the page.
-//
-// Narrower than the element-level bar's band in ScrollBarComponent, on purpose. This edge is the
-// viewport's, which the pointer physically cannot travel past — reaching for the bar always ends
-// against it, so a narrow band is enough to catch that. An element's edge sits in the middle of the
-// page with more content beyond it, where the pointer sails straight through on its way somewhere
-// else, and needs the wider band to register the approach as deliberate. A band this wide there
-// would also fire on ordinary travel across the page rather than on an actual reach for the bar.
-const REVEAL_DISTANCE = 48;
+const REVEAL_DISTANCE: number = 48;
+const SCROLL_REVEAL_MS: number = 900;
+const NO_POINTER: string = '(pointer: coarse), (hover: none)';
 
-// How long the bar stays up after the last scroll. Scrolling is the one moment the position it
-// reports is worth reading on its own.
-const SCROLL_REVEAL_MS = 900;
-
-// A touch screen scrolls the content directly and has no pointer that could reach the edge to
-// reveal this, so there it would be dead weight floating over the page.
-const NO_POINTER = '(pointer: coarse), (hover: none)';
-
-// Draws the page's own scroll bar, replacing the platform one that styles.scss takes away. The
-// element-level ScrollBarComponent cannot stand in for this: it is positioned against the box it is
-// pointed at, whereas this floats over the viewport and is driven by the document's scroll.
-//
-// The geometry itself is shared with that component rather than restated, so how a thumb is sized
-// and where it sits is decided in exactly one place.
 @Component({
   selector: 'app-page-scroll-bar',
   templateUrl: './page-scroll-bar.component.html',
   styleUrl: './page-scroll-bar.component.scss',
   host: {
-    // It only restates scrolling the page already offers, so there is nothing here to announce.
     'aria-hidden': 'true',
     '[class.page-scroll-bar-revealed]': 'revealed()',
     '[class.page-scroll-bar-dragging]': 'dragging()',
@@ -55,9 +19,6 @@ const NO_POINTER = '(pointer: coarse), (hover: none)';
 })
 export class PageScrollBarComponent {
 
-  // The element the bar has to stop above once it comes into view — the footer, which is in the
-  // ordinary flow at the end of the document rather than pinned anywhere, so how much of it is on
-  // screen changes with every scroll and can only be measured.
   readonly endsAbove: InputSignal<HTMLElement | null> = input<HTMLElement | null>(null);
 
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
@@ -69,9 +30,6 @@ export class PageScrollBarComponent {
   private readonly scrollHeight: WritableSignal<number> = signal(0);
   private readonly viewportHeight: WritableSignal<number> = signal(0);
 
-  // How tall the band between the navbar and the footer currently is. Read back off this element
-  // rather than worked out here: where the bar starts is CSS's business, and reading it means the
-  // navbar's height stays stated in exactly one place.
   private readonly trackHeight: WritableSignal<number> = signal(0);
 
   protected readonly footerInset: WritableSignal<number> = signal(0);
@@ -87,15 +45,11 @@ export class PageScrollBarComponent {
   private grabbedAt = 0;
   private grabbedScrollTop = 0;
 
-  // The track is the band the bar is drawn in, which is shorter than the viewport it scrolls: the
-  // thumb has less room to travel than the page has to move, and the two are told apart here.
   protected readonly axis: Signal<ScrollBarAxis> = computed((): ScrollBarAxis => scrollBarAxis(
     this.trackHeight(), this.viewportHeight(), this.scrollHeight(), this.scrollTop(),
   ));
 
-  // Only worth drawing where there is a pointer that could reach for it and something to scroll.
-  protected readonly scrollable: Signal<boolean> =
-    computed((): boolean => this.untouchable() && this.axis().visible);
+  protected readonly scrollable: Signal<boolean> = computed((): boolean => this.untouchable() && this.axis().visible);
 
   protected readonly revealed: Signal<boolean> = computed((): boolean =>
     this.scrollable() &&
@@ -103,8 +57,6 @@ export class PageScrollBarComponent {
   );
 
   constructor() {
-    // Measuring reads layout, which exists only once the view is in a document — and never on the
-    // server, where afterNextRender does not run at all.
     afterNextRender((): void => {
       const view: (Window & typeof globalThis) | null = this.document.defaultView;
       if (!view) return;
@@ -122,8 +74,6 @@ export class PageScrollBarComponent {
   }
 
   protected grab(event: PointerEvent): void {
-    // Secondary buttons open the platform's own scroll menu on a native bar; there is nothing to
-    // imitate there, so they are left alone.
     if (event.button !== 0) return;
 
     this.dragging.set(true);
@@ -132,13 +82,11 @@ export class PageScrollBarComponent {
 
     (event.target as Element).setPointerCapture(event.pointerId);
 
-    // Otherwise the press starts selecting the text the bar is drawn over.
     event.preventDefault();
   }
 
   protected drag(event: PointerEvent): void {
     if (!this.dragging()) return;
-
     this.scrollTo(this.offsetFor(this.axis(), event.clientY - this.grabbedAt));
   }
 
@@ -146,8 +94,6 @@ export class PageScrollBarComponent {
     this.dragging.set(false);
   }
 
-  // The thumb is dragged from where it was grabbed, so the scroll it maps to is measured from the
-  // offset it had then rather than from wherever it has been dragged to since.
   private offsetFor(axis: ScrollBarAxis, moved: number): number {
     const room: number = axis.trackSize - axis.thumbSize;
     if (room <= 0) return this.grabbedScrollTop;
@@ -162,9 +108,6 @@ export class PageScrollBarComponent {
   }
 
   private listen(view: Window & typeof globalThis): void {
-    // Registered outside Angular deliberately: a scroll fires dozens of events and a mouse well
-    // over a hundred a second, and in the zone every one would drag the whole application through
-    // change detection. The signals written below schedule a render by themselves.
     this.zone.runOutsideAngular((): void => {
       const scrolled = (): void => {
         this.measure();
@@ -172,14 +115,9 @@ export class PageScrollBarComponent {
       };
 
       const moved = (event: PointerEvent): void => {
-        // innerWidth rather than the document element's width: with the platform bar gone there is
-        // no gutter, but measuring against the element would still be the wrong edge if one
-        // returned.
         this.pointerNear.set(view.innerWidth - event.clientX <= REVEAL_DISTANCE);
       };
 
-      // Without this the last position — possibly inside the reveal zone — would linger forever
-      // once the pointer leaves the window, since no further move fires to correct it.
       const left = (): void => this.pointerNear.set(false);
       const resized = (): void => this.measure();
 
@@ -188,15 +126,7 @@ export class PageScrollBarComponent {
       this.document.addEventListener('pointermove', moved, { passive: true });
       this.document.addEventListener('pointerleave', left);
 
-      // The page grows and shrinks without anything scrolling or resizing — a table loading its
-      // rows, a panel opening — and the thumb has to follow.
-      //
-      // Watching the body itself is not enough: this app pins html and body to `height: 100%`, so
-      // their boxes stay exactly one viewport tall however long the content gets and the observer
-      // would never fire. What actually grows is the app root inside them, and anything else the
-      // body may come to hold, so every child is watched instead.
-      const sizes: ResizeObserver | undefined =
-        typeof ResizeObserver === 'function' ? new ResizeObserver((): void => this.measure()) : undefined;
+      const sizes: ResizeObserver | undefined = typeof ResizeObserver === 'function' ? new ResizeObserver((): void => this.measure()) : undefined;
 
       const observe = (): void => {
         sizes?.disconnect();
@@ -204,7 +134,6 @@ export class PageScrollBarComponent {
         for (const child of this.document.body.children) sizes?.observe(child);
       };
 
-      // A route change replaces what the body holds, bringing a new set of children to watch.
       const children: MutationObserver | undefined =
         typeof MutationObserver === 'function'
           ? new MutationObserver((): void => { observe(); this.measure(); })
@@ -225,8 +154,6 @@ export class PageScrollBarComponent {
     });
   }
 
-  // Held up for a moment after the last scroll event rather than cleared with it, so the bar does
-  // not strobe through a gesture that arrives as a burst of separate events.
   private flashOnScroll(): void {
     this.scrolling.set(true);
 
@@ -245,12 +172,8 @@ export class PageScrollBarComponent {
     this.scrollHeight.set(root.scrollHeight);
     this.viewportHeight.set(root.clientHeight);
 
-    // Whatever the navbar leaves above the bar. Read off the element's own top rather than from the
-    // token behind it, so where the band starts stays CSS's to decide and is stated once.
     const bandTop: number = this.host.nativeElement.getBoundingClientRect().top;
 
-    // The footer is in the ordinary flow at the end of the document, so it is only ever in the way
-    // once it has scrolled up into the viewport — which is what this measures.
     const footer: HTMLElement | null = this.endsAbove();
     const inset: number = footer
       ? Math.max(0, root.clientHeight - footer.getBoundingClientRect().top)

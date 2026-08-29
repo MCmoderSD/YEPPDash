@@ -54,8 +54,8 @@
         <td mat-cell *matCellDef="let command" class="command-table-aliases">
           <div class="command-table-chips">
             @if (isSkeleton(command)) {
-              <span class="app-skeleton command-table-skeleton-chip" aria-hidden="true"></span>
-              <span class="app-skeleton command-table-skeleton-chip command-table-skeleton-chip-narrow" aria-hidden="true"></span>
+              <span class="app-skeleton app-skeleton-text command-table-skeleton-chip" aria-hidden="true"></span>
+              <span class="app-skeleton app-skeleton-text command-table-skeleton-chip command-table-skeleton-chip-narrow" aria-hidden="true"></span>
             } @else {
               @for (alias of command.aliases; track alias) {
                 <span class="command-table-alias">{{ alias }}</span>

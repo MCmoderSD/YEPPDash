@@ -43,6 +43,7 @@
 
 // A two-tone ring — panel colour first, then primary — so "which one is active" reads on any swatch,
 // including the white and black ones.
+//noinspection CssUnusedSymbol
 .picker-preset-selected {
   box-shadow:
     0 0 0 2px var(--mat-sys-surface-container),
