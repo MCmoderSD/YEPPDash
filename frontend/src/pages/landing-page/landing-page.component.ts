@@ -25,7 +25,6 @@ export class LandingPageComponent {
   private readonly router: Router = inject(Router);
   private readonly route:ActivatedRoute = inject(ActivatedRoute);
 
-  protected readonly loginUrl: string = this.auth.loginUrl(environment.production ? '/' : '/dash');
   protected readonly authError = signal<string | null>(null);
 
   constructor() {
