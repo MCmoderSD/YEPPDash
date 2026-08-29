@@ -544,6 +544,43 @@ public sealed class TwitchChannelService(
     }
     #endregion
 
+    #region Channel Points
+    public async Task<IReadOnlyList<CustomReward>> GetCustomRewardsAsync(string broadcasterId, IReadOnlyCollection<string> rewardIds, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var rewardsTask = apiClient.GetCustomRewardsAsync(broadcasterId, rewardIds, onlyManageable: false, accessToken, cancellationToken);
+        var manageableTask = apiClient.GetCustomRewardsAsync(broadcasterId, [], onlyManageable: true, accessToken, cancellationToken);
+
+        var rewards = await rewardsTask;
+        var manageable = (await manageableTask).Select(reward => reward.Id).ToHashSet(StringComparer.Ordinal);
+
+        return [.. rewards.Select(reward => reward with { IsManageable = manageable.Contains(reward.Id) })];
+    }
+
+    public async Task<CustomReward> CreateCustomRewardAsync(string broadcasterId, CustomRewardCreate create, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var reward = await apiClient.CreateCustomRewardAsync(broadcasterId, create, accessToken, cancellationToken);
+
+        return reward with { IsManageable = true };
+    }
+
+    public async Task<CustomReward> UpdateCustomRewardAsync(string broadcasterId, string rewardId, CustomRewardUpdate update, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var reward = await apiClient.UpdateCustomRewardAsync(broadcasterId, rewardId, update, accessToken, cancellationToken);
+
+        return reward with { IsManageable = true };
+    }
+
+    public async Task DeleteCustomRewardAsync(string broadcasterId, string rewardId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        await apiClient.DeleteCustomRewardAsync(broadcasterId, rewardId, accessToken, cancellationToken);
+    }
+    #endregion
+
     private async Task<IReadOnlyList<TwitchChannelUser>> CheckInBatchesAsync(string broadcasterId, IReadOnlyCollection<string> userIds, Func<IReadOnlyCollection<string>, string, Task<IReadOnlyList<TwitchChannelUser>>> check, CancellationToken cancellationToken)
     {
         if (userIds.Count is 0) return [];
