@@ -92,12 +92,7 @@ public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connectio
 
     private static int ParseUserId(string twitchUserId)
     {
-        if (!int.TryParse(twitchUserId, out var id))
-        {
-            throw new ArgumentException($"'{twitchUserId}' is not a numeric Twitch user ID.", nameof(twitchUserId));
-        }
-
-        return id;
+        return !int.TryParse(twitchUserId, out var id) ? throw new ArgumentException($"'{twitchUserId}' is not a numeric Twitch user ID.", nameof(twitchUserId)) : id;
     }
 
     private sealed class TokenRow
