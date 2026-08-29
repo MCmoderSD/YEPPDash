@@ -18,7 +18,7 @@ public sealed class WheelService(WheelRepository repository, ILogger<WheelServic
         var entries = Normalize(request.Entries);
 
         await repository.SaveAsync(id, entries, cancellationToken);
-        logger.LogDebug("Stored {Count} entries for channel {ChannelId}", entries.Count, id);
+        logger.LogDebug("Stored {Count} entries for the channel {ChannelId}", entries.Count, id);
 
         return entries;
     }
