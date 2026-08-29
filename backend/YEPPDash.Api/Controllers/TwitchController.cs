@@ -406,6 +406,26 @@ public sealed partial class TwitchController(
     #endregion
 
 
+    #region Stream
+
+    [HttpGet("stream")]
+    public async Task<IActionResult> GetStream(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            return Ok(await channelService.GetStreamStatusAsync(twitchId, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "read the stream status");
+        }
+    }
+    #endregion
+
+
     #region Chat
     
     [HttpGet("chatters")]
@@ -414,6 +434,15 @@ public sealed partial class TwitchController(
         return ListUserProfilesAsync(
             broadcasterId => channelService.GetChatterProfilesAsync(broadcasterId, cancellationToken),
             "list the chatters");
+    }
+
+
+    [HttpGet("chatters/count")]
+    public Task<IActionResult> CountChatters(CancellationToken cancellationToken)
+    {
+        return CountAsync(
+            broadcasterId => channelService.GetChatterCountAsync(broadcasterId, cancellationToken),
+            "count the chatters");
     }
 
 
