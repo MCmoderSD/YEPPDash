@@ -108,7 +108,7 @@ public sealed class TwitchChannelService(
                 Moderator: moderators.Contains(user.Id),
                 Vip: vips.Contains(user.Id),
                 Editor: editors.Contains(user.Id),
-                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase)),
+                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase))
         }).ToList();
     }
 

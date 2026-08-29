@@ -22,7 +22,7 @@ public static class BotServiceCollectionExtensions
             ApiKey = ApiKeyFor(configuration.GetRequiredValue($"Twitch:ClientSecret{dbTarget}")),
             AllowUntrustedCertificate =
                 configuration.GetValue($"YeppBot:AllowUntrustedCertificate{dbTarget}", false)
-                || configuration.GetValue("YeppBot:AllowUntrustedCertificate", false),
+                || configuration.GetValue("YeppBot:AllowUntrustedCertificate", false)
         };
 
         services.AddSingleton(options);
@@ -38,7 +38,7 @@ public static class BotServiceCollectionExtensions
             builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
                 // Scoped to this one client, so nothing else in the app loses certificate checking.
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
         }
 

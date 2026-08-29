@@ -125,7 +125,7 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
             message = command.Message,
             active = command.Active,
             type = ToColumn(command.ResponseType),
-            userLevel = ToColumn(command.UserLevel),
+            userLevel = ToColumn(command.UserLevel)
         };
     }
 

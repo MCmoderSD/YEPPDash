@@ -36,7 +36,7 @@ public static class RequestLoggingExtensions
                 {
                     >= StatusCodes.Status500InternalServerError => LogLevel.Error,
                     StatusCodes.Status404NotFound when context.GetEndpoint() is null => LogLevel.Debug,
-                    _ => LogLevel.Information,
+                    _ => LogLevel.Information
                 };
 
                 logger.Log(
