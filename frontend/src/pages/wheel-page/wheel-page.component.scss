@@ -110,26 +110,6 @@
   padding-block-start: 1rem;
 }
 
-// MatTabGroup measures each tab's own content once to size the shared wrapper it animates between
-// tabs, then leaves that number fixed — the height painted by the flex column above can come out a
-// pixel or two past what was measured, which is not a real amount of content to scroll but is enough
-// for Chrome and Firefox to draw a scrollbar over a table that plainly has no more rows to reach.
-// mat-tab-body carries the actual overflow: .mat-mdc-tab-body-content is a plain height: 100% of it,
-// so hiding the bar on the outer element covers both.
-//
-// ::ng-deep because both elements belong to MatTabBody's own template, not this component's — a
-// selector without it would carry this component's encapsulation attribute and match nothing.
-.wheel-page-tabs {
-  ::ng-deep mat-tab-body,
-  ::ng-deep .mat-mdc-tab-body-content {
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-}
-
 .wheel-page-toolbar {
   display: flex;
   flex-wrap: wrap;

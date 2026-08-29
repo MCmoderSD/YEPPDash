@@ -243,6 +243,24 @@ body {
   overflow: visible;
 }
 
+// Two things make a tab body overflow, and neither is content anyone can reach. A tab sliding out
+// is taken out of flow and stretched over the wrapper, which by then is sized by the tab arriving,
+// so a taller tab hangs over that box for the length of the slide. And .app-fade-in starts its
+// content six pixels low, which is six pixels of overflow for as long as the entrance runs — on
+// first load, and again on every tab that fades in behind the slide. Material leaves `overflow:
+// auto` here, so both show up as the platform's own scroll bar, in its own grey, down the middle
+// of the page.
+//
+// Clipped, the way Material itself clips this element when a tab group is given a dynamic height.
+// Nothing is lost: what scrolls a tab in this app is the page under it, and .bdsm-page-tabs
+// already keeps a row of padding above the panels for the clipping that happened here anyway.
+//
+// Matched through the tab body so this out-specifies Material's own rule on the same class, and
+// global because both elements are Material's, where no page's own styles reach them.
+.mat-mdc-tab-body > .mat-mdc-tab-body-content {
+  overflow: hidden;
+}
+
 // The OBS overlay is captured over whatever the scene has behind it, so the page must not paint a
 // background of its own. OBS does strip one through its own custom CSS, but only while that setting
 // is left at its default — this makes it the page's own doing instead.
