@@ -6,7 +6,7 @@ import { TwitchUser } from "../../data/twitch-user";
 import { environment } from '../../environments/environment';
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  access_denied: 'You denied access on Twitch.',
+  access_denied: 'You denied access to Twitch.',
   invalid_state: 'The login expired or was interrupted. Please try again.',
   missing_code: 'Twitch did not return an authorization code. Please try again.',
   twitch_error: 'Twitch rejected the login. Please try again later.',
