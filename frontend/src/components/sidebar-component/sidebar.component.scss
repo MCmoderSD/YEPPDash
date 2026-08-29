@@ -76,6 +76,7 @@
 
 // --- Groups -----------------------------------------------------------------------------------
 
+//noinspection CssUnusedSymbol
 .sidebar-group + .sidebar-group {
   // A rule rather than more space: three groups separated by gaps alone start to read as one long
   // list again, which is what the grouping is here to undo.
@@ -177,6 +178,7 @@
     visibility var(--app-motion-base);
 }
 
+//noinspection CssUnusedSymbol
 .sidebar-group-items-open {
   grid-template-rows: 1fr;
   visibility: visible;
@@ -295,6 +297,7 @@
 // The current page. Three signals rather than one — a tinted background, the brand colour on the
 // label and icon, and a marker on the leading edge — so it survives both a monochrome display and
 // the forms of colour blindness that would flatten the tint against the panel.
+//noinspection CssUnusedSymbol
 .sidebar-link-active {
   background: var(--app-tint-primary);
   color: var(--mat-sys-primary);
@@ -336,6 +339,7 @@
 
 // Nothing draws the rail next to a standalone entry, so there is no hairline for the marker to
 // stand in for and it would float in the padding on its own.
+//noinspection CssUnusedSymbol
 .sidebar-link-standalone.sidebar-link-active::before {
   content: none;
 }
@@ -400,6 +404,7 @@
 
   // Faded rather than dropped: `content: none` takes the box away in one frame, while the indent
   // it sits in is still closing.
+  //noinspection CssUnusedSymbol
   .sidebar-group-list::before,
   .sidebar-link-active::before {
     opacity: 0;

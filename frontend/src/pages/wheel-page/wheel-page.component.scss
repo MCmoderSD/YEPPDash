@@ -187,6 +187,7 @@ table.wheel-page-table {
   width: 100%;
   background: transparent;
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.75rem;
@@ -200,6 +201,7 @@ table.wheel-page-table {
   }
 
   // Nothing follows the last row, so its rule only draws a line along the container's own border.
+  //noinspection CssUnusedSymbol
   &:last-of-type .mdc-data-table__cell {
     border-bottom: none;
   }

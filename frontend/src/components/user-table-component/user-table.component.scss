@@ -36,6 +36,7 @@ table.user-table-grid {
 
   // Material's default 16px inline padding on every cell adds up fast across three columns —
   // tightened so name, id and remove sit close together instead of spread across the row.
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.5rem;
@@ -114,17 +115,20 @@ table.user-table-grid {
 // Gated behind `hover: hover` because a touch screen never reports a hover state — there the button
 // simply stays visible, otherwise it would be unreachable.
 @media (hover: hover) {
+  //noinspection CssUnusedSymbol
   .user-table-actions .mat-mdc-icon-button {
     opacity: 0;
     transition: opacity 120ms var(--mat-sys-easing-standard, ease);
   }
 
+  //noinspection CssUnusedSymbol
   .user-table-row:hover .mat-mdc-icon-button,
   .user-table-row:focus-within .mat-mdc-icon-button {
     opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    //noinspection CssUnusedSymbol
     .user-table-actions .mat-mdc-icon-button {
       transition: none;
     }

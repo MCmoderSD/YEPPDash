@@ -26,6 +26,7 @@
 // Closed with people still in it. Not an error — a queue is often closed on purpose while the last
 // few are worked through — but it is the state that gets left behind by accident, so it carries a
 // colour of its own instead of reading like any other closed queue.
+//noinspection CssUnusedSymbol
 .queue-page-state-holding {
   background: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
@@ -51,6 +52,7 @@
 
 // Only where there is something to open — a row whose ID Twitch does not know has no dialog behind
 // it, and a pointer promising one would be lying.
+//noinspection CssUnusedSymbol
 .queue-page-entry-known {
   cursor: pointer;
 }

@@ -66,6 +66,7 @@ table.birthday-list-grid {
   width: 100%;
   background: transparent;
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.5rem;
@@ -80,6 +81,7 @@ table.birthday-list-grid {
 }
 
 // Only the rows that actually open something say so.
+//noinspection CssUnusedSymbol
 .birthday-list-clickable {
   cursor: pointer;
 }
@@ -142,6 +144,7 @@ table.birthday-list-grid {
 // Needs ::ng-deep because that flex container is a div out of MatSortHeader's own template: it never
 // carries this component's encapsulation attribute, so a plain descendant selector cannot reach it.
 // Kept behind :host so the reach stops at this component.
+//noinspection CssUnusedSymbol
 :host ::ng-deep .birthday-list-age .mat-sort-header-container {
   justify-content: center;
 }
@@ -152,6 +155,7 @@ table.birthday-list-grid {
 }
 
 // The whole point of the page, so the one row it applies to should not read like the rest.
+//noinspection CssUnusedSymbol
 .birthday-list-today {
   color: var(--mat-sys-primary);
   font-weight: 600;
