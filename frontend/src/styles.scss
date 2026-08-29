@@ -391,10 +391,8 @@ body {
 }
 
 // A bar standing where text will: 1lh is the line box of whatever font its parent sets, which is
-// exactly the height the words will take. The rem height underneath is for the odd browser that
-// does not know the unit yet.
+// exactly the height the words will take.
 .app-skeleton-text {
-  height: 1.25rem;
   height: 1lh;
 }
 

@@ -262,14 +262,12 @@
 }
 
 // The readout sits inside .timer-page-readout, so it inherits that paragraph's own clamp(2.5rem,
-// 12vw, 5rem) font size and 1.1 line height — 1lh below rides both, which a fixed rem height could
-// not do across the readout's own responsive range. The width is in ch rather than rem for the same
-// reason: "00:00:00" is eight tabular-nums-width characters, and ch scales with the font size the
-// bar sits in instead of only fitting one point on the clamp.
+// 12vw, 5rem) font size and 1.1 line height — the shared 1lh rides both, which a fixed rem height
+// could not do across the readout's own responsive range. The width is in ch rather than rem for
+// the same reason: "00:00:00" is eight tabular-nums-width characters, and ch scales with the font
+// size the bar sits in instead of only fitting one point on the clamp.
 .timer-page-skeleton-readout {
   width: 8ch;
-  height: 1.1em;
-  height: 1lh;
 }
 
 // Material's flat and stroked buttons: 40px tall, fully rounded, as wide as their icon and label.

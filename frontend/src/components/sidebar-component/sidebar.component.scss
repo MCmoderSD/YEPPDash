@@ -58,8 +58,6 @@
   // directive in the template, which is why neither the drawer nor Material's wrapper inside it may
   // catch the overflow first — see dash-page.component.scss and styles.scss.
   .sidebar {
-    // vh first so an engine without dvh keeps a working cap rather than none at all, as in app.scss.
-    max-height: calc(100vh - var(--app-navbar-block));
     max-height: calc(100dvh - var(--app-navbar-block));
 
     overflow-y: auto;
