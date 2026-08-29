@@ -46,7 +46,7 @@ public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connectio
         var ids = await connection.QueryAsync<int>(
             new CommandDefinition("SELECT userId FROM TwitchToken", cancellationToken: cancellationToken));
 
-        return ids.Select(id => id.ToString()).ToList();
+        return [.. ids.Select(id => id.ToString())];
     }
 
     public async Task SaveAsync(StoredTwitchToken token, CancellationToken cancellationToken)

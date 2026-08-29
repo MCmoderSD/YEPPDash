@@ -19,7 +19,7 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
                 new { channelId },
                 cancellationToken: cancellationToken));
 
-        return rows.Select(ToCommand).ToList();
+        return [.. rows.Select(ToCommand)];
     }
 
     public async Task<CustomCommand?> GetAsync(int channelId, string name, CancellationToken cancellationToken)
