@@ -247,46 +247,6 @@
   }
 }
 
-// A description list rather than a table: each command has exactly one explanation, and a table
-// would announce a column header before every one of them.
-//
-// This panel is stretched to whatever height its neighbour has, and the leftover used to pool at the
-// bottom as one blank band. `flex: 1 1 auto` hands that leftover to the list and `space-between`
-// spreads it between the rows — growing only into space that already exists, so the list never makes
-// the panel taller than the one beside it. Without the auto basis the rows would be squashed to
-// nothing when there is no slack to take.
-.timer-page-commands {
-  display: grid;
-  flex: 1 1 auto;
-  align-content: space-between;
-  gap: 0.25rem 1rem;
-  margin: 0;
-  grid-template-columns: max-content minmax(0, 1fr);
-
-  dt {
-    color: var(--mat-sys-primary);
-    font-family: var(--mat-sys-body-medium-font), monospace;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  dd {
-    margin: 0;
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-body-medium);
-  }
-
-  // Two columns of nowrap command names do not survive a phone; stacked, each command keeps its
-  // explanation directly under it.
-  @media (max-width: 30rem) {
-    grid-template-columns: minmax(0, 1fr);
-
-    dd {
-      margin-block-end: 0.5rem;
-    }
-  }
-}
-
 // --- the initial-load skeleton ----------------------------------------------------------------
 // Surface, pulse, corners, text heights and the held-back appearance all come from the global
 // .app-skeleton utilities in styles.scss. The frames these stand-ins sit inside are the page's own

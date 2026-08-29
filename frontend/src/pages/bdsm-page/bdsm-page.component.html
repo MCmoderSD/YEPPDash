@@ -53,8 +53,8 @@
             <mat-accordion class="bdsm-page-results app-fade-in" multi="true">
               @for (entry of entries(); track entry.result.id) {
                 <mat-expansion-panel
-                  class="bdsm-page-panel"
-                  [class.bdsm-page-panel-open]="panel.expanded"
+                  class="app-expansion-card"
+                  [class.app-expansion-card-open]="panel.expanded"
                   [expanded]="$first"
                   #panel
                 >
@@ -118,8 +118,8 @@
             <mat-accordion class="bdsm-page-results app-fade-in" multi="true">
               @for (entry of community(); track entry.result.id) {
                 <mat-expansion-panel
-                  class="bdsm-page-panel"
-                  [class.bdsm-page-panel-open]="panel.expanded"
+                  class="app-expansion-card"
+                  [class.app-expansion-card-open]="panel.expanded"
                   #panel
                 >
 

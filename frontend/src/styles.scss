@@ -469,3 +469,92 @@ body {
   --mat-slide-toggle-selected-track-outline-width: 0;
   --mat-slide-toggle-disabled-unselected-track-outline-width: 1px;
 }
+
+// --- Expansion cards ------------------------------------------------------------------------
+// Material paints a panel in the same tone as the page and separates it with a drop shadow, which
+// on a near-black background is close to invisible — a closed panel blends into the page until it
+// is opened, and even then only the arrow says so. Each one is a card instead: a lifted surface
+// with an edge of its own, so the eye can tell where one ends and the next begins.
+//
+// Global because the FAQ entries and the BDSM results share the treatment and no stylesheet, and
+// because it is all custom properties, which inherit — the class goes on the panel itself.
+.app-expansion-card {
+  --mat-expansion-container-background-color: var(--mat-sys-surface-container);
+  --mat-expansion-container-shape: var(--app-radius-lg);
+  --mat-expansion-container-text-color: var(--mat-sys-on-surface);
+  --mat-expansion-header-text-color: var(--mat-sys-on-surface);
+  --mat-expansion-header-indicator-color: var(--mat-sys-on-surface-variant);
+
+  // Neutral rather than the accent, matching every other control in the app — being open is what
+  // the accent marks here, not being hovered.
+  --mat-expansion-header-hover-state-layer-color: var(--app-tint-hover);
+  --mat-expansion-header-focus-state-layer-color: var(--app-tint-hover);
+
+  border: var(--app-border);
+  transition:
+    border-color var(--app-motion-fast) var(--app-ease),
+    background-color var(--app-motion-fast) var(--app-ease);
+
+  // Material's own shadow does nothing here and only muddies the card's edge against the page.
+  box-shadow: none !important;
+
+  &:hover {
+    border-color: var(--mat-sys-outline);
+  }
+}
+
+// The open card carries the brand colour on its edge and lifts a tone further, so which one is
+// expanded is obvious from the shape of the page rather than from the arrow alone.
+//noinspection CssUnusedSymbol
+.app-expansion-card-open {
+  --mat-expansion-container-background-color: var(--mat-sys-surface-container-high);
+  --mat-expansion-header-indicator-color: var(--mat-sys-primary);
+
+  border-color: var(--mat-sys-primary);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+  }
+}
+
+// --- Command lists --------------------------------------------------------------------------
+// The chat commands a page documents, as a <dl> rather than a table: each command has exactly one
+// explanation, and a table would announce a column header before every one of them. The command in
+// one column, what it does in the next.
+//
+// The queue page and the timer page each carry one, in a panel that is stretched to whatever
+// height its neighbour has. `flex: 1 1 auto` hands that leftover to the list and `space-between`
+// spreads it between the rows — growing only into space that already exists, so the list never
+// makes the panel taller than the one beside it. Without the auto basis the rows would be squashed
+// to nothing when there is no slack to take.
+.app-command-list {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: space-between;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  grid-template-columns: max-content minmax(0, 1fr);
+
+  dt {
+    color: var(--mat-sys-primary);
+    font-family: var(--mat-sys-body-medium-font), monospace;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-medium);
+  }
+
+  // Two columns of nowrap command names do not survive a phone; stacked, each command keeps its
+  // explanation directly under it.
+  @media (max-width: 30rem) {
+    grid-template-columns: minmax(0, 1fr);
+
+    dd {
+      margin-block-end: 0.5rem;
+    }
+  }
+}

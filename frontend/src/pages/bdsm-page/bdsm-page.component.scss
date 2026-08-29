@@ -51,49 +51,6 @@
   gap: 0.75rem;
 }
 
-// Material paints a panel in the same tone as the page and separates it with a drop shadow, which
-// on a near-black background is close to invisible — every result blends into the page until it
-// is opened, and even then only the arrow says so. Each one is a card instead, the same treatment
-// the FAQ entries use: a lifted surface with an edge of its own, so a result is visible whether it
-// is open or not, and unmistakably so once it is.
-.bdsm-page-panel {
-  --mat-expansion-container-background-color: var(--mat-sys-surface-container);
-  --mat-expansion-container-shape: var(--app-radius-lg);
-  --mat-expansion-container-text-color: var(--mat-sys-on-surface);
-  --mat-expansion-header-text-color: var(--mat-sys-on-surface);
-  --mat-expansion-header-indicator-color: var(--mat-sys-on-surface-variant);
-
-  // Neutral rather than the accent, matching every other control in the app — being open is what
-  // the accent marks here, not being hovered.
-  --mat-expansion-header-hover-state-layer-color: var(--app-tint-hover);
-  --mat-expansion-header-focus-state-layer-color: var(--app-tint-hover);
-
-  border: var(--app-border);
-  transition:
-    border-color var(--app-motion-fast) var(--app-ease),
-    background-color var(--app-motion-fast) var(--app-ease);
-
-  // Material's own shadow does nothing here and only muddies the card's edge against the page.
-  box-shadow: none !important;
-
-  &:hover {
-    border-color: var(--mat-sys-outline);
-  }
-}
-
-// The open card carries the brand colour on its edge and lifts a tone further, so which result is
-// expanded is obvious from the shape of the page rather than from the arrow alone.
-.bdsm-page-panel-open {
-  --mat-expansion-container-background-color: var(--mat-sys-surface-container-high);
-  --mat-expansion-header-indicator-color: var(--mat-sys-primary);
-
-  border-color: var(--mat-sys-primary);
-
-  &:hover {
-    border-color: var(--mat-sys-primary);
-  }
-}
-
 // The tab body clips its content while a tab slides in, so the panels need a little room above them
 // or the first one's shadow is cut off mid-animation.
 .bdsm-page-tabs {
