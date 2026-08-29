@@ -149,7 +149,7 @@ export class TimerPageComponent {
     const channelId: string | null = this.channelId();
     if (channelId === null) return;
 
-    void this.run(this.timers.saveStyle(channelId, this.style()), 'Overlay settings saved.');
+    void this.run(this.timers.saveStyle(channelId, this.style()), 'Overlay settings are saved.');
   }
 
   protected resetStyle(): void {

@@ -108,10 +108,7 @@ export class WheelPageComponent {
     !this.busy() && this.draft().trim().length > 0 && this.problem() === null);
 
   protected add(): void {
-    // Guarded as well as disabled: pressing Enter in the field submits the form in its own right,
-    // and not every engine holds that back for a disabled submit button.
     if (!this.canAdd()) return;
-
     if (this.addAll(splitEntries(this.draft()))) this.draft.set('');
   }
 

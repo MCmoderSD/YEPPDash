@@ -74,10 +74,6 @@ export class RoleManagementComponent {
   protected readonly showProgress: Signal<boolean> = computed((): boolean => (this.loading() || this.busy()) && !this.initialLoading());
 
   constructor() {
-    // The mode is the only thing this effect reacts to. Everything it then does is a side effect,
-    // and it runs untracked so nothing load() happens to read on its way to the first await — the
-    // row count, for one — becomes a dependency: load() ends by writing users(), so an effect that
-    // had read it would wake itself, clear the list and start over, forever.
     effect((): void => {
       const mode: RoleManagementMode = this.mode();
 

@@ -65,9 +65,6 @@ app.use((req, res, next) => {
       const query = queryIndex === -1 ? '' : req.url.slice(queryIndex);
       const rewritten = `/dash${path === '/' ? '' : path}${query}`;
 
-      // Angular's Node adapter builds the request URL from `originalUrl ?? url`, so rewriting
-      // only `url` leaves it resolving the untouched path and serving the prerendered landing
-      // page at the dashboard's root. Both have to move for the rewrite to be honoured.
       req.url = rewritten;
       req.originalUrl = rewritten;
     }
