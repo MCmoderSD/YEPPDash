@@ -6,6 +6,7 @@ using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Exceptions.Twitch;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Services;
+using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Controllers;
 
@@ -21,6 +22,9 @@ public sealed partial class TwitchController(
     private const int TagMaxLength = 25;
     private const int DelayMaxSeconds = 900;
     private const int CategoryPageSize = 20;
+    private const int RewardTitleMaxLength = 45;
+    private const int RewardPromptMaxLength = 200;
+    private const int RewardCooldownMaxSeconds = 604_800;
 
     #region Users
     
@@ -457,6 +461,118 @@ public sealed partial class TwitchController(
     #endregion
 
 
+    #region Channel Points
+
+    [HttpGet("rewards")]
+    public async Task<IActionResult> GetRewards([FromQuery(Name = "id")] string[]? id, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var rewardIds = Clean(id);
+        if (rewardIds.Count > TwitchApiClient.MaxRewardBatchSize)
+        {
+            return BadRequest($"Pass at most {TwitchApiClient.MaxRewardBatchSize} reward ids.");
+        }
+
+        try
+        {
+            return Ok(await channelService.GetCustomRewardsAsync(twitchId, rewardIds, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "list the channel point rewards");
+        }
+    }
+
+
+    [HttpPost("rewards")]
+    public async Task<IActionResult> CreateReward([FromBody] CustomRewardCreate create, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        if (ValidateReward(create.Title, create.Cost, create.Prompt, create.BackgroundColor, create.MaxPerStream, create.MaxPerUserPerStream, create.GlobalCooldownSeconds) is { } error)
+        {
+            return BadRequest(error);
+        }
+
+        if (create.IsUserInputRequired is true && string.IsNullOrWhiteSpace(create.Prompt))
+        {
+            return BadRequest("A reward that asks for user input needs a prompt.");
+        }
+
+        try
+        {
+            return Ok(await channelService.CreateCustomRewardAsync(twitchId, create, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"create the reward '{create.Title}'");
+        }
+    }
+
+
+    [HttpPatch("rewards/{rewardId}")]
+    public async Task<IActionResult> UpdateReward(string rewardId, [FromBody] CustomRewardUpdate update, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        if (update is { Title: null, Cost: null, Prompt: null, IsEnabled: null, BackgroundColor: null,
+                        IsUserInputRequired: null, IsMaxPerStreamEnabled: null, MaxPerStream: null,
+                        IsMaxPerUserPerStreamEnabled: null, MaxPerUserPerStream: null,
+                        IsGlobalCooldownEnabled: null, GlobalCooldownSeconds: null,
+                        IsPaused: null, ShouldRedemptionsSkipRequestQueue: null })
+        {
+            return BadRequest("Pass something to change — an empty change is not one.");
+        }
+
+        if (ValidateReward(update.Title, update.Cost, update.Prompt, update.BackgroundColor, update.MaxPerStream, update.MaxPerUserPerStream, update.GlobalCooldownSeconds) is { } error)
+        {
+            return BadRequest(error);
+        }
+
+        try
+        {
+            return Ok(await channelService.UpdateCustomRewardAsync(twitchId, rewardId, update, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"update the reward {rewardId}");
+        }
+    }
+
+
+    [HttpDelete("rewards/{rewardId}")]
+    public Task<IActionResult> DeleteReward(string rewardId, CancellationToken cancellationToken)
+    {
+        return EditChannelAsync(
+            broadcasterId => channelService.DeleteCustomRewardAsync(broadcasterId, rewardId, cancellationToken),
+            $"delete the reward {rewardId}");
+    }
+
+
+    private static string? ValidateReward(string? title, long? cost, string? prompt, string? backgroundColor, long? maxPerStream, long? maxPerUserPerStream, long? globalCooldownSeconds)
+    {
+        if (title is not null)
+        {
+            if (string.IsNullOrWhiteSpace(title)) return "A reward title cannot be empty.";
+            if (title.Length > RewardTitleMaxLength) return $"A reward title cannot be longer than {RewardTitleMaxLength} characters.";
+        }
+
+        if (cost is < 1) return "A reward has to cost at least 1 channel point.";
+        if (prompt?.Length > RewardPromptMaxLength) return $"A reward prompt cannot be longer than {RewardPromptMaxLength} characters.";
+        if (backgroundColor is not null && !HexColor().IsMatch(backgroundColor)) return "A background color has to be a hex color like #9147FF.";
+        if (maxPerStream is < 1) return "A per-stream limit has to be at least 1.";
+        if (maxPerUserPerStream is < 1) return "A per-user limit has to be at least 1.";
+        if (globalCooldownSeconds is < 1 or > RewardCooldownMaxSeconds) return $"A cooldown has to be between 1 and {RewardCooldownMaxSeconds} seconds.";
+
+        return null;
+    }
+    #endregion
+
+
     private async Task<IActionResult> CheckChannelUsersAsync<T>(string[]? id, Func<string, IReadOnlyCollection<string>, Task<IReadOnlyList<T>>> check, string role)
     {
         var twitchId = User.GetTwitchId();
@@ -530,6 +646,9 @@ public sealed partial class TwitchController(
 
     [GeneratedRegex("^(other|[a-z]{2,3}(-[a-z]{2,4})?)$", RegexOptions.IgnoreCase)]
     private static partial Regex LanguageCode();
+
+    [GeneratedRegex("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")]
+    private static partial Regex HexColor();
 
     private IActionResult HandleTwitchFailure(Exception exception, string description)
     {
