@@ -2,7 +2,7 @@ import { Component, inject, Signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BotManageComponent } from '../../components/bot-manage-component/bot-manage.component';
-import { StreamManageComponent } from '../../components/stream-manage-component/stream-manage.component';
+import { BroadcastOverviewComponent } from '../../components/broadcast-overview-component/broadcast-overview.component';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { TwitchUser } from '../../data/twitch-user';
@@ -12,7 +12,7 @@ import { NAV_GROUPS, NavGroup } from '../../data/dash-nav';
   selector: 'app-dash-home-page',
   templateUrl: './dash-home-page.component.html',
   styleUrl: './dash-home-page.component.scss',
-  imports: [RouterLink, MatIconModule, BotManageComponent, StreamManageComponent],
+  imports: [RouterLink, MatIconModule, BotManageComponent, BroadcastOverviewComponent],
 })
 export class DashHomePageComponent {
 

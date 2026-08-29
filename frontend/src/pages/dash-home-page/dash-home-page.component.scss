@@ -53,7 +53,7 @@
 // The stretch has to be passed down: a grid item fills its row on its own, but the card inside each
 // section is a child of that section and would otherwise keep its content height.
 .dash-home-row > .dash-home-section > app-bot-manage,
-.dash-home-row > .dash-home-section > app-stream-manage {
+.dash-home-row > .dash-home-section > app-broadcast-overview {
   display: flex;
   flex: 1 1 auto;
 }
