@@ -22,6 +22,7 @@ export interface NavGroup {
 const BASE: string = isDashHost() ? '' : '/dash';
 
 export const OVERVIEW_PATH: string = BASE || '/';
+export const COMMUNITY_PATH: string = `${BASE}/community`;
 
 export const NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -68,7 +69,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         label: 'Follower',
         icon: 'group',
         description: 'Who is around, and what roles they hold.',
-        path: `${BASE}/community`,
+        path: COMMUNITY_PATH,
       },
       {
         label: 'Birthdays',
