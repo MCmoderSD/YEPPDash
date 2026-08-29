@@ -99,6 +99,14 @@ export function settableLabels(labels: readonly string[]): string[] {
   return labels.filter((id: string): boolean => CONTENT_LABELS.some((label: typeof CONTENT_LABELS[number]): boolean => label.id === id));
 }
 
+export function delayShort(seconds: number): string {
+  const minutes: number = Math.floor(seconds / 60);
+  const rest: number = seconds % 60;
+
+  if (minutes === 0) return `${rest}s`;
+
+  return rest === 0 ? `${minutes}m` : `${minutes}m ${rest}s`;
+}
 
 export function delayText(seconds: number): string {
   if (seconds === 0) return 'No delay.';
@@ -143,7 +151,3 @@ export const EMPTY_CHANNEL: ChannelInformation = {
   contentClassificationLabels: [],
   isBrandedContent: false,
 };
-
-export function boxArtUrl(template: string): string {
-  return template.replace(/-?\{width}x\{height}/, '');
-}

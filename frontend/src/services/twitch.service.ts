@@ -5,6 +5,7 @@ import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
 import { BanStatus } from '../data/banned-user';
 import { CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate } from '../data/channel';
+import { StreamStatus } from '../data/stream';
 import { CountResponse } from '../data/count';
 import { ApiService } from './api.service';
 
@@ -100,6 +101,10 @@ export class TwitchService extends ApiService {
     return this.get<TwitchUser[]>('chatters');
   }
 
+  async countChatters(): Promise<number> {
+    return (await this.get<CountResponse>('chatters/count')).count;
+  }
+
   async isChatter(userId: string): Promise<boolean> {
     return (await this.checkChannelRole<ChannelMember>('chatters', [userId])).length > 0;
   }
@@ -126,6 +131,10 @@ export class TwitchService extends ApiService {
 
   unbanUser(userId: string): Promise<void> {
     return this.delete(`banned/${encodeURIComponent(userId)}`);
+  }
+
+  getStreamStatus(): Promise<StreamStatus> {
+    return this.get<StreamStatus>('stream');
   }
 
   getChannel(): Promise<ChannelInformation> {

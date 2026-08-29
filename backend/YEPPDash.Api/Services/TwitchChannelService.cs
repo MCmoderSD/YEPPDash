@@ -464,11 +464,29 @@ public sealed class TwitchChannelService(
     }
     #endregion
 
+    #region Streams
+    public async Task<StreamStatusResponse> GetStreamStatusAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var stream = await apiClient.GetStreamAsync(broadcasterId, accessToken, cancellationToken);
+
+        return new StreamStatusResponse(stream is not null, stream);
+    }
+    #endregion
+
     #region Chat
     public async Task<IReadOnlyList<TwitchUser>> GetChatterProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var chatters = await GetChattersAsync(broadcasterId, cancellationToken);
         return await GetUserProfilesAsync(broadcasterId, [.. chatters.Select(chatter => chatter.UserId)], [], cancellationToken);
+    }
+
+    public async Task<int> GetChatterCountAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var page = await apiClient.GetChattersAsync(broadcasterId, accessToken, null, cancellationToken);
+
+        return page.Total ?? page.Items.Count;
     }
 
     public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)

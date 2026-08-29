@@ -14,11 +14,12 @@ import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import {
-  boxArtUrl, BROADCAST_LANGUAGES, CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate,
+  BROADCAST_LANGUAGES, CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate,
   CONTENT_LABELS, ContentClassificationLabel, DELAY_MAX_SECONDS, delayText,
   cleanTag, isValidTag, sameLabels, sameTags, settableLabels, TAG_MAX_COUNT, TAG_MAX_LENGTH,
   TITLE_MAX_LENGTH,
 } from '../../data/channel';
+import { fullSizeUrl } from '../../data/twitch-image';
 
 export interface ManageBroadcastData {
   channel: ChannelInformation;
@@ -215,7 +216,7 @@ export class ManageBroadcastDialogComponent {
   }
 
   protected art(category: ChannelCategory): string {
-    return boxArtUrl(category.boxArtUrl);
+    return fullSizeUrl(category.boxArtUrl);
   }
 
   protected blockTag(event: InputEvent): void {
