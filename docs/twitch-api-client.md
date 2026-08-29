@@ -75,6 +75,12 @@ Helix has no filtered form of this endpoint, so there is no `GetEditorsByIdAsync
 | `GetBlockedUsersAsync` | GET | `users/blocks` | `HelixPage<TwitchChannelUser>` | Cursor-paginated |
 | `UnblockUserAsync` | DELETE | `users/blocks?target_user_id=…` | – | No `broadcaster_id` — blocks live on the account, not the channel |
 
+### Streams
+
+| Method | HTTP | Endpoint | Returns | Notes |
+|---|---|---|---|---|
+| `GetStreamAsync` | GET | `streams?user_id=…&first=1` | `TwitchStream?` | The one Helix call here that needs no scope. Get Streams is the endpoint behind Twitch's own directory — it takes up to 100 `user_id`s plus game and language filters and is cursor-paginated, which is why it answers with a list. Filtered to one broadcaster it can only hold 0 or 1 rows, so this collapses it. `TwitchStream` keeps three fields: `viewerCount`, `startedAt` and the `thumbnailUrl` template. Title, category and language are dropped — `twitch/channel` already carries them, and reading one value from two endpoints is how they end up disagreeing |
+
 ### Chat
 
 | Method | HTTP | Endpoint | Returns | Notes |
@@ -114,9 +120,11 @@ lookup, 100 rows per page — are the backend's problem: it splits and walks, th
 | `GET twitch/editors/check?id=` | `getEditorsById(ids)` / `isEditor(id)` | `Editor[]` / `boolean` | Twitch has no filtered form, so the service matches against the full list. The one check with no batch limit — the ids never reach Twitch. Uncached, so an editor added on Twitch's site shows up right away |
 | `GET twitch/followers` | `getFollowers()` | `FollowerProfile[]` | Full user profiles plus `followedAt`, feeding the community page. Paged and cached server-side like the moderators; nothing here can add a follower, so the first-page check is the only thing that refreshes it. Enrichment costs two Helix batches per 100 followers, so a very large channel wants paging before this |
 | `GET twitch/followers/{userId}` | `getFollowStatus(id)` / `isFollower(id)` | `FollowStatus` / `boolean` | 200 with a false flag rather than a 404, so "does not follow" is not a failed request. `follow` is a full `FollowerProfile`; `following` stands on its own, so an account Get Users cannot resolve still reads as a follower |
+| `GET twitch/chatters/count` | `countChatters()` | `CountResponse` | How many accounts are connected to chat. One Helix page rather than the walk `twitch/chatters` does — `total` covers the whole room, so nothing past the first hundred is fetched and none of it is enriched. Uncached for the same reason the list is |
 | `GET twitch/chatters` | `getChatters()` | `TwitchUser[]` | Deliberately uncached — who is in chat turns over constantly. **The costly one:** it walks every page of chat and then enriches all of it, so a busy channel spends a Get Users and a chat-colour batch per 100 people present. A caller that only needs to know whether one account is in chat is paying for the whole room |
 | `GET twitch/blocked` | `getBlocked()` | `TwitchUser[]` | |
 | `DELETE twitch/blocked/{userId}` | `unblockUser(id)` | – | Invalidates the cached blocked list |
+| `GET twitch/stream` | `getStreamStatus()` | `StreamStatus` | 200 with a false flag rather than a 404, like the follow and ban checks: off air is something Twitch said, not something it failed to say. `stream` is null when `live` is false, and otherwise carries `viewerCount`, `startedAt` and the preview template — nothing the channel route already answers. Uncached; a viewer count is only worth anything fresh |
 | `GET twitch/banned/{userId}` | `getBanStatus(id)` / `isBanned(id)` | `BanStatus` / `boolean` | 200 with a false flag rather than a 404. `ban` carries the banned account and the moderator who issued it as full profiles, and dates the ban with `bannedAt` — `createdAt` on the same object is the account's own. Like `following`, `banned` stands on its own |
 | `DELETE twitch/banned/{userId}` | `unbanUser(id)` | – | |
 
