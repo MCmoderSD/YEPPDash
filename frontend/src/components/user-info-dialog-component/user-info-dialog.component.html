@@ -33,9 +33,17 @@
     }
 
     @if (birthdayDate(); as date) {
-      <div class="user-info-detail">
+      <div class="user-info-detail app-fade-in">
         <dt class="user-info-label">Birthday</dt>
         <dd class="user-info-value">{{ date | localeDate }}</dd>
+      </div>
+    } @else if (pending()) {
+      <div class="user-info-detail user-info-skeleton-birthday app-skeleton-appear" role="status">
+        <dt class="user-info-label" aria-hidden="true">Birthday</dt>
+        <dd class="user-info-value">
+          <span class="app-visually-hidden">Loading their birthday…</span>
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text user-info-skeleton-date" aria-hidden="true"></span>
+        </dd>
       </div>
     }
   </dl>

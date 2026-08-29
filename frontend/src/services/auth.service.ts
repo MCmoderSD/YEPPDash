@@ -14,10 +14,13 @@ export class AuthService extends ApiService {
   private readonly user: WritableSignal<Broadcaster | null> = signal<Broadcaster | null>(null);
   private readonly loaded: WritableSignal<boolean> = signal(false);
   private readonly failed: WritableSignal<boolean> = signal(false);
+  private readonly checking: WritableSignal<boolean> = signal(false);
 
   readonly currentUser: Signal<Broadcaster | null> = this.user.asReadonly();
   readonly isAuthenticated: Signal<boolean> = computed((): boolean => this.user() !== null);
   readonly unreachable: Signal<boolean> = this.failed.asReadonly();
+
+  readonly pending: Signal<boolean> = this.checking.asReadonly();
 
   loginUrl(returnPath: string): string {
     const returnUrl = `${environment.frontendBaseUrl}${returnPath}`;
@@ -35,6 +38,7 @@ export class AuthService extends ApiService {
   async ensureLoaded(): Promise<Broadcaster | null> {
     if (this.loaded()) return this.user();
 
+    this.checking.set(true);
     try {
       this.user.set(await this.get<Broadcaster>('me'));
       this.failed.set(false);
@@ -45,6 +49,8 @@ export class AuthService extends ApiService {
       this.user.set(null);
       this.failed.set(!signedOut);
       this.loaded.set(signedOut);
+    } finally {
+      this.checking.set(false);
     }
 
     return this.user();

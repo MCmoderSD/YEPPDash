@@ -13,6 +13,14 @@
   text-align: center;
 }
 
+// The global utility stays in normal flow on purpose, but here that would make the announcement a
+// real child of the header's flex column — one pixel tall, plus the header's own 0.25rem gap on
+// both sides of it — pushing the count line that visible amount lower while it is up. Taken out of
+// flow instead: a screen reader hears it regardless of where it sits on screen.
+.wheel-page-loading-status {
+  position: absolute;
+}
+
 .wheel-page-title {
   margin: 0;
   font: var(--mat-sys-headline-medium);
@@ -22,6 +30,12 @@
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
+}
+
+// Roughly the width of "3 entries, 5 slices on the wheel" — long enough that the shorter "No
+// entries yet" reading never has to grow into it.
+.wheel-skeleton-count {
+  width: min(14rem, 70vw);
 }
 
 .wheel-page-layout {
@@ -41,11 +55,31 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+}
 
-  // Past this the wheel stops gaining anything and just pushes the list off the screen.
-  app-wheel {
-    width: min(28rem, 100%);
-  }
+// Carries the width app-wheel used to set on itself directly — past this the wheel stops gaining
+// anything and just pushes the list off the screen. Moved out to this wrapper, rather than left on
+// the component, so the loading pulse below can sit over the wheel at that same footprint without
+// a circular percentage between the two (the wheel is width: 100% of whatever holds it).
+.wheel-page-wheel-wrap {
+  position: relative;
+  width: min(28rem, 100%);
+}
+
+// Sits over the real wheel, which already draws a stable, correctly sized disc with zero slices —
+// this only paints the "still loading" cue on top of a footprint that was already right. A plain
+// inset: 0 circle rather than anything shaped like the wheel's own slices: the real disc has none
+// to echo yet, and pretending otherwise would be a different lie than the one being fixed.
+.wheel-page-wheel-skeleton {
+  position: absolute;
+  inset: 0;
+}
+
+// The pulse itself, filling the footprint the wrapper above already claimed.
+.wheel-page-wheel-skeleton-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
 }
 
 .wheel-page-spin {
@@ -188,6 +222,47 @@ table.wheel-page-table {
   // Nothing follows the last row, so its rule only draws a line along the container's own border.
   &:last-of-type .mdc-data-table__cell {
     border-bottom: none;
+  }
+}
+
+// A ghost row carries the same class as a real one — that is what keeps its border and padding
+// identical — but there is nothing behind it worth pointing at, so the highlight a real row offers
+// on hover has to be switched back off.
+.wheel-page-row-ghost {
+  &:hover,
+  &:focus-within {
+    background: none;
+  }
+}
+
+// A name is not all the same length, and six rows the same width would read as a pattern, not a
+// list — the same three-row cadence the queue skeleton's rows use.
+.wheel-skeleton-name {
+  width: min(11rem, 70%);
+}
+
+.wheel-page-row:nth-child(3n) .wheel-skeleton-name {
+  width: min(7rem, 45%);
+}
+
+.wheel-page-row:nth-child(3n+2) .wheel-skeleton-name {
+  width: min(15rem, 85%);
+}
+
+// Standing where the add and remove icon buttons sit — Material's 24px default for the icon
+// inside each. .app-skeleton is block by default, which is right for a bar filling its own line
+// but would stack two of these instead of sitting them side by side the way the real buttons do;
+// inline-block is enough to let .wheel-page-actions' own text-align: end place the pair the same
+// way it places the buttons.
+.wheel-skeleton-action {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  margin-inline-start: 0.5rem;
+
+  &:first-child {
+    margin-inline-start: 0;
   }
 }
 

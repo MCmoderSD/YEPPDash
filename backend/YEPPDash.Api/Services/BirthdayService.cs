@@ -1,3 +1,4 @@
+using System.Globalization;
 using MySqlConnector;
 using YEPPDash.Api.Data.Birthday;
 using YEPPDash.Api.Exceptions.Birthday;
@@ -15,7 +16,26 @@ public sealed class BirthdayService(
         return repository.GetAsync(int.Parse(userId), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Birthday>> GetForFollowersAsync(string broadcasterId, CancellationToken cancellationToken)
+    public async Task<int> CountForFollowersAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        return (await MatchFollowerBirthdaysAsync(broadcasterId, cancellationToken)).Count;
+    }
+
+    public async Task<IReadOnlyList<FollowerBirthdayResponse>> GetForFollowersAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var matched = await MatchFollowerBirthdaysAsync(broadcasterId, cancellationToken);
+        if (matched.Count is 0) return [];
+
+        var userIds = matched.Select(birthday => birthday.UserId.ToString(CultureInfo.InvariantCulture)).ToArray();
+        var profiles = await channels.GetUserProfilesAsync(broadcasterId, userIds, [], cancellationToken);
+        var byId = profiles.ToDictionary(user => user.Id, StringComparer.Ordinal);
+
+        return matched
+            .Select(birthday => FollowerBirthdayResponse.From(birthday, byId.GetValueOrDefault(birthday.UserId.ToString(CultureInfo.InvariantCulture))))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<Birthday>> MatchFollowerBirthdaysAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var birthdays = await repository.GetAllAsync(cancellationToken);
         if (birthdays.Count is 0) return [];

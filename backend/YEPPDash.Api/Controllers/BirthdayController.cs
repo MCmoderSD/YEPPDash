@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using YEPPDash.Api.Data;
 using YEPPDash.Api.Data.Birthday;
 using YEPPDash.Api.Exceptions.Birthday;
 using YEPPDash.Api.Exceptions.Twitch;
@@ -11,9 +12,24 @@ namespace YEPPDash.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("birthday")]
-public sealed class BirthdayController(BirthdayService birthdays, ILogger<BirthdayController> logger)
-    : ControllerBase
+public sealed class BirthdayController(BirthdayService birthdays, ILogger<BirthdayController> logger) : ControllerBase
 {
+    [HttpGet("~/birthdays/{userId:int}/count")]
+    public async Task<IActionResult> CountFollowerBirthdays(string userId, CancellationToken cancellationToken)
+    {
+        if (Denied(userId) is { } denied) return denied;
+
+        try
+        {
+            return Ok(new CountResponse(await birthdays.CountForFollowersAsync(userId, cancellationToken)));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            logger.LogWarning(exception, "Cannot count the follower birthdays of channel {UserId}", userId);
+            return StatusCode(StatusCodes.Status502BadGateway);
+        }
+    }
+
     [HttpGet("~/birthdays/{userId:int}")]
     public async Task<IActionResult> GetFollowerBirthdays(string userId, CancellationToken cancellationToken)
     {
@@ -21,8 +37,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
 
         try
         {
-            var found = await birthdays.GetForFollowersAsync(userId, cancellationToken);
-            return Ok(found.Select(BirthdayResponse.From));
+            return Ok(await birthdays.GetForFollowersAsync(userId, cancellationToken));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {

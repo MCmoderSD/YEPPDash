@@ -47,7 +47,17 @@ export class RaidPageComponent {
     this.rows().reduce((total: number, entry: RaidEntry): number => total + entry.raid.viewers, 0),
   );
 
+  protected readonly skeleton: Signal<boolean> = computed((): boolean => this.loading() && this.count() === 0);
+
   protected readonly columns: string[] = ['raider', 'viewers', 'firedAt'];
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
+    const expected: number | null = this.expected();
+    if (expected === null || expected <= 0) return [];
+    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
+  });
 
   protected readonly pageSizes: number[] = [10, 25, 50, 100];
 
@@ -109,6 +119,16 @@ export class RaidPageComponent {
   private async load(): Promise<void> {
     this.isLoading.set(true);
     this.failed.set(false);
+    this.expected.set(null);
+
+    if (this.rows().length === 0) {
+      void this.raids.countRaids()
+        .then((count: number): void => {
+          if (this.isLoading()) this.expected.set(count);
+        })
+        .catch((): void => void 0);
+    }
+
     try {
       const raids: Raid[] = await this.raids.getRaids();
 

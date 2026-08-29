@@ -285,9 +285,7 @@ export class ManageBroadcastDialogComponent {
     this.busy.set(true);
 
     try {
-      await this.twitch.updateChannel(update);
-
-      const saved: ChannelInformation = await this.twitch.getChannel();
+      const saved: ChannelInformation = await this.twitch.updateChannel(update);
 
       this.notifications.success('Channel updated.');
       this.dialogRef.close(saved);

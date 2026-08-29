@@ -15,8 +15,7 @@ import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { BirthdayService } from '../../services/birthday.service';
 import { NotificationService } from '../../services/notification.service';
-import { TwitchService } from '../../services/twitch.service';
-import { ageOn, Birthday, birthdayToDate, daysUntilNextBirthday } from '../../data/birthday';
+import { ageOn, Birthday, birthdayToDate, daysUntilNextBirthday, FollowerBirthday } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
 
 export interface BirthdayEntry {
@@ -44,7 +43,6 @@ function labelFor(daysUntil: number): string {
 export class BirthdayListComponent {
 
   private readonly birthdays: BirthdayService = inject(BirthdayService);
-  private readonly twitch: TwitchService = inject(TwitchService);
   private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
@@ -57,6 +55,16 @@ export class BirthdayListComponent {
   protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
 
   protected readonly count: Signal<number> = computed((): number => this.rows().length);
+  protected readonly initialLoad: Signal<boolean> = computed((): boolean => this.loading() && this.rows().length === 0);
+  protected readonly busy: Signal<boolean> = computed((): boolean => this.loading() && !this.initialLoad());
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly skeletonRows: Signal<readonly number[]> = computed((): readonly number[] => {
+    const expected: number | null = this.expected();
+    if (expected === null || expected <= 0) return [];
+    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
+  });
 
   protected readonly columns: string[] = ['user', 'date', 'age', 'next'];
 
@@ -109,22 +117,27 @@ export class BirthdayListComponent {
 
     this.isLoading.set(true);
     this.failed.set(false);
+    this.expected.set(null);
+
+    if (this.rows().length === 0) {
+      void this.birthdays.countFollowerBirthdays(channelId)
+        .then((count: number): void => {
+          if (this.isLoading()) this.expected.set(count);
+        })
+        .catch((): void => void 0);
+    }
+
     try {
-      const birthdays: Birthday[] = await this.birthdays.getFollowerBirthdays(channelId);
-
-      const users: TwitchUser[] = await this.twitch.getUsers(birthdays.map((entry: Birthday): string => entry.userId));
-      const byId: Map<string, TwitchUser> = new Map(users.map((user: TwitchUser): [string, TwitchUser] => [user.id, user]));
-
+      const birthdays: FollowerBirthday[] = await this.birthdays.getFollowerBirthdays(channelId);
       const today: Date = new Date();
 
-      this.rows.set(birthdays.map((birthday: Birthday): BirthdayEntry => {
-        const user: TwitchUser | undefined = byId.get(birthday.userId);
+      this.rows.set(birthdays.map((birthday: FollowerBirthday): BirthdayEntry => {
         const daysUntil: number = daysUntilNextBirthday(birthday, today);
 
         return {
           birthday,
-          user: user ?? null,
-          name: user?.displayName ?? birthday.userId,
+          user: birthday.user,
+          name: birthday.user?.displayName ?? birthday.userId,
           date: birthdayToDate(birthday),
           age: ageOn(birthday, today),
           daysUntil,

@@ -42,6 +42,16 @@ export class CommunityPageComponent {
   protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
 
   protected readonly count: Signal<number> = computed((): number => this.rows().length);
+  protected readonly skeleton: Signal<boolean> = computed((): boolean => this.isLoading() && this.rows().length === 0);
+  protected readonly refreshing: Signal<boolean> = computed((): boolean => this.isLoading() && this.rows().length > 0);
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
+    const expected: number | null = this.expected();
+    if (expected === null || expected <= 0) return [];
+    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
+  });
 
   protected readonly columns: string[] = ['user', 'followedAt'];
 
@@ -100,6 +110,16 @@ export class CommunityPageComponent {
   private async load(): Promise<void> {
     this.isLoading.set(true);
     this.failed.set(false);
+    this.expected.set(null);
+
+    if (this.rows().length === 0) {
+      void this.twitch.countFollowers()
+        .then((count: number): void => {
+          if (this.isLoading()) this.expected.set(count);
+        })
+        .catch((): void => void 0);
+    }
+
     try {
       const followers: FollowerProfile[] = await this.twitch.getFollowers();
 

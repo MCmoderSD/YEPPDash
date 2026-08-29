@@ -3,7 +3,6 @@ import { Component, computed, inject, signal, Signal, WritableSignal } from '@an
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { ManageBroadcastDialogComponent } from '../manage-broadcast-dialog-component/manage-broadcast-dialog.component';
@@ -15,7 +14,7 @@ import { boxArtUrl, BROADCAST_LANGUAGES, ChannelCategory, ChannelInformation, CO
   selector: 'app-stream-manage',
   templateUrl: './stream-manage.component.html',
   styleUrl: './stream-manage.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatIconModule, MatProgressBarModule, MatTooltipModule],
+  imports: [NgOptimizedImage, MatButtonModule, MatIconModule, MatTooltipModule],
 })
 export class StreamManageComponent {
 
@@ -59,9 +58,7 @@ export class StreamManageComponent {
     if (!saved) return;
 
     this.channel.set(saved);
-    this.game.set(saved.gameId ? { id: saved.gameId, name: saved.gameName, boxArtUrl: '' } : null);
-
-    await this.loadBoxArt();
+    this.game.set(this.category(saved));
   }
 
   private async load(): Promise<void> {
@@ -71,25 +68,15 @@ export class StreamManageComponent {
       const channel: ChannelInformation = await this.twitch.getChannel();
 
       this.channel.set(channel);
-      this.game.set(channel.gameId ? { id: channel.gameId, name: channel.gameName, boxArtUrl: '' } : null);
+      this.game.set(this.category(channel));
     } catch {
       this.notifications.failure('Could not read your channel information.');
     } finally {
       this.loading.set(false);
     }
-
-    await this.loadBoxArt();
   }
 
-  private async loadBoxArt(): Promise<void> {
-    const current: ChannelCategory | null = this.game();
-    if (current === null || current.boxArtUrl) return;
-
-    try {
-      const [game] = await this.twitch.getGames([current.id]);
-      if (game && this.game()?.id === game.id) this.game.set(game);
-    } catch {
-      // Left without a cover rather than reported: nothing the viewer of this page can act on.
-    }
+  private category(channel: ChannelInformation): ChannelCategory | null {
+    return channel.gameId ? { id: channel.gameId, name: channel.gameName, boxArtUrl: channel.boxArtUrl } : null;
   }
 }

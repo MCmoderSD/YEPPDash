@@ -1,8 +1,14 @@
+import { TwitchUser } from './twitch-user';
+
 export interface Birthday {
   userId: string;
   day: number;
   month: number;
   year: number;
+}
+
+export interface FollowerBirthday extends Birthday {
+  user: TwitchUser | null;
 }
 
 export type BirthdayDraft = Pick<Birthday, 'day' | 'month' | 'year'>;

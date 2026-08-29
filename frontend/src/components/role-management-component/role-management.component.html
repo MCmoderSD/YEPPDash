@@ -1,9 +1,17 @@
 <section class="role-management">
 
+  @if (initialLoading()) {
+    <p class="app-visually-hidden" role="status">Loading your {{ roleName() }}s…</p>
+  }
+
   <header class="role-management-header">
     <h1 class="role-management-title">{{ title() }}</h1>
     <p class="role-management-count">
-      {{ users().length }} {{ roleName() }}{{ users().length === 1 ? '' : 's' }} in your channel
+      @if (initialLoading()) {
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text role-management-count-skeleton" aria-hidden="true"></span>
+      } @else {
+        <span class="app-fade-in">{{ users().length }} {{ roleName() }}{{ users().length === 1 ? '' : 's' }} in your channel</span>
+      }
     </p>
   </header>
 
@@ -21,9 +29,15 @@
   <mat-progress-bar
     class="role-management-progress"
     mode="indeterminate"
-    [attr.aria-hidden]="!(loading() || busy())"
-    [style.visibility]="loading() || busy() ? 'visible' : 'hidden'"
+    [attr.aria-hidden]="!showProgress()"
+    [style.visibility]="showProgress() ? 'visible' : 'hidden'"
   />
 
-  <app-user-table [users]="users()" [mode]="tableMode()" (remove)="remove($event)"/>
+  <app-user-table
+    [users]="users()"
+    [mode]="tableMode()"
+    [loading]="initialLoading()"
+    [expected]="expected()"
+    (remove)="remove($event)"
+  />
 </section>

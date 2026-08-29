@@ -21,6 +21,13 @@
   text-align: center;
 }
 
+// The header is a column flex, so an in-flow "Loading your quotes…" sentence would claim a row
+// of its own — a phantom line plus a slice of the header's gap — even though nothing about it
+// should be seen. Pulled out of flow instead, the way the queue skeleton does the same thing.
+.quote-management-header > .app-visually-hidden {
+  position: absolute;
+}
+
 .quote-management-title {
   margin: 0;
   font: var(--mat-sys-headline-medium);
@@ -30,6 +37,12 @@
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-medium);
+}
+
+// About as wide as "1,234 quotes in your channel" sets at this size, so the header does not
+// visibly grow the moment the real count lands.
+.quote-management-skeleton-count {
+  width: min(11rem, 60%);
 }
 
 .quote-management-toolbar {
@@ -95,6 +108,18 @@ table.quote-management-grid {
   }
 }
 
+// A ghost row carries the same class as a real one — that is what keeps its borders and padding
+// identical — but it has nothing behind it worth pointing at, so the pointer affordances a real
+// row offers have to be switched back off.
+.quote-management-row-ghost {
+  cursor: default;
+
+  &:hover,
+  &:focus-within {
+    background: none;
+  }
+}
+
 .quote-management-id {
   width: 3rem;
   font-variant-numeric: tabular-nums;
@@ -102,11 +127,32 @@ table.quote-management-grid {
   white-space: nowrap;
 }
 
+// text-align on the cell only steers real text; a block-level bar needs its own push to the end
+// of the column to land where right-aligned digits would.
+.quote-management-skeleton-id {
+  width: 1.5rem;
+  margin-inline-start: auto;
+}
+
 // The message is the one column allowed to grow, so the fixed ones keep their width and it takes
 // whatever is left.
 .quote-management-text {
   padding-block: 0.75rem !important;
   overflow-wrap: anywhere;
+}
+
+// A message is a sentence, not a fixed label, so a single width would read as a barcode across
+// six identical rows. The same three-row cadence the queue skeleton uses for names.
+.quote-management-skeleton-text {
+  width: min(70%, 26rem);
+}
+
+.quote-management-row:nth-child(3n) .quote-management-skeleton-text {
+  width: min(52%, 18rem);
+}
+
+.quote-management-row:nth-child(3n + 2) .quote-management-skeleton-text {
+  width: min(86%, 32rem);
 }
 
 // Fills its cell so the whole message reads as the click target, and carries the keyboard path to
@@ -133,6 +179,12 @@ table.quote-management-grid {
   width: 8rem;
   color: var(--mat-sys-on-surface-variant);
   white-space: nowrap;
+}
+
+// Shorter than the column: a 'medium' formatted date is fairly long, but the bar only needs to
+// read as "a date", not to reserve the exact width one might render at.
+.quote-management-skeleton-date {
+  width: 5.5rem;
 }
 
 .quote-management-actions {
