@@ -98,9 +98,10 @@ public sealed class TwitchChannelWarmupWorker(
         var moderators = await channels.GetModeratorsAsync(broadcasterId, cancellationToken);
         var vips = await channels.GetVipsAsync(broadcasterId, cancellationToken);
         var followers = await channels.GetFollowersAsync(broadcasterId, cancellationToken);
+        var bans = await channels.GetBanCountsAsync(broadcasterId, cancellationToken);
 
         logger.LogInformation(
-            "All caches loaded for channel {BroadcasterId}: {Moderators} moderators, {Vips} VIPs, {Followers} followers",
-            broadcasterId, moderators.Count, vips.Count, followers.Count);
+            "All caches loaded for channel {BroadcasterId}: {Moderators} moderators, {Vips} VIPs, {Followers} followers, {Timeouts} timeouts, {Bans} bans",
+            broadcasterId, moderators.Count, vips.Count, followers.Count, bans.Timeouts, bans.Bans);
     }
 }

@@ -85,7 +85,8 @@ export class RoleManagementComponent {
   }
 
   protected async openAddDialog(): Promise<void> {
-    const dialogRef = UserAddDialogComponent.open(this.dialog, `Add ${this.roleName()}`);
+    const roleName: string = this.roleName();
+    const dialogRef = UserAddDialogComponent.open(this.dialog, `Add ${roleName}`, roleName === 'VIP' ? 'VIP' : 'moderator');
     const user: TwitchUser | undefined = await firstValueFrom(dialogRef.afterClosed());
 
     if (user) await this.add(user);

@@ -12,7 +12,7 @@ import { TwitchService } from '../../services/twitch.service';
 import { ShoutoutService } from '../../services/shoutout.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchUser } from '../../data/twitch-user';
-import { BanStatus } from '../../data/banned-user';
+import { BannedUser } from '../../data/banned-user';
 import { ShoutoutSettings } from '../../data/shoutout';
 
 function reasonFor(error: unknown): string | null {
@@ -157,9 +157,9 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const [users, ban, blocked, moderator, inChat, shoutout]: [TwitchUser[], BanStatus, boolean, boolean, boolean, ShoutoutSettings | null] = await Promise.all([
+      const [users, ban, blocked, moderator, inChat, shoutout]: [TwitchUser[], BannedUser | null, boolean, boolean, boolean, ShoutoutSettings | null] = await Promise.all([
         this.twitch.getUsers([botUserId]),
-        this.twitch.getBanStatus(botUserId),
+        this.twitch.getBan(botUserId),
         this.twitch.isBlocked(botUserId),
         this.twitch.isModerator(botUserId),
         this.twitch.isChatter(botUserId),
@@ -168,7 +168,7 @@ export class BotManageComponent {
 
       this.bot.set(users[0] ?? null);
       this.chatColor.set(users[0]?.color ?? null);
-      this.banned.set(ban.banned);
+      this.banned.set(ban !== null);
       this.blocked.set(blocked);
       this.moderator.set(moderator);
       this.inChat.set(inChat);

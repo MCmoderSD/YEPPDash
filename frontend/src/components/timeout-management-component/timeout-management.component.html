@@ -1,0 +1,60 @@
+<section class="timeout-management">
+
+  @if (initialLoading()) {
+    <p class="app-visually-hidden" role="status">Loading the ban list…</p>
+  }
+
+  <header class="timeout-management-header">
+    <h1 class="timeout-management-title">Timeouts &amp; Bans</h1>
+    <p class="timeout-management-count">Who is timed out or banned, and until when.</p>
+  </header>
+
+  <button
+    mat-flat-button
+    type="button"
+    class="timeout-management-add"
+    [disabled]="busy()"
+    (click)="openBanDialog()"
+  >
+    <mat-icon aria-hidden="true">gavel</mat-icon>
+    <span>{{ addLabel() }}</span>
+  </button>
+
+  <mat-progress-bar
+    class="timeout-management-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!showProgress()"
+    [style.visibility]="showProgress() ? 'visible' : 'hidden'"
+  />
+
+  <mat-tab-group
+    class="timeout-management-tabs"
+    [selectedIndex]="selected()"
+    (selectedIndexChange)="select($event)"
+  >
+
+    <mat-tab [label]="timeoutLabel()">
+      <ng-template matTabContent>
+        <app-ban-table
+          mode="timeout"
+          [bans]="timeouts()"
+          [loading]="initialLoading()"
+          [expected]="expectedTimeouts()"
+          (revoke)="revoke($event)"
+        />
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab [label]="banLabel()">
+      <ng-template matTabContent>
+        <app-ban-table
+          mode="ban"
+          [bans]="permanent()"
+          [loading]="initialLoading()"
+          [expected]="expectedBans()"
+          (revoke)="revoke($event)"
+        />
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</section>
