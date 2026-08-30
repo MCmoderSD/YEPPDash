@@ -19,7 +19,6 @@ export class NumberStepperComponent {
 
   protected nudge(direction: number): void {
     const stepped: number = this.value() + direction * this.step();
-
     this.valueChange.emit(Math.min(this.max(), Math.max(this.min(), stepped)));
   }
 }
