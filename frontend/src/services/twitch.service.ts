@@ -3,7 +3,7 @@ import { Service } from '@angular/core';
 import { ChannelMember, Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
-import { BanStatus } from '../data/banned-user';
+import { BannedUser, BanCounts, BanResult } from '../data/banned-user';
 import { CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate } from '../data/channel';
 import { StreamStatus } from '../data/stream';
 import { CountResponse } from '../data/count';
@@ -121,12 +121,24 @@ export class TwitchService extends ApiService {
     return this.delete(`blocked/${encodeURIComponent(userId)}`);
   }
 
-  getBanStatus(userId: string): Promise<BanStatus> {
-    return this.get<BanStatus>(`banned/${encodeURIComponent(userId)}`);
+  getBannedUsers(): Promise<BannedUser[]> {
+    return this.get<BannedUser[]>('banned');
+  }
+
+  countBans(): Promise<BanCounts> {
+    return this.get<BanCounts>('banned/count');
+  }
+
+  banUser(userId: string, duration: number | null, reason: string | null): Promise<BanResult> {
+    return this.post<BanResult>(`banned/${encodeURIComponent(userId)}`, { duration, reason });
+  }
+
+  getBan(userId: string): Promise<BannedUser | null> {
+    return this.get<BannedUser | null>(`banned/${encodeURIComponent(userId)}`);
   }
 
   async isBanned(userId: string): Promise<boolean> {
-    return (await this.getBanStatus(userId)).banned;
+    return (await this.getBan(userId)) !== null;
   }
 
   unbanUser(userId: string): Promise<void> {
@@ -153,7 +165,6 @@ export class TwitchService extends ApiService {
   searchCategories(query: string, cursor: string | null = null): Promise<CategoryPage> {
     let params: HttpParams = new HttpParams().set('query', query);
     if (cursor !== null) params = params.set('after', cursor);
-
     return this.get<CategoryPage>('categories', params);
   }
 

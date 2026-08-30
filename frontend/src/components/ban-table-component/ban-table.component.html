@@ -1,0 +1,134 @@
+<div class="ban-table">
+  <mat-form-field appearance="outline" class="ban-table-search">
+    <mat-label>Search</mat-label>
+    <input
+      matInput
+      #search
+      type="search"
+      autocomplete="off"
+      placeholder="Name, user ID or reason"
+      (input)="filter(search.value)"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+  </mat-form-field>
+
+  <div #scroll class="ban-table-scroll">
+    <table
+      mat-table
+      matSort
+      matSortActive="when"
+      [matSortDirection]="defaultDirection()"
+      [dataSource]="dataSource"
+      class="ban-table-grid"
+    >
+
+      <ng-container matColumnDef="user">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
+        <td mat-cell *matCellDef="let ban">
+          <div class="ban-table-identity">
+            <img
+              class="ban-table-avatar"
+              [ngSrc]="ban.profileImageUrl"
+              [width]=32
+              [height]=32
+              loading="eager"
+              alt=""
+            />
+
+            <app-user-badges [user]="ban"/>
+
+            <button
+              type="button"
+              class="ban-table-name"
+              [attr.aria-label]="'Details for ' + ban.displayName"
+              (click)="showDetails(ban, $event)"
+            >
+              <span class="ban-table-display-name" [style.--chat-color]="ban.color">
+                {{ ban.displayName }}
+              </span>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="when">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">{{ whenLabel() }}</th>
+        <td mat-cell *matCellDef="let ban" class="ban-table-when">{{ whenOf(ban) | date: 'MMM d, y, HH:mm' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="reason">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Reason</th>
+        <td mat-cell *matCellDef="let ban" class="ban-table-reason" [title]="ban.reason ?? ''">{{ ban.reason || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="revoke">
+        <th mat-header-cell *matHeaderCellDef scope="col">
+          <span class="ban-table-hidden-label">Revoke</span>
+        </th>
+        <td mat-cell *matCellDef="let ban" class="ban-table-actions">
+          <button
+            mat-icon-button
+            type="button"
+            [attr.aria-label]="revokeLabel(ban)"
+            (click)="revokeBan($event, ban)"
+          >
+            <mat-icon aria-hidden="true">undo</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let ban; columns: columns"
+        class="ban-table-row"
+        [class.app-fade-in]="loaded()"
+        (click)="showDetails(ban)"
+      ></tr>
+
+      <tr class="ban-table-empty-row" *matNoDataRow>
+        @if (loading()) {
+          <td class="ban-table-ghost-cell" [attr.colspan]="columns.length" aria-hidden="true">
+            <div class="ban-table-ghost">
+              @for (row of ghostRows(); track row) {
+                <div class="ban-table-ghost-row">
+                  <span class="ban-table-ghost-column ban-table-ghost-identity">
+                    <span class="app-skeleton ban-table-ghost-avatar"></span>
+                    <span class="app-skeleton app-skeleton-bar ban-table-ghost-name"></span>
+                  </span>
+                  <span class="ban-table-ghost-column">
+                    <span class="app-skeleton app-skeleton-bar ban-table-ghost-when"></span>
+                  </span>
+                  <span class="ban-table-ghost-column">
+                    <span class="app-skeleton app-skeleton-bar ban-table-ghost-reason"></span>
+                  </span>
+                  <span class="ban-table-ghost-column"></span>
+                </div>
+              }
+            </div>
+          </td>
+        } @else {
+          <td class="ban-table-empty" [attr.colspan]="columns.length">
+            @if (query()) {
+              No entry matches “{{ query() }}”.
+            } @else if (mode() === 'timeout') {
+              Nobody is timed out.
+            } @else {
+              Nobody is banned.
+            }
+          </td>
+        }
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    class="ban-table-paginator"
+    [pageSizeOptions]="pageSizes"
+    [pageSize]="25"
+    showFirstLastButtons="true"
+    [attr.aria-label]="mode() === 'timeout' ? 'Select a page of timeouts' : 'Select a page of bans'"
+  />
+
+  <app-scroll-bar [target]="scroll"/>
+</div>

@@ -22,6 +22,8 @@ public sealed partial class TwitchController(
     private const int TagMaxLength = 25;
     private const int DelayMaxSeconds = 900;
     private const int CategoryPageSize = 20;
+    private const long BanMaxSeconds = 1_209_600;
+    private const int BanReasonMaxLength = 500;
     private const int RewardTitleMaxLength = 45;
     private const int RewardPromptMaxLength = 200;
     private const int RewardCooldownMaxSeconds = 604_800;
@@ -236,15 +238,76 @@ public sealed partial class TwitchController(
 
     #region Bans
 
-    [HttpGet("banned/{userId}")]
-    public async Task<IActionResult> GetBanStatus(string userId, CancellationToken cancellationToken)
+    [HttpGet("banned")]
+    public async Task<IActionResult> GetBannedUsers(CancellationToken cancellationToken)
     {
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
         try
         {
-            return Ok(await channelService.GetBanStatusAsync(twitchId, userId, cancellationToken));
+            return Ok(await channelService.GetBannedProfilesAsync(twitchId, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "list the banned users");
+        }
+    }
+
+
+    [HttpGet("banned/count")]
+    public async Task<IActionResult> CountBannedUsers(CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            return Ok(await channelService.GetBanCountsAsync(twitchId, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, "count the banned users");
+        }
+    }
+
+
+    [HttpPost("banned/{userId}")]
+    public async Task<IActionResult> BanUser(string userId, [FromBody] BanCreate ban, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        if (ban.Duration is < 1 or > BanMaxSeconds)
+        {
+            return BadRequest($"A timeout has to run between 1 and {BanMaxSeconds} seconds; leave the duration out for a permanent ban.");
+        }
+
+        if (ban.Reason?.Length > BanReasonMaxLength)
+        {
+            return BadRequest($"A ban reason cannot be longer than {BanReasonMaxLength} characters.");
+        }
+
+        try
+        {
+            return Ok(await channelService.BanUserAsync(twitchId, userId, ban.Duration, ban.Reason, cancellationToken));
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            return HandleTwitchFailure(exception, $"ban {userId}");
+        }
+    }
+
+
+    [HttpGet("banned/{userId}")]
+    public async Task<IActionResult> GetBan(string userId, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        try
+        {
+            return Ok(await channelService.GetBanProfileAsync(twitchId, userId, cancellationToken));
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {

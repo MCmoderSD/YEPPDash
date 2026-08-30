@@ -1,0 +1,109 @@
+<h2 mat-dialog-title>{{ actionLabel() }}</h2>
+
+<mat-dialog-content class="ban-user" #content>
+
+  <app-user-finder [(user)]="found"/>
+
+  @if (broadcaster()) {
+    <p class="ban-user-warning">
+      <mat-icon class="ban-user-warning-icon" aria-hidden="true">block</mat-icon>
+      <span>This is your own channel account. Twitch does not take a ban on it.</span>
+    </p>
+  } @else {
+    @if (bot()) {
+      <p class="ban-user-warning">
+        <mat-icon class="ban-user-warning-icon" aria-hidden="true">smart_toy</mat-icon>
+        <span>
+          {{ found()?.displayName }} is the bot this dashboard manages. Banning it stops it working
+          in your channel until the ban is lifted.
+        </span>
+      </p>
+    }
+
+    @if (roleWarning(); as warning) {
+      <p class="ban-user-warning">
+        <mat-icon class="ban-user-warning-icon" aria-hidden="true">warning</mat-icon>
+        <span>{{ warning }}</span>
+      </p>
+    }
+  }
+
+  @if (editor()) {
+    <p class="ban-user-note">Their editor access is not a chat privilege and stays as it is.</p>
+  }
+
+  <div class="ban-user-duration">
+    @if (!permanent()) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ban-user-amount">
+        <mat-label>Duration</mat-label>
+        <input
+          matInput
+          #amountField
+          type="number"
+          min="1"
+          [max]="maxAmount()"
+          autocomplete="off"
+          [attr.aria-invalid]="tooLong() || tooShort()"
+          [value]="amount()"
+          (input)="amount.set(+amountField.value)"
+        />
+
+        <app-number-stepper
+          matSuffix
+          [value]="amount()"
+          [min]="1"
+          [max]="maxAmount()"
+          (valueChange)="amount.set($event)"
+        />
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ban-user-unit">
+      <mat-label>{{ unitLabel() }}</mat-label>
+      <mat-select
+        panelClass="app-select-panel"
+        [value]="unit()"
+        (valueChange)="unit.set($event)"
+      >
+        @for (option of units; track option.label) {
+          <mat-option [value]="option.seconds">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <p class="ban-user-hint" [class.ban-user-hint-error]="tooLong() || tooShort()" aria-live="polite">
+    @if (permanent()) {
+      A permanent ban holds until it is lifted.
+    } @else if (tooLong()) {
+      Too long: a timeout runs for {{ limitText() }}.
+    } @else if (tooShort()) {
+      Too short: a timeout runs for {{ floorText() }}.
+    } @else {
+      A timeout runs for {{ floorText() }} and {{ limitText() }}.
+    }
+  </p>
+
+  <mat-form-field appearance="outline" class="ban-user-field">
+    <mat-label>Reason (optional)</mat-label>
+    <input
+      matInput
+      #reasonField
+      type="text"
+      autocomplete="off"
+      [attr.maxlength]="maxReasonLength"
+      [value]="reason()"
+      (input)="reason.set(reasonField.value)"
+    />
+    <mat-hint align="end">{{ reasonLeft() }} character{{ reasonLeft() === 1 ? '' : 's' }} left</mat-hint>
+  </mat-form-field>
+
+  <app-scroll-bar [target]="content"/>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close>Cancel</button>
+  <button mat-flat-button type="button" [disabled]="!valid()" (click)="confirm()">
+    {{ actionLabel() }}
+  </button>
+</mat-dialog-actions>

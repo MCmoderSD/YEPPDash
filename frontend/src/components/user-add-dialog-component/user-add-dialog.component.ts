@@ -1,86 +1,65 @@
-import { Component, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TwitchService } from '../../services/twitch.service';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { UserFinderComponent } from '../user-finder-component/user-finder.component';
 import { TwitchUser } from '../../data/twitch-user';
+
+export type ChannelRoleName = 'moderator' | 'VIP';
 
 export interface UserAddDialogData {
   title: string;
+  role: ChannelRoleName;
 }
 
 @Component({
   selector: 'app-user-add-dialog',
   templateUrl: './user-add-dialog.component.html',
   styleUrl: './user-add-dialog.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule],
+  imports: [MatButtonModule, MatDialogModule, MatIconModule, ScrollBarComponent, UserFinderComponent],
 })
 export class UserAddDialogComponent {
 
-  private readonly twitch: TwitchService = inject(TwitchService);
   private readonly dialogRef: MatDialogRef<UserAddDialogComponent, TwitchUser> = inject<MatDialogRef<UserAddDialogComponent, TwitchUser>>(MatDialogRef);
 
   protected readonly data: UserAddDialogData = inject<UserAddDialogData>(MAT_DIALOG_DATA);
 
-  private readonly found: WritableSignal<TwitchUser | null> = signal<TwitchUser | null>(null);
-  private readonly color: WritableSignal<string | null> = signal<string | null>(null);
-  private readonly term: WritableSignal<string> = signal('');
-  private readonly state: WritableSignal<'idle' | 'searching' | 'empty' | 'failed'> = signal('idle');
+  protected readonly found: WritableSignal<TwitchUser | null> = signal<TwitchUser | null>(null);
 
-  protected readonly user: Signal<TwitchUser | null> = this.found.asReadonly();
-  protected readonly chatColor: Signal<string | null> = this.color.asReadonly();
-  protected readonly query: Signal<string> = this.term.asReadonly();
-  protected readonly status: Signal<'idle' | 'searching' | 'empty' | 'failed'> = this.state.asReadonly();
+  protected readonly alreadyHas: Signal<boolean> = computed((): boolean => {
+    const roles = this.found()?.roles;
+    return this.data.role === 'VIP' ? roles?.vip === true : roles?.moderator === true;
+  });
 
-  static open(dialog: MatDialog, title: string): MatDialogRef<UserAddDialogComponent, TwitchUser> {
+  protected readonly swaps: Signal<boolean> = computed((): boolean => {
+    const roles = this.found()?.roles;
+    if (this.alreadyHas()) return false;
+
+    return this.data.role === 'VIP' ? roles?.moderator === true : roles?.vip === true;
+  });
+
+  protected readonly otherRole: Signal<ChannelRoleName> = computed(
+    (): ChannelRoleName => this.data.role === 'VIP' ? 'moderator' : 'VIP',
+  );
+
+  protected readonly broadcaster: Signal<boolean> = computed((): boolean => this.found()?.roles?.broadcaster === true);
+
+  protected readonly valid: Signal<boolean> = computed(
+    (): boolean => this.found() !== null && !this.alreadyHas() && !this.broadcaster(),
+  );
+
+  static open(dialog: MatDialog, title: string, role: ChannelRoleName): MatDialogRef<UserAddDialogComponent, TwitchUser> {
     return dialog.open<UserAddDialogComponent, UserAddDialogData, TwitchUser>(UserAddDialogComponent, {
-      data: { title },
+      data: { title, role },
       width: '33vw',
-      minWidth: 'min(22rem, 92vw)',
+      minWidth: 'min(24rem, 92vw)',
       maxWidth: '92vw',
     });
   }
 
-  protected submit(event: Event, input: HTMLInputElement): void {
-    event.preventDefault();
-    void this.search(input.value);
-  }
-
   protected add(): void {
     const user: TwitchUser | null = this.found();
-    if (user) this.dialogRef.close(user);
-  }
-
-  private async search(value: string): Promise<void> {
-    const term: string = value.trim();
-    if (!term) return;
-
-    this.term.set(term);
-    this.found.set(null);
-    this.color.set(null);
-    this.state.set('searching');
-
-    try {
-      let [user] = await this.twitch.getUsers([], [term.toLowerCase()]);
-
-      if (!user && /^\d+$/.test(term)) {
-        [user] = await this.twitch.getUsers([term], []);
-      }
-
-      if (!user) {
-        this.state.set('empty');
-        return;
-      }
-
-      this.found.set(user);
-      this.state.set('idle');
-      this.color.set(user.color ?? null);
-    } catch {
-      this.state.set('failed');
-    }
+    if (user && this.valid()) this.dialogRef.close(user);
   }
 }

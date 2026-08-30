@@ -170,6 +170,16 @@ public sealed class TwitchChannelService(
     public async Task AddModeratorAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var vips = await GetVipsByIdAsync(broadcasterId, [userId], cancellationToken);
+        if (vips.Count > 0)
+        {
+            await apiClient.RemoveVipAsync(broadcasterId, userId, accessToken, cancellationToken);
+            SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: false);
+
+            logger.LogInformation("Removed {UserId} as VIP to make them a moderator in the channel {BroadcasterId}", userId, broadcasterId);
+        }
+
         await apiClient.AddModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
         SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: true);
         userCache.Invalidate(broadcasterId, userId);
@@ -228,6 +238,16 @@ public sealed class TwitchChannelService(
     public async Task AddVipAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var moderators = await GetModeratorsByIdAsync(broadcasterId, [userId], cancellationToken);
+        if (moderators.Count > 0)
+        {
+            await apiClient.RemoveModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
+            SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: false);
+
+            logger.LogInformation("Removed {UserId} as moderator to make them a VIP in the channel {BroadcasterId}", userId, broadcasterId);
+        }
+
         await apiClient.AddVipAsync(broadcasterId, userId, accessToken, cancellationToken);
         SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: true);
         userCache.Invalidate(broadcasterId, userId);
@@ -345,17 +365,118 @@ public sealed class TwitchChannelService(
     #endregion
 
     #region Bans
-    public async Task<BanStatusResponse> GetBanStatusAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
+    // The ban itself, or null for nobody Twitch reports as banned. An account Twitch no longer
+    // resolves counts as the latter, the same rule the list and the counts follow — a ban the
+    // dashboard cannot show is not one it claims to know about either.
+    public async Task<TwitchBanProfile?> GetBanProfileAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var ban = await GetBannedUserAsync(broadcasterId, userId, cancellationToken);
-        if (ban is null) return new BanStatusResponse(false, null);
+        if (ban is null) return null;
 
         var users = await GetUserProfilesAsync(broadcasterId, [ban.UserId, ban.ModeratorId], [], cancellationToken);
         var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
 
         return byId.TryGetValue(ban.UserId, out var banned)
-            ? new BanStatusResponse(true, new TwitchBanProfile(banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason))
-            : new BanStatusResponse(true, null);
+            ? new TwitchBanProfile(banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason)
+            : null;
+    }
+
+    public async Task<IReadOnlyList<TwitchBanProfile>> GetBannedProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var bans = await GetBannedUsersAsync(broadcasterId, cancellationToken);
+        if (bans.Count is 0) return [];
+
+        var ids = bans.Select(ban => ban.UserId)
+            .Concat(bans.Select(ban => ban.ModeratorId))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var users = await GetUserProfilesAsync(broadcasterId, ids, [], cancellationToken);
+        var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
+        
+        var profiles = bans.Where(ban => byId.ContainsKey(ban.UserId)).ToList();
+        CountBans(broadcasterId, profiles);
+
+        return [.. profiles.Select(ban => new TwitchBanProfile(
+            byId[ban.UserId],
+            byId.GetValueOrDefault(ban.ModeratorId),
+            ban.ExpiresAt,
+            ban.CreatedAt,
+            ban.Reason))];
+    }
+
+    public async Task<BanCountResponse> GetBanCountsAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var timeouts = cache.GetCount(ChannelRole.TimedOut, broadcasterId);
+        var bans = cache.GetCount(ChannelRole.Banned, broadcasterId);
+
+        if (timeouts is { } knownTimeouts && bans is { } knownBans) return new BanCountResponse(knownTimeouts, knownBans);
+
+        var all = await GetBannedUsersAsync(broadcasterId, cancellationToken);
+        if (all.Count is 0) return CountBans(broadcasterId, all);
+
+        var alive = (await GetUsersAsync(broadcasterId, [.. all.Select(ban => ban.UserId).Distinct(StringComparer.Ordinal)], [], cancellationToken))
+            .Select(user => user.Id)
+            .ToHashSet(StringComparer.Ordinal);
+
+        return CountBans(broadcasterId, [.. all.Where(ban => alive.Contains(ban.UserId))]);
+    }
+
+    public async Task<TwitchBanResult> BanUserAsync(string broadcasterId, string userId, long? duration, string? reason, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var ban = new TwitchBanCreate { UserId = userId, Duration = duration, Reason = reason };
+        var result = await apiClient.BanUserAsync(broadcasterId, broadcasterId, ban, accessToken, cancellationToken);
+
+        cache.Invalidate(ChannelRole.TimedOut, broadcasterId);
+        cache.Invalidate(ChannelRole.Banned, broadcasterId);
+        cache.Invalidate(ChannelRole.Moderator, broadcasterId);
+        cache.Invalidate(ChannelRole.Vip, broadcasterId);
+        userCache.Invalidate(broadcasterId, userId);
+
+        logger.LogInformation(
+            "Banned {UserId} in channel {BroadcasterId} until {EndTime}",
+            userId, broadcasterId, result.EndTime?.ToString("O") ?? "forever");
+
+        return result;
+    }
+
+    private async Task<IReadOnlyList<TwitchBannedUser>> GetBannedUsersAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var bans = new List<TwitchBannedUser>();
+        var page = await apiClient.GetBannedUsersAsync(broadcasterId, accessToken, null, cancellationToken);
+        bans.AddRange(page.Items);
+
+        var pages = 1;
+
+        while (page.Cursor is not null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            page = await apiClient.GetBannedUsersAsync(broadcasterId, accessToken, page.Cursor, cancellationToken);
+            bans.AddRange(page.Items);
+            pages++;
+        }
+
+        logger.LogDebug(
+            "Paginated {Count} bans of channel {BroadcasterId} across {Pages} pages",
+            bans.Count, broadcasterId, pages);
+
+        return bans;
+    }
+
+    private BanCountResponse CountBans(string broadcasterId, IReadOnlyList<TwitchBannedUser> bans)
+    {
+        var timeouts = bans.Count(ban => ban.ExpiresAt is not null);
+        var permanent = bans.Count - timeouts;
+
+        cache.SetCount(ChannelRole.TimedOut, broadcasterId, timeouts);
+        cache.SetCount(ChannelRole.Banned, broadcasterId, permanent);
+
+        return new BanCountResponse(timeouts, permanent);
     }
 
     public async Task<TwitchBannedUser?> GetBannedUserAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -369,6 +490,9 @@ public sealed class TwitchChannelService(
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
 
         await apiClient.UnbanUserAsync(broadcasterId, broadcasterId, userId, accessToken, cancellationToken);
+
+        cache.Invalidate(ChannelRole.TimedOut, broadcasterId);
+        cache.Invalidate(ChannelRole.Banned, broadcasterId);
 
         logger.LogInformation("Unbanned {UserId} in channel {BroadcasterId}", userId, broadcasterId);
     }

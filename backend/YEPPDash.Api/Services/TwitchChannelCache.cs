@@ -8,7 +8,9 @@ public enum ChannelRole
     Editor,
     Vip,
     Blocked,
-    Follower
+    Follower,
+    Banned,
+    TimedOut
 }
 
 public sealed class TwitchChannelCache
