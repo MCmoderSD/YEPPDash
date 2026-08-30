@@ -152,6 +152,9 @@ table.raid-page-grid {
 // Roughly "N raids, M viewers brought along" at its shortest real length.
 .raid-page-count-skeleton {
   width: min(16rem, 70vw);
+
+  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
+  margin-inline: auto;
 }
 
 // The centred padding is for a short line of text, not a tableful of rows — the skeleton grid

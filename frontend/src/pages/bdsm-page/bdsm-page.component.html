@@ -38,6 +38,22 @@
             <p class="bdsm-page-count" aria-hidden="true">
               <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-count"></span>
             </p>
+
+            <div class="bdsm-page-skeleton-card" aria-hidden="true">
+              <div class="bdsm-page-skeleton-card-header">
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-title"></span>
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-meta"></span>
+              </div>
+
+              <div class="bdsm-page-skeleton-card-body">
+                @for (row of [0, 1, 2, 3, 4]; track row) {
+                  <div class="bdsm-page-skeleton-card-row">
+                    <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-label"></span>
+                    <span class="app-skeleton bdsm-page-skeleton-card-bar"></span>
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         } @else {
           <p class="bdsm-page-count app-fade-in">
@@ -104,6 +120,23 @@
             <p class="bdsm-page-count" aria-hidden="true">
               <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-count"></span>
             </p>
+
+            <div class="bdsm-page-skeleton-card" aria-hidden="true">
+              <div class="bdsm-page-skeleton-card-header">
+                <span class="app-skeleton bdsm-page-skeleton-card-avatar"></span>
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-title"></span>
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-meta"></span>
+              </div>
+
+              <div class="bdsm-page-skeleton-card-body">
+                @for (row of [0, 1, 2, 3, 4]; track row) {
+                  <div class="bdsm-page-skeleton-card-row">
+                    <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-label"></span>
+                    <span class="app-skeleton bdsm-page-skeleton-card-bar"></span>
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         } @else {
           <p class="bdsm-page-count app-fade-in">

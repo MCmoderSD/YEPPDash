@@ -43,6 +43,9 @@
 // sentence.
 .community-page-count-skeleton {
   width: 6.5rem;
+
+  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
+  margin-inline: auto;
 }
 
 .community-page-toolbar {
