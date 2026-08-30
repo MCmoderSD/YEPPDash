@@ -57,7 +57,9 @@
 
 .birthday-list-scroll {
   align-self: stretch;
-  overflow-x: auto;
+  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
+  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
+  overflow: auto hidden;
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--app-radius-outlined);
 }
