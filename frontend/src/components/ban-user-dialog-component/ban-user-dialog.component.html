@@ -47,6 +47,14 @@
           [value]="amount()"
           (input)="amount.set(+amountField.value)"
         />
+
+        <app-number-stepper
+          matSuffix
+          [value]="amount()"
+          [min]="1"
+          [max]="maxAmount()"
+          (valueChange)="amount.set($event)"
+        />
       </mat-form-field>
     }
 

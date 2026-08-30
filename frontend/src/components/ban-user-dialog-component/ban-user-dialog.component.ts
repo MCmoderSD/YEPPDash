@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { NumberStepperComponent } from '../number-stepper-component/number-stepper.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserFinderComponent } from '../user-finder-component/user-finder.component';
 import { TwitchUser } from '../../data/twitch-user';
@@ -43,7 +44,7 @@ const UNITS: readonly DurationUnit[] = [
   selector: 'app-ban-user-dialog',
   templateUrl: './ban-user-dialog.component.html',
   styleUrl: './ban-user-dialog.component.scss',
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, ScrollBarComponent, UserFinderComponent],
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, NumberStepperComponent, ScrollBarComponent, UserFinderComponent],
 })
 export class BanUserDialogComponent {
 
