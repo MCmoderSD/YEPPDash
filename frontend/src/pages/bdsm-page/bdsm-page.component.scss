@@ -158,7 +158,84 @@
 // than the wrong number while N is still unknown.
 .bdsm-page-skeleton-count {
   width: min(15rem, 70%);
+
+  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
+  margin-inline: auto;
 }
+
+// One card, open — the shape the tab actually greets you with, since the first result expands
+// itself on arrival. A single open card claims no count; it only promises the form.
+.bdsm-page-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  margin-top: 1rem;
+  padding: 1rem 1.5rem 1.5rem;
+
+  // The open card’s own surface, one step above the closed ones — matching .app-expansion-card-open.
+  background: var(--mat-sys-surface-container-high);
+  border-radius: var(--app-radius-lg);
+}
+
+// The bars inside sit on the card’s raised surface, which is the tone they are usually painted
+// in — lifted one step so they read against it at all.
+.bdsm-page-skeleton-card .app-skeleton {
+  background: var(--mat-sys-surface-container-highest);
+}
+
+.bdsm-page-skeleton-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bdsm-page-skeleton-card-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  border-radius: 50%;
+}
+
+.bdsm-page-skeleton-card-title {
+  width: min(9rem, 40%);
+}
+
+// Pushed to the far end, where the real header keeps its date and meta line.
+.bdsm-page-skeleton-card-meta {
+  width: min(11rem, 35%);
+  margin-inline-start: auto;
+}
+
+// Stand-ins for the result chart: a label and a value bar per row, the widths staggered the way
+// real percentages land.
+.bdsm-page-skeleton-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.bdsm-page-skeleton-card-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bdsm-page-skeleton-card-label {
+  width: 6.5rem;
+  flex: none;
+}
+
+.bdsm-page-skeleton-card-bar {
+  height: 0.625rem;
+  border-radius: var(--app-radius-pill);
+}
+
+.bdsm-page-skeleton-card-row:nth-child(1) .bdsm-page-skeleton-card-bar { width: 72%; }
+.bdsm-page-skeleton-card-row:nth-child(2) .bdsm-page-skeleton-card-bar { width: 58%; }
+.bdsm-page-skeleton-card-row:nth-child(3) .bdsm-page-skeleton-card-bar { width: 44%; }
+.bdsm-page-skeleton-card-row:nth-child(4) .bdsm-page-skeleton-card-bar { width: 30%; }
+.bdsm-page-skeleton-card-row:nth-child(5) .bdsm-page-skeleton-card-bar { width: 18%; }
 
 // Shared by the per-row match chip patched in once the score fan-out resolves (see the community
 // tab's @else if (entry.matchPending) above) and the generic card below: both stand in for "87%"
