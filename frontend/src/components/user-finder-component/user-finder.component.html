@@ -1,0 +1,48 @@
+<form class="user-finder-search" (submit)="submit($event, term)">
+  <mat-form-field appearance="outline" class="user-finder-field">
+    <mat-label>Twitch username</mat-label>
+    <input
+      matInput
+      #term
+      type="text"
+      autocomplete="off"
+      [disabled]="status() === 'searching'"
+    />
+    <button
+      matSuffix
+      mat-icon-button
+      type="submit"
+      aria-label="Search Twitch"
+      [disabled]="status() === 'searching'"
+    >
+      <mat-icon aria-hidden="true">search</mat-icon>
+    </button>
+    <mat-hint>A numeric name is looked up as a user ID when no account matches.</mat-hint>
+  </mat-form-field>
+</form>
+
+<div class="user-finder-outcome" role="status">
+  @if (status() === 'searching') {
+    <mat-progress-bar mode="indeterminate"/>
+  } @else if (user(); as found) {
+    <div class="user-finder-result">
+      <img
+        class="user-finder-avatar"
+        [ngSrc]="found.profileImageUrl"
+        [width]=128
+        [height]=128
+        alt=""
+      />
+
+      <div class="user-finder-title">
+        <app-user-badges [user]="found" [size]="badgeSize"/>
+
+        <p class="user-finder-name" [style.--chat-color]="found.color">{{ found.displayName }}</p>
+      </div>
+    </div>
+  } @else if (status() === 'empty') {
+    <p class="user-finder-message">No Twitch account matches “{{ query() }}”.</p>
+  } @else if (status() === 'failed') {
+    <p class="user-finder-message">Could not reach Twitch. Please try again.</p>
+  }
+</div>
