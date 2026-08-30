@@ -12,6 +12,7 @@ import { QueuePageComponent } from './queue-page/queue-page.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
 import { BirthdayListComponent } from '../components/birthday-list-component/birthday-list.component';
+import { TimeoutManagementComponent } from '../components/timeout-management-component/timeout-management.component';
 
 export const DASH_ROUTES: Routes = [
   {
@@ -20,6 +21,7 @@ export const DASH_ROUTES: Routes = [
     children: [
       { path: '', component: DashHomePageComponent, title: 'Dashboard' },
       { path: 'role-management', component: RoleManagementComponent, title: 'Role Management' },
+      { path: 'timeouts', component: TimeoutManagementComponent, title: 'Timeouts & Bans' },
       { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
       { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },

@@ -47,6 +47,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         queryParams: { mode: RoleManagementMode.Vip },
       },
       {
+        label: 'Timeouts & Bans',
+        icon: 'gavel',
+        description: 'Who is timed out or banned, and until when.',
+        path: `${BASE}/timeouts`,
+      },
+      {
         label: 'Quotes',
         icon: 'format_quote',
         description: 'Everything your chat has saved for posterity.',
