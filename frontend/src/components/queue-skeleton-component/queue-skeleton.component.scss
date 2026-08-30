@@ -25,11 +25,18 @@
 // .app-skeleton utilities in styles.scss. Everything below only sets the widths and shapes of
 // this page's stand-ins.
 
-// In the state pill, whose padding and line height do the rest. One tone above the usual grey: the
-// pill is itself painted the bars' colour, and a bar that matches its background is no bar at all.
+// Where the state pill stands. The slot only centres; the bar below is the pill, drawn at the
+// chip's own height and radius — a bar inside the real chip would pulse a pill within a pill.
+.queue-skeleton-state-slot {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
 .queue-skeleton-state {
   width: min(16.5rem, 70vw);
-  background: var(--mat-sys-surface-container-highest);
+  height: 2rem;
+  border-radius: 1rem;
 }
 
 // "Up now", in label-large capitals.
