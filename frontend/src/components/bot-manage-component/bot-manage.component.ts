@@ -43,9 +43,9 @@ export class BotManageComponent {
 
   protected readonly chatColor: WritableSignal<string | null> = signal<string | null>(null);
 
-  protected readonly banned: WritableSignal<boolean> = signal(false);
-
   protected readonly blocked: WritableSignal<boolean> = signal(false);
+
+  protected readonly banned: WritableSignal<boolean> = signal(false);
 
   protected readonly moderator: WritableSignal<boolean> = signal(false);
 
@@ -64,7 +64,7 @@ export class BotManageComponent {
   protected readonly autoShoutout: Signal<boolean> = computed((): boolean => this.shoutout()?.autoShoutout ?? false);
 
   protected readonly healthy: Signal<boolean> = computed(
-    (): boolean => !this.banned() && !this.blocked() && this.moderator() && this.inChat(),
+    (): boolean => !this.blocked() && !this.banned() && this.moderator() && this.inChat(),
   );
 
   protected readonly working: Signal<boolean> = computed(
@@ -75,19 +75,19 @@ export class BotManageComponent {
     effect((): undefined => void this.load(this.botUserId()));
   }
 
-  protected unban(): Promise<void> {
-    return this.act(
-      (): Promise<void> => this.twitch.unbanUser(this.botUserId()),
-      `${this.botName()} is no longer banned.`,
-      `Could not unban ${this.botName()}.`,
-    );
-  }
-
   protected unblock(): Promise<void> {
     return this.act(
       (): Promise<void> => this.twitch.unblockUser(this.botUserId()),
       `${this.botName()} is no longer blocked.`,
       `Could not unblock ${this.botName()}.`,
+    );
+  }
+
+  protected unban(): Promise<void> {
+    return this.act(
+      (): Promise<void> => this.twitch.unbanUser(this.botUserId()),
+      `${this.botName()} is no longer banned.`,
+      `Could not unban ${this.botName()}.`,
     );
   }
 
@@ -168,8 +168,8 @@ export class BotManageComponent {
 
       this.bot.set(users[0] ?? null);
       this.chatColor.set(users[0]?.color ?? null);
-      this.banned.set(ban !== null);
       this.blocked.set(blocked);
+      this.banned.set(ban !== null);
       this.moderator.set(moderator);
       this.inChat.set(inChat);
       this.shoutout.set(shoutout);
