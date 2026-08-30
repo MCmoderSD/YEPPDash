@@ -570,3 +570,20 @@ body {
     }
   }
 }
+
+// The app draws its own arrows (components/number-stepper-component), so the browser's built-in
+// pair would only ever be a second, blunter copy of the same control sitting next to it. Global
+// because it is a normalisation rather than one field's styling: any number input the app grows
+// should start out without them.
+//
+// Both spellings are needed - `appearance` is what Firefox reads, the pseudo-elements are what
+// Chromium and Safari read, and neither engine honours the other's.
+input[type='number'] {
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+}
