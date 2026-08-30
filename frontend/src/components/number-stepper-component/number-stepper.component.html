@@ -1,0 +1,30 @@
+<!--
+  Out of the tab order on purpose, exactly like the native arrows these replace. A number input
+  already increments on ArrowUp and ArrowDown, so nothing here is the only way to reach a
+  function - making them focusable would only put two extra stops in front of the next field.
+  This is what separates them from the colour swatch beside them, which opens a picker that has
+  no keyboard equivalent and therefore does have to be reachable.
+-->
+<button
+  type="button"
+  tabindex="-1"
+  aria-label="Increase"
+  [disabled]="atMax()"
+  (click)="nudge(1)"
+>
+  <svg viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+    <path d="M1 5 5 1l4 4" />
+  </svg>
+</button>
+
+<button
+  type="button"
+  tabindex="-1"
+  aria-label="Decrease"
+  [disabled]="atMin()"
+  (click)="nudge(-1)"
+>
+  <svg viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+    <path d="M1 1 5 5l4-4" />
+  </svg>
+</button>
