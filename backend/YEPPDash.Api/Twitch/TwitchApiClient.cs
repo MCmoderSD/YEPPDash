@@ -139,6 +139,24 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
         return page.Items.FirstOrDefault();
     }
 
+    public Task<HelixPage<TwitchBannedUser>> GetBannedUsersAsync(string broadcasterId, string accessToken, string? cursor, CancellationToken cancellationToken)
+    {
+        return GetPageAsync<TwitchBannedUser>(PagedQuery("moderation/banned", broadcasterId, cursor), accessToken, cancellationToken);
+    }
+
+    public async Task<TwitchBanResult> BanUserAsync(string broadcasterId, string moderatorId, TwitchBanCreate ban, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"moderation/bans?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
+                    $"&moderator_id={Uri.EscapeDataString(moderatorId)}";
+
+        var body = JsonContent.Create(new HelixBanBody(ban), options: TwitchJson.Options);
+        using var response = await SendAsync(HttpMethod.Post, query, accessToken, cancellationToken, body);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchBanResult>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault() ?? throw new TwitchOAuthException("Helix returned no ban for the one it created.", HttpStatusCode.NotFound);
+    }
+
     public async Task UnbanUserAsync(string broadcasterId, string moderatorId, string userId, string accessToken, CancellationToken cancellationToken)
     {
         var query = $"moderation/bans?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
@@ -283,6 +301,8 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
             response.Dispose();
         }
     }
+
+    private sealed record HelixBanBody(TwitchBanCreate Data);
 
     private sealed record HelixResponse<T>
     {
