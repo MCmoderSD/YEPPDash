@@ -194,6 +194,14 @@
         <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
           <mat-label>Size</mat-label>
           <input matInput type="number" min="1" #fontSize [value]="style().fontSize" (input)="restyle({ fontSize: +fontSize.value })"/>
+
+          <app-number-stepper
+            matSuffix
+            [value]="style().fontSize"
+            [min]="1"
+            (valueChange)="restyle({ fontSize: $event })"
+          />
+
           <mat-hint>Share of the source, not pixels</mat-hint>
         </mat-form-field>
 
