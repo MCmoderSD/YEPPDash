@@ -36,6 +36,9 @@
 // entries yet" reading never has to grow into it.
 .wheel-skeleton-count {
   width: min(14rem, 70vw);
+
+  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
+  margin-inline: auto;
 }
 
 .wheel-page-layout {

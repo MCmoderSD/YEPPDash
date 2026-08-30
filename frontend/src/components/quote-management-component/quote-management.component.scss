@@ -43,6 +43,9 @@
 // visibly grow the moment the real count lands.
 .quote-management-skeleton-count {
   width: min(11rem, 60%);
+
+  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
+  margin-inline: auto;
 }
 
 .quote-management-toolbar {
