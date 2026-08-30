@@ -9,7 +9,7 @@ import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component
 import { UserFinderComponent } from '../user-finder-component/user-finder.component';
 import { TwitchUser } from '../../data/twitch-user';
 import { UserRoles } from '../../data/user-roles';
-import { isBotUser } from '../../data/bot-users';
+import { environment } from '../../environments/environment';
 
 export interface BanChoice {
   user: TwitchUser;
@@ -115,10 +115,9 @@ export class BanUserDialogComponent {
 
   protected readonly editor: Signal<boolean> = computed((): boolean => this.found()?.roles?.editor === true);
 
-  protected readonly bot: Signal<boolean> = computed((): boolean => {
-    const user: TwitchUser | null = this.found();
-    return user !== null && isBotUser(user.id);
-  });
+  protected readonly bot: Signal<boolean> = computed(
+    (): boolean => this.found()?.id === environment.botUserId,
+  );
 
   protected readonly roleWarning: Signal<string | null> = computed((): string | null => {
     const dropped: readonly string[] = this.droppedRoles();

@@ -13,7 +13,10 @@
     @if (bot()) {
       <p class="ban-user-warning">
         <mat-icon class="ban-user-warning-icon" aria-hidden="true">smart_toy</mat-icon>
-        <span>{{ found()?.displayName }} is a chat bot. Banning it stops it answering in your channel.</span>
+        <span>
+          {{ found()?.displayName }} is the bot this dashboard manages. Banning it stops it working
+          in your channel until the ban is lifted.
+        </span>
       </p>
     }
 
