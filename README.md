@@ -2,7 +2,7 @@
 
 Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot) — a monolithic Twitch chat bot with no interactive console of its own. YEPPDash lets broadcasters control YEPPBot from a browser instead of only via Twitch chat commands, without weakening the bot's security posture: end users never talk to the bot directly, only to this dashboard's backend.
 
-Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, BDSM test results, and two OBS overlays (a lucky wheel and a subathon timer) are live. The UI, and the feature set, are still changing.
+Status: early beta, actively developed. Twitch login, moderator/VIP/editor management, letting the bot join/leave your channel, custom commands, quote management, follower birthdays, BDSM test results, auto-shoutouts for raiders, a channel point reward that buys a timeout, and two OBS overlays (a lucky wheel and a subathon timer) are live. The UI, and the feature set, are still changing.
 
 ## Features
 
@@ -16,6 +16,8 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 - **Lucky wheel** — build a wheel of entries and spin it, live on an OBS browser source
 - **Subathon timer** — a countdown OBS shows and chat drives, with the appearance set from the dashboard
 - **Queue** — a waiting list chat joins from and the dashboard works through, in order (the dashboard half; the `!queue` commands are not in YEPPBot yet, so nothing can join it today)
+- **Auto-shoutouts** — shout out whoever raids you, without touching chat yourself
+- **Timeout reward** — a channel point reward viewers redeem by typing a name, which times that viewer out for as long as you set; unknown names and the roles you protect are refunded automatically
 
 ## Tech Stack
 
@@ -24,7 +26,8 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 | Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector, ClosedXML |
 | Frontend | Angular 22 + Angular Material, SSR (`@angular/ssr` + Express) |
 | Auth | Twitch OAuth2 (authorization code) + Helix `/users` — no local passwords/user table |
-| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot, plus YEPPDash's own `TwitchToken` and `Wheel` tables |
+| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot, plus YEPPDash's own `TwitchToken`, `Wheel`, `TimeoutReward`, `RoleRestore` and `RedemptionLog` tables |
+| Twitch events | EventSub over WebSocket, one connection per broadcaster — every EventSub limit is counted per client id and user id together |
 | Live updates | Server-Sent Events, one in-process hub per feature — assumes a single backend instance, which `docker-compose.yaml` runs |
 | Reverse proxy | Caddy, run by the operator outside this repo — subdomain routing (`dash.yeppbot.com`/`.dev` → frontend, `api.yeppbot.com`/`.dev` → backend) |
 
