@@ -13,6 +13,7 @@ import { RoleManagementComponent } from '../components/role-management-component
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
 import { BirthdayListComponent } from '../components/birthday-list-component/birthday-list.component';
 import { TimeoutManagementComponent } from '../components/timeout-management-component/timeout-management.component';
+import { TimeoutRewardComponent } from '../components/timeout-reward-component/timeout-reward.component';
 
 export const DASH_ROUTES: Routes = [
   {
@@ -30,6 +31,7 @@ export const DASH_ROUTES: Routes = [
       { path: 'queue', component: QueuePageComponent, title: 'Queue' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'timer', component: TimerPageComponent, title: 'Subathon Timer' },
+      { path: 'timeout-reward', component: TimeoutRewardComponent, title: 'Timeout Reward' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }

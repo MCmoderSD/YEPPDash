@@ -1,0 +1,398 @@
+.timeout-reward {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  width: min(52rem, 100%);
+  margin-inline: auto;
+}
+
+.timeout-reward-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.timeout-reward-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.timeout-reward-sub {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+// Kept in the layout while idle so the form does not jump every time a request starts.
+.timeout-reward-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+// Form on the left, the Twitch-side preview beside it — and stacked again once the viewport
+// cannot carry both.
+.timeout-reward-layout {
+  display: grid;
+  // As narrow as Remove and Save allow: together they need 249px, and they are what sets the floor
+  // here — the heading and the tile would both fit in less.
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 2rem;
+  align-self: stretch;
+
+  @media (max-width: 45rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.timeout-reward-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.timeout-reward-heading {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+
+  // Sections read as groups only if the heading sits closer to its fields than to the section
+  // before it.
+  &:not(:first-child) {
+    margin-top: 0.75rem;
+  }
+}
+
+.timeout-reward-field {
+  width: 100%;
+}
+
+// Amount and unit share a row, the same split the ban dialog uses.
+.timeout-reward-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.timeout-reward-amount {
+  flex: 1 1 0;
+}
+
+.timeout-reward-unit {
+  flex: 1 1 0;
+}
+
+// The nested block Twitch draws around its cooldown and limit fields: each setting is a name on the
+// left, its control on the right, and the explanation under the control rather than beside it.
+.timeout-reward-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  padding: 1rem;
+  background: #18181b;
+  border-radius: var(--app-radius-md);
+}
+
+.timeout-reward-setting {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  align-items: start;
+
+  // Below this the two columns stop being worth the squeeze on the fields.
+  @media (max-width: 34rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.timeout-reward-setting-label {
+  // Nudged down so it reads level with the text inside the field, not with the field's top edge.
+  padding-top: 0.875rem;
+  font: var(--mat-sys-title-small);
+}
+
+.timeout-reward-setting-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.timeout-reward-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.timeout-reward-hint-error {
+  color: var(--mat-sys-error);
+}
+
+.timeout-reward-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.timeout-reward-warning {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+
+  margin: 0;
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-small);
+}
+
+// mat-icon carries its own 24px box, which would sit a line taller than the text beside it.
+.timeout-reward-warning-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+}
+
+.timeout-reward-switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  // Wide column gap so the switch and the swatch read as two settings rather than one cluster; the
+  // row gap only comes into play once they no longer fit side by side.
+  gap: 0.75rem 1.25rem;
+  justify-content: center;
+  margin-block: 0.5rem;
+}
+
+.timeout-reward-colour {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Reads as a setting name like the switch's own label, not as a caption under it.
+.timeout-reward-colour-label {
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}
+
+// The swatch is the colour it opens with — a button that is its own preview, and now the only way
+// into the colour, so it stands on its own rather than inside a field.
+.timeout-reward-swatch {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: var(--app-border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.timeout-reward-shield {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// A group name labels a stack of checkboxes, so it lines up with the first of them rather than
+// with the middle of a field the way the limit rows do.
+.timeout-reward-group .timeout-reward-setting-label {
+  padding-top: 0;
+}
+
+.timeout-reward-shield-label {
+  display: block;
+  font: var(--mat-sys-body-medium);
+}
+
+.timeout-reward-shield-hint {
+  display: block;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.timeout-reward-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+
+  // Left to flex they get squeezed to whatever the column has left, and the label breaks over two
+  // lines. Their own width is the right one.
+  button {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+.timeout-reward-delete {
+  color: var(--mat-sys-error);
+}
+
+// --- The Twitch-side tile -------------------------------------------------------------------
+// The same proportions as a reward in Twitch's own panel: a coloured square with the image
+// centred and the cost pinned to the bottom.
+
+.timeout-reward-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// The same card Twitch draws in its own "what your viewers will see" panel: the tile and its name
+// sit together on a darker ground, so the coloured square reads against the panel rather than
+// against the page.
+.timeout-reward-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+
+  padding: 0.875rem;
+  background: #18181b;
+  border-radius: var(--app-radius-md);
+}
+
+.timeout-reward-tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  width: 7.5rem;
+  aspect-ratio: 1;
+
+  // Tighter than the app's cards on purpose — it imitates Twitch's tile, not YEPPDash.
+  border-radius: 0.375rem;
+}
+
+.timeout-reward-tile-image {
+  width: 3.5rem;
+  height: 3.5rem;
+
+  // Lifted a little so the cost pill below never crowds it.
+  margin-bottom: 0.75rem;
+}
+
+.timeout-reward-tile-cost {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--app-radius-sm);
+  background: rgb(0 0 0 / 0.55);
+  color: #ffffff;
+  font: var(--mat-sys-label-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// Twitch's channel points mark. Painted through a mask rather than placed as an image: the file
+// is drawn in black, and the pill it sits in is white on a dark ground.
+.timeout-reward-tile-points {
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
+
+  background: currentcolor;
+  //noinspection CssUnknownTarget
+  mask: url('/channel-points.svg') center / contain no-repeat;
+}
+
+.timeout-reward-tile-name {
+  margin: 0;
+  max-width: 8.5rem;
+  font: var(--mat-sys-body-medium);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.timeout-reward-note {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.timeout-reward-note a {
+  color: var(--mat-sys-primary);
+}
+// --- The waiting state ----------------------------------------------------------------------
+// Stand-ins shaped like what replaces them, so nothing shifts when the real values arrive.
+
+.timeout-reward-skeleton-heading {
+  width: 8rem;
+  height: 1.25rem;
+}
+
+.timeout-reward-skeleton-field {
+  height: 3.5rem;
+  border-radius: var(--app-radius-sm);
+}
+
+.timeout-reward-skeleton-panel {
+  border-radius: var(--app-radius-md);
+}
+
+.timeout-reward-skeleton-limits {
+  height: 13.5rem;
+}
+
+.timeout-reward-skeleton-shield {
+  height: 17rem;
+}
+
+.timeout-reward-skeleton-summary {
+  height: 10.875rem;
+  border-radius: var(--app-radius-md);
+}
+
+.timeout-reward-skeleton-short {
+  width: 60%;
+}
+
+.timeout-reward-skeleton-toggle {
+  width: 5.5rem;
+  height: 1.25rem;
+}
+
+.timeout-reward-skeleton-swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+}
+
+.timeout-reward-skeleton-remove,
+.timeout-reward-skeleton-save {
+  height: 2.5rem;
+}
+
+.timeout-reward-skeleton-remove {
+  width: 6.5rem;
+}
+
+.timeout-reward-skeleton-save {
+  width: 8.5rem;
+}
+
+// The status line has to sit outside the grid: as a grid item it would take the first column and
+// push the ghost form into the narrow one.
+.timeout-reward-skeleton {
+  align-self: stretch;
+}
