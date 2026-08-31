@@ -1,6 +1,7 @@
 using MCmoderSD.BdsmTestApi.Core;
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Bot;
+using YEPPDash.Api.EventSub;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services;
@@ -25,6 +26,7 @@ builder.Services.AddCors(options => options.AddPolicy(frontendCorsPolicy, policy
 builder.Services.AddYeppDashDatabase(builder.Configuration, dbTarget);
 builder.Services.AddYeppDashAuth(builder.Configuration, dbTarget);
 builder.Services.AddYeppBot(builder.Configuration, dbTarget);
+builder.Services.AddYeppDashEventSub();
 // Constructed here rather than by the container, so uptime is measured from startup, not from the
 // first request that happens to ask for it.
 builder.Services.AddSingleton(new UptimeTracker());
@@ -68,6 +70,14 @@ builder.Services.AddSingleton<QueueHub>();
 // Chat is where the queue is joined and left, and the bot does that by writing to the table this
 // shares with it. This worker is what turns those writes into the events a dashboard is waiting on.
 builder.Services.AddHostedService<QueueWatcher>();
+// Spans every channel and every reward: it is what stops one redemption being acted on twice,
+// whichever socket or instance saw it.
+builder.Services.AddScoped<RedemptionLogRepository>();
+builder.Services.AddScoped<TimeoutRewardRepository>();
+builder.Services.AddScoped<TimeoutRewardService>();
+builder.Services.AddSingleton<IEventSubSource, TimeoutRewardSource>();
+// Handing a stripped role back is the one part no event announces, so it stays on a clock.
+builder.Services.AddHostedService<TimeoutRewardWatcher>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
