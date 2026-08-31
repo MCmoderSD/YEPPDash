@@ -40,8 +40,7 @@ export class FaqPageComponent {
       question: 'Does it cost anything?',
       answer: 'No. YEPPBot and YEPPDash are free, with no paid tier, no ads, and no feature held back behind a subscription.',
       details: [
-        'This is a hobby project, not a business. There is no plan to monetize it, and no plan to make the interesting parts cost money later.',
-        'That also means there is no support contract behind it. See the question about uptime below.',
+        'This is a hobby project, not a business. There is no plan to monetize it, and none to put the interesting parts behind a price later.',
       ],
     },
     {
@@ -60,16 +59,37 @@ export class FaqPageComponent {
       question: 'Where is all of this hosted?',
       answer: 'On dedicated Hetzner servers inside the EU, so EU data protection law and the GDPR apply to the whole thing.',
       details: [
-        'Dedicated machines rather than shared hosting, with a German provider held to strict data protection rules. The database, the backend, and this site all sit there.',
-        'Nothing is reachable directly. Every request goes through a reverse proxy first, and in front of that sits Cloudflare\'s proxy as a protective layer, absorbing attack traffic and keeping the real server addresses out of sight.',
+        'Dedicated machines rather than shared hosting, with the database, the backend and this site all in one place.',
+        'Nothing is reachable directly: every request passes a reverse proxy, with Cloudflare in front of it keeping the real addresses out of sight.',
       ],
     },
     {
       question: 'Which features actually work right now?',
-      answer: 'Bot join and leave, moderator and VIP management, quotes, follower birthdays and BDSM test results are all live. Custom commands work but are still buggy, and auto-shoutouts for raids do not exist yet.',
+      answer: 'Bot join and leave, moderator and VIP management, quotes, follower birthdays, BDSM test results, auto-shoutouts for raids and the channel point timeout reward are all live. Custom commands work but are still buggy.',
       details: [
         'The landing page carries a badge next to each feature saying how far along it is. Anything marked "Coming soon" is genuinely not built yet rather than hidden somewhere.',
-        'Features will keep being added, and some existing ones will change shape as the dashboard settles down.',
+      ],
+    },
+    {
+      question: 'Can viewers spend channel points to time someone out?',
+      answer: 'Yes, once you set the reward up. Viewers redeem it, type a name, and that viewer is timed out for as long as you chose.',
+      details: [
+        'You set the price, the length, and who cannot be bought — editors, moderators, VIPs, subscribers by tier, followers. A protected name, a name nobody has, or your own gets the points refunded automatically.',
+        'A timeout takes the moderator role with it and hands it back when it runs out. Lead moderator and editor cannot be given back through Twitch\'s API, so leave those protected unless you mean it.',
+      ],
+    },
+    {
+      question: 'Does the bot shout out people who raid me?',
+      answer: 'Yes, automatically, once the bot is a moderator in your channel.',
+      details: [
+        'Every raid is also listed in the dashboard with who came, how many they brought, and when — so you can still thank someone you missed live.',
+      ],
+    },
+    {
+      question: 'What is the viewer queue for?',
+      answer: 'A waiting list you work through in order, for anything where viewers take turns: games with you, reviews, requests.',
+      details: [
+        'The dashboard half is finished — you can see the queue, reorder it and work it down. Chat cannot join it yet, because the commands for that are not in the bot itself so far.',
       ],
     },
     {
@@ -96,8 +116,7 @@ export class FaqPageComponent {
       question: 'Who builds and runs this?',
       answer: 'One person: Seraphin Berger, better known as MCmoderSD. The bot, this dashboard, and the backend between them are all solo-developed.',
       details: [
-        'That is worth knowing because it sets expectations. There is nobody on call, no support rota, and answers arrive whenever there is time for them. It is a hobby project rather than a company.',
-        'It also means there is no ticket queue to disappear into: a bug report or a feature request lands directly with the person who wrote the code.',
+        'Worth knowing, because it cuts both ways: nobody is on call and answers arrive when there is time for them, but a bug report lands directly with the person who wrote the code.',
       ],
       link: {
         label: 'Imprint and contact details',
@@ -120,8 +139,7 @@ export class FaqPageComponent {
       question: 'Why is the dashboard on a different address than the website?',
       answer: 'The public site lives on yeppbot.com and the dashboard on dash.yeppbot.com. Logging in moves you from one to the other.',
       details: [
-        'Splitting them keeps the pages anyone can read separate from the ones that need your Twitch token, so the two have nothing to share by accident.',
-        'The landing page, this FAQ, and the legal pages are all on the public side. Everything behind the login is on the dashboard side.',
+        'Splitting them keeps the pages anyone can read — the landing page, this FAQ, the legal pages — apart from the ones holding your Twitch token, so the two have nothing to share by accident.',
       ],
     },
   ];
