@@ -55,4 +55,22 @@
       [style.background]="hueColor()"
     ></div>
   </div>
+
+  @if (showHex()) {
+    <label class="picker-hex">
+      <span class="picker-hex-name">Hex</span>
+      <input
+        #hexField
+        class="picker-hex-field"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        maxlength="7"
+        [value]="hexText()"
+        (input)="typeHex(hexField.value)"
+        (blur)="settleHex()"
+        (keydown)="hexKey($event)"
+      />
+    </label>
+  }
 </div>
