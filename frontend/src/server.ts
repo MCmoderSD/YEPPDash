@@ -31,17 +31,18 @@ const REVALIDATE = 'no-cache';
  *   dead app rather than an old one: it goes on naming bundles the new build no longer publishes.
  *   A few kilobytes, so asking every time is cheaper than a deploy that half arrives.
  * - robots.txt and llms.txt are instructions rather than content. Their whole point is to be
- *   changeable, and an hour is about the shortest notice a crawler will act on.
- * - Everything left is artwork: stable in name, replaceable in principle, harmless when a day out
- *   of date.
+ *   changeable, and an hour is about the shortest notice a crawler will act on. Nobody but a
+ *   crawler ever reads them, so this is the one bucket where a stale copy cannot reach a user.
+ * - Everything left is artwork: stable in name, replaceable in principle. It revalidates like the
+ *   documents do, because a swapped image under an old name would otherwise show the old picture
+ *   for as long as the lifetime says - and a 304 for an unchanged file costs a few hundred bytes,
+ *   which this instance can afford far more easily than a wrong icon on screen.
  */
 const LIFETIMES: readonly (readonly [RegExp, string])[] = [
   [/-[A-Za-z0-9_-]{8,}\.(?:js|css)$/, 'public, max-age=31536000, immutable'],
   [/\.html$/, REVALIDATE],
   [/(?:robots|llms)\.txt$/, 'public, max-age=3600'],
 ];
-
-const ARTWORK = 'public, max-age=86400';
 
 /**
  * Has to stay ahead of the host rewrite below: bundles and assets live at real paths in the
@@ -56,7 +57,7 @@ app.use(
     setHeaders: (res, path) => {
       const match = LIFETIMES.find(([name]) => name.test(path));
 
-      res.setHeader('Cache-Control', match ? match[1] : ARTWORK);
+      res.setHeader('Cache-Control', match ? match[1] : REVALIDATE);
     },
   }),
 );
