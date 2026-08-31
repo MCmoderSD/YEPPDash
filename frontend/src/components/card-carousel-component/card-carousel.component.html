@@ -1,0 +1,73 @@
+<div class="carousel">
+  <div class="carousel-head">
+    <ng-content/>
+  </div>
+
+  <div class="carousel-viewport" (pointermove)="aim($event)" (pointerleave)="release()">
+    <ul class="carousel-track" #track [style.--per-page]="perPage()" (scroll)="measure()">
+      @for (item of items(); track item.label) {
+        <li>
+          <a class="carousel-card" [routerLink]="item.path" [queryParams]="item.queryParams">
+            <span class="carousel-card-icon" aria-hidden="true">
+              @if (item.mask; as mask) {
+                <span class="carousel-card-glyph" [style.--icon]="'url(' + mask + ')'"></span>
+              } @else {
+                <mat-icon [fontSet]="item.outlined ? 'material-icons-outlined' : 'material-icons'">{{ item.icon }}</mat-icon>
+              }
+            </span>
+
+            <span class="carousel-card-body">
+              <span class="carousel-card-title">{{ item.label }}</span>
+              <span class="carousel-card-text">{{ item.description }}</span>
+            </span>
+
+            <mat-icon class="carousel-card-chevron" aria-hidden="true">chevron_right</mat-icon>
+          </a>
+        </li>
+      }
+    </ul>
+
+    @if (page() > 0) {
+      <button
+        type="button"
+        class="carousel-edge carousel-edge-back"
+        [class.carousel-edge-shown]="edge() === 'back'"
+        [attr.aria-label]="'Show the previous ' + label() + ' cards'"
+        (click)="step(-1)"
+      >
+        <svg class="carousel-edge-icon" viewBox="0 0 12 40" fill="none" aria-hidden="true">
+          <path d="M9.5 2 1.5 20l8 18"/>
+        </svg>
+      </button>
+    }
+
+    @if (page() < pages() - 1) {
+      <button
+        type="button"
+        class="carousel-edge carousel-edge-forward"
+        [class.carousel-edge-shown]="edge() === 'forward'"
+        [attr.aria-label]="'Show the next ' + label() + ' cards'"
+        (click)="step(1)"
+      >
+        <svg class="carousel-edge-icon" viewBox="0 0 12 40" fill="none" aria-hidden="true">
+          <path d="M2.5 2 10.5 20l-8 18"/>
+        </svg>
+      </button>
+    }
+  </div>
+
+  @if (pages() > 1) {
+    <div class="carousel-dots">
+      @for (dot of dots(); track dot) {
+        <button
+          type="button"
+          class="carousel-dot"
+          [class.carousel-dot-here]="dot === page()"
+          [attr.aria-label]="label() + ', page ' + (dot + 1) + ' of ' + pages()"
+          [attr.aria-current]="dot === page() ? 'true' : null"
+          (click)="goTo(dot)"
+        ></button>
+      }
+    </div>
+  }
+</div>
