@@ -1,3 +1,7 @@
 namespace YEPPDash.Api.Twitch;
 
-public sealed record HelixPage<T>(IReadOnlyList<T> Items, string? Cursor);
+public sealed record HelixPage<T>(
+    IReadOnlyList<T> Items, 
+    string? Cursor, 
+    int? Total = null
+);

@@ -1,0 +1,42 @@
+.user-list-title {
+  text-align: center;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+
+  // A floor rather than a height. A list can hold three names or three hundred, and it is the
+  // dialog that scrolls the long case — without this it would open at whatever the short case
+  // needed and then jump as the names land.
+  min-height: 18rem;
+}
+
+// The table caps itself at 36rem: it is a compact panel by design, and on the role-management page
+// it has a whole column to not stretch across. In a dialog sized around it there is nothing left
+// over, but centring the host means any that does appear falls evenly on both sides rather than
+// stacking up on the right. Reachable without ::ng-deep because this element is in this template —
+// the cap is repeated here so the host is the box, instead of a wide host holding a narrow table.
+.user-list app-user-table {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
+
+  // Material takes the content's top padding away whenever a title stands above it — the rule is
+  // `.mat-mdc-dialog-title + .mat-mdc-dialog-content { padding-top: 0 }`, and at two classes it
+  // out-specifies anything a single class here could say back. The content scrolls, so with no
+  // padding its box began exactly at the search field's outline and the floating label, which
+  // hangs above that outline by half its own height, was sliced off at the seam.
+  //
+  // So the room is bought here instead, on a child nothing else is competing over. The user-add
+  // dialog solves the identical problem the identical way, with a margin on its own field.
+  margin-block-start: 0.75rem;
+}
+
+.user-list-message {
+  margin: auto 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  text-align: center;
+}

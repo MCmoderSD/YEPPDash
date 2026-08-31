@@ -1,60 +1,42 @@
-@use '../../styles/chat-color' as chat;
-
 .user-add {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding-block: 0.5rem;
-}
-
-.user-add-field {
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-.user-add-field button {
-  margin-right: 0.5rem;
-}
-
-// Holds whatever the last search produced. Given a fixed floor so the dialog does not resize
-// under the pointer between "searching", a result and a miss.
-.user-add-outcome {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 9rem;
-}
-
-.user-add-result {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin-top: 1rem;
   gap: 1rem;
+  padding-block: 0.5rem;
+
+  // The containing block for the scroll bar drawn over this content.
+  position: relative;
 }
 
-.user-add-avatar {
-  border-radius: 50%;
-  object-fit: cover;
-  width: clamp(4rem, 16vw, 6rem);
-  height: auto;
-  aspect-ratio: 1;
-}
-
-.user-add-name {
-  @include chat.chat-color;
+// Why the button will not move, or what pressing it will cost — always about the account found
+// above, never about the form.
+.user-add-notice {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
 
   margin: 0;
-  font: var(--mat-sys-headline-small);
-  overflow-wrap: anywhere;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--app-radius-outlined);
+  font: var(--mat-sys-body-small);
 }
 
-.user-add-message {
-  margin: 0;
+.user-add-notice-blocked {
+  background: var(--mat-sys-surface-container-high);
   color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-  text-align: center;
-  overflow-wrap: anywhere;
+}
+
+// A trade the broadcaster cannot undo from this dialog, so it carries more weight than a hint.
+.user-add-notice-swap {
+  background: var(--app-warning-container);
+  color: var(--mat-sys-on-surface);
+}
+
+.user-add-notice-icon {
+  flex: none;
+
+  // Material sizes its icons at 24px; these sit on body-small text and would tower over it.
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
 }

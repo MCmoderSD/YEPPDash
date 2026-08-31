@@ -2,24 +2,43 @@
 
   <header class="wheel-page-header">
     <h1 class="wheel-page-title">Lucky Wheel</h1>
-    <p class="wheel-page-count">
-      @if (total() === 0) {
-        No entries yet — add one below
-      } @else {
-        {{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}, {{ total() }} {{ total() === 1 ? 'slice' : 'slices' }} on the wheel
-      }
-    </p>
+    @if (initialLoad()) {
+      <span class="app-visually-hidden wheel-page-loading-status" role="status">Loading your wheel…</span>
+      <p class="wheel-page-count app-skeleton-appear" aria-hidden="true">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text wheel-skeleton-count"></span>
+      </p>
+    } @else {
+      <p class="wheel-page-count app-fade-in">
+        @if (total() === 0) {
+          No entries yet — add one below
+        } @else {
+          {{ entries().length }} {{ entries().length === 1 ? 'entry' : 'entries' }}, {{ total() }} {{ total() === 1 ? 'slice' : 'slices' }} on the wheel
+        }
+      </p>
+    }
   </header>
 
   <div class="wheel-page-layout">
 
     <div class="wheel-page-stage">
-      <app-wheel
-        [slices]="slices()"
-        [interactive]="!spinning() && total() > 1"
-        (spinRequested)="spin()"
-        (spun)="landed($event)"
-      />
+      <div
+        class="wheel-page-wheel-wrap"
+        [class.app-fade-in]="!initialLoad()"
+        [attr.aria-hidden]="initialLoad() ? true : null"
+      >
+        <app-wheel
+          [slices]="slices()"
+          [interactive]="!spinning() && total() > 1"
+          (spinRequested)="spin()"
+          (spun)="landed($event)"
+        />
+
+        @if (initialLoad()) {
+          <span class="wheel-page-wheel-skeleton app-skeleton-appear">
+            <span class="app-skeleton wheel-page-wheel-skeleton-fill"></span>
+          </span>
+        }
+      </div>
 
       <button
         mat-flat-button
@@ -107,17 +126,21 @@
             </div>
 
             <div #scroll class="wheel-page-scroll">
-              <table mat-table [dataSource]="entries()" class="wheel-page-table">
+              <table mat-table [dataSource]="rows()" class="wheel-page-table">
 
                 <ng-container matColumnDef="entry">
                   <th mat-header-cell *matHeaderCellDef scope="col">Entry</th>
                   <td mat-cell *matCellDef="let entry" class="wheel-page-entry">
-                    <div class="wheel-page-entry-content">
-                      @if (entry.count > 1) {
-                        <span class="wheel-page-badge">{{ entry.count }}x</span>
-                      }
-                      <span class="wheel-page-name">{{ entry.label }}</span>
-                    </div>
+                    @if (entry.ghost) {
+                      <span class="app-skeleton app-skeleton-bar app-skeleton-text wheel-skeleton-name" aria-hidden="true"></span>
+                    } @else {
+                      <div class="wheel-page-entry-content">
+                        @if (entry.count > 1) {
+                          <span class="wheel-page-badge">{{ entry.count }}x</span>
+                        }
+                        <span class="wheel-page-name">{{ entry.label }}</span>
+                      </div>
+                    }
                   </td>
                 </ng-container>
 
@@ -126,38 +149,49 @@
                     <span class="wheel-page-hidden-label">Actions</span>
                   </th>
                   <td mat-cell *matCellDef="let entry" class="wheel-page-actions">
-                    <button
-                      mat-icon-button
-                      type="button"
-                      [attr.aria-label]="'Add another ' + entry.label"
-                      [disabled]="busy() || full()"
-                      (click)="addOne(entry.label)"
-                    >
-                      <mat-icon aria-hidden="true">add</mat-icon>
-                    </button>
+                    @if (entry.ghost) {
+                      <span class="app-skeleton wheel-skeleton-action" aria-hidden="true"></span>
+                      <span class="app-skeleton wheel-skeleton-action" aria-hidden="true"></span>
+                    } @else {
+                      <button
+                        mat-icon-button
+                        type="button"
+                        [attr.aria-label]="'Add another ' + entry.label"
+                        [disabled]="busy() || full()"
+                        (click)="addOne(entry.label)"
+                      >
+                        <mat-icon aria-hidden="true">add</mat-icon>
+                      </button>
 
-                    <button
-                      mat-icon-button
-                      type="button"
-                      [attr.aria-label]="entry.count > 1
-                      ? 'Remove one ' + entry.label
-                      : 'Remove ' + entry.label + ' from the wheel'"
-                      [disabled]="busy()"
-                      (click)="removeOne(entry.label)"
-                    >
-                      <mat-icon aria-hidden="true">remove</mat-icon>
-                    </button>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        [attr.aria-label]="entry.count > 1
+                        ? 'Remove one ' + entry.label
+                        : 'Remove ' + entry.label + ' from the wheel'"
+                        [disabled]="busy()"
+                        (click)="removeOne(entry.label)"
+                      >
+                        <mat-icon aria-hidden="true">remove</mat-icon>
+                      </button>
+                    }
                   </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="columns"></tr>
-                <tr mat-row *matRowDef="let entry; columns: columns" class="wheel-page-row"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let entry; columns: columns"
+                  class="wheel-page-row"
+                  [class.wheel-page-row-ghost]="entry.ghost"
+                  [class.app-skeleton-appear]="entry.ghost"
+                  [class.app-fade-in]="!entry.ghost"
+                  [attr.aria-hidden]="entry.ghost || null"
+                ></tr>
 
                 <tr class="wheel-page-empty-row" *matNoDataRow>
                   <td class="wheel-page-empty" [attr.colspan]="columns.length">
-                    @if (loading()) {
-                      Loading your wheel…
-                    } @else {
+                    @if (!initialLoad()) {
                       Nothing on the wheel yet. Add your first entry above.
                     }
                   </td>
@@ -263,6 +297,7 @@
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="resultColumns"></tr>
+                <!--suppress JSUnusedLocalSymbols -->
                 <tr mat-row *matRowDef="let result; columns: resultColumns" class="wheel-page-row"></tr>
 
                 <tr class="wheel-page-empty-row" *matNoDataRow>

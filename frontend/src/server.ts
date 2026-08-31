@@ -95,9 +95,6 @@ app.use((req, res, next) => {
       const query = queryIndex === -1 ? '' : req.url.slice(queryIndex);
       const rewritten = `/dash${path === '/' ? '' : path}${query}`;
 
-      // Angular's Node adapter builds the request URL from `originalUrl ?? url`, so rewriting
-      // only `url` leaves it resolving the untouched path and serving the prerendered landing
-      // page at the dashboard's root. Both have to move for the rewrite to be honoured.
       req.url = rewritten;
       req.originalUrl = rewritten;
     }
@@ -138,7 +135,7 @@ app.use((req, res, next) => {
 });
 
 /**
- * Start the server if this module is the main entry point, or it is ran via PM2.
+ * Start the server if this module is the main entry point or is run via PM2.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {

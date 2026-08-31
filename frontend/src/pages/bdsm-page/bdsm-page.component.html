@@ -19,8 +19,8 @@
   <mat-progress-bar
     class="bdsm-page-progress"
     mode="indeterminate"
-    [attr.aria-hidden]="!loading()"
-    [style.visibility]="loading() ? 'visible' : 'hidden'"
+    [attr.aria-hidden]="!showProgress()"
+    [style.visibility]="showProgress() ? 'visible' : 'hidden'"
   />
 
   <mat-tab-group
@@ -31,136 +31,193 @@
 
     <mat-tab label="Your results">
       <ng-template matTabContent>
-        <p class="bdsm-page-count">
-          @if (count() === 1) {
-            You have taken the test once
-          } @else {
-            You have taken the test {{ count() }} times
-          }
-        </p>
+        @if (loading() && !entries().length) {
+          <div class="bdsm-page-skeleton app-skeleton-appear" role="status">
+            <span class="app-visually-hidden">Loading your results…</span>
 
-        @if (entries().length) {
+            <p class="bdsm-page-count" aria-hidden="true">
+              <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-count"></span>
+            </p>
 
-          <mat-accordion class="bdsm-page-results" multi="true">
-            @for (entry of entries(); track entry.result.id) {
-              <mat-expansion-panel
-                class="bdsm-page-panel"
-                [class.bdsm-page-panel-open]="panel.expanded"
-                [expanded]="$first"
-                #panel
-              >
+            <div class="bdsm-page-skeleton-card" aria-hidden="true">
+              <div class="bdsm-page-skeleton-card-header">
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-title"></span>
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-meta"></span>
+              </div>
 
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
-                      {{ entry.takenAt | localeDate }}
-                    </time>
-                  </mat-panel-title>
-
-                  <mat-panel-description class="bdsm-page-summary">
-                    <p class="bdsm-page-meta">
-                      Version {{ entry.result.version }}
-                      <span aria-hidden="true">·</span> {{ entry.result.gender }}
-                      <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
-                    </p>
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
-
-                <ng-template matExpansionPanelContent>
-                  <app-bdsm-result [result]="entry.result"/>
-                </ng-template>
-              </mat-expansion-panel>
-            }
-          </mat-accordion>
+              <div class="bdsm-page-skeleton-card-body">
+                @for (row of [0, 1, 2, 3, 4]; track row) {
+                  <div class="bdsm-page-skeleton-card-row">
+                    <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-label"></span>
+                    <span class="app-skeleton bdsm-page-skeleton-card-bar"></span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
         } @else {
-          <p class="bdsm-page-empty">
-            @if (loading()) {
-              Loading your results…
-            } @else if (unreachable()) {
-              Could not load your results. Please try again.
+          <p class="bdsm-page-count app-fade-in">
+            @if (count() === 1) {
+              You have taken the test once
             } @else {
-              You have not taken the BDSM test yet. Take it through YEPPBot and your results will
-              show up here.
+              You have taken the test {{ count() }} times
             }
           </p>
+
+          @if (entries().length) {
+
+            <mat-accordion class="bdsm-page-results app-fade-in" multi="true">
+              @for (entry of entries(); track entry.result.id) {
+                <mat-expansion-panel
+                  class="app-expansion-card"
+                  [class.app-expansion-card-open]="panel.expanded"
+                  [expanded]="$first"
+                  #panel
+                >
+
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
+                        {{ entry.takenAt | localeDate }}
+                      </time>
+                    </mat-panel-title>
+
+                    <mat-panel-description class="bdsm-page-summary">
+                      <p class="bdsm-page-meta">
+                        Version {{ entry.result.version }}
+                        <span aria-hidden="true">·</span> {{ entry.result.gender }}
+                        <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+                      </p>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <ng-template matExpansionPanelContent>
+                    <app-bdsm-result [result]="entry.result"/>
+                  </ng-template>
+                </mat-expansion-panel>
+              }
+            </mat-accordion>
+          } @else {
+            <p class="bdsm-page-empty app-fade-in">
+              @if (unreachable()) {
+                Could not load your results. Please try again.
+              } @else {
+                You have not taken the BDSM test yet. Take it through YEPPBot and your results will
+                show up here.
+              }
+            </p>
+          }
         }
       </ng-template>
     </mat-tab>
 
     <mat-tab label="Community">
       <ng-template matTabContent>
-        <p class="bdsm-page-count">
-          @if (communityCount() === 1) {
-            1 person in your channel shared a result
-          } @else {
-            {{ communityCount() }} people in your channel shared a result
-          }
-        </p>
+        @if (loading() && !community().length) {
+          <div class="bdsm-page-skeleton app-skeleton-appear" role="status">
+            <span class="app-visually-hidden">Loading the results of your followers…</span>
 
-        @if (community().length) {
-          <mat-accordion class="bdsm-page-results" multi="true">
-            @for (entry of community(); track entry.result.id) {
-              <mat-expansion-panel
-                class="bdsm-page-panel"
-                [class.bdsm-page-panel-open]="panel.expanded"
-                #panel
-              >
+            <p class="bdsm-page-count" aria-hidden="true">
+              <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-count"></span>
+            </p>
 
-                <mat-expansion-panel-header>
-                  <mat-panel-title class="bdsm-page-user">
-                    @if (entry.user) {
-                      <img
-                        class="bdsm-page-avatar"
-                        [ngSrc]="entry.user.profileImageUrl"
-                        [width]="24"
-                        [height]="24"
-                        loading="eager"
-                        alt=""
-                      />
+            <div class="bdsm-page-skeleton-card" aria-hidden="true">
+              <div class="bdsm-page-skeleton-card-header">
+                <span class="app-skeleton bdsm-page-skeleton-card-avatar"></span>
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-title"></span>
+                <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-meta"></span>
+              </div>
 
-                      <app-user-badges [user]="entry.user"/>
-                    }
-                    <span class="bdsm-page-name" [style.--chat-color]="entry.user?.color">
-                      {{ entry.name }}
-                    </span>
-                  </mat-panel-title>
-
-                  <mat-panel-description class="bdsm-page-summary">
-                    @if (entry.match) {
-                      <span class="bdsm-page-match" [style.color]="entry.match.color">
-                        {{ entry.match.percent }}%
-                        <span class="bdsm-page-match-label">compatible</span>
-                      </span>
-                    }
-
-                    <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
-                      {{ entry.takenAt | localeDate }}
-                    </time>
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
-
-                <ng-template matExpansionPanelContent>
-                  <p class="bdsm-page-meta">
-                    Version {{ entry.result.version }}
-                    <span aria-hidden="true">·</span> {{ entry.result.gender }}
-                    <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
-                  </p>
-
-                  <app-bdsm-result [result]="entry.result"/>
-                </ng-template>
-              </mat-expansion-panel>
-            }
-          </mat-accordion>
+              <div class="bdsm-page-skeleton-card-body">
+                @for (row of [0, 1, 2, 3, 4]; track row) {
+                  <div class="bdsm-page-skeleton-card-row">
+                    <span class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-skeleton-card-label"></span>
+                    <span class="app-skeleton bdsm-page-skeleton-card-bar"></span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
         } @else {
-          <p class="bdsm-page-empty">
-            @if (loading()) {
-              Loading the results of your followers…
-            } @else if (communityUnreachable()) {
-              Could not load the results of your followers. Please try again.
+          <p class="bdsm-page-count app-fade-in">
+            @if (communityCount() === 1) {
+              1 person in your channel shared a result
             } @else {
-              Nobody in your channel has shared a BDSM test result with YEPPBot yet.
+              {{ communityCount() }} people in your channel shared a result
             }
           </p>
+
+          @if (community().length) {
+            <mat-accordion class="bdsm-page-results app-fade-in" multi="true">
+              @for (entry of community(); track entry.result.id) {
+                <mat-expansion-panel
+                  class="app-expansion-card"
+                  [class.app-expansion-card-open]="panel.expanded"
+                  #panel
+                >
+
+                  <mat-expansion-panel-header>
+                    <mat-panel-title class="bdsm-page-user">
+                      @if (entry.user) {
+                        <img
+                          class="bdsm-page-avatar"
+                          [ngSrc]="entry.user.profileImageUrl"
+                          [width]="24"
+                          [height]="24"
+                          loading="eager"
+                          alt=""
+                        />
+
+                        <app-user-badges [user]="entry.user"/>
+                      }
+                      <span class="bdsm-page-name" [style.--chat-color]="entry.user?.color">
+                        {{ entry.name }}
+                      </span>
+                    </mat-panel-title>
+
+                    <mat-panel-description class="bdsm-page-summary">
+                      @if (entry.match) {
+                        <span class="bdsm-page-match app-fade-in" [style.color]="entry.match.color">
+                          {{ entry.match.percent }}%
+                          <span class="bdsm-page-match-label">compatible</span>
+                        </span>
+                      } @else if (entry.matchPending) {
+                        <span class="bdsm-page-match-pending" role="status">
+                          <span class="app-visually-hidden">Loading your compatibility with {{ entry.name }}…</span>
+                          <span
+                            class="app-skeleton app-skeleton-bar app-skeleton-text bdsm-page-match-skeleton"
+                            aria-hidden="true"
+                          ></span>
+                        </span>
+                      }
+
+                      <time [attr.datetime]="entry.takenAt | date: 'yyyy-MM-dd'">
+                        {{ entry.takenAt | localeDate }}
+                      </time>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <ng-template matExpansionPanelContent>
+                    <p class="bdsm-page-meta">
+                      Version {{ entry.result.version }}
+                      <span aria-hidden="true">·</span> {{ entry.result.gender }}
+                      <span aria-hidden="true">·</span> {{ entry.result.ageGroup }}
+                    </p>
+
+                    <app-bdsm-result [result]="entry.result"/>
+                  </ng-template>
+                </mat-expansion-panel>
+              }
+            </mat-accordion>
+          } @else {
+            <p class="bdsm-page-empty app-fade-in">
+              @if (communityUnreachable()) {
+                Could not load the results of your followers. Please try again.
+              } @else {
+                Nobody in your channel has shared a BDSM test result with YEPPBot yet.
+              }
+            </p>
+          }
         }
       </ng-template>
     </mat-tab>

@@ -1,0 +1,56 @@
+.timeout-management {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  // A little wider than the role panel: the tables carry a date and a reason next to each name.
+  width: min(48rem, 100%);
+  margin-inline: auto;
+}
+
+.timeout-management-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.timeout-management-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.timeout-management-count {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+// Pulled out of flow so announcing the load costs no space while only screen readers listen.
+.timeout-management > .app-visually-hidden {
+  position: absolute;
+}
+
+// Kept in the layout while idle so the tables do not jump every time a request starts.
+.timeout-management-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+.timeout-management-tabs {
+  align-self: stretch;
+}
+
+app-ban-table {
+  display: block;
+
+  // The tab body is the width of the panel, and the table fills it rather than shrink-wrapping to
+  // whatever its columns happen to need.
+  width: 100%;
+
+  // An outlined field hangs its floating label above its own top edge, so the search box directly
+  // under the tab header had "Search" sitting on the header's underline. This is the room that
+  // label needs, and it doubles as the gap the panel would want anyway.
+  padding-block-start: 1.25rem;
+}

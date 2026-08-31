@@ -19,7 +19,7 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
                 new { channelId },
                 cancellationToken: cancellationToken));
 
-        return rows.Select(ToCommand).ToList();
+        return [.. rows.Select(ToCommand)];
     }
 
     public async Task<CustomCommand?> GetAsync(int channelId, string name, CancellationToken cancellationToken)
@@ -125,7 +125,7 @@ public sealed class CustomCommandRepository(MySqlConnection connection)
             message = command.Message,
             active = command.Active,
             type = ToColumn(command.ResponseType),
-            userLevel = ToColumn(command.UserLevel),
+            userLevel = ToColumn(command.UserLevel)
         };
     }
 

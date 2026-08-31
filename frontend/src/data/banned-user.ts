@@ -7,7 +7,13 @@ export interface BannedUser extends TwitchUser {
   moderator: TwitchUser | null;
 }
 
-export interface BanStatus {
-  banned: boolean;
-  ban: BannedUser | null;
+export interface BanResult {
+  userId: string;
+  createdAt: string;
+  endTime: string | null; // null means permanent ban
+}
+
+export interface BanCounts {
+  timeouts: number;
+  bans: number;
 }

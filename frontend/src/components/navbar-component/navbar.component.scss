@@ -157,3 +157,52 @@ a[mat-button] {
   display: inline-flex;
   align-items: center;
 }
+
+// --- Skeleton, while the session check is out ------------------------------------------------
+// Surface, pulse, corners and the held-back appearance all come from the global .app-skeleton
+// utilities in styles.scss. Everything below only sets the widths, heights and shapes of the two
+// stand-ins this bar needs: the drawer toggle and the account chip.
+
+// Same 40px box as the mat-icon-button it stands in for, so the brand does not creep sideways
+// once the toggle either appears for real or never shows up at all.
+.navbar-skeleton-toggle {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.navbar-skeleton-toggle-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+// .user-menu-trigger's own height — a Material text button at this app's density — so the row
+// does not bob when the real chip or the login button lands in its place.
+.navbar-skeleton-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+}
+
+// The global utility stays in normal flow on purpose elsewhere, but here it would become a real
+// flex item and push the name bar over by its own width plus a gap.
+.navbar-skeleton-chip > .app-visually-hidden {
+  position: absolute;
+}
+
+// user-menu-avatar's own 32px circle.
+.navbar-skeleton-chip-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+// user-menu-name's font, so the 1lh from .app-skeleton-text lines up with the same
+// label-large line box the real display name sets. The width is a stand-in for an average Twitch
+// handle, not any particular one.
+.navbar-skeleton-chip-name {
+  font: var(--mat-sys-label-large);
+  width: min(6rem, 32vw);
+}

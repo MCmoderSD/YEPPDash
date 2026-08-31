@@ -31,7 +31,9 @@
 // the columns instead of squashing them.
 .command-table-scroll {
   align-self: stretch;
-  overflow-x: auto;
+  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
+  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
+  overflow: auto hidden;
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--app-radius-outlined);
 
@@ -44,6 +46,7 @@ table.command-table-grid {
   width: 100%;
   background: transparent;
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.5rem;
@@ -59,11 +62,26 @@ table.command-table-grid {
   }
 }
 
+// A ghost row is not a row yet — pointer-events removes it from the click and hover paths outright
+// rather than trusting the disabled cursor alone, so nothing here can be mistaken for a command
+// that is one tap away from opening.
+.command-table-row-skeleton {
+  cursor: default;
+  pointer-events: none;
+
+  &:hover,
+  &:focus-within {
+    background: none;
+  }
+}
+
 // The row whose form is open reads as the heading of that form rather than as one row among the
 // rest, and loses its bottom rule so the two read as one block.
+//noinspection CssUnusedSymbol
 .command-table-row-open {
   background: var(--mat-sys-surface-container-high);
 
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell {
     border-bottom-color: transparent;
   }
@@ -74,6 +92,7 @@ table.command-table-grid {
 //
 // 0.7 rather than a heavier fade: the alias chips are the faintest thing in the row to begin with,
 // and dimming them further puts them under the 4.5:1 they need.
+//noinspection CssUnusedSymbol
 .command-table-row-inactive {
   .command-table-name,
   .command-table-aliases,
@@ -161,50 +180,76 @@ table.command-table-grid {
 // nothing has to be overridden on the header.
 .command-table-active {
   width: 5rem;
-
-  // M3's switch is 52x32 with a 24px handle, which beside a row of 14px text is the loudest thing
-  // in the table. Scaled through Material's own tokens rather than a transform, so the handle, the
-  // focus ring and the state layer all shrink together instead of being drawn small and hit large.
-  //
-  // The touch target token is deliberately left alone: it is a separate overlay that keeps the tap
-  // area at its full size, which is what holds the control above the 24x24 minimum.
-  --mat-slide-toggle-track-width: 36px;
-  --mat-slide-toggle-track-height: 20px;
-
-  // Not the drawn size — the travel budget. Material moves the handle by
-  // `track-width - handle-width`, so this has to be the handle plus the inset it should keep at
-  // each end (14 + 3 + 3). Leaving it unset makes that calc() invalid, which collapses the travel
-  // to zero and leaves the handle sitting wherever the margins below put it.
-  --mat-slide-toggle-handle-width: 20px;
-  --mat-slide-toggle-handle-height: 14px;
-
-  // One size in both states rather than M3's grow-on-select: at this scale the change reads as the
-  // handle jittering rather than as feedback. The margins are what set the 3px inset — equal on
-  // both, so the handle sits the same distance from each end of the track.
-  --mat-slide-toggle-unselected-handle-size: 14px;
-  --mat-slide-toggle-selected-handle-size: 14px;
-  --mat-slide-toggle-with-icon-handle-size: 14px;
-  --mat-slide-toggle-unselected-handle-horizontal-margin: 0 3px;
-  --mat-slide-toggle-selected-handle-horizontal-margin: 0 3px;
-
-  // Held down: the handle grows into its inset by a pixel at each end and stays centred.
-  --mat-slide-toggle-pressed-handle-size: 16px;
-  --mat-slide-toggle-unselected-pressed-handle-horizontal-margin: 0 2px;
-  --mat-slide-toggle-selected-pressed-handle-horizontal-margin: 0 2px;
-
-  --mat-slide-toggle-state-layer-size: 32px;
-
-  // A 2px outline on a 20px track is most of the gap between track and handle. The on state carries
-  // none at all: it is a filled pill, and an outline only muddies its edge.
-  --mat-slide-toggle-track-outline-width: 1px;
-  --mat-slide-toggle-selected-track-outline-width: 0;
-  --mat-slide-toggle-disabled-unselected-track-outline-width: 1px;
 }
 
 .command-table-actions {
   width: 6.5rem;
   text-align: end;
   white-space: nowrap;
+}
+
+// --- initial-load ghosts ---------------------------------------------------------------------
+// Six rows standing in the same cells the columns above already size, so the surface and pulse
+// from .app-skeleton are all that is missing to read as "a table, loading" rather than a sketch of
+// one. Only the shapes are declared here — colour, motion and the held-back appearance are the
+// shared utilities'.
+
+.command-table-skeleton-name {
+  width: 5rem;
+}
+
+// A command that is followed by its own empty editor row (height: 0, see below), so every real row
+// lands on an odd position among its table siblings — 1st, 3rd, 5th… Splitting those three ways in
+// steps of six keeps every third *row*, not every third element, from matching the one before it.
+.command-table-row:nth-child(6n+3) .command-table-skeleton-name {
+  width: 7.5rem;
+}
+
+.command-table-row:nth-child(6n+5) .command-table-skeleton-name {
+  width: 3.5rem;
+}
+
+// Most commands carry zero or one alias, so two chips — one shorter than the other — reads truer
+// than guessing a row will have a whole row of them.
+.command-table-skeleton-chip {
+  width: 3rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+}
+
+.command-table-skeleton-chip-narrow {
+  width: 2rem;
+}
+
+// The one column that grows, so its ghost is sized against the space that is actually on screen
+// rather than a fixed rem width. Varied the same way and on the same rows as the name bar, so the
+// two do not read as a matched pair repeating down the table.
+.command-table-skeleton-message {
+  width: 70%;
+}
+
+.command-table-row:nth-child(6n+3) .command-table-skeleton-message {
+  width: 45%;
+}
+
+.command-table-row:nth-child(6n+5) .command-table-skeleton-message {
+  width: 90%;
+}
+
+// Roughly the compact slide-toggle's own footprint (app-toggle-compact), start-aligned the way the
+// real control is in this column.
+.command-table-skeleton-toggle {
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: var(--mat-sys-corner-full);
+}
+
+// Standing where the expand icon sits, Material's 24px centred by the column's own end alignment —
+// margin rather than text-align, since a block-level .app-skeleton shape ignores that property.
+.command-table-skeleton-action {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-inline-start: auto;
+  border-radius: 50%;
 }
 
 // The row holding a command's form. Closed, it holds nothing — so it has to take up nothing either,

@@ -1,0 +1,225 @@
+<h2 mat-dialog-title>Manage broadcast</h2>
+
+<mat-dialog-content class="manage-broadcast" #content>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Title</mat-label>
+    <input
+      matInput
+      [value]="title()"
+      [attr.maxlength]="maxLength"
+      [disabled]="busy()"
+      (input)="title.set($any($event.target).value)"
+    />
+    <mat-hint align="end">{{ title().length }} / {{ maxLength }}</mat-hint>
+  </mat-form-field>
+
+  <div class="manage-broadcast-game">
+    <mat-form-field appearance="outline">
+      <mat-label>Game</mat-label>
+
+      <input
+        matInput
+        [value]="query()"
+        [disabled]="busy()"
+        placeholder="Start typing to search"
+        [matAutocomplete]="games"
+        (input)="retype($any($event.target).value)"
+      />
+
+      @if (game() !== null) {
+        <button
+          matSuffix
+          mat-icon-button
+          type="button"
+          aria-label="Clear the game"
+          (click)="clearGame()"
+        >
+          <mat-icon aria-hidden="true">close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+
+    @if (game(); as picked) {
+      @if (picked.boxArtUrl) {
+        <img
+          class="manage-broadcast-art"
+          [ngSrc]="art(picked)"
+          [width]=45
+          [height]=60
+          alt=""
+        />
+      }
+    }
+  </div>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Language</mat-label>
+    <input
+      matInput
+      [value]="languageQuery() || languageLabel(language())"
+      [disabled]="busy()"
+      placeholder="Type to search"
+      [matAutocomplete]="tongues"
+      (input)="retypeLanguage($any($event.target).value)"
+      (focus)="retypeLanguage('')"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+    <mat-hint>The language you speak on stream, not the one the dashboard is in.</mat-hint>
+  </mat-form-field>
+
+  <div class="manage-broadcast-tags">
+    <mat-form-field appearance="outline">
+      <mat-label>Tags</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        placeholder="Add a tag…"
+        [value]="tagDraft()"
+        [attr.maxlength]="tagLength"
+        [disabled]="busy() || tags().length >= tagLimit"
+        (beforeinput)="blockTag($any($event))"
+        (input)="retypeTag($any($event.target).value)"
+        (keydown.enter)="addTag()"
+      />
+
+      <button
+        matSuffix
+        mat-icon-button
+        type="button"
+        aria-label="Add this tag"
+        [disabled]="!canAddTag()"
+        (click)="addTag()"
+      >
+        <mat-icon aria-hidden="true">add</mat-icon>
+      </button>
+
+      <mat-hint>
+        @if (tags().length >= tagLimit) {
+          That is the most Twitch allows — {{ tagLimit }} tags.
+        } @else {
+          {{ tags().length }} / {{ tagLimit }}, up to {{ tagLength }} characters each. Letters and
+          numbers only.
+        }
+      </mat-hint>
+    </mat-form-field>
+
+    @if (tags().length > 0) {
+      <mat-chip-set aria-label="Tags on this channel">
+        @for (tag of tags(); track tag) {
+          <mat-chip (removed)="removeTag(tag)">
+            {{ tag }}
+            <button matChipRemove type="button" [attr.aria-label]="'Remove tag ' + tag">
+              <mat-icon aria-hidden="true">cancel</mat-icon>
+            </button>
+          </mat-chip>
+        }
+      </mat-chip-set>
+    }
+  </div>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Content classification</mat-label>
+    <mat-select
+      multiple
+      panelClass="app-select-panel"
+      [value]="labels()"
+      [disabled]="busy()"
+      (valueChange)="labels.set($event)"
+    >
+      <mat-select-trigger>{{ labelSummary() }}</mat-select-trigger>
+
+      @for (label of contentLabels; track label.id) {
+        <mat-option [value]="label.id">
+          <span class="manage-broadcast-label-name">{{ label.label }}</span>
+          <span class="manage-broadcast-label-hint">{{ label.hint }}</span>
+        </mat-option>
+      }
+    </mat-select>
+    <mat-hint>What Twitch warns viewers about before they open the stream.</mat-hint>
+  </mat-form-field>
+
+  @if (partner()) {
+    <mat-form-field appearance="outline">
+      <mat-label>Stream delay</mat-label>
+      <input
+        matInput
+        type="number"
+        min="0"
+        [attr.max]="delayMax"
+        [value]="delay()"
+        [disabled]="busy()"
+        (input)="setDelay($any($event.target).value)"
+      />
+      <span matSuffix class="manage-broadcast-suffix">seconds</span>
+      <mat-hint>{{ delayHint() }} Up to {{ delayMax }} seconds.</mat-hint>
+    </mat-form-field>
+  }
+
+  <div class="manage-broadcast-toggle">
+    <mat-slide-toggle
+      class="app-toggle-compact"
+      hideIcon="true"
+      [checked]="branded()"
+      [disabled]="busy()"
+      (change)="branded.set($event.checked)"
+    >
+      Branded content
+    </mat-slide-toggle>
+
+    <p class="manage-broadcast-hint">
+      Let viewers know if your stream features branded content. This includes paid product
+      placement, endorsement, or other commercial relationships.
+    </p>
+  </div>
+
+  <app-scroll-bar [target]="content"/>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [disabled]="busy()" mat-dialog-close>Cancel</button>
+  <button mat-flat-button type="button" [disabled]="!canSave()" (click)="save()">
+    <mat-icon aria-hidden="true">save</mat-icon>
+    <span>Save</span>
+  </button>
+</mat-dialog-actions>
+
+<mat-autocomplete
+  #games
+  class="app-select-panel"
+  [displayWith]="gameName"
+  (optionSelected)="pick($event)"
+  (opened)="attach()"
+  (closed)="detach()"
+>
+  @for (category of results(); track category.id) {
+    <mat-option [value]="category">
+      <span class="manage-broadcast-option">
+        @if (category.boxArtUrl) {
+          <img class="manage-broadcast-option-art" [ngSrc]="art(category)" [width]=30 [height]=40 alt=""/>
+        }
+        <span class="manage-broadcast-option-name">{{ category.name }}</span>
+      </span>
+    </mat-option>
+  }
+
+  @if (searching()) {
+    <mat-option disabled="true">
+      <span class="manage-broadcast-status">Searching…</span>
+    </mat-option>
+  } @else if (results().length === 0 && query().trim().length > 0) {
+    <mat-option disabled="true">
+      <span class="manage-broadcast-status">Nothing found.</span>
+    </mat-option>
+  } @else if (!more() && results().length > 0) {
+    <mat-option disabled="true">
+      <span class="manage-broadcast-status">End of results.</span>
+    </mat-option>
+  }
+</mat-autocomplete>
+
+<mat-autocomplete #tongues class="app-select-panel" (optionSelected)="pickLanguage($event)">
+  @for (option of languages(); track option.code) {
+    <mat-option [value]="option.code">{{ option.name }}</mat-option>
+  }
+</mat-autocomplete>

@@ -7,8 +7,15 @@ namespace YEPPDash.Api.Services;
 public sealed class RaidService(
     RaidRepository repository,
     TwitchChannelService channels,
-    ILogger<RaidService> logger)
-{
+    ILogger<RaidService> logger
+) {
+    public async Task<int> CountForChannelAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        return int.TryParse(broadcasterId, out var channelId)
+            ? await repository.CountForChannelAsync(channelId, cancellationToken)
+            : 0;
+    }
+
     public async Task<IReadOnlyList<RaidResponse>> GetForChannelAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         if (!int.TryParse(broadcasterId, out var channelId)) return [];

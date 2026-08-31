@@ -24,6 +24,15 @@ function reasonFor(error: unknown): string | null {
   return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
 }
 
+type QuoteRow = Quote & { readonly ghost?: true };
+
+function ghostRows(count: number | null): QuoteRow[] {
+  if (count === null || count <= 0) return [];
+
+  return Array.from({ length: Math.min(count, 25) }, (_: unknown, index: number): QuoteRow =>
+    ({ id: -(index + 1), quote: '', timestamp: '', ghost: true }));
+}
+
 @Component({
   selector: 'app-quote-management',
   templateUrl: './quote-management.component.html',
@@ -45,6 +54,8 @@ export class QuoteManagementComponent {
 
   protected readonly quoteList: Signal<Quote[]> = this.entries.asReadonly();
   protected readonly loading: Signal<boolean> = this.isLoading.asReadonly();
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
   protected readonly busy: Signal<boolean> = this.isBusy.asReadonly();
   protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
 
@@ -52,7 +63,9 @@ export class QuoteManagementComponent {
 
   protected readonly count: Signal<number> = computed((): number => this.quoteList().length);
 
-  protected readonly dataSource: MatTableDataSource<Quote> = new MatTableDataSource<Quote>([]);
+  protected readonly dataSource: MatTableDataSource<QuoteRow> = new MatTableDataSource<QuoteRow>([]);
+
+  protected readonly trackQuote = (_: number, quote: QuoteRow): number => quote.id;
 
   protected readonly query: WritableSignal<string> = signal('');
 
@@ -71,7 +84,7 @@ export class QuoteManagementComponent {
       }
     };
 
-    effect((): Quote[] => this.dataSource.data = this.quoteList());
+    effect((): QuoteRow[] => this.dataSource.data = this.loading() ? ghostRows(this.expected()) : this.quoteList());
     effect((): void => {
       const sorter: MatSort | undefined = this.sorter();
       if (sorter) this.dataSource.sort = sorter;
@@ -98,7 +111,9 @@ export class QuoteManagementComponent {
     );
   }
 
-  protected async edit(quote: Quote): Promise<void> {
+  protected async edit(quote: QuoteRow): Promise<void> {
+    if (quote.ghost) return;
+
     const text: string | undefined = await this.ask(quote);
     if (!text) return;
 

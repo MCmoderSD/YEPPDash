@@ -20,7 +20,6 @@ public sealed class TwitchAuthService(
     {
         return oauthClient.BuildAuthorizationUrl(state);
     }
-
     
     public async Task<(ClaimsPrincipal Principal, TwitchUser User)> CompleteLoginAsync(string code, CancellationToken cancellationToken)
     {
@@ -43,9 +42,6 @@ public sealed class TwitchAuthService(
 
         try
         {
-            // Started together rather than one after the other: the colour is looked up by id, and
-            // the id came out of the auth cookie, so it does not have to wait for the profile. Two
-            // requests cost what the one used to.
             var profile = apiClient.GetCurrentUserAsync(token.AccessToken, cancellationToken);
             var color = ChatColorAsync(twitchUserId, token.AccessToken, cancellationToken);
 
@@ -59,8 +55,6 @@ public sealed class TwitchAuthService(
         }
     }
 
-    // A missing colour is not a reason to fail the session — the name simply renders in the default
-    // text colour, which is what happens for everyone who never picked one anyway.
     private async Task<string?> ChatColorAsync(string twitchUserId, string accessToken, CancellationToken cancellationToken)
     {
         try

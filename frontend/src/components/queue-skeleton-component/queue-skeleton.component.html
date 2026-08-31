@@ -1,0 +1,96 @@
+<div class="queue-skeleton app-skeleton-appear" role="status">
+  <span class="app-visually-hidden">Loading your queue…</span>
+
+  <p class="queue-skeleton-state-slot" aria-hidden="true">
+    <span class="app-skeleton queue-skeleton-state"></span>
+  </p>
+
+  <div class="queue-page-stage" aria-hidden="true">
+    @if (lines().length > 0) {
+      <p class="queue-page-stage-label">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-label"></span>
+      </p>
+
+      <div class="queue-page-stage-identity">
+        <span class="app-skeleton queue-skeleton-stage-avatar"></span>
+        <span class="queue-page-stage-name">
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-name"></span>
+        </span>
+      </div>
+
+      <div class="queue-page-controls">
+        <span class="app-skeleton queue-skeleton-button queue-skeleton-button-done"></span>
+      </div>
+    } @else {
+      <p class="queue-page-stage-label">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-waiting"></span>
+      </p>
+      <p class="queue-page-empty">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-line"></span>
+      </p>
+    }
+  </div>
+
+  <div class="queue-page-controls" aria-hidden="true">
+    <span class="app-skeleton queue-skeleton-button queue-skeleton-button-toggle"></span>
+    <span class="app-skeleton queue-skeleton-button queue-skeleton-button-clear"></span>
+  </div>
+
+  <div class="queue-page-panels" aria-hidden="true">
+    <section class="queue-page-panel">
+      <h2 class="queue-page-panel-title">The order</h2>
+      <p class="queue-page-panel-hint">
+        Everyone who has joined, first at the top. Drag by the handle to move somebody, or focus a
+        handle and use the arrow keys, Home and End. Chat sees whatever order you leave it in.
+      </p>
+
+      @if (lines().length > 0) {
+        <div class="app-fade-in">
+          <div class="queue-page-row queue-page-head">
+            <span></span>
+            <span class="queue-page-column queue-page-position">#</span>
+            <span class="queue-page-column">Name</span>
+            <span></span>
+          </div>
+
+          <div class="queue-page-rows">
+            @for (line of lines(); track line) {
+              <div class="queue-page-row queue-page-entry">
+                <span></span>
+                <span class="queue-page-position">{{ line + 1 }}</span>
+
+                <span class="queue-page-identity">
+                  <span class="app-skeleton queue-skeleton-avatar"></span>
+                  <span class="app-skeleton app-skeleton-bar queue-skeleton-row-name"></span>
+                </span>
+
+                <span class="app-skeleton queue-skeleton-remove"></span>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <p class="queue-page-empty">
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-empty"></span>
+        </p>
+      }
+    </section>
+
+    <section class="queue-page-panel">
+      <h2 class="queue-page-panel-title">Who may join</h2>
+
+      <span class="queue-skeleton-field">
+        <span class="app-skeleton queue-skeleton-field-box"></span>
+        <span class="app-skeleton app-skeleton-bar queue-skeleton-field-hint"></span>
+      </span>
+
+      <p class="queue-page-panel-note">
+        <mat-icon class="queue-page-note-icon" aria-hidden="true">info</mat-icon>
+        <span>
+          One level, not a floor: someone who does not hold exactly that role is turned away, even
+          if they hold a higher one. You and your moderators always get in.
+        </span>
+      </p>
+    </section>
+  </div>
+</div>

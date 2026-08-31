@@ -289,8 +289,15 @@ export class ScrollBarComponent {
 
     const thickness: number = vertical.offsetWidth || horizontal.offsetHeight;
 
-    const needsVertical: boolean = target.scrollHeight - target.clientHeight > 1;
-    const needsHorizontal: boolean = target.scrollWidth - target.clientWidth > 1;
+    const style: CSSStyleDeclaration | undefined = this.document.defaultView?.getComputedStyle(target);
+    const scrollableY: boolean = !style || style.overflowY === 'auto' || style.overflowY === 'scroll';
+    const scrollableX: boolean = !style || style.overflowX === 'auto' || style.overflowX === 'scroll';
+
+    const scrollHeight: number = scrollableY ? target.scrollHeight : target.clientHeight;
+    const scrollWidth: number = scrollableX ? target.scrollWidth : target.clientWidth;
+
+    const needsVertical: boolean = scrollHeight - target.clientHeight > 1;
+    const needsHorizontal: boolean = scrollWidth - target.clientWidth > 1;
 
     this.box.set(this.boxOf(target));
 
@@ -299,14 +306,14 @@ export class ScrollBarComponent {
     this.vertical.set(scrollBarAxis(
       target.clientHeight - (needsHorizontal ? thickness : 0) - inset,
       target.clientHeight,
-      target.scrollHeight,
+      scrollHeight,
       target.scrollTop
     ));
 
     this.horizontal.set(scrollBarAxis(
       target.clientWidth - (needsVertical ? thickness : 0) - inset,
       target.clientWidth,
-      target.scrollWidth,
+      scrollWidth,
       target.scrollLeft
     ));
   }

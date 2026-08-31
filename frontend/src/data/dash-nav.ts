@@ -22,6 +22,7 @@ export interface NavGroup {
 const BASE: string = isDashHost() ? '' : '/dash';
 
 export const OVERVIEW_PATH: string = BASE || '/';
+export const COMMUNITY_PATH: string = `${BASE}/community`;
 
 export const NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -46,6 +47,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         queryParams: { mode: RoleManagementMode.Vip },
       },
       {
+        label: 'Timeouts & Bans',
+        icon: 'gavel',
+        description: 'Who is timed out or banned, and until when.',
+        path: `${BASE}/timeouts`,
+      },
+      {
         label: 'Quotes',
         icon: 'format_quote',
         description: 'Everything your chat has saved for posterity.',
@@ -68,7 +75,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         label: 'Follower',
         icon: 'group',
         description: 'Who is around, and what roles they hold.',
-        path: `${BASE}/community`,
+        path: COMMUNITY_PATH,
       },
       {
         label: 'Birthdays',
@@ -90,6 +97,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     icon: 'sports_esports',
     items: [
       {
+        label: 'Queue',
+        icon: 'format_list_numbered',
+        description: 'Who is lined up, in order, driven from chat.',
+        path: `${BASE}/queue`,
+      },
+      {
         label: 'Lucky Wheel',
         icon: 'casino',
         mask: 'lucky-wheel.svg',
@@ -109,6 +122,19 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         mask: 'BDSM-Test-128px.png',
         description: 'Results your chat has shared with the channel.',
         path: `${BASE}/bdsm`,
+      },
+    ],
+  },
+  {
+    id: 'rewards',
+    label: 'Rewards',
+    icon: 'redeem',
+    items: [
+      {
+        label: 'Timeout Reward',
+        icon: 'gavel',
+        description: 'Let channel points buy a timeout, on your terms.',
+        path: `${BASE}/timeout-reward`,
       },
     ],
   },

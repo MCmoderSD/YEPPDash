@@ -2,7 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Service } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
-import { Birthday, BirthdayDraft } from '../data/birthday';
+import { Birthday, BirthdayDraft, FollowerBirthday } from '../data/birthday';
+import { CountResponse } from '../data/count';
 import { ApiService } from './api.service';
 
 @Service()
@@ -22,13 +23,24 @@ export class BirthdayService extends ApiService {
     }
   }
 
-  getFollowerBirthdays(userId: string): Promise<Birthday[]> {
+  getFollowerBirthdays(userId: string): Promise<FollowerBirthday[]> {
     return firstValueFrom(
-      this.http.get<Birthday[]>(
+      this.http.get<FollowerBirthday[]>(
         `${environment.apiBaseUrl}/birthdays/${encodeURIComponent(userId)}`,
         { withCredentials: true },
       ),
     );
+  }
+
+  async countFollowerBirthdays(userId: string): Promise<number> {
+    const response: CountResponse = await firstValueFrom(
+      this.http.get<CountResponse>(
+        `${environment.apiBaseUrl}/birthdays/${encodeURIComponent(userId)}/count`,
+        { withCredentials: true },
+      ),
+    );
+
+    return response.count;
   }
 
   addBirthday(userId: string, draft: BirthdayDraft): Promise<Birthday> {

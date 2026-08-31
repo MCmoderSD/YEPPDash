@@ -35,6 +35,14 @@
   background: var(--mat-sys-surface-container-low);
 }
 
+// The global utility stays in normal flow on purpose, but inside this flex column that would make
+// the loading announcement a real item — a full gap taller than the stage it is meant to sit under,
+// which has no such line to begin with. It only ever appears in the unloaded stage, so this is safe
+// to key off the class alone.
+.timer-page-stage > .app-visually-hidden {
+  position: absolute;
+}
+
 // clamp rather than a fixed size: the readout is the point of the page on a wide screen, and eight
 // characters at a headline size still have to fit a phone.
 .timer-page-readout {
@@ -239,42 +247,106 @@
   }
 }
 
-// A description list rather than a table: each command has exactly one explanation, and a table
-// would announce a column header before every one of them.
-//
-// This panel is stretched to whatever height its neighbour has, and the leftover used to pool at the
-// bottom as one blank band. `flex: 1 1 auto` hands that leftover to the list and `space-between`
-// spreads it between the rows — growing only into space that already exists, so the list never makes
-// the panel taller than the one beside it. Without the auto basis the rows would be squashed to
-// nothing when there is no slack to take.
-.timer-page-commands {
-  display: grid;
-  flex: 1 1 auto;
-  align-content: space-between;
-  gap: 0.25rem 1rem;
-  margin: 0;
-  grid-template-columns: max-content minmax(0, 1fr);
+// --- the initial-load skeleton ----------------------------------------------------------------
+// Surface, pulse, corners, text heights and the held-back appearance all come from the global
+// .app-skeleton utilities in styles.scss. The frames these stand-ins sit inside are the page's own
+// .timer-page-stage, .timer-page-controls, .timer-page-appearance etc., reused as-is in the
+// template, so only the stand-ins' own widths, heights and shapes are declared here.
 
-  dt {
-    color: var(--mat-sys-primary);
-    font-family: var(--mat-sys-body-medium-font), monospace;
-    font-weight: 600;
-    white-space: nowrap;
-  }
+// The state line reads centred, but .app-skeleton is a block: without a width it would stretch to
+// its paragraph's full, already-centred box, and without this margin it would hug that box's start
+// edge instead of sitting in the middle of it the way the sentence it replaces does.
+.timer-page-skeleton-state {
+  width: min(19rem, 75vw);
+  margin-inline: auto;
+}
 
-  dd {
-    margin: 0;
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-body-medium);
-  }
+// The readout sits inside .timer-page-readout, so it inherits that paragraph's own clamp(2.5rem,
+// 12vw, 5rem) font size and 1.1 line height — the shared 1lh rides both, which a fixed rem height
+// could not do across the readout's own responsive range. The width is in ch rather than rem for
+// the same reason: "00:00:00" is eight tabular-nums-width characters, and ch scales with the font
+// size the bar sits in instead of only fitting one point on the clamp.
+.timer-page-skeleton-readout {
+  width: 8ch;
+}
 
-  // Two columns of nowrap command names do not survive a phone; stacked, each command keeps its
-  // explanation directly under it.
-  @media (max-width: 30rem) {
-    grid-template-columns: minmax(0, 1fr);
+// Material's flat and stroked buttons: 40px tall, fully rounded, as wide as their icon and label.
+.timer-page-skeleton-button {
+  height: 2.5rem;
+  border-radius: var(--mat-sys-corner-full);
+}
 
-    dd {
-      margin-block-end: 0.5rem;
-    }
-  }
+// "Pause" runs a touch longer than "Start", so the wider of the two is what the stand-in has to fit
+// without knowing yet which word is coming.
+.timer-page-skeleton-button-toggle {
+  width: 7rem;
+}
+
+.timer-page-skeleton-button-reset {
+  width: 7.5rem;
+}
+
+.timer-page-skeleton-button-save {
+  width: 6rem;
+}
+
+.timer-page-skeleton-button-copy {
+  width: 11.5rem;
+}
+
+.timer-page-skeleton-button-reset-defaults {
+  width: 10.5rem;
+}
+
+// One child of the appearance grid, like the real mat-form-field is — as two the box and hint would
+// pick up the grid's own 0.75rem gap between them instead of the field's few pixels, and .app-fade-in
+// on this stand-in shape rather than the box+hint pair is what makes it a single grid cell.
+.timer-page-skeleton-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// An outlined Material field: 56px of box, whichever of the four this stands in for.
+.timer-page-skeleton-field-box {
+  height: 3.5rem;
+  border-radius: 0.5rem;
+}
+
+// The hint under it, indented by the field's own 1rem of padding. Four fields reading the same width
+// would look drawn rather than waited for, so every other one runs a touch shorter.
+.timer-page-skeleton-field-hint {
+  width: min(11rem, 70%);
+  height: 1rem;
+  margin-inline-start: 1rem;
+}
+
+.timer-page-skeleton-field:nth-child(2n) .timer-page-skeleton-field-hint {
+  width: min(8.5rem, 55%);
+}
+
+// The switch plus its caption, grouped the way mat-slide-toggle lays its own label out — as two
+// separate children they would pick up .timer-page-switches' 1.5rem inter-toggle gap instead of the
+// few pixels between a switch and its own words.
+.timer-page-skeleton-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// The compact toggle's own track, from the .app-toggle-compact tokens in styles.scss: 36 by 20.
+.timer-page-skeleton-toggle {
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: var(--mat-sys-corner-full);
+}
+
+// "Drop shadow for bright scenes" against "Animate digit changes" — kept two different widths so the
+// pair does not read as one caption stamped twice.
+.timer-page-skeleton-switch-shadow {
+  width: 11rem;
+}
+
+.timer-page-skeleton-switch-animate {
+  width: 8.5rem;
 }

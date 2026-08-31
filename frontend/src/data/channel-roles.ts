@@ -7,3 +7,7 @@ export interface Vip extends TwitchUser {}
 export interface Editor extends TwitchUser {
   editorSince: string;
 }
+
+export interface ChannelMember {
+  userId: string;
+}

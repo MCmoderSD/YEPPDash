@@ -53,6 +53,28 @@ function isDraft(command: CustomCommand): boolean {
   return command.name === '';
 }
 
+const SKELETON_ROW_CAP: number = 25;
+const SKELETON_MARKER: string = '\u0000skeleton-';
+
+function isSkeleton(command: CustomCommand): boolean {
+  return command.name.startsWith(SKELETON_MARKER);
+}
+
+function skeletonRow(index: number): CustomCommand {
+  return {
+    name: `${SKELETON_MARKER}${index}`,
+    aliases: [],
+    message: '',
+    active: true,
+    responseType: DEFAULT_RESPONSE_TYPE,
+    userLevel: DEFAULT_USER_LEVEL,
+  };
+}
+
+function skeletonRows(count: number): CustomCommand[] {
+  return Array.from({ length: Math.min(count, SKELETON_ROW_CAP) }, (_, index: number): CustomCommand => skeletonRow(index));
+}
+
 @Component({
   selector: 'app-command-table',
   templateUrl: './command-table.component.html',
@@ -66,6 +88,8 @@ export class CommandTableComponent {
   readonly busy: InputSignal<boolean> = input<boolean>(false);
 
   readonly loading: InputSignal<boolean> = input<boolean>(false);
+
+  readonly expected: InputSignal<number | null> = input<number | null>(null);
 
   readonly unreachable: InputSignal<boolean> = input<boolean>(false);
 
@@ -85,13 +109,19 @@ export class CommandTableComponent {
 
   protected readonly query: WritableSignal<string> = signal('');
 
-  private readonly rows: Signal<CustomCommand[]> = computed((): CustomCommand[] => this.adding() ? [DRAFT, ...this.commands()] : this.commands());
+  protected readonly initialLoad: Signal<boolean> = computed((): boolean => this.loading() && this.commands().length === 0);
+
+  private readonly rows: Signal<CustomCommand[]> = computed((): CustomCommand[] => {
+    if (this.initialLoad()) return skeletonRows(this.expected() ?? 0);
+    return this.adding() ? [DRAFT, ...this.commands()] : this.commands();
+  });
 
   private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
 
   constructor() {
     this.dataSource.filterPredicate = (command: CustomCommand, filter: string): boolean => {
       return isDraft(command)
+        || isSkeleton(command)
         || commandTriggers(command).some((trigger: string): boolean => trigger.toLowerCase().includes(filter))
         || command.message.toLowerCase().includes(filter);
     };
@@ -126,6 +156,10 @@ export class CommandTableComponent {
     return isDraft(command);
   }
 
+  protected isSkeleton(command: CustomCommand): boolean {
+    return isSkeleton(command);
+  }
+
   protected isOpen(command: CustomCommand): boolean {
     return isDraft(command) ? this.adding() : this.editing() === command.name;
   }
@@ -147,6 +181,8 @@ export class CommandTableComponent {
 
   protected toggle(command: CustomCommand, event?: Event): void {
     event?.stopPropagation();
+
+    if (isSkeleton(command)) return;
 
     if (isDraft(command)) {
       this.adding.set(false);

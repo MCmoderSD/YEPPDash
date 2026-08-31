@@ -9,6 +9,7 @@ public sealed class TwitchChannelService(
     TwitchAuthService authService,
     TwitchApiClient apiClient,
     TwitchChannelCache cache,
+    TwitchUserCache userCache,
     ILogger<TwitchChannelService> logger
 ) {
 
@@ -42,8 +43,43 @@ public sealed class TwitchChannelService(
 
     public async Task<IReadOnlyList<TwitchUser>> GetUserProfilesAsync(string broadcasterId, IReadOnlyCollection<string> userIds, IReadOnlyCollection<string> logins, CancellationToken cancellationToken)
     {
-        var users = await GetUsersAsync(broadcasterId, userIds, logins, cancellationToken);
-        return await EnrichAsync(broadcasterId, users, cancellationToken);
+        var ordered = new List<string>(userIds.Count);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var resolved = new Dictionary<string, TwitchUser>(userIds.Count, StringComparer.Ordinal);
+        var missing = new List<string>();
+
+        foreach (var userId in userIds)
+        {
+            if (!seen.Add(userId)) continue;
+            ordered.Add(userId);
+
+            var cached = userCache.Get(broadcasterId, userId);
+            if (cached is null) missing.Add(userId);
+            else resolved[userId] = cached;
+        }
+
+        if (missing.Count + logins.Count > 0)
+        {
+            var fetched = await GetUsersAsync(broadcasterId, missing, logins, cancellationToken);
+            var enriched = await EnrichAsync(broadcasterId, fetched, cancellationToken);
+
+            foreach (var user in enriched)
+            {
+                userCache.Set(broadcasterId, user);
+
+                resolved[user.Id] = user;
+                if (seen.Add(user.Id)) ordered.Add(user.Id);
+            }
+        }
+
+        var profiles = new List<TwitchUser>(ordered.Count);
+
+        foreach (var userId in ordered)
+        {
+            if (resolved.TryGetValue(userId, out var user)) profiles.Add(user);
+        }
+
+        return profiles;
     }
 
     private async Task<IReadOnlyList<TwitchUser>> EnrichAsync(string broadcasterId, IReadOnlyList<TwitchUser> users, CancellationToken cancellationToken)
@@ -51,21 +87,18 @@ public sealed class TwitchChannelService(
         if (users.Count is 0) return users;
 
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
-        var colors = new Dictionary<string, string?>(users.Count, StringComparer.Ordinal);
 
-        foreach (var batch in users.Chunk(TwitchApiClient.MaxBatchSize))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        var colorTask = GetChatColorsAsync(users, accessToken, cancellationToken);
+        var moderatorTask = GetModeratorsAsync(broadcasterId, cancellationToken);
+        var vipTask = GetVipsAsync(broadcasterId, cancellationToken);
+        var editorTask = GetEditorsAsync(broadcasterId, cancellationToken);
 
-            var found = await apiClient.GetChatColorsAsync(
-                [.. batch.Select(user => user.Id)], accessToken, cancellationToken);
+        await Task.WhenAll(colorTask, moderatorTask, vipTask, editorTask);
 
-            foreach (var color in found) colors[color.UserId] = color.Color;
-        }
-
-        var moderators = (await GetModeratorsAsync(broadcasterId, cancellationToken)).Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
-        var vips = (await GetVipsAsync(broadcasterId, cancellationToken)).Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
-        var editors = (await GetEditorsAsync(broadcasterId, cancellationToken)).Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
+        var colors = await colorTask;
+        var moderators = (await moderatorTask).Select(moderator => moderator.UserId).ToHashSet(StringComparer.Ordinal);
+        var vips = (await vipTask).Select(vip => vip.UserId).ToHashSet(StringComparer.Ordinal);
+        var editors = (await editorTask).Select(editor => editor.UserId).ToHashSet(StringComparer.Ordinal);
 
         return users.Select(user => user with
         {
@@ -75,8 +108,24 @@ public sealed class TwitchChannelService(
                 Moderator: moderators.Contains(user.Id),
                 Vip: vips.Contains(user.Id),
                 Editor: editors.Contains(user.Id),
-                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase)),
+                Verified: user.BroadcasterType.Equals("partner", StringComparison.OrdinalIgnoreCase))
         }).ToList();
+    }
+
+    private async Task<Dictionary<string, string?>> GetChatColorsAsync(IReadOnlyList<TwitchUser> users, string accessToken, CancellationToken cancellationToken)
+    {
+        var colors = new Dictionary<string, string?>(users.Count, StringComparer.Ordinal);
+
+        foreach (var batch in users.Chunk(TwitchApiClient.MaxBatchSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var found = await apiClient.GetChatColorsAsync([.. batch.Select(user => user.Id)], accessToken, cancellationToken);
+
+            foreach (var color in found) colors[color.UserId] = color.Color;
+        }
+
+        return colors;
     }
     #endregion
 
@@ -84,16 +133,19 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var moderators = await GetModeratorsAsync(broadcasterId, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. moderators.Select(moderator => moderator.UserId)], [], cancellationToken);
+    }
+
+    public async Task<int> GetModeratorCountAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        return cache.GetCount(ChannelRole.Moderator, broadcasterId) ?? (await GetModeratorsAsync(broadcasterId, cancellationToken)).Count;
     }
 
     public async Task<IReadOnlyList<TwitchUser>> GetModeratorProfilesByIdAsync(
         string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var moderators = await GetModeratorsByIdAsync(broadcasterId, userIds, cancellationToken);
-        return await GetUserProfilesAsync(
-            broadcasterId, moderators.Select(moderator => moderator.UserId).ToArray(), [], cancellationToken);
+        return await GetUserProfilesAsync(broadcasterId, [.. moderators.Select(moderator => moderator.UserId)], [], cancellationToken);
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetModeratorsAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -118,19 +170,31 @@ public sealed class TwitchChannelService(
     public async Task AddModeratorAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
-        await apiClient.AddModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
-        cache.Invalidate(ChannelRole.Moderator, broadcasterId);
 
-        logger.LogInformation("Added {UserId} as moderator in channel {BroadcasterId}", userId, broadcasterId);
+        var vips = await GetVipsByIdAsync(broadcasterId, [userId], cancellationToken);
+        if (vips.Count > 0)
+        {
+            await apiClient.RemoveVipAsync(broadcasterId, userId, accessToken, cancellationToken);
+            SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: false);
+
+            logger.LogInformation("Removed {UserId} as VIP to make them a moderator in the channel {BroadcasterId}", userId, broadcasterId);
+        }
+
+        await apiClient.AddModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
+        SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: true);
+        userCache.Invalidate(broadcasterId, userId);
+
+        logger.LogInformation("Added {UserId} as moderator in the channel {BroadcasterId}", userId, broadcasterId);
     }
 
     public async Task RemoveModeratorAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
         await apiClient.RemoveModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
-        cache.Invalidate(ChannelRole.Moderator, broadcasterId);
+        SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: false);
+        userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Removed {UserId} as moderator in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Removed {UserId} as moderator in the channel {BroadcasterId}", userId, broadcasterId);
     }
     #endregion
 
@@ -141,8 +205,12 @@ public sealed class TwitchChannelService(
         return await GetUserProfilesAsync(broadcasterId, [.. vips.Select(vip => vip.UserId)], [], cancellationToken);
     }
 
-    public async Task<IReadOnlyList<TwitchUser>> GetVipProfilesByIdAsync(
-        string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    public async Task<int> GetVipCountAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        return cache.GetCount(ChannelRole.Vip, broadcasterId) ?? (await GetVipsAsync(broadcasterId, cancellationToken)).Count;
+    }
+
+    public async Task<IReadOnlyList<TwitchUser>> GetVipProfilesByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
     {
         var vips = await GetVipsByIdAsync(broadcasterId, userIds, cancellationToken);
         return await GetUserProfilesAsync(broadcasterId, [.. vips.Select(vip => vip.UserId)], [], cancellationToken);
@@ -170,19 +238,31 @@ public sealed class TwitchChannelService(
     public async Task AddVipAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
-        await apiClient.AddVipAsync(broadcasterId, userId, accessToken, cancellationToken);
-        cache.Invalidate(ChannelRole.Vip, broadcasterId);
 
-        logger.LogInformation("Added {UserId} as VIP in channel {BroadcasterId}", userId, broadcasterId);
+        var moderators = await GetModeratorsByIdAsync(broadcasterId, [userId], cancellationToken);
+        if (moderators.Count > 0)
+        {
+            await apiClient.RemoveModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
+            SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: false);
+
+            logger.LogInformation("Removed {UserId} as moderator to make them a VIP in the channel {BroadcasterId}", userId, broadcasterId);
+        }
+
+        await apiClient.AddVipAsync(broadcasterId, userId, accessToken, cancellationToken);
+        SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: true);
+        userCache.Invalidate(broadcasterId, userId);
+
+        logger.LogInformation("Added {UserId} as VIP in the channel {BroadcasterId}", userId, broadcasterId);
     }
 
     public async Task RemoveVipAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
         await apiClient.RemoveVipAsync(broadcasterId, userId, accessToken, cancellationToken);
-        cache.Invalidate(ChannelRole.Vip, broadcasterId);
+        SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: false);
+        userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Removed {UserId} as VIP in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Removed {UserId} as VIP in the channel {BroadcasterId}", userId, broadcasterId);
     }
     #endregion
 
@@ -199,8 +279,7 @@ public sealed class TwitchChannelService(
         return await ToEditorProfilesAsync(broadcasterId, editors, cancellationToken);
     }
 
-    private async Task<IReadOnlyList<TwitchEditorProfile>> ToEditorProfilesAsync(
-        string broadcasterId, IReadOnlyList<TwitchChannelEditor> editors, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<TwitchEditorProfile>> ToEditorProfilesAsync(string broadcasterId, IReadOnlyList<TwitchChannelEditor> editors, CancellationToken cancellationToken)
     {
         var users = await GetUserProfilesAsync(broadcasterId, [.. editors.Select(editor => editor.UserId)], [], cancellationToken);
         var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
@@ -214,7 +293,11 @@ public sealed class TwitchChannelService(
     public async Task<IReadOnlyList<TwitchChannelEditor>> GetEditorsAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
-        return await apiClient.GetEditorsAsync(broadcasterId, accessToken, cancellationToken);
+        var editors = await apiClient.GetEditorsAsync(broadcasterId, accessToken, cancellationToken);
+
+        cache.SetCount(ChannelRole.Editor, broadcasterId, editors.Count);
+
+        return editors;
     }
 
     public async Task<IReadOnlyList<TwitchChannelEditor>> GetEditorsByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
@@ -248,8 +331,20 @@ public sealed class TwitchChannelService(
 
         var users = await GetUserProfilesAsync(broadcasterId, [follow.UserId], [], cancellationToken);
 
-        return new FollowStatusResponse(
-            true, users.Count is 0 ? null : new TwitchFollowerProfile(users[0], follow.FollowedAt));
+        return new FollowStatusResponse(true, users.Count is 0 ? null : new TwitchFollowerProfile(users[0], follow.FollowedAt));
+    }
+
+    public async Task<int> GetFollowerCountAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        if (cache.GetCount(ChannelRole.Follower, broadcasterId) is { } remembered) return remembered;
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var page = await apiClient.GetFollowersAsync(broadcasterId, accessToken, null, cancellationToken);
+
+        var count = page.Total ?? page.Items.Count;
+        cache.SetCount(ChannelRole.Follower, broadcasterId, count);
+
+        return count;
     }
 
     public Task<IReadOnlyList<TwitchFollower>> GetFollowersAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -270,17 +365,118 @@ public sealed class TwitchChannelService(
     #endregion
 
     #region Bans
-    public async Task<BanStatusResponse> GetBanStatusAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
+    // The ban itself, or null for nobody Twitch reports as banned. An account Twitch no longer
+    // resolves counts as the latter, the same rule the list and the counts follow — a ban the
+    // dashboard cannot show is not one it claims to know about either.
+    public async Task<TwitchBanProfile?> GetBanProfileAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
     {
         var ban = await GetBannedUserAsync(broadcasterId, userId, cancellationToken);
-        if (ban is null) return new BanStatusResponse(false, null);
+        if (ban is null) return null;
 
         var users = await GetUserProfilesAsync(broadcasterId, [ban.UserId, ban.ModeratorId], [], cancellationToken);
         var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
 
         return byId.TryGetValue(ban.UserId, out var banned)
-            ? new BanStatusResponse(true, new TwitchBanProfile(banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason))
-            : new BanStatusResponse(true, null);
+            ? new TwitchBanProfile(banned, byId.GetValueOrDefault(ban.ModeratorId), ban.ExpiresAt, ban.CreatedAt, ban.Reason)
+            : null;
+    }
+
+    public async Task<IReadOnlyList<TwitchBanProfile>> GetBannedProfilesAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var bans = await GetBannedUsersAsync(broadcasterId, cancellationToken);
+        if (bans.Count is 0) return [];
+
+        var ids = bans.Select(ban => ban.UserId)
+            .Concat(bans.Select(ban => ban.ModeratorId))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var users = await GetUserProfilesAsync(broadcasterId, ids, [], cancellationToken);
+        var byId = users.ToDictionary(user => user.Id, StringComparer.Ordinal);
+        
+        var profiles = bans.Where(ban => byId.ContainsKey(ban.UserId)).ToList();
+        CountBans(broadcasterId, profiles);
+
+        return [.. profiles.Select(ban => new TwitchBanProfile(
+            byId[ban.UserId],
+            byId.GetValueOrDefault(ban.ModeratorId),
+            ban.ExpiresAt,
+            ban.CreatedAt,
+            ban.Reason))];
+    }
+
+    public async Task<BanCountResponse> GetBanCountsAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var timeouts = cache.GetCount(ChannelRole.TimedOut, broadcasterId);
+        var bans = cache.GetCount(ChannelRole.Banned, broadcasterId);
+
+        if (timeouts is { } knownTimeouts && bans is { } knownBans) return new BanCountResponse(knownTimeouts, knownBans);
+
+        var all = await GetBannedUsersAsync(broadcasterId, cancellationToken);
+        if (all.Count is 0) return CountBans(broadcasterId, all);
+
+        var alive = (await GetUsersAsync(broadcasterId, [.. all.Select(ban => ban.UserId).Distinct(StringComparer.Ordinal)], [], cancellationToken))
+            .Select(user => user.Id)
+            .ToHashSet(StringComparer.Ordinal);
+
+        return CountBans(broadcasterId, [.. all.Where(ban => alive.Contains(ban.UserId))]);
+    }
+
+    public async Task<TwitchBanResult> BanUserAsync(string broadcasterId, string userId, long? duration, string? reason, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var ban = new TwitchBanCreate { UserId = userId, Duration = duration, Reason = reason };
+        var result = await apiClient.BanUserAsync(broadcasterId, broadcasterId, ban, accessToken, cancellationToken);
+
+        cache.Invalidate(ChannelRole.TimedOut, broadcasterId);
+        cache.Invalidate(ChannelRole.Banned, broadcasterId);
+        cache.Invalidate(ChannelRole.Moderator, broadcasterId);
+        cache.Invalidate(ChannelRole.Vip, broadcasterId);
+        userCache.Invalidate(broadcasterId, userId);
+
+        logger.LogInformation(
+            "Banned {UserId} in channel {BroadcasterId} until {EndTime}",
+            userId, broadcasterId, result.EndTime?.ToString("O") ?? "forever");
+
+        return result;
+    }
+
+    private async Task<IReadOnlyList<TwitchBannedUser>> GetBannedUsersAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var bans = new List<TwitchBannedUser>();
+        var page = await apiClient.GetBannedUsersAsync(broadcasterId, accessToken, null, cancellationToken);
+        bans.AddRange(page.Items);
+
+        var pages = 1;
+
+        while (page.Cursor is not null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            page = await apiClient.GetBannedUsersAsync(broadcasterId, accessToken, page.Cursor, cancellationToken);
+            bans.AddRange(page.Items);
+            pages++;
+        }
+
+        logger.LogDebug(
+            "Paginated {Count} bans of channel {BroadcasterId} across {Pages} pages",
+            bans.Count, broadcasterId, pages);
+
+        return bans;
+    }
+
+    private BanCountResponse CountBans(string broadcasterId, IReadOnlyList<TwitchBannedUser> bans)
+    {
+        var timeouts = bans.Count(ban => ban.ExpiresAt is not null);
+        var permanent = bans.Count - timeouts;
+
+        cache.SetCount(ChannelRole.TimedOut, broadcasterId, timeouts);
+        cache.SetCount(ChannelRole.Banned, broadcasterId, permanent);
+
+        return new BanCountResponse(timeouts, permanent);
     }
 
     public async Task<TwitchBannedUser?> GetBannedUserAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -293,8 +489,10 @@ public sealed class TwitchChannelService(
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
 
-        // The token belongs to the broadcaster, so they are their own moderator of record here.
         await apiClient.UnbanUserAsync(broadcasterId, broadcasterId, userId, accessToken, cancellationToken);
+
+        cache.Invalidate(ChannelRole.TimedOut, broadcasterId);
+        cache.Invalidate(ChannelRole.Banned, broadcasterId);
 
         logger.LogInformation("Unbanned {UserId} in channel {BroadcasterId}", userId, broadcasterId);
     }
@@ -305,6 +503,16 @@ public sealed class TwitchChannelService(
     {
         var blocked = await GetBlockedUsersAsync(broadcasterId, cancellationToken);
         return await GetUserProfilesAsync(broadcasterId, [.. blocked.Select(user => user.UserId)], [], cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0) return [];
+
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        var blocked = await GetBlockedUsersAsync(broadcasterId, cancellationToken);
+
+        return [.. blocked.Where(user => wanted.Contains(user.UserId))];
     }
 
     public Task<IReadOnlyList<TwitchChannelUser>> GetBlockedUsersAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -321,9 +529,72 @@ public sealed class TwitchChannelService(
     {
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
         await apiClient.UnblockUserAsync(userId, accessToken, cancellationToken);
-        cache.Invalidate(ChannelRole.Blocked, broadcasterId);
+        SetRoleMembership(ChannelRole.Blocked, broadcasterId, userId, member: false);
+        userCache.Invalidate(broadcasterId, userId);
 
         logger.LogInformation("Unblocked {UserId} for user {BroadcasterId}", userId, broadcasterId);
+    }
+    #endregion
+
+    #region Channel
+    public async Task<ChannelInformation?> GetChannelAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var channel = await apiClient.GetChannelAsync(broadcasterId, accessToken, cancellationToken);
+
+        return channel is null ? null : await WithBoxArtAsync(channel, accessToken, cancellationToken);
+    }
+
+    public async Task<ChannelInformation?> UpdateChannelAsync(string broadcasterId, ChannelUpdate update, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        await apiClient.ModifyChannelAsync(broadcasterId, update, accessToken, cancellationToken);
+
+        logger.LogInformation("Updated the channel information of {BroadcasterId}", broadcasterId);
+
+        return await GetChannelAsync(broadcasterId, cancellationToken);
+    }
+
+    private async Task<ChannelInformation> WithBoxArtAsync(ChannelInformation channel, string accessToken, CancellationToken cancellationToken)
+    {
+        if (channel.GameId.Length is 0) return channel;
+
+        try
+        {
+            var games = await apiClient.GetGamesAsync([channel.GameId], accessToken, cancellationToken);
+            var boxArtUrl = games.FirstOrDefault()?.BoxArtUrl;
+
+            return string.IsNullOrEmpty(boxArtUrl) ? channel : channel with { BoxArtUrl = boxArtUrl };
+        }
+        catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
+        {
+            logger.LogWarning(exception, "Could not look up the box art for game {GameId}", channel.GameId);
+            return channel;
+        }
+    }
+
+    public async Task<IReadOnlyList<ChannelCategory>> GetGamesAsync(string broadcasterId, IReadOnlyCollection<string> gameIds, CancellationToken cancellationToken)
+    {
+        if (gameIds.Count is 0) return [];
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.GetGamesAsync(gameIds, accessToken, cancellationToken);
+    }
+
+    public async Task<HelixPage<ChannelCategory>> SearchCategoriesAsync(string broadcasterId, string search, int first, string? cursor, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        return await apiClient.SearchCategoriesAsync(search, first, cursor, accessToken, cancellationToken);
+    }
+    #endregion
+
+    #region Streams
+    public async Task<StreamStatusResponse> GetStreamStatusAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var stream = await apiClient.GetStreamAsync(broadcasterId, accessToken, cancellationToken);
+
+        return new StreamStatusResponse(stream is not null, stream);
     }
     #endregion
 
@@ -332,6 +603,41 @@ public sealed class TwitchChannelService(
     {
         var chatters = await GetChattersAsync(broadcasterId, cancellationToken);
         return await GetUserProfilesAsync(broadcasterId, [.. chatters.Select(chatter => chatter.UserId)], [], cancellationToken);
+    }
+
+    public async Task<int> GetChatterCountAsync(string broadcasterId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var page = await apiClient.GetChattersAsync(broadcasterId, accessToken, null, cancellationToken);
+
+        return page.Total ?? page.Items.Count;
+    }
+
+    public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersByIdAsync(string broadcasterId, IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count is 0) return [];
+
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var wanted = userIds.ToHashSet(StringComparer.Ordinal);
+        var found = new List<TwitchChannelUser>();
+
+        string? cursor = null;
+
+        do
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var page = await apiClient.GetChattersAsync(broadcasterId, accessToken, cursor, cancellationToken);
+
+            found.AddRange(page.Items.Where(chatter => wanted.Remove(chatter.UserId)));
+
+            if (wanted.Count is 0) break;
+
+            cursor = page.Cursor;
+        }
+        while (cursor is not null);
+
+        return found;
     }
 
     public async Task<IReadOnlyList<TwitchChannelUser>> GetChattersAsync(string broadcasterId, CancellationToken cancellationToken)
@@ -359,6 +665,43 @@ public sealed class TwitchChannelService(
             all.Count, broadcasterId, pages);
 
         return all;
+    }
+    #endregion
+
+    #region Channel Points
+    public async Task<IReadOnlyList<CustomReward>> GetCustomRewardsAsync(string broadcasterId, IReadOnlyCollection<string> rewardIds, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+
+        var rewardsTask = apiClient.GetCustomRewardsAsync(broadcasterId, rewardIds, onlyManageable: false, accessToken, cancellationToken);
+        var manageableTask = apiClient.GetCustomRewardsAsync(broadcasterId, [], onlyManageable: true, accessToken, cancellationToken);
+
+        var rewards = await rewardsTask;
+        var manageable = (await manageableTask).Select(reward => reward.Id).ToHashSet(StringComparer.Ordinal);
+
+        return [.. rewards.Select(reward => reward with { IsManageable = manageable.Contains(reward.Id) })];
+    }
+
+    public async Task<CustomReward> CreateCustomRewardAsync(string broadcasterId, CustomRewardCreate create, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var reward = await apiClient.CreateCustomRewardAsync(broadcasterId, create, accessToken, cancellationToken);
+
+        return reward with { IsManageable = true };
+    }
+
+    public async Task<CustomReward> UpdateCustomRewardAsync(string broadcasterId, string rewardId, CustomRewardUpdate update, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        var reward = await apiClient.UpdateCustomRewardAsync(broadcasterId, rewardId, update, accessToken, cancellationToken);
+
+        return reward with { IsManageable = true };
+    }
+
+    public async Task DeleteCustomRewardAsync(string broadcasterId, string rewardId, CancellationToken cancellationToken)
+    {
+        var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
+        await apiClient.DeleteCustomRewardAsync(broadcasterId, rewardId, accessToken, cancellationToken);
     }
     #endregion
 
@@ -417,6 +760,25 @@ public sealed class TwitchChannelService(
 
         cache.Set(role, broadcasterId, all);
         return all;
+    }
+
+    private void SetRoleMembership(ChannelRole role, string broadcasterId, string userId, bool member)
+    {
+        var cached = cache.Get<TwitchChannelUser>(role, broadcasterId);
+
+        if (cached is not null)
+        {
+            var updated = cached.Where(entry => !string.Equals(entry.UserId, userId, StringComparison.Ordinal)).ToList();
+            if (member) updated.Add(new TwitchChannelUser { UserId = userId });
+
+            cache.Set(role, broadcasterId, updated);
+            return;
+        }
+
+        if (cache.GetCount(role, broadcasterId) is { } count)
+        {
+            cache.SetCount(role, broadcasterId, Math.Max(0, member ? count + 1 : count - 1));
+        }
     }
 
     private static bool IsCoveredBy<T>(IReadOnlyList<T> page, IReadOnlyList<T> cached, Func<T, string> idOf)

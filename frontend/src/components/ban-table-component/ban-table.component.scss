@@ -1,0 +1,222 @@
+@use '../../styles/chat-color' as chat;
+
+.ban-table {
+  display: flex;
+  flex-direction: column;
+
+  // The containing block for the scroll bar drawn over the table below.
+  position: relative;
+}
+
+.ban-table-search {
+  width: 100%;
+}
+
+// Narrow viewports scroll the table instead of squashing the columns into unreadable slivers.
+//
+// Both axes are named on purpose. Setting overflow-x alone computes overflow-y from visible to
+// auto, and the table then answers a fraction of a pixel of rounding — at a browser zoom other
+// than 100%, reliably — with a full-height vertical scrollbar over rows that already fit. Nothing
+// is clipped by hiding it: this box has no height of its own and grows with its rows.
+.ban-table-scroll {
+  overflow: auto hidden;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-outlined);
+}
+
+table.ban-table-grid {
+  width: 100%;
+  background: transparent;
+
+  //noinspection CssUnusedSymbol
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 0.5rem;
+  }
+}
+
+.ban-table-row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-within {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+.ban-table-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ban-table-name {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.ban-table-display-name {
+  @include chat.chat-color;
+
+  white-space: nowrap;
+}
+
+.ban-table-avatar {
+  flex: none;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ban-table-display-name {
+  @include chat.chat-color;
+
+  white-space: nowrap;
+}
+
+.ban-table-avatar {
+  flex: none;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+// Dates read off in passing, like the id column in the user table — quiet and never wrapped.
+.ban-table-when {
+  color: var(--mat-sys-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// A reason can be a whole sentence; the row shows its start and the title attribute the rest.
+.ban-table-reason {
+  max-width: 14rem;
+  color: var(--mat-sys-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ban-table-actions {
+  width: 3.5rem;
+  text-align: end;
+  white-space: nowrap;
+}
+
+// Same as the user table: the control stays out of the way until the row is pointed at, and a
+// touch screen keeps it visible because it never reports a hover state.
+@media (hover: hover) {
+  //noinspection CssUnusedSymbol
+  .ban-table-actions .mat-mdc-icon-button {
+    opacity: 0;
+    transition: opacity 120ms var(--mat-sys-easing-standard, ease);
+  }
+
+  //noinspection CssUnusedSymbol
+  .ban-table-row:hover .mat-mdc-icon-button,
+  .ban-table-row:focus-within .mat-mdc-icon-button {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    //noinspection CssUnusedSymbol
+    .ban-table-actions .mat-mdc-icon-button {
+      transition: none;
+    }
+  }
+}
+
+.ban-table-paginator {
+  align-self: stretch;
+  background: transparent;
+}
+
+.ban-table-empty {
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+// --- Ghost rows (first load) ----------------------------------------------------------------
+// A grid living inside matNoDataRow's one cell, standing in for rows CDK has not drawn yet.
+
+.ban-table-ghost-cell {
+  padding: 0;
+}
+
+.ban-table-ghost {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9rem 10rem 3.5rem;
+}
+
+.ban-table-ghost-row {
+  display: contents;
+}
+
+.ban-table-ghost-column {
+  display: flex;
+  align-items: center;
+
+  // Material's default MDC data-row height, which this table never overrides.
+  height: 3.25rem;
+  padding: 0 0.5rem;
+}
+
+.ban-table-ghost-identity {
+  gap: 0.5rem;
+}
+
+.ban-table-ghost-avatar {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 50%;
+}
+
+.ban-table-ghost-name {
+  width: 9rem;
+  height: 1.25rem;
+}
+
+// Names are not all the same length, and four identical bars would read as a barcode, not a list.
+.ban-table-ghost-row:nth-child(3n) .ban-table-ghost-name {
+  width: 6rem;
+}
+
+.ban-table-ghost-row:nth-child(3n + 2) .ban-table-ghost-name {
+  width: 11rem;
+}
+
+.ban-table-ghost-when {
+  width: 7rem;
+  height: 1.25rem;
+}
+
+.ban-table-ghost-reason {
+  width: 8rem;
+  height: 1.25rem;
+}
+
+// Header text the table needs for screen readers but that would only add noise on screen.
+.ban-table-hidden-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

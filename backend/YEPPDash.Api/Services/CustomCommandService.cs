@@ -92,7 +92,7 @@ public sealed partial class CustomCommandService(
 
         if (result.Success)
         {
-            logger.LogInformation("Asked YEPPBot to reload the commands of channel {ChannelId}", channelId);
+            logger.LogInformation("Asked YEPPBot to reload the commands of the channel {ChannelId}", channelId);
             return;
         }
 

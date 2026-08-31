@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ColorPickerComponent } from '../../components/color-picker-component/color-picker.component';
+import { NumberStepperComponent } from '../../components/number-stepper-component/number-stepper.component';
 import { TimerDisplayComponent } from '../../components/timer-display-component/timer-display.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -19,7 +20,7 @@ import { overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
   selector: 'app-timer-page',
   templateUrl: './timer-page.component.html',
   styleUrl: './timer-page.component.scss',
-  imports: [ColorPickerComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, TimerDisplayComponent],
+  imports: [ColorPickerComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, NumberStepperComponent, TimerDisplayComponent],
   host: {
     '[style.--timer-animation-duration]': 'animation()',
   },
@@ -41,6 +42,7 @@ export class TimerPageComponent {
 
   protected readonly timer: WritableSignal<SubathonTimer> = signal<SubathonTimer>(EMPTY_TIMER);
   protected readonly busy: WritableSignal<boolean> = signal(false);
+  protected readonly loaded: WritableSignal<boolean> = signal(false);
 
   protected readonly delta: WritableSignal<string> = signal('5m');
   protected readonly target: WritableSignal<string> = signal('');
@@ -148,7 +150,7 @@ export class TimerPageComponent {
     const channelId: string | null = this.channelId();
     if (channelId === null) return;
 
-    void this.run(this.timers.saveStyle(channelId, this.style()), 'Overlay settings saved.');
+    void this.run(this.timers.saveStyle(channelId, this.style()), 'Overlay settings are saved.');
   }
 
   protected resetStyle(): void {
@@ -189,12 +191,14 @@ export class TimerPageComponent {
       this.show(await this.timers.getTimer(channelId));
     } catch {
       this.notifications.failure('Could not load your timer.');
+      this.loaded.set(true);
     }
   }
 
   private show(timer: SubathonTimer): void {
     this.timer.set(timer);
     this.style.set(timer.style);
+    this.loaded.set(true);
 
     if (!this.start()) this.start.set(durationText(timer.startSeconds));
   }

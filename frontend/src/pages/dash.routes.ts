@@ -8,9 +8,12 @@ import { RaidPageComponent } from './raid-page/raid-page.component';
 import { CommandPageComponent } from './command-page/command-page.component';
 import { WheelPageComponent } from './wheel-page/wheel-page.component';
 import { TimerPageComponent } from './timer-page/timer-page.component';
+import { QueuePageComponent } from './queue-page/queue-page.component';
 import { RoleManagementComponent } from '../components/role-management-component/role-management.component';
 import { QuoteManagementComponent } from '../components/quote-management-component/quote-management.component';
 import { BirthdayListComponent } from '../components/birthday-list-component/birthday-list.component';
+import { TimeoutManagementComponent } from '../components/timeout-management-component/timeout-management.component';
+import { TimeoutRewardComponent } from '../components/timeout-reward-component/timeout-reward.component';
 
 export const DASH_ROUTES: Routes = [
   {
@@ -19,13 +22,16 @@ export const DASH_ROUTES: Routes = [
     children: [
       { path: '', component: DashHomePageComponent, title: 'Dashboard' },
       { path: 'role-management', component: RoleManagementComponent, title: 'Role Management' },
+      { path: 'timeouts', component: TimeoutManagementComponent, title: 'Timeouts & Bans' },
       { path: 'quotes', component: QuoteManagementComponent, title: 'Quote Management' },
       { path: 'commands', component: CommandPageComponent, title: 'Custom Commands' },
       { path: 'birthdays', component: BirthdayListComponent, title: 'Follower Birthdays' },
       { path: 'community', component: CommunityPageComponent, title: 'Community' },
       { path: 'raids', component: RaidPageComponent, title: 'Raid Overview' },
+      { path: 'queue', component: QueuePageComponent, title: 'Queue' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'timer', component: TimerPageComponent, title: 'Subathon Timer' },
+      { path: 'timeout-reward', component: TimeoutRewardComponent, title: 'Timeout Reward' },
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }

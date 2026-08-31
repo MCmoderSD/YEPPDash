@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { AuthService } from '../../services/auth.service';
 import { BotResult, BotService } from '../../services/bot.service';
@@ -13,12 +12,8 @@ import { TwitchService } from '../../services/twitch.service';
 import { ShoutoutService } from '../../services/shoutout.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchUser } from '../../data/twitch-user';
-import { BanStatus } from '../../data/banned-user';
+import { BannedUser } from '../../data/banned-user';
 import { ShoutoutSettings } from '../../data/shoutout';
-
-function contains(users: readonly TwitchUser[], userId: string): boolean {
-  return users.some((user: TwitchUser): boolean => user.id === userId);
-}
 
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse)) return null;
@@ -30,7 +25,7 @@ function reasonFor(error: unknown): string | null {
   selector: 'app-bot-manage',
   templateUrl: './bot-manage.component.html',
   styleUrl: './bot-manage.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, MatProgressSpinnerModule, MatSlideToggleModule],
+  imports: [NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, MatSlideToggleModule],
 })
 export class BotManageComponent {
 
@@ -48,9 +43,9 @@ export class BotManageComponent {
 
   protected readonly chatColor: WritableSignal<string | null> = signal<string | null>(null);
 
-  protected readonly banned: WritableSignal<boolean> = signal(false);
-
   protected readonly blocked: WritableSignal<boolean> = signal(false);
+
+  protected readonly banned: WritableSignal<boolean> = signal(false);
 
   protected readonly moderator: WritableSignal<boolean> = signal(false);
 
@@ -69,7 +64,7 @@ export class BotManageComponent {
   protected readonly autoShoutout: Signal<boolean> = computed((): boolean => this.shoutout()?.autoShoutout ?? false);
 
   protected readonly healthy: Signal<boolean> = computed(
-    (): boolean => !this.banned() && !this.blocked() && this.moderator() && this.inChat(),
+    (): boolean => !this.blocked() && !this.banned() && this.moderator() && this.inChat(),
   );
 
   protected readonly working: Signal<boolean> = computed(
@@ -80,19 +75,19 @@ export class BotManageComponent {
     effect((): undefined => void this.load(this.botUserId()));
   }
 
-  protected unban(): Promise<void> {
-    return this.act(
-      (): Promise<void> => this.twitch.unbanUser(this.botUserId()),
-      `${this.botName()} is no longer banned.`,
-      `Could not unban ${this.botName()}.`,
-    );
-  }
-
   protected unblock(): Promise<void> {
     return this.act(
       (): Promise<void> => this.twitch.unblockUser(this.botUserId()),
       `${this.botName()} is no longer blocked.`,
       `Could not unblock ${this.botName()}.`,
+    );
+  }
+
+  protected unban(): Promise<void> {
+    return this.act(
+      (): Promise<void> => this.twitch.unbanUser(this.botUserId()),
+      `${this.botName()} is no longer banned.`,
+      `Could not unban ${this.botName()}.`,
     );
   }
 
@@ -162,21 +157,21 @@ export class BotManageComponent {
   private async load(botUserId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const [users, ban, blocked, moderators, chatters, shoutout]: [TwitchUser[], BanStatus, TwitchUser[], TwitchUser[], TwitchUser[], ShoutoutSettings | null] = await Promise.all([
+      const [users, ban, blocked, moderator, inChat, shoutout]: [TwitchUser[], BannedUser | null, boolean, boolean, boolean, ShoutoutSettings | null] = await Promise.all([
         this.twitch.getUsers([botUserId]),
-        this.twitch.getBanStatus(botUserId),
-        this.twitch.getBlocked(),
-        this.twitch.getModerators(),
-        this.twitch.getChatters(),
+        this.twitch.getBan(botUserId),
+        this.twitch.isBlocked(botUserId),
+        this.twitch.isModerator(botUserId),
+        this.twitch.isChatter(botUserId),
         this.shoutouts.getSettings().catch((): null => null)
       ]);
 
       this.bot.set(users[0] ?? null);
       this.chatColor.set(users[0]?.color ?? null);
-      this.banned.set(ban.banned);
-      this.blocked.set(contains(blocked, botUserId));
-      this.moderator.set(contains(moderators, botUserId));
-      this.inChat.set(contains(chatters, botUserId));
+      this.blocked.set(blocked);
+      this.banned.set(ban !== null);
+      this.moderator.set(moderator);
+      this.inChat.set(inChat);
       this.shoutout.set(shoutout);
       this.unreachable.set(false);
     } catch {

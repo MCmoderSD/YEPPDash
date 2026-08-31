@@ -1,0 +1,149 @@
+@use '../../styles/chat-color' as chat;
+
+// The measurements live in the shell, which the skeleton shares — see the note at its top.
+@use './queue-page-shell' as shell;
+
+.queue-page {
+  display: flex;
+  flex-direction: column;
+  gap: shell.$page-gap;
+  width: min(72rem, 100%);
+  margin-inline: auto;
+}
+
+.queue-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: shell.$header-gap;
+  text-align: center;
+}
+
+.queue-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+// Closed with people still in it. Not an error — a queue is often closed on purpose while the last
+// few are worked through — but it is the state that gets left behind by accident, so it carries a
+// colour of its own instead of reading like any other closed queue.
+//noinspection CssUnusedSymbol
+.queue-page-state-holding {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.queue-page-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-body-medium);
+  line-height: 1.5;
+}
+
+.queue-page-entry:hover {
+  background: var(--mat-sys-surface-container-high);
+}
+
+// Only where there is something to open — a row whose ID Twitch does not know has no dialog behind
+// it, and a pointer promising one would be lying.
+//noinspection CssUnusedSymbol
+.queue-page-entry-known {
+  cursor: pointer;
+}
+
+// Material builds its icon buttons at 40px for a fingertip. These two sit in a dense list on a
+// desktop page, and at that size they pushed the name a quarter of the row to the right.
+//
+// Laid out as a grid rather than left as Material's own inline box: an inline-level button sits on
+// the text baseline of its cell, and the descender space beneath lifts the icon off centre. The
+// grid also centres the icon inside the shrunk box, which the padding it replaced used to do.
+.queue-page-row button[mat-icon-button] {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.queue-page-stage-avatar,
+.queue-page-avatar {
+  flex: none;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+// After the rule above, as it always stood: the blank placeholder carries both classes, and on the
+// properties they share the later rule is the one that wins.
+.queue-page-avatar-blank {
+  width: 2rem;
+  height: 2rem;
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: 50%;
+}
+
+.queue-page-name {
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: var(--mat-sys-body-medium);
+  text-align: start;
+
+  &:is(button) {
+    cursor: pointer;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+}
+
+.queue-page-display-name {
+  @include chat.chat-color;
+
+  overflow-wrap: anywhere;
+}
+
+.queue-page-name-unknown {
+  display: flex;
+  flex-direction: column;
+  color: var(--mat-sys-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.queue-page-unknown-hint {
+  font: var(--mat-sys-body-small);
+}
+
+// Out of the way until the row is pointed at. Guarded on hover being a thing the pointer can do:
+// on a touch screen nothing hovers, and an always-invisible handle would be no handle at all.
+@media (hover: hover) {
+  // The grab cursor lives in here too: a pointer that cannot hover has no cursor to shape.
+  .queue-page-handle {
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 120ms;
+  }
+
+  // Focus counts as well as hover — the arrow keys are the only way to reorder without a mouse, and
+  // a control that cannot be seen while it is focused cannot be used that way.
+  .queue-page-entry:hover .queue-page-handle,
+  .queue-page-handle:focus-visible,
+  .queue-page-entry.cdk-drag-preview .queue-page-handle {
+    opacity: 1;
+  }
+}
+
+.queue-page-field {
+  width: 100%;
+}

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,7 @@ import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll
 import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
+import { wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { RaidService } from '../../services/raid.service';
 import { Raid } from '../../data/raid';
@@ -47,7 +48,17 @@ export class RaidPageComponent {
     this.rows().reduce((total: number, entry: RaidEntry): number => total + entry.raid.viewers, 0),
   );
 
+  protected readonly skeleton: Signal<boolean> = computed((): boolean => this.loading() && this.count() === 0);
+
   protected readonly columns: string[] = ['raider', 'viewers', 'firedAt'];
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
+    const expected: number | null = this.expected();
+    if (expected === null || expected <= 0) return [];
+    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
+  });
 
   protected readonly pageSizes: number[] = [10, 25, 50, 100];
 
@@ -77,16 +88,7 @@ export class RaidPageComponent {
       }
     };
 
-    effect((): RaidEntry[] => this.dataSource.data = this.rows());
-    effect((): void => {
-      const sorter: MatSort | undefined = this.sorter();
-      if (sorter) this.dataSource.sort = sorter;
-    });
-
-    effect((): void => {
-      const pager: MatPaginator | undefined = this.pager();
-      if (pager) this.dataSource.paginator = pager;
-    });
+    wireDataSource(this.dataSource, this.rows, this.sorter, this.pager);
 
     void this.load();
   }
@@ -109,6 +111,16 @@ export class RaidPageComponent {
   private async load(): Promise<void> {
     this.isLoading.set(true);
     this.failed.set(false);
+    this.expected.set(null);
+
+    if (this.rows().length === 0) {
+      void this.raids.countRaids()
+        .then((count: number): void => {
+          if (this.isLoading()) this.expected.set(count);
+        })
+        .catch((): void => void 0);
+    }
+
     try {
       const raids: Raid[] = await this.raids.getRaids();
 

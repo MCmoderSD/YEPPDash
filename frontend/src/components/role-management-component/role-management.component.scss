@@ -29,6 +29,23 @@
   font: var(--mat-sys-body-medium);
 }
 
+// Stands in for "N moderators/VIPs in your channel" while the real count is still just a
+// promise — a short sentence's worth of width at the line's own height, so the header does not
+// grow or shrink when the number lands. The real text centres for free because it is inline
+// content and the paragraph is text-align: center; a block-level bar needs its own margin to do
+// the same, since text-align never repositions a block box.
+.role-management-count-skeleton {
+  width: 11rem;
+  margin-inline: auto;
+}
+
+// The global utility stays in normal flow on purpose, but as a flex child of the column above it
+// would still claim a full row-gap either side of nothing — pulled out of flow so announcing the
+// load costs no space while it is only screen readers listening.
+.role-management > .app-visually-hidden {
+  position: absolute;
+}
+
 // Kept in the layout while idle so the table does not jump every time a request starts.
 .role-management-progress {
   flex: none;

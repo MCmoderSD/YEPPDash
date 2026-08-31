@@ -139,16 +139,19 @@ body {
 //
 // The hairline is what separates the panel from the page: it floats on a surface only a couple of
 // tones above the near-black behind it, where a drop shadow alone is close to invisible.
+//noinspection CssUnusedSymbol
 .mat-mdc-menu-panel {
   border: var(--app-border);
   box-shadow: var(--app-elevation-3);
 
+  //noinspection CssUnusedSymbol
   .mat-mdc-menu-content {
     padding: 0.25rem;
   }
 
   // Inset by the panel's own padding, so a highlighted item is a rounded block inside the panel
   // rather than a square edge running into its rounded corner.
+  //noinspection CssUnusedSymbol
   .mat-mdc-menu-item {
     min-height: 2.5rem;
     border-radius: var(--app-radius-md);
@@ -163,18 +166,72 @@ body {
 // opened from, through `.mat-mdc-select-panel-above div.mat-mdc-select-panel`. Out-specifying that
 // is what lets the radius below stick whichever way the panel opens, without reaching for
 // !important.
-.mat-mdc-select-panel.mdc-menu-surface.app-select-panel {
+// Both panel kinds, because a select and an autocomplete are the same object to whoever is looking
+// at one. MatAutocomplete forwards its `class` to the panel, so the same name reaches both.
+//noinspection CssUnusedSymbol
+.mat-mdc-select-panel.app-select-panel,
+.mat-mdc-autocomplete-panel.app-select-panel {
   border: var(--app-border);
   border-radius: var(--app-radius-md);
   padding: 0.25rem;
   background-color: var(--mat-sys-surface-container-high);
   box-shadow: var(--app-elevation-3);
 
+  // The app draws its own scroll bars over elements it owns (see ScrollBarComponent), but that one
+  // deliberately sits at z-index 2 so menus and dialogs win over it — which makes it the wrong tool
+  // for a panel that *is* an overlay. This is the native bar, dressed to match it.
+  //
+  // The two styling models cannot both be used: once scrollbar-width or scrollbar-color is set,
+  // Chrome ignores the ::-webkit-scrollbar pseudo-elements entirely — which is what happened the
+  // first time, leaving a stock thin bar. So the pseudo-elements get the engines that have them,
+  // and the standard properties are kept for the engines that do not.
+  &::-webkit-scrollbar {
+    width: 0.75rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  // The transparent border plus content-box clipping is what insets the thumb inside the wider
+  // strip, the way the drawn bar centres a thin thumb in a thicker track.
+  &::-webkit-scrollbar-thumb {
+    border: 0.1875rem solid transparent;
+    border-radius: var(--app-radius-pill);
+    background-color: var(--mat-sys-outline);
+    background-clip: content-box;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mat-sys-primary);
+  }
+
+  // Firefox, which has the standard properties and not the pseudo-elements. No pill and no hover
+  // colour to be had there, but the thumb still carries the app's outline rather than the
+  // platform's grey.
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mat-sys-outline) transparent;
+  }
+
   // Inset by the panel's own padding, so a highlighted option is a rounded block inside the panel
   // rather than a square edge running into its rounded corner.
+  //noinspection CssUnusedSymbol
   .mat-mdc-option {
     min-height: 2.5rem;
     border-radius: var(--app-radius-sm);
+  }
+
+  // Material tints the selected row with the same overlay it uses for hover, which leaves the two
+  // states looking alike. The chosen one carries the brand instead.
+  //noinspection CssUnusedSymbol
+  .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+    background-color: var(--mat-sys-secondary-container);
+
+    //noinspection CssUnusedSymbol
+    .mdc-list-item__primary-text {
+      color: var(--mat-sys-on-secondary-container);
+    }
   }
 }
 
@@ -189,8 +246,28 @@ body {
 //
 // It is global only because the element it applies to is created by Material, inside the drawer,
 // where neither the page nor the sidebar component's styles can reach it.
+//noinspection CssUnusedSymbol
 .dash-drawer .mat-drawer-inner-container {
   overflow: visible;
+}
+
+// Two things make a tab body overflow, and neither is content anyone can reach. A tab sliding out
+// is taken out of flow and stretched over the wrapper, which by then is sized by the tab arriving,
+// so a taller tab hangs over that box for the length of the slide. And .app-fade-in starts its
+// content six pixels low, which is six pixels of overflow for as long as the entrance runs — on
+// first load, and again on every tab that fades in behind the slide. Material leaves `overflow:
+// auto` here, so both show up as the platform's own scroll bar, in its own grey, down the middle
+// of the page.
+//
+// Clipped, the way Material itself clips this element when a tab group is given a dynamic height.
+// Nothing is lost: what scrolls a tab in this app is the page under it, and .bdsm-page-tabs
+// already keeps a row of padding above the panels for the clipping that happened here anyway.
+//
+// Matched through the tab body so this out-specifies Material's own rule on the same class, and
+// global because both elements are Material's, where no page's own styles reach them.
+//noinspection CssUnusedSymbol
+.mat-mdc-tab-body > .mat-mdc-tab-body-content {
+  overflow: hidden;
 }
 
 // The OBS overlay is captured over whatever the scene has behind it, so the page must not paint a
@@ -211,10 +288,302 @@ body {
 // Both styling models are covered on purpose: `scrollbar-width` is the standard property and the
 // only one Firefox has, `::-webkit-scrollbar` the older WebKit/Blink one. Declaring only one of
 // them would leave the other engine showing its native bar underneath ours.
+//noinspection CssUnusedSymbol
 .app-native-scrollbar-hidden {
   scrollbar-width: none;
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+// How a row being dragged and the gap it will drop into look. Global because the CDK writes these
+// classes onto elements it moves out of their component — a preview is reparented to the body, where
+// a component's scoped styles cannot reach it. They are also the app's answer for any list that
+// becomes draggable later, rather than one page's.
+//noinspection CssUnusedSymbol
+.cdk-drag-preview {
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface-container-highest);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 45%);
+  opacity: 0.95;
+}
+
+// Dashed rather than blank, so it reads as a destination and not as something having gone missing.
+//noinspection CssUnusedSymbol
+.cdk-drag-placeholder {
+  border: 1px dashed var(--mat-sys-outline);
+  border-radius: 0.5rem;
+  background: none;
+  box-shadow: none;
+  opacity: 0.4;
+
+  * {
+    visibility: hidden;
+  }
+}
+
+// Held in a custom property so the reduced-motion case is one number rather than a second copy of
+// the selector.
+//noinspection CssUnusedSymbol
+.cdk-drop-list {
+  --app-shuffle: 200ms;
+
+  @media (prefers-reduced-motion: reduce) {
+    --app-shuffle: 0ms;
+  }
+}
+
+//noinspection CssUnusedSymbol
+.cdk-drag-animating,
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform var(--app-shuffle, 200ms) cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Readable to a screen reader, invisible on screen, and — unlike display: none — still announced.
+// Deliberately not absolutely positioned, so it keeps its place in a flex or grid line: an
+// out-of-flow item claims no column, which silently shifts everything beside it.
+.app-visually-hidden {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// For content that arrives all at once where a skeleton was standing. Every piece carrying this
+// starts its animation in the same frame, so a page that fills in several places at once still
+// reads as one arrival rather than a queue of them. The rise is small enough to read as settling,
+// not as movement. The duration is a token, and reduced motion takes that to 1ms — the swap
+// happens either way, it just stops being a fade.
+.app-fade-in {
+  animation: app-fade-in var(--app-motion-base) var(--app-ease);
+}
+
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+    translate: 0 0.375rem;
+  }
+}
+
+// --- Skeletons ------------------------------------------------------------------------------
+// The one loading language for the whole app. A skeleton is the real view with the data blanked
+// out: it renders the page's own layout classes, shows outright whatever is static — titles,
+// hints, table headers, chrome — and stands a grey shape wherever the server has yet to answer.
+// Three rules, written once here so every skeleton breathes, appears and leaves the same way:
+//
+//   .app-skeleton        on every grey stand-in — the surface and the shared pulse
+//   .app-skeleton-bar    a stand-in for a line of text — adds the pill corners and, with
+//                        .app-skeleton-text, the height of the line it replaces
+//   .app-skeleton-appear on the skeleton's wrapper — holds it back for a breath, so a request
+//                        that answers fast never flashes a skeleton on the way
+//
+// The swap back is .app-fade-in above, on the content that takes the skeleton's place — one
+// arrival, everywhere the same. Accessibility is part of the pattern: the wrapper carries
+// role="status" with an .app-visually-hidden sentence saying what is loading, and everything
+// grey inside is aria-hidden.
+
+// One animation on one rule, so every shape on a page breathes in step and the whole thing reads
+// as one surface waiting rather than a chase across the screen.
+.app-skeleton {
+  display: block;
+  flex: none;
+  background: var(--mat-sys-surface-container-high);
+  animation: app-skeleton-pulse 1400ms ease-in-out infinite;
+}
+
+// The motion tokens are no help here: they shorten a transition, and shortening a loop only makes
+// it flicker. This one has to stop.
+@media (prefers-reduced-motion: reduce) {
+  .app-skeleton {
+    animation: none;
+  }
+}
+
+.app-skeleton-bar {
+  border-radius: var(--mat-sys-corner-full);
+}
+
+// A bar standing where text will: 1lh is the line box of whatever font its parent sets, which is
+// exactly the height the words will take.
+.app-skeleton-text {
+  height: 1lh;
+}
+
+// The delay is the point: a skeleton that shows up instantly turns every fast answer into a
+// flicker. The fade is a one-off, so it may run under reduced motion — it is the endless pulse
+// above that must not.
+.app-skeleton-appear {
+  opacity: 0;
+  animation: app-skeleton-appear 200ms var(--app-ease) 150ms forwards;
+}
+
+@keyframes app-skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes app-skeleton-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+// M3 draws a switch at 52x32 with a 24px handle, which is sized for a settings screen where the
+// switch is the row. Everywhere this app uses one it sits beside 14px body text — in a table cell,
+// on a card row, next to a dialog field — and at full size it is the loudest thing in the block.
+//
+// Scaled through Material's own tokens rather than a transform, so the handle, the focus ring and
+// the state layer all shrink together instead of being drawn small and hit large. The touch target
+// token is deliberately left alone: it is a separate overlay that keeps the tap area at its full
+// size, which is what holds the control above the 24x24 minimum.
+//
+// Global because the same control appears in four places that share no stylesheet, one of them
+// inside a CDK dialog. Custom properties inherit, so the class goes on the switch itself.
+.app-toggle-compact {
+  --mat-slide-toggle-track-width: 36px;
+  --mat-slide-toggle-track-height: 20px;
+
+  // Not the drawn size — the travel budget. Material moves the handle by
+  // `track-width - handle-width`, so this has to be the handle plus the inset it should keep at
+  // each end (14 + 3 + 3). Leaving it unset makes that calc() invalid, which collapses the travel
+  // to zero and leaves the handle sitting wherever the margins below put it.
+  --mat-slide-toggle-handle-width: 20px;
+  --mat-slide-toggle-handle-height: 14px;
+
+  // One size in both states rather than M3's grow-on-select: at this scale the change reads as the
+  // handle jittering rather than as feedback. The margins are what set the 3px inset — equal on
+  // both, so the handle sits the same distance from each end of the track.
+  --mat-slide-toggle-unselected-handle-size: 14px;
+  --mat-slide-toggle-selected-handle-size: 14px;
+  --mat-slide-toggle-unselected-handle-horizontal-margin: 0 3px;
+  --mat-slide-toggle-selected-handle-horizontal-margin: 0 3px;
+
+  // Every switch in the app is set to `hideIcon`, which drops the icons out of the DOM and leaves
+  // the three tokens below unmatched. They are kept so the class stays correct on its own terms:
+  // Material selects the with-icon geometry through `:has(.mdc-switch__icons)`, so a switch that
+  // shows its checkmark would otherwise snap back to the 24px handle and its 24px selected margin.
+  --mat-slide-toggle-with-icon-handle-size: 14px;
+  --mat-slide-toggle-unselected-with-icon-handle-horizontal-margin: 0 3px;
+  --mat-slide-toggle-selected-with-icon-handle-horizontal-margin: 0 3px;
+
+  // Held down: the handle grows into its inset by a pixel at each end and stays centred.
+  --mat-slide-toggle-pressed-handle-size: 16px;
+  --mat-slide-toggle-unselected-pressed-handle-horizontal-margin: 0 2px;
+  --mat-slide-toggle-selected-pressed-handle-horizontal-margin: 0 2px;
+
+  --mat-slide-toggle-state-layer-size: 32px;
+
+  // A 2px outline on a 20px track is most of the gap between track and handle. The on state carries
+  // none at all: it is a filled pill, and an outline only muddies its edge.
+  --mat-slide-toggle-track-outline-width: 1px;
+  --mat-slide-toggle-selected-track-outline-width: 0;
+  --mat-slide-toggle-disabled-unselected-track-outline-width: 1px;
+}
+
+// --- Expansion cards ------------------------------------------------------------------------
+// Material paints a panel in the same tone as the page and separates it with a drop shadow, which
+// on a near-black background is close to invisible — a closed panel blends into the page until it
+// is opened, and even then only the arrow says so. Each one is a card instead: a lifted surface
+// with an edge of its own, so the eye can tell where one ends and the next begins.
+//
+// Global because the FAQ entries and the BDSM results share the treatment and no stylesheet, and
+// because it is all custom properties, which inherit — the class goes on the panel itself.
+.app-expansion-card {
+  --mat-expansion-container-background-color: var(--mat-sys-surface-container);
+  --mat-expansion-container-shape: var(--app-radius-lg);
+  --mat-expansion-container-text-color: var(--mat-sys-on-surface);
+  --mat-expansion-header-text-color: var(--mat-sys-on-surface);
+  --mat-expansion-header-indicator-color: var(--mat-sys-on-surface-variant);
+
+  // Neutral rather than the accent, matching every other control in the app — being open is what
+  // the accent marks here, not being hovered.
+  --mat-expansion-header-hover-state-layer-color: var(--app-tint-hover);
+  --mat-expansion-header-focus-state-layer-color: var(--app-tint-hover);
+
+  border: var(--app-border);
+  transition:
+    border-color var(--app-motion-fast) var(--app-ease),
+    background-color var(--app-motion-fast) var(--app-ease);
+
+  // Material's own shadow does nothing here and only muddies the card's edge against the page.
+  box-shadow: none !important;
+
+  &:hover {
+    border-color: var(--mat-sys-outline);
+  }
+}
+
+// The open card carries the brand colour on its edge and lifts a tone further, so which one is
+// expanded is obvious from the shape of the page rather than from the arrow alone.
+//noinspection CssUnusedSymbol
+.app-expansion-card-open {
+  --mat-expansion-container-background-color: var(--mat-sys-surface-container-high);
+  --mat-expansion-header-indicator-color: var(--mat-sys-primary);
+
+  border-color: var(--mat-sys-primary);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+  }
+}
+
+// --- Command lists --------------------------------------------------------------------------
+// The chat commands a page documents, as a <dl> rather than a table: each command has exactly one
+// explanation, and a table would announce a column header before every one of them. The command in
+// one column, what it does in the next.
+//
+// The queue page and the timer page each carry one, in a panel that is stretched to whatever
+// height its neighbour has. `flex: 1 1 auto` hands that leftover to the list and `space-between`
+// spreads it between the rows — growing only into space that already exists, so the list never
+// makes the panel taller than the one beside it. Without the auto basis the rows would be squashed
+// to nothing when there is no slack to take.
+.app-command-list {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: space-between;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  grid-template-columns: max-content minmax(0, 1fr);
+
+  dt {
+    color: var(--mat-sys-primary);
+    font-family: var(--mat-sys-body-medium-font), monospace;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-medium);
+  }
+
+  // Two columns of nowrap command names do not survive a phone; stacked, each command keeps its
+  // explanation directly under it.
+  @media (max-width: 30rem) {
+    grid-template-columns: minmax(0, 1fr);
+
+    dd {
+      margin-block-end: 0.5rem;
+    }
+  }
+}
+
+// The app draws its own arrows (components/number-stepper-component), so the browser's built-in
+// pair would only ever be a second, blunter copy of the same control sitting next to it. Global
+// because it is a normalisation rather than one field's styling: any number input the app grows
+// should start out without them.
+//
+// Both spellings are needed - `appearance` is what Firefox reads, the pseudo-elements are what
+// Chromium and Safari read, and neither engine honours the other's.
+input[type='number'] {
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
   }
 }

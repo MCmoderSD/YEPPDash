@@ -4,7 +4,6 @@ namespace YEPPDash.Api.Data.Twitch;
 
 public sealed record TwitchBanProfile : TwitchUser
 {
-    // BannedAt rather than CreatedAt: the base already carries CreatedAt for the account itself.
     [SetsRequiredMembers]
     public TwitchBanProfile(
         TwitchUser user,
@@ -28,6 +27,7 @@ public sealed record TwitchBanProfile : TwitchUser
     public string? Reason { get; init; }
 }
 
-// Banned stands on its own rather than on Ban: a ban whose account Get Users no longer resolves is
-// still a ban, and answering "not banned" there would invite the caller to act on it.
-public sealed record BanStatusResponse(bool Banned, TwitchBanProfile? Ban);
+public sealed record BanCountResponse(
+    int Timeouts, 
+    int Bans
+);

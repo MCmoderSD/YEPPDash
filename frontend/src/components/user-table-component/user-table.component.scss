@@ -22,7 +22,9 @@
 // the search box above — the same width the flex column already gives this element — instead of
 // shrink-wrapping to whatever width the table content happens to need.
 .user-table-scroll {
-  overflow-x: auto;
+  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
+  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
+  overflow: auto hidden;
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--app-radius-outlined);
 }
@@ -36,6 +38,7 @@ table.user-table-grid {
 
   // Material's default 16px inline padding on every cell adds up fast across three columns —
   // tightened so name, id and remove sit close together instead of spread across the row.
+  //noinspection CssUnusedSymbol
   .mdc-data-table__cell,
   .mdc-data-table__header-cell {
     padding: 0 0.5rem;
@@ -114,17 +117,20 @@ table.user-table-grid {
 // Gated behind `hover: hover` because a touch screen never reports a hover state — there the button
 // simply stays visible, otherwise it would be unreachable.
 @media (hover: hover) {
+  //noinspection CssUnusedSymbol
   .user-table-actions .mat-mdc-icon-button {
     opacity: 0;
     transition: opacity 120ms var(--mat-sys-easing-standard, ease);
   }
 
+  //noinspection CssUnusedSymbol
   .user-table-row:hover .mat-mdc-icon-button,
   .user-table-row:focus-within .mat-mdc-icon-button {
     opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    //noinspection CssUnusedSymbol
     .user-table-actions .mat-mdc-icon-button {
       transition: none;
     }
@@ -135,6 +141,65 @@ table.user-table-grid {
   padding: 1.5rem 1rem;
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
+}
+
+// --- Ghost rows (first load) ----------------------------------------------------------------
+// A grid living inside matNoDataRow's one cell, standing in for the rows CDK has not drawn yet.
+// See the template comment for why it is a grid and not real <tr>s.
+
+.user-table-ghost-cell {
+  // The grid below supplies its own per-column padding, cell by cell, the same way the real
+  // <td>s do — the outer cell keeps none of its own.
+  padding: 0;
+}
+
+.user-table-ghost {
+  display: grid;
+}
+
+.user-table-ghost-row {
+  display: contents;
+}
+
+.user-table-ghost-column {
+  display: flex;
+  align-items: center;
+
+  // Material's default MDC data-row height, which this table never overrides — matching it is
+  // what keeps the row count from jumping once real rows land.
+  height: 3.25rem;
+  padding: 0 0.5rem;
+}
+
+.user-table-ghost-identity {
+  gap: 0.5rem;
+}
+
+.user-table-ghost-avatar {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 50%;
+}
+
+.user-table-ghost-name {
+  width: 9rem;
+  height: 1.25rem;
+}
+
+// Names are not all the same length, and six identical bars would read as a barcode, not a list.
+.user-table-ghost-row:nth-child(3n) .user-table-ghost-name {
+  width: 6rem;
+}
+
+.user-table-ghost-row:nth-child(3n + 2) .user-table-ghost-name {
+  width: 11rem;
+}
+
+// A Twitch id is a handful of digits — well short of the 7rem the column reserves for it.
+.user-table-ghost-id {
+  width: 5rem;
+  height: 1.25rem;
 }
 
 // Header text the table needs for screen readers but that would only add noise on screen.

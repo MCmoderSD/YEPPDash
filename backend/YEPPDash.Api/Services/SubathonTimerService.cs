@@ -96,12 +96,7 @@ public sealed class SubathonTimerService(
 
     private static int Duration(int seconds)
     {
-        if (seconds < 0)
-        {
-            throw new InvalidSubathonTimerException("A timer cannot be set to a negative duration.");
-        }
-
-        return seconds;
+        return seconds < 0 ? throw new InvalidSubathonTimerException("A timer cannot be set to a negative duration.") : seconds;
     }
 
     private static SubathonTimerState Empty(int channelId)
@@ -111,11 +106,6 @@ public sealed class SubathonTimerService(
 
     private static int ParseChannelId(string channelId)
     {
-        if (!int.TryParse(channelId, out var id))
-        {
-            throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId));
-        }
-
-        return id;
+        return !int.TryParse(channelId, out var id) ? throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId)) : id;
     }
 }

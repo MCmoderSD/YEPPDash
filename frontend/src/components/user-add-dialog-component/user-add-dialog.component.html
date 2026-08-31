@@ -1,55 +1,35 @@
 <h2 mat-dialog-title>{{ data.title }}</h2>
 
-<mat-dialog-content class="user-add">
+<mat-dialog-content class="user-add" #content>
 
-  <form class="user-add-search" (submit)="submit($event, term)">
-    <mat-form-field appearance="outline" class="user-add-field">
-      <mat-label>Twitch username</mat-label>
-      <input
-        matInput
-        #term
-        type="text"
-        autocomplete="off"
-        [disabled]="status() === 'searching'"
-      />
-      <button
-        matSuffix
-        mat-icon-button
-        type="submit"
-        aria-label="Search Twitch"
-        [disabled]="status() === 'searching'"
-      >
-        <mat-icon aria-hidden="true">search</mat-icon>
-      </button>
-      <mat-hint>A numeric name is looked up as a user ID when no account matches.</mat-hint>
-    </mat-form-field>
-  </form>
+  <app-user-finder [(user)]="found"/>
 
-  <div class="user-add-outcome" role="status">
-    @if (status() === 'searching') {
-      <mat-progress-bar mode="indeterminate"/>
-    } @else if (user(); as found) {
-      <div class="user-add-result">
-        <img
-          class="user-add-avatar"
-          [ngSrc]="found.profileImageUrl"
-          [width]=96
-          [height]=96
-          alt=""
-        />
-        <p class="user-add-name" [style.--chat-color]="chatColor()">{{ found.displayName }}</p>
-      </div>
-    } @else if (status() === 'empty') {
-      <p class="user-add-message">No Twitch account matches “{{ query() }}”.</p>
-    } @else if (status() === 'failed') {
-      <p class="user-add-message">Could not reach Twitch. Please try again.</p>
-    }
-  </div>
+  @if (broadcaster()) {
+    <p class="user-add-notice user-add-notice-blocked">
+      <mat-icon class="user-add-notice-icon" aria-hidden="true">block</mat-icon>
+      <span>This is your own channel account — it already outranks every role you can grant.</span>
+    </p>
+  } @else if (alreadyHas()) {
+    <p class="user-add-notice user-add-notice-blocked">
+      <mat-icon class="user-add-notice-icon" aria-hidden="true">check_circle</mat-icon>
+      <span>{{ found()?.displayName }} is already a {{ data.role }}. There is nothing to add.</span>
+    </p>
+  } @else if (swaps()) {
+    <p class="user-add-notice user-add-notice-swap">
+      <mat-icon class="user-add-notice-icon" aria-hidden="true">swap_horiz</mat-icon>
+      <span>
+        {{ found()?.displayName }} is a {{ otherRole() }}. Twitch does not allow both, so that role
+        is taken away first and cannot be handed back automatically.
+      </span>
+    </p>
+  }
+
+  <app-scroll-bar [target]="content"/>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button type="button" mat-dialog-close>Cancel</button>
-  <button mat-flat-button type="button" [disabled]="!user()" (click)="add()">
+  <button mat-flat-button type="button" [disabled]="!valid()" (click)="add()">
     {{ data.title }}
   </button>
 </mat-dialog-actions>
