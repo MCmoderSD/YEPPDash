@@ -7,26 +7,30 @@ public static class TwitchScopes
         return dbTarget.Equals("Prod", StringComparison.OrdinalIgnoreCase) ? Prod : Dev;
     }
 
+    // What the broadcaster is asked to grant in production: everything the dashboard calls
+    // itself, plus what YEPPBot needs on the same authorisation. Marked lines are the bot's —
+    // six of them the dashboard never calls, so nothing here is dead, and dropping one takes
+    // a feature away from the bot rather than tidying this file.
     private static readonly string[] Prod =
     [
         "channel:manage:broadcast",
-        "channel:edit:commercial",
-        "channel:read:editors",
-        "channel:manage:moderators",
-        "channel:manage:raids",
+        "channel:edit:commercial",         // YEPPBot
+        "channel:read:editors",            // YEPPBot
+        "channel:manage:moderators",       // YEPPBot
+        "channel:manage:raids",            // YEPPBot
         "channel:manage:redemptions",
-        "channel:read:subscriptions",
-        "channel:read:vips",
-        "channel:manage:vips",
-        "moderation:read",
+        "channel:read:subscriptions",      // YEPPBot
+        "channel:read:vips",               // YEPPBot
+        "channel:manage:vips",             // YEPPBot
+        "moderation:read",                 // YEPPBot
         "moderator:manage:banned_users",
-        "moderator:manage:chat_messages",
-        "moderator:read:chatters",
-        "moderator:read:followers",
-        "moderator:manage:shoutouts",
+        "moderator:manage:chat_messages",  // YEPPBot
+        "moderator:read:chatters",         // YEPPBot
+        "moderator:read:followers",        // YEPPBot
+        "moderator:manage:shoutouts",      // YEPPBot
         "user:read:blocked_users",
         "user:manage:blocked_users",
-        "user:read:email"
+        "user:read:email"                  // YEPPBot
     ];
 
     private static readonly string[] Dev =

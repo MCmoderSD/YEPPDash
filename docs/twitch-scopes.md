@@ -8,7 +8,20 @@ compared line by line when they change something.
 81 scopes in total: 78 twitch api and eventsub scopes, 2 irc chat scopes, 1 pubsub-specific chat scopes.
 
 The two sets in [`TwitchScopes.cs`](../backend/YEPPDash.Api/Twitch/TwitchScopes.cs) are drawn from
-this list: **Dev** asks for all 81 of them, **Prod** for the 18 the dashboard genuinely uses.
+this list. **Dev** asks for all 81. **Prod** asks for 18, which is not the same as 18 the dashboard
+calls: one login serves both halves of the project, so the set is the union of what the dashboard
+calls itself and what YEPPBot needs on the same authorisation.
+
+| Needed by | # | Scopes |
+|---|---|---|
+| Both | 7 | `channel:read:editors`, `channel:manage:moderators`, `channel:read:subscriptions`, `channel:manage:vips`, `moderator:read:chatters`, `moderator:read:followers`, `user:read:email` |
+| YEPPBot only | 6 | `channel:edit:commercial`, `channel:manage:raids`, `channel:read:vips`, `moderation:read`, `moderator:manage:chat_messages`, `moderator:manage:shoutouts` |
+| Dashboard only | 5 | `channel:manage:broadcast`, `channel:manage:redemptions`, `moderator:manage:banned_users`, `user:read:blocked_users`, `user:manage:blocked_users` |
+
+The six in the middle row are why the dashboard never calls an endpoint for some of what it asks
+for. They are the bot's, and the lines carry a `// YEPPBot` marker so that stays visible; taking
+one out removes a bot feature rather than trimming an unused permission.
+
 A scope is granted when the user authorises, so adding one to either set means every user of that
 environment has to log in again before the new permission exists on their token.
 
