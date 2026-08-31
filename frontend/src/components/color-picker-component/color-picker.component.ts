@@ -14,6 +14,8 @@ export class ColorPickerComponent {
   readonly color: InputSignal<string> = input.required<string>();
   readonly presets: InputSignal<readonly ColorPreset[]> = input<readonly ColorPreset[]>(COLOR_PRESETS);
 
+  readonly showHex: InputSignal<boolean> = input<boolean>(false);
+
   readonly colorChange: OutputEmitterRef<string> = output<string>();
 
   readonly picked: OutputEmitterRef<string> = output<string>();
@@ -24,6 +26,10 @@ export class ColorPickerComponent {
   private draggingHue: boolean = false;
 
   protected readonly hex: Signal<string> = computed((): string => hsvToHex(this.hsv()));
+
+  private readonly draft: WritableSignal<string | null> = signal<string | null>(null);
+
+  protected readonly hexText: Signal<string> = computed((): string => this.draft() ?? this.hex());
 
   protected readonly hueColor: Signal<string> = computed((): string => hsvToHex({ h: this.hsv().h, s: 1, v: 1 }));
 
@@ -56,9 +62,30 @@ export class ColorPickerComponent {
     const parsed: Hsv | null = hexToHsv(value);
     if (parsed === null) return;
 
+    this.draft.set(null);
     this.hsv.set(parsed.s === 0 ? { ...parsed, h: this.hsv().h } : parsed);
     this.colorChange.emit(this.hex());
     this.picked.emit(this.hex());
+  }
+
+  protected typeHex(value: string): void {
+    this.draft.set(value);
+
+    const parsed: Hsv | null = hexToHsv(normalise(value));
+    if (parsed === null) return;
+
+    this.hsv.set(parsed.s === 0 ? { ...parsed, h: this.hsv().h } : parsed);
+    this.colorChange.emit(this.hex());
+  }
+
+  protected settleHex(): void {
+    this.draft.set(null);
+  }
+
+  protected hexKey(event: KeyboardEvent): void {
+    if (event.key === 'Escape' || event.key === 'Tab') return;
+
+    event.stopPropagation();
   }
 
   protected areaDown(event: PointerEvent): void {
@@ -138,9 +165,17 @@ export class ColorPickerComponent {
   }
 
   private change(update: (current: Hsv) => Hsv): void {
+    this.draft.set(null);
     this.hsv.update(update);
     this.colorChange.emit(this.hex());
   }
+}
+
+function normalise(value: string): string {
+  const digits: string = value.trim().replace(/^#/, '').toLowerCase();
+  const full: string = digits.length === 3 ? [...digits].map((digit: string): string => digit + digit).join('') : digits;
+
+  return `#${full}`;
 }
 
 function capture(event: PointerEvent): void {

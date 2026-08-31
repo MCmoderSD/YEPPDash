@@ -125,6 +125,19 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       },
     ],
   },
+  {
+    id: 'rewards',
+    label: 'Rewards',
+    icon: 'redeem',
+    items: [
+      {
+        label: 'Timeout Reward',
+        icon: 'gavel',
+        description: 'Let channel points buy a timeout, on your terms.',
+        path: `${BASE}/timeout-reward`,
+      },
+    ],
+  },
 ];
 
 export function groupForUrl(groups: readonly NavGroup[], url: string): string | undefined {

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using YEPPDash.Api.Data.Twitch;
+using YEPPDash.Api.EventSub;
 using YEPPDash.Api.Exceptions.Twitch;
 
 namespace YEPPDash.Api.Twitch;
@@ -10,6 +11,7 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     public const string BaseUrl = "https://api.twitch.tv/helix/";
 
     public const int MaxBatchSize = 100;
+    public const int MaxRewardBatchSize = 50;
 
  
     #region Users
@@ -223,6 +225,18 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
     #endregion
 
+    #region Subscriptions
+    public async Task<TwitchSubscription?> GetSubscriptionAsync(string broadcasterId, string userId, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"subscriptions?broadcaster_id={Uri.EscapeDataString(broadcasterId)}&user_id={Uri.EscapeDataString(userId)}";
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchSubscription>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault();
+    }
+    #endregion
+
     #region Streams
     public async Task<TwitchStream?> GetStreamAsync(string broadcasterId, string accessToken, CancellationToken cancellationToken)
     {
@@ -244,6 +258,87 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
     #endregion
 
+    #region Channel Points
+    public async Task<IReadOnlyList<CustomReward>> GetCustomRewardsAsync(string broadcasterId, IReadOnlyCollection<string> rewardIds, bool onlyManageable, string accessToken, CancellationToken cancellationToken)
+    {
+        if (rewardIds.Count > MaxRewardBatchSize)
+        {
+            throw new ArgumentException($"Get Custom Reward takes at most {MaxRewardBatchSize} reward ids.", nameof(rewardIds));
+        }
+
+        var query = RewardQuery(broadcasterId);
+        if (onlyManageable) query += "&only_manageable_rewards=true";
+        query += string.Concat(rewardIds.Select(id => $"&id={Uri.EscapeDataString(id)}"));
+
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<CustomReward>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data ?? [];
+    }
+
+    public async Task<CustomReward> CreateCustomRewardAsync(string broadcasterId, CustomRewardCreate create, string accessToken, CancellationToken cancellationToken)
+    {
+        var body = JsonContent.Create(create, options: TwitchJson.Options);
+        using var response = await SendAsync(HttpMethod.Post, RewardQuery(broadcasterId), accessToken, cancellationToken, body);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<CustomReward>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault() ?? throw new TwitchOAuthException("Helix returned no reward for the one it created.", HttpStatusCode.NotFound);
+    }
+
+    public async Task<CustomReward> UpdateCustomRewardAsync(string broadcasterId, string rewardId, CustomRewardUpdate update, string accessToken, CancellationToken cancellationToken)
+    {
+        var body = JsonContent.Create(update, options: TwitchJson.Options);
+        using var response = await SendAsync(HttpMethod.Patch, RewardQuery(broadcasterId, rewardId), accessToken, cancellationToken, body);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<CustomReward>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault() ?? throw new TwitchOAuthException("Helix returned no reward for the one it updated.", HttpStatusCode.NotFound);
+    }
+
+    public async Task<IReadOnlyList<TwitchRedemption>> GetRedemptionsAsync(string broadcasterId, string rewardId, string status, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channel_points/custom_rewards/redemptions?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
+                    $"&reward_id={Uri.EscapeDataString(rewardId)}" +
+                    $"&status={Uri.EscapeDataString(status)}&sort=OLDEST&first=50";
+
+        using var response = await SendAsync(HttpMethod.Get, query, accessToken, cancellationToken);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<TwitchRedemption>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data ?? [];
+    }
+
+    public async Task UpdateRedemptionStatusAsync(string broadcasterId, string rewardId, string redemptionId, string status, string accessToken, CancellationToken cancellationToken)
+    {
+        var query = $"channel_points/custom_rewards/redemptions?broadcaster_id={Uri.EscapeDataString(broadcasterId)}" +
+                    $"&reward_id={Uri.EscapeDataString(rewardId)}" +
+                    $"&id={Uri.EscapeDataString(redemptionId)}";
+
+        var body = JsonContent.Create(new RedemptionStatusBody(status), options: TwitchJson.Options);
+        using var response = await SendAsync(HttpMethod.Patch, query, accessToken, cancellationToken, body);
+    }
+
+    public async Task DeleteCustomRewardAsync(string broadcasterId, string rewardId, string accessToken, CancellationToken cancellationToken)
+    {
+        using var response = await SendAsync(HttpMethod.Delete, RewardQuery(broadcasterId, rewardId), accessToken, cancellationToken);
+    }
+    #endregion
+
+    #region EventSub
+    public async Task<EventSubSubscription> CreateEventSubSubscriptionAsync(EventSubSubscriptionCreate create, string accessToken, CancellationToken cancellationToken)
+    {
+        var body = JsonContent.Create(create, options: TwitchJson.Options);
+        using var response = await SendAsync(HttpMethod.Post, "eventsub/subscriptions", accessToken, cancellationToken, body);
+
+        var payload = await response.Content.ReadFromJsonAsync<HelixResponse<EventSubSubscription>>(TwitchJson.Options, cancellationToken);
+
+        return payload?.Data.FirstOrDefault() ?? throw new TwitchOAuthException("Helix returned no subscription for the one it created.", HttpStatusCode.NotFound);
+    }
+
+    #endregion
+
     private async Task<IReadOnlyList<TwitchChannelUser>> GetFilteredChannelUsersAsync(string path, string broadcasterId, IReadOnlyCollection<string> userIds, string accessToken, CancellationToken cancellationToken)
     {
         if (userIds.Count is 0 or > MaxBatchSize)
@@ -262,6 +357,13 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     {
         var query = $"{path}?broadcaster_id={Uri.EscapeDataString(broadcasterId)}&user_id={Uri.EscapeDataString(userId)}";
         using var response = await SendAsync(method, query, accessToken, cancellationToken);
+    }
+
+    private static string RewardQuery(string broadcasterId, string? rewardId = null)
+    {
+        var query = $"channel_points/custom_rewards?broadcaster_id={Uri.EscapeDataString(broadcasterId)}";
+
+        return rewardId is null ? query : $"{query}&id={Uri.EscapeDataString(rewardId)}";
     }
 
     private static string PagedQuery(string path, string broadcasterId, string? cursor)
@@ -303,6 +405,8 @@ public sealed class TwitchApiClient(HttpClient httpClient, TwitchAuthOptions opt
     }
 
     private sealed record HelixBanBody(TwitchBanCreate Data);
+
+    private sealed record RedemptionStatusBody(string Status);
 
     private sealed record HelixResponse<T>
     {

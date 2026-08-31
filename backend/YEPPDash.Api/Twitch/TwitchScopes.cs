@@ -14,6 +14,7 @@ public static class TwitchScopes
         "channel:read:editors",
         "channel:manage:moderators",
         "channel:manage:raids",
+        "channel:manage:redemptions",
         "channel:read:subscriptions",
         "channel:read:vips",
         "channel:manage:vips",
