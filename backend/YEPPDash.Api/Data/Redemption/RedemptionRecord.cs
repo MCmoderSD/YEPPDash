@@ -1,10 +1,10 @@
 namespace YEPPDash.Api.Data.Redemption;
 
-public static class RedemptionOutcome
+public static class RedemptionStatus
 {
-    public const string Claimed = "claimed";
-    public const string Timeout = "timeout";
-    public const string Refunded = "refunded";
+    public const string Unfulfilled = "UNFULFILLED";
+    public const string Fulfilled = "FULFILLED";
+    public const string Canceled = "CANCELED";
 }
 
 public sealed record RedemptionRecord(
@@ -14,6 +14,6 @@ public sealed record RedemptionRecord(
     string UserId,
     string Input,
     DateTime RedeemedAt,
-    string Outcome = RedemptionOutcome.Claimed,
+    string Status = RedemptionStatus.Unfulfilled,
     string Reason = ""
 );

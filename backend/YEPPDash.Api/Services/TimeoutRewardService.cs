@@ -18,10 +18,6 @@ public sealed class TimeoutRewardService(
     EventSubHost eventSub,
     ILogger<TimeoutRewardService> logger
 ) {
-    private const string Unfulfilled = "UNFULFILLED";
-    private const string Fulfilled = "FULFILLED";
-    private const string Canceled = "CANCELED";
-
     private static readonly TimeSpan RestoreGrace = TimeSpan.Zero;
     private static readonly TimeSpan RestoreRetryDelay = TimeSpan.FromSeconds(5);
 
@@ -174,7 +170,7 @@ public sealed class TimeoutRewardService(
 
         try
         {
-            open = await apiClient.GetRedemptionsAsync(broadcasterId, config.RewardId, Unfulfilled, token.AccessToken, cancellationToken);
+            open = await apiClient.GetRedemptionsAsync(broadcasterId, config.RewardId, RedemptionStatus.Unfulfilled, token.AccessToken, cancellationToken);
         }
         catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
         {
@@ -191,17 +187,17 @@ public sealed class TimeoutRewardService(
             var inFlight = DateTimeOffset.UtcNow - redemption.RedeemedAt < InFlight;
             if (inFlight && await log.HasAsync(redemption.Id, cancellationToken)) continue;
 
-            if (!await SettleAsync(config, broadcasterId, redemption, Canceled, token.AccessToken, cancellationToken)) continue;
+            if (!await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Canceled, token.AccessToken, cancellationToken)) continue;
 
             const string reason = "redeemed while nothing was listening";
 
             var recorded = await log.TryRecordAsync(
                 new RedemptionRecord(
                     redemption.Id, channelId, config.RewardId, redemption.UserId, redemption.UserInput,
-                    redemption.RedeemedAt.UtcDateTime, RedemptionOutcome.Refunded, reason),
+                    redemption.RedeemedAt.UtcDateTime, RedemptionStatus.Canceled, reason),
                 cancellationToken);
 
-            if (!recorded) await log.MarkAsync(redemption.Id, RedemptionOutcome.Refunded, reason, cancellationToken);
+            if (!recorded) await log.MarkAsync(redemption.Id, RedemptionStatus.Canceled, reason, cancellationToken);
 
             logger.LogInformation(
                 "Refunded redemption {RedemptionId} in channel {ChannelId}: {Reason}",
@@ -310,8 +306,8 @@ public sealed class TimeoutRewardService(
 
             if (alreadyBanned)
             {
-                await SettleAsync(config, broadcasterId, redemption, Fulfilled, accessToken, cancellationToken);
-                await log.MarkAsync(redemption.Id, RedemptionOutcome.Timeout, $"{target.Id} was already banned", cancellationToken);
+                await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Fulfilled, accessToken, cancellationToken);
+                await log.MarkAsync(redemption.Id, RedemptionStatus.Fulfilled, $"{target.Id} was already banned", cancellationToken);
 
                 logger.LogInformation(
                     "Redemption {RedemptionId} in channel {ChannelId} counted as spent: {TargetId} was already banned",
@@ -329,8 +325,8 @@ public sealed class TimeoutRewardService(
 
         if (hadModerator) await repository.ScheduleRestoreAsync(new RoleRestore(config.ChannelId, target.Id, RestorableRole.Moderator, restoreAt), cancellationToken);
 
-        await SettleAsync(config, broadcasterId, redemption, Fulfilled, accessToken, cancellationToken);
-        await log.MarkAsync(redemption.Id, RedemptionOutcome.Timeout, $"timed out {target.Id} for {config.DurationSeconds}s", cancellationToken);
+        await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Fulfilled, accessToken, cancellationToken);
+        await log.MarkAsync(redemption.Id, RedemptionStatus.Fulfilled, $"timed out {target.Id} for {config.DurationSeconds}s", cancellationToken);
 
         logger.LogInformation(
             "Timed out {TargetId} for {Duration}s in channel {ChannelId}, redeemed by {RedeemerId}",
@@ -368,10 +364,10 @@ public sealed class TimeoutRewardService(
 
     private async Task RefundAsync(TimeoutRewardConfig config, string broadcasterId, TwitchRedemption redemption, string reason, string accessToken, CancellationToken cancellationToken)
     {
-        var refunded = await SettleAsync(config, broadcasterId, redemption, Canceled, accessToken, cancellationToken);
+        var refunded = await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Canceled, accessToken, cancellationToken);
         if (!refunded) return;
 
-        await log.MarkAsync(redemption.Id, RedemptionOutcome.Refunded, reason, cancellationToken);
+        await log.MarkAsync(redemption.Id, RedemptionStatus.Canceled, reason, cancellationToken);
 
         logger.LogInformation(
             "Refunded redemption {RedemptionId} in channel {ChannelId} by {RedeemerId}: {Reason}",

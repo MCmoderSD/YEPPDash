@@ -15,7 +15,7 @@ public sealed class RedemptionLogRepository(YeppDashConnectionFactory connection
             userId     VARCHAR(64)  NOT NULL,
             input      VARCHAR(500) NOT NULL DEFAULT (''),
             redeemedAt DATETIME(3)  NOT NULL,
-            outcome    VARCHAR(16)  NOT NULL DEFAULT ('claimed'),
+            status     VARCHAR(16)  NOT NULL DEFAULT ('UNFULFILLED'),
             reason     VARCHAR(200) NOT NULL DEFAULT (''),
             INDEX ix_RedemptionLog_channel (channelId, redeemedAt),
             INDEX ix_RedemptionLog_reward (rewardId, redeemedAt)
@@ -29,8 +29,8 @@ public sealed class RedemptionLogRepository(YeppDashConnectionFactory connection
         var written = await connection.ExecuteAsync(
             new CommandDefinition(
                 """
-                INSERT IGNORE INTO RedemptionLog (eventId, channelId, rewardId, userId, input, redeemedAt, outcome, reason)
-                VALUES (@EventId, @ChannelId, @RewardId, @UserId, @input, @RedeemedAt, @Outcome, @reason)
+                INSERT IGNORE INTO RedemptionLog (eventId, channelId, rewardId, userId, input, redeemedAt, status, reason)
+                VALUES (@EventId, @ChannelId, @RewardId, @UserId, @input, @RedeemedAt, @Status, @reason)
                 """,
                 new
                 {
@@ -40,7 +40,7 @@ public sealed class RedemptionLogRepository(YeppDashConnectionFactory connection
                     record.UserId,
                     input = Trim(record.Input, 500),
                     record.RedeemedAt,
-                    record.Outcome,
+                    record.Status,
                     reason = Trim(record.Reason, 200),
                 },
                 cancellationToken: cancellationToken));
@@ -48,14 +48,14 @@ public sealed class RedemptionLogRepository(YeppDashConnectionFactory connection
         return written is 1;
     }
 
-    public async Task MarkAsync(string eventId, string outcome, string reason, CancellationToken cancellationToken)
+    public async Task MarkAsync(string eventId, string status, string reason, CancellationToken cancellationToken)
     {
         await using var connection = connections.Create();
 
         await connection.ExecuteAsync(
             new CommandDefinition(
-                "UPDATE RedemptionLog SET outcome = @outcome, reason = @reason WHERE eventId = @eventId",
-                new { eventId, outcome, reason = Trim(reason, 200) },
+                "UPDATE RedemptionLog SET status = @status, reason = @reason WHERE eventId = @eventId",
+                new { eventId, status, reason = Trim(reason, 200) },
                 cancellationToken: cancellationToken));
     }
 
