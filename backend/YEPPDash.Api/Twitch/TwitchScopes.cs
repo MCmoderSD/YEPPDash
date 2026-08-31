@@ -9,8 +9,8 @@ public static class TwitchScopes
 
     private static readonly string[] Prod =
     [
-        "channel:edit:commercial",
         "channel:manage:broadcast",
+        "channel:edit:commercial",
         "channel:read:editors",
         "channel:manage:moderators",
         "channel:manage:raids",

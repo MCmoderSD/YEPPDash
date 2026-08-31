@@ -8,7 +8,7 @@ compared line by line when they change something.
 81 scopes in total: 78 twitch api and eventsub scopes, 2 irc chat scopes, 1 pubsub-specific chat scopes.
 
 The two sets in [`TwitchScopes.cs`](../backend/YEPPDash.Api/Twitch/TwitchScopes.cs) are drawn from
-this list: **Dev** asks for all 81 of them, **Prod** for the 17 the dashboard genuinely uses.
+this list: **Dev** asks for all 81 of them, **Prod** for the 18 the dashboard genuinely uses.
 A scope is granted when the user authorises, so adding one to either set means every user of that
 environment has to log in again before the new permission exists on their token.
 
