@@ -1,0 +1,283 @@
+<section class="broadcast-overview">
+  <div class="broadcast-overview-card">
+    <section class="broadcast-overview-stats" aria-label="Channel at a glance">
+
+      @if (pending()) {
+        <p class="app-visually-hidden" role="status">Loading the numbers for your channel…</p>
+      }
+
+      @if (preview(); as frame) {
+        @if (channelUrl(); as channel) {
+          <a
+            class="broadcast-overview-preview-frame broadcast-overview-preview-link app-fade-in"
+            [href]="channel"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Watch your stream on Twitch, opens in a new tab"
+          >
+            <img
+              class="broadcast-overview-preview"
+              [ngSrc]="frame"
+              fill="true"
+              disableOptimizedSrcset="true"
+              alt=""
+              (error)="dropPreview()"
+            />
+            <span class="broadcast-overview-preview-badge" aria-hidden="true">
+              <mat-icon class="broadcast-overview-preview-icon">open_in_new</mat-icon>
+              Watch
+            </span>
+          </a>
+        } @else {
+          <div class="broadcast-overview-preview-frame app-fade-in">
+            <img
+              class="broadcast-overview-preview"
+              [ngSrc]="frame"
+              fill="true"
+              disableOptimizedSrcset="true"
+              alt="Live preview of your stream"
+              (error)="dropPreview()"
+            />
+          </div>
+        }
+      }
+
+      @if (boxed()) {
+        <ul class="broadcast-overview-boxes">
+
+          <li>
+            <a
+              class="broadcast-overview-box"
+              [class.broadcast-overview-box-action]="dashboardUrl() !== null"
+              [attr.href]="dashboardUrl()"
+              target="_blank"
+              rel="noopener noreferrer"
+              matTooltip="Open your Twitch dashboard"
+            >
+              <span class="broadcast-overview-box-label">Status</span>
+              @if (streamPending()) {
+                <span class="broadcast-overview-box-value broadcast-overview-pending app-skeleton-appear">
+                  <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-status" aria-hidden="true"></span>
+                </span>
+              } @else {
+                <span class="broadcast-overview-box-value app-fade-in">Offline</span>
+              }
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="broadcast-overview-box broadcast-overview-box-action"
+              [routerLink]="communityPath"
+              matTooltip="Open the community page"
+            >
+              <span class="broadcast-overview-box-label">Followers</span>
+              @if (followersPending()) {
+                <span class="broadcast-overview-box-value broadcast-overview-pending app-skeleton-appear">
+                  <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-number" aria-hidden="true"></span>
+                </span>
+              } @else {
+                <span class="broadcast-overview-box-value app-fade-in">{{ followerCount() }}</span>
+              }
+            </a>
+          </li>
+
+          <li>
+            <button
+              type="button"
+              class="broadcast-overview-box broadcast-overview-box-action"
+              matTooltip="See who is in chat"
+              (click)="showChatters()"
+            >
+              <span class="broadcast-overview-box-label">In chat</span>
+              @if (chattersPending()) {
+                <span class="broadcast-overview-box-value broadcast-overview-pending app-skeleton-appear">
+                  <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-number" aria-hidden="true"></span>
+                </span>
+              } @else {
+                <span class="broadcast-overview-box-value app-fade-in">{{ inChat() }}</span>
+              }
+            </button>
+          </li>
+        </ul>
+      } @else {
+        <div class="broadcast-overview-strip">
+
+          <ul class="broadcast-overview-group">
+            <li>
+              <a
+                class="broadcast-overview-item"
+                [class.broadcast-overview-action]="dashboardUrl() !== null"
+                [attr.href]="dashboardUrl()"
+                target="_blank"
+                rel="noopener noreferrer"
+                matTooltip="Open your Twitch dashboard"
+              >
+                <span class="broadcast-overview-state broadcast-overview-on-air app-fade-in">
+                  <span class="broadcast-overview-dot" aria-hidden="true"></span>
+                  Live
+                </span>
+              </a>
+            </li>
+
+            <li>
+              <a
+                class="broadcast-overview-item broadcast-overview-action"
+                [routerLink]="communityPath"
+                matTooltip="Open the community page"
+              >
+                <mat-icon class="broadcast-overview-icon" aria-hidden="true">group</mat-icon>
+                @if (followersPending()) {
+                  <span class="broadcast-overview-pending app-skeleton-appear">
+                    <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-number" aria-hidden="true"></span>
+                  </span>
+                } @else {
+                  <span class="broadcast-overview-value app-fade-in">{{ followerCount() }}</span>
+                }
+                <span class="app-visually-hidden">followers</span>
+              </a>
+            </li>
+          </ul>
+
+          <ul class="broadcast-overview-group broadcast-overview-group-end">
+
+            @if (uptime(); as running) {
+              <li class="broadcast-overview-item app-fade-in">
+                <mat-icon class="broadcast-overview-icon" aria-hidden="true">schedule</mat-icon>
+                <span class="broadcast-overview-value">{{ running }}</span>
+                <span class="app-visually-hidden">on air</span>
+              </li>
+            }
+
+            <li class="broadcast-overview-item app-fade-in">
+              <mat-icon class="broadcast-overview-icon" aria-hidden="true">visibility</mat-icon>
+              <span class="broadcast-overview-value">{{ viewers() }}</span>
+              <span class="app-visually-hidden">viewers</span>
+            </li>
+
+            <li>
+              <button
+                type="button"
+                class="broadcast-overview-item broadcast-overview-action"
+                matTooltip="See who is in chat"
+                (click)="showChatters()"
+              >
+                <mat-icon class="broadcast-overview-icon" aria-hidden="true">forum</mat-icon>
+                @if (chattersPending()) {
+                  <span class="broadcast-overview-pending app-skeleton-appear">
+                    <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-number" aria-hidden="true"></span>
+                  </span>
+                } @else {
+                  <span class="broadcast-overview-value app-fade-in">{{ inChat() }}</span>
+                }
+                <span class="app-visually-hidden">in chat</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      }
+    </section>
+
+    @if (loading()) {
+      <div class="broadcast-overview-channel app-skeleton-appear" role="status">
+        <span class="app-visually-hidden">Loading your channel information…</span>
+
+        <span class="app-skeleton broadcast-overview-art" aria-hidden="true"></span>
+
+        <div class="broadcast-overview-names" aria-hidden="true">
+          <span class="broadcast-overview-title">
+            <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-title"></span>
+          </span>
+          <span class="broadcast-overview-game">
+            <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-game"></span>
+          </span>
+        </div>
+
+        <button mat-icon-button type="button" aria-label="Manage broadcast" disabled>
+          <mat-icon aria-hidden="true">edit</mat-icon>
+        </button>
+      </div>
+
+      <p class="broadcast-overview-facts app-skeleton-appear" aria-hidden="true">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-language"></span>
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text broadcast-overview-skeleton-tags"></span>
+      </p>
+    } @else {
+      <div class="broadcast-overview-channel app-fade-in">
+        @if (game(); as picked) {
+          @if (picked.boxArtUrl) {
+            <img
+              class="broadcast-overview-art"
+              [ngSrc]="art(picked)"
+              [width]=78
+              [height]=104
+              disableOptimizedSrcset="true"
+              alt=""
+            />
+          } @else {
+            <span class="broadcast-overview-art broadcast-overview-blank" aria-hidden="true"></span>
+          }
+        } @else {
+          <span class="broadcast-overview-art broadcast-overview-blank" aria-hidden="true"></span>
+        }
+
+        <div class="broadcast-overview-names">
+          <h2 class="broadcast-overview-title">
+            @if (channel().title.trim()) {
+              {{ channel().title }}
+            } @else {
+              <span class="broadcast-overview-empty">No title</span>
+            }
+          </h2>
+
+          <span class="broadcast-overview-game">
+            @if (game(); as picked) {
+              {{ picked.name }}
+            } @else {
+              <span class="broadcast-overview-empty">No category</span>
+            }
+          </span>
+        </div>
+
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Manage broadcast"
+          matTooltip="Manage broadcast"
+          (click)="manage()"
+        >
+          <mat-icon aria-hidden="true">edit</mat-icon>
+        </button>
+      </div>
+
+      <p class="broadcast-overview-facts app-fade-in">
+        <span class="app-visually-hidden">Language:</span>
+        <span class="broadcast-overview-language">{{ languageName() }}</span>
+
+        @for (tag of channel().tags; track tag) {
+          <span class="broadcast-overview-tag">{{ tag }}</span>
+        } @empty {
+          <span class="broadcast-overview-empty">No tags</span>
+        }
+
+        @if (channel().delay > 0) {
+          <span class="broadcast-overview-extra">{{ delay() }} delay</span>
+        }
+
+        @for (label of labelNames(); track label) {
+          <span class="broadcast-overview-extra">{{ label }}</span>
+        }
+      </p>
+
+      @if (channel().isBrandedContent) {
+        <p class="broadcast-overview-branded app-fade-in">
+          <mat-icon class="broadcast-overview-branded-icon" aria-hidden="true">campaign</mat-icon>
+          <span>
+            <strong>Branded content is on.</strong>
+            Twitch shows viewers a label saying this stream is sponsored or otherwise commercial.
+          </span>
+        </p>
+      }
+    }
+  </div>
+</section>

@@ -74,7 +74,7 @@ public sealed class QuoteRepository(MySqlConnection connection)
                 channelId,
                 id = index + 1,
                 quote = draft.Text,
-                timestamp = draft.Timestamp?.UtcDateTime,
+                timestamp = draft.Timestamp?.UtcDateTime
             });
 
             await connection.ExecuteAsync(

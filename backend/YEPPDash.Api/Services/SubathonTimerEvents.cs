@@ -18,7 +18,7 @@ public static class SubathonTimerEvents
                 state.Remaining,
                 state.StartSeconds,
                 state.Style,
-                ServerNow = serverNow,
+                ServerNow = serverNow
             },
             EventJson);
     }

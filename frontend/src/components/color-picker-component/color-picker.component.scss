@@ -43,6 +43,7 @@
 
 // A two-tone ring — panel colour first, then primary — so "which one is active" reads on any swatch,
 // including the white and black ones.
+//noinspection CssUnusedSymbol
 .picker-preset-selected {
   box-shadow:
     0 0 0 2px var(--mat-sys-surface-container),
@@ -114,4 +115,33 @@
   box-shadow: 0 0 0 1px rgb(0 0 0 / 60%);
   transform: translate(-50%, -50%);
   pointer-events: none;
+}
+
+.picker-hex {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.picker-hex-name {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.picker-hex-field {
+  flex: 1;
+  min-width: 0;
+
+  padding: 0.375rem 0.5rem;
+  border: var(--app-border-strong);
+  border-radius: var(--app-radius-sm);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 1px;
+  }
 }

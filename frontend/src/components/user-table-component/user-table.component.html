@@ -71,17 +71,41 @@
         mat-row
         *matRowDef="let user; columns: columns()"
         class="user-table-row"
+        [class.app-fade-in]="loaded()"
         (click)="showDetails(user)"
       ></tr>
 
       <tr class="user-table-empty-row" *matNoDataRow>
-        <td class="user-table-empty" [attr.colspan]="columns().length">
-          @if (query()) {
-            No user matches “{{ query() }}”.
-          } @else {
-            No users to show.
-          }
-        </td>
+        @if (loading()) {
+          <td class="user-table-ghost-cell" [attr.colspan]="columns().length" aria-hidden="true">
+            <div class="user-table-ghost" [style.grid-template-columns]="ghostColumns()">
+              @for (row of ghostRows(); track row) {
+                <div class="user-table-ghost-row">
+                  <span class="user-table-ghost-column user-table-ghost-identity">
+                    <span class="app-skeleton user-table-ghost-avatar"></span>
+                    <span class="app-skeleton app-skeleton-bar user-table-ghost-name"></span>
+                  </span>
+                  @if (showId()) {
+                    <span class="user-table-ghost-column">
+                      <span class="app-skeleton app-skeleton-bar user-table-ghost-id"></span>
+                    </span>
+                  }
+                  @if (mode() !== 'user') {
+                    <span class="user-table-ghost-column"></span>
+                  }
+                </div>
+              }
+            </div>
+          </td>
+        } @else {
+          <td class="user-table-empty" [attr.colspan]="columns().length">
+            @if (query()) {
+              No user matches “{{ query() }}”.
+            } @else {
+              No users to show.
+            }
+          </td>
+        }
       </tr>
     </table>
   </div>

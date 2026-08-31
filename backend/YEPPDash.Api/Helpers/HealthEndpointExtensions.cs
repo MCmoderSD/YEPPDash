@@ -13,7 +13,7 @@ public static class HealthEndpointExtensions
         app.MapHealthChecks("/health/ready", new HealthCheckOptions
         {
             Predicate = registration => registration.Tags.Contains("ready"),
-            ResponseWriter = WriteJsonAsync,
+            ResponseWriter = WriteJsonAsync
         });
 
         app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = WriteJsonAsync });
@@ -34,8 +34,8 @@ public static class HealthEndpointExtensions
                 name = entry.Key,
                 status = entry.Value.Status.ToString(),
                 durationMs = Math.Round(entry.Value.Duration.TotalMilliseconds, 1),
-                description = entry.Value.Description,
-            }),
+                description = entry.Value.Description
+            })
         }));
     }
 }

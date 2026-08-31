@@ -1,0 +1,14 @@
+<h2 mat-dialog-title class="user-list-title">{{ data.title }}</h2>
+
+<mat-dialog-content class="user-list">
+  @if (failed()) {
+    <p class="user-list-message">{{ data.failure ?? 'Could not read this list.' }}</p>
+  } @else {
+    <app-user-table
+      [users]="users()"
+      [loading]="loading()"
+      [expected]="data.expected ?? null"
+      [showId]="data.showId ?? false"
+    />
+  }
+</mat-dialog-content>

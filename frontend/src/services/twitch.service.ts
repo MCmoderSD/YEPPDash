@@ -1,10 +1,12 @@
 import { HttpParams } from '@angular/common/http';
 import { Service } from '@angular/core';
-import { Editor, Moderator, Vip } from '../data/channel-roles';
+import { ChannelMember, Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
-import { BanStatus } from '../data/banned-user';
+import { BannedUser, BanCounts, BanResult } from '../data/banned-user';
 import { CategoryPage, ChannelCategory, ChannelInformation, ChannelUpdate } from '../data/channel';
+import { StreamStatus } from '../data/stream';
+import { CountResponse } from '../data/count';
 import { ApiService } from './api.service';
 
 @Service()
@@ -21,6 +23,10 @@ export class TwitchService extends ApiService {
 
   getModerators(): Promise<Moderator[]> {
     return this.get<Moderator[]>('moderators');
+  }
+
+  async countModerators(): Promise<number> {
+    return (await this.get<CountResponse>('moderators/count')).count;
   }
 
   getModeratorsById(userIds: readonly string[]): Promise<Moderator[]> {
@@ -41,6 +47,10 @@ export class TwitchService extends ApiService {
 
   getVips(): Promise<Vip[]> {
     return this.get<Vip[]>('vips');
+  }
+
+  async countVips(): Promise<number> {
+    return (await this.get<CountResponse>('vips/count')).count;
   }
 
   getVipsById(userIds: readonly string[]): Promise<Vip[]> {
@@ -75,6 +85,10 @@ export class TwitchService extends ApiService {
     return this.get<FollowerProfile[]>('followers');
   }
 
+  async countFollowers(): Promise<number> {
+    return (await this.get<CountResponse>('followers/count')).count;
+  }
+
   getFollowStatus(userId: string): Promise<FollowStatus> {
     return this.get<FollowStatus>(`followers/${encodeURIComponent(userId)}`);
   }
@@ -87,32 +101,60 @@ export class TwitchService extends ApiService {
     return this.get<TwitchUser[]>('chatters');
   }
 
+  async countChatters(): Promise<number> {
+    return (await this.get<CountResponse>('chatters/count')).count;
+  }
+
+  async isChatter(userId: string): Promise<boolean> {
+    return (await this.checkChannelRole<ChannelMember>('chatters', [userId])).length > 0;
+  }
+
   getBlocked(): Promise<TwitchUser[]> {
     return this.get<TwitchUser[]>('blocked');
+  }
+
+  async isBlocked(userId: string): Promise<boolean> {
+    return (await this.checkChannelRole<ChannelMember>('blocked', [userId])).length > 0;
   }
 
   unblockUser(userId: string): Promise<void> {
     return this.delete(`blocked/${encodeURIComponent(userId)}`);
   }
 
-  getBanStatus(userId: string): Promise<BanStatus> {
-    return this.get<BanStatus>(`banned/${encodeURIComponent(userId)}`);
+  getBannedUsers(): Promise<BannedUser[]> {
+    return this.get<BannedUser[]>('banned');
+  }
+
+  countBans(): Promise<BanCounts> {
+    return this.get<BanCounts>('banned/count');
+  }
+
+  banUser(userId: string, duration: number | null, reason: string | null): Promise<BanResult> {
+    return this.post<BanResult>(`banned/${encodeURIComponent(userId)}`, { duration, reason });
+  }
+
+  getBan(userId: string): Promise<BannedUser | null> {
+    return this.get<BannedUser | null>(`banned/${encodeURIComponent(userId)}`);
   }
 
   async isBanned(userId: string): Promise<boolean> {
-    return (await this.getBanStatus(userId)).banned;
+    return (await this.getBan(userId)) !== null;
   }
 
   unbanUser(userId: string): Promise<void> {
     return this.delete(`banned/${encodeURIComponent(userId)}`);
   }
 
+  getStreamStatus(): Promise<StreamStatus> {
+    return this.get<StreamStatus>('stream');
+  }
+
   getChannel(): Promise<ChannelInformation> {
     return this.get<ChannelInformation>('channel');
   }
 
-  updateChannel(update: ChannelUpdate): Promise<void> {
-    return this.patch<void>('channel', update);
+  updateChannel(update: ChannelUpdate): Promise<ChannelInformation> {
+    return this.patch<ChannelInformation>('channel', update);
   }
 
   getGames(gameIds: readonly string[]): Promise<ChannelCategory[]> {
@@ -123,7 +165,6 @@ export class TwitchService extends ApiService {
   searchCategories(query: string, cursor: string | null = null): Promise<CategoryPage> {
     let params: HttpParams = new HttpParams().set('query', query);
     if (cursor !== null) params = params.set('after', cursor);
-
     return this.get<CategoryPage>('categories', params);
   }
 

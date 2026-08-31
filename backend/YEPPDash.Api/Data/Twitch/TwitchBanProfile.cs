@@ -27,4 +27,7 @@ public sealed record TwitchBanProfile : TwitchUser
     public string? Reason { get; init; }
 }
 
-public sealed record BanStatusResponse(bool Banned, TwitchBanProfile? Ban);
+public sealed record BanCountResponse(
+    int Timeouts, 
+    int Bans
+);

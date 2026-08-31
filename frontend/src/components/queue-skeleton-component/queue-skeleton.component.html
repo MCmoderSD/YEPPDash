@@ -1,44 +1,39 @@
-<!-- The real page with the data blanked out, not a sketch of it: every container here carries the
-     page's own class, styled by the shared shell, so the frame cannot sit a pixel apart from what
-     replaces it. Whatever is static — titles, hints, the table header, the note — is simply shown,
-     because there is nothing about it to wait for; only what the server has yet to answer pulses.
-     The wording is copied from the page and has to move with it. -->
-<div class="queue-skeleton" role="status">
+<div class="queue-skeleton app-skeleton-appear" role="status">
   <span class="app-visually-hidden">Loading your queue…</span>
 
-  <p class="queue-page-state" aria-hidden="true">
-    <span class="queue-skeleton-bar queue-skeleton-state"></span>
+  <p class="queue-skeleton-state-slot" aria-hidden="true">
+    <span class="app-skeleton queue-skeleton-state"></span>
   </p>
 
   <div class="queue-page-stage" aria-hidden="true">
     @if (lines().length > 0) {
       <p class="queue-page-stage-label">
-        <span class="queue-skeleton-bar queue-skeleton-text queue-skeleton-stage-label"></span>
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-label"></span>
       </p>
 
       <div class="queue-page-stage-identity">
-        <span class="queue-skeleton-shape queue-skeleton-stage-avatar"></span>
+        <span class="app-skeleton queue-skeleton-stage-avatar"></span>
         <span class="queue-page-stage-name">
-          <span class="queue-skeleton-bar queue-skeleton-stage-name"></span>
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-name"></span>
         </span>
       </div>
 
       <div class="queue-page-controls">
-        <span class="queue-skeleton-shape queue-skeleton-button queue-skeleton-button-done"></span>
+        <span class="app-skeleton queue-skeleton-button queue-skeleton-button-done"></span>
       </div>
     } @else {
       <p class="queue-page-stage-label">
-        <span class="queue-skeleton-bar queue-skeleton-text queue-skeleton-stage-waiting"></span>
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-waiting"></span>
       </p>
       <p class="queue-page-empty">
-        <span class="queue-skeleton-bar queue-skeleton-text queue-skeleton-stage-line"></span>
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-stage-line"></span>
       </p>
     }
   </div>
 
   <div class="queue-page-controls" aria-hidden="true">
-    <span class="queue-skeleton-shape queue-skeleton-button queue-skeleton-button-toggle"></span>
-    <span class="queue-skeleton-shape queue-skeleton-button queue-skeleton-button-clear"></span>
+    <span class="app-skeleton queue-skeleton-button queue-skeleton-button-toggle"></span>
+    <span class="app-skeleton queue-skeleton-button queue-skeleton-button-clear"></span>
   </div>
 
   <div class="queue-page-panels" aria-hidden="true">
@@ -65,18 +60,18 @@
                 <span class="queue-page-position">{{ line + 1 }}</span>
 
                 <span class="queue-page-identity">
-                  <span class="queue-skeleton-shape queue-skeleton-avatar"></span>
-                  <span class="queue-skeleton-bar queue-skeleton-row-name"></span>
+                  <span class="app-skeleton queue-skeleton-avatar"></span>
+                  <span class="app-skeleton app-skeleton-bar queue-skeleton-row-name"></span>
                 </span>
 
-                <span class="queue-skeleton-shape queue-skeleton-remove"></span>
+                <span class="app-skeleton queue-skeleton-remove"></span>
               </div>
             }
           </div>
         </div>
       } @else {
         <p class="queue-page-empty">
-          <span class="queue-skeleton-bar queue-skeleton-text queue-skeleton-empty"></span>
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text queue-skeleton-empty"></span>
         </p>
       }
     </section>
@@ -85,8 +80,8 @@
       <h2 class="queue-page-panel-title">Who may join</h2>
 
       <span class="queue-skeleton-field">
-        <span class="queue-skeleton-shape queue-skeleton-field-box"></span>
-        <span class="queue-skeleton-bar queue-skeleton-field-hint"></span>
+        <span class="app-skeleton queue-skeleton-field-box"></span>
+        <span class="app-skeleton app-skeleton-bar queue-skeleton-field-hint"></span>
       </span>
 
       <p class="queue-page-panel-note">

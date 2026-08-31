@@ -45,6 +45,7 @@
 
   // Hidden rather than removed from the layout: the component reads the thickness back off this
   // element, and display:none would measure as zero.
+  //noinspection CssUnusedSymbol
   &.scroll-bar-shown {
     visibility: visible;
   }
@@ -67,6 +68,7 @@
   transform: translateY(0.25rem);
 }
 
+//noinspection CssUnusedSymbol
 :host(.scroll-bar-revealed) .scroll-bar-track.scroll-bar-shown {
   opacity: 1;
   transform: none;
@@ -121,6 +123,7 @@
 // stay purely as an indicator — shown by the scroll itself, and handing every gesture through to
 // what is underneath.
 @media (hover: none) {
+  //noinspection CssUnusedSymbol
   .scroll-bar-track,
   :host(.scroll-bar-revealed) .scroll-bar-track.scroll-bar-shown {
     pointer-events: none;

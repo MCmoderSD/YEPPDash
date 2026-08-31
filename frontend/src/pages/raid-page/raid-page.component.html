@@ -2,9 +2,15 @@
 
   <header class="raid-page-header">
     <h1 class="raid-page-title">Raid Overview</h1>
-    <p class="raid-page-count">
-      {{ count() }} raid{{ count() === 1 ? '' : 's' }}, {{ viewers() }} viewer{{ viewers() === 1 ? '' : 's' }} brought along
-    </p>
+    @if (skeleton()) {
+      <p class="raid-page-count" aria-hidden="true">
+        <span class="app-skeleton app-skeleton-bar app-skeleton-text raid-page-count-skeleton"></span>
+      </p>
+    } @else {
+      <p class="raid-page-count app-fade-in">
+        {{ count() }} raid{{ count() === 1 ? '' : 's' }}, {{ viewers() }} viewer{{ viewers() === 1 ? '' : 's' }} brought along
+      </p>
+    }
   </header>
 
   <div class="raid-page-toolbar">
@@ -22,8 +28,8 @@
   <mat-progress-bar
     class="raid-page-progress"
     mode="indeterminate"
-    [attr.aria-hidden]="!loading()"
-    [style.visibility]="loading() ? 'visible' : 'hidden'"
+    [attr.aria-hidden]="!loading() || skeleton()"
+    [style.visibility]="loading() && !skeleton() ? 'visible' : 'hidden'"
   />
 
   <mat-form-field appearance="outline" class="raid-page-search">
@@ -48,6 +54,7 @@
       matSortDisableClear="true"
       [dataSource]="dataSource"
       class="raid-page-grid"
+      [class.app-fade-in]="!skeleton()"
     >
 
       <ng-container matColumnDef="raider">
@@ -102,9 +109,23 @@
       ></tr>
 
       <tr class="raid-page-empty-row" *matNoDataRow>
-        <td class="raid-page-empty" [attr.colspan]="columns.length">
-          @if (loading()) {
-            Loading your raids…
+        <td class="raid-page-empty" [class.raid-page-empty-skeleton]="skeleton()" [attr.colspan]="columns.length">
+          @if (skeleton()) {
+            <div class="raid-page-skeleton-rows app-skeleton-appear" role="status">
+              <span class="app-visually-hidden">Loading your raids…</span>
+              <div class="raid-page-skeleton-list" aria-hidden="true">
+                @for (row of ghostRows(); track row) {
+                  <div class="raid-page-skeleton-row">
+                    <span class="raid-page-skeleton-identity">
+                      <span class="app-skeleton raid-page-skeleton-avatar"></span>
+                      <span class="app-skeleton app-skeleton-bar raid-page-skeleton-name"></span>
+                    </span>
+                    <span class="app-skeleton app-skeleton-bar raid-page-skeleton-viewers"></span>
+                    <span class="app-skeleton app-skeleton-bar raid-page-skeleton-date"></span>
+                  </div>
+                }
+              </div>
+            </div>
           } @else if (unreachable()) {
             Could not load your raids. Please try again.
           } @else if (query()) {

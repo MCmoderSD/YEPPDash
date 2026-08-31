@@ -18,9 +18,7 @@ public sealed record BirthdayRequest
         var length = DateTime.DaysInMonth(Year, Month);
         if (Day < 1 || Day > length) return $"Day must be between 1 and {length} for that month.";
 
-        if (new DateOnly(Year, Month, Day) > today) return "A birthday cannot be in the future.";
-
-        return null;
+        return new DateOnly(Year, Month, Day) > today ? "A birthday cannot be in the future." : null;
     }
 }
 

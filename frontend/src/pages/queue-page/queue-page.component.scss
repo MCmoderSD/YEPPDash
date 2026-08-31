@@ -26,6 +26,7 @@
 // Closed with people still in it. Not an error — a queue is often closed on purpose while the last
 // few are worked through — but it is the state that gets left behind by accident, so it carries a
 // colour of its own instead of reading like any other closed queue.
+//noinspection CssUnusedSymbol
 .queue-page-state-holding {
   background: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
@@ -51,6 +52,7 @@
 
 // Only where there is something to open — a row whose ID Twitch does not know has no dialog behind
 // it, and a pointer promising one would be lying.
+//noinspection CssUnusedSymbol
 .queue-page-entry-known {
   cursor: pointer;
 }
@@ -139,38 +141,6 @@
   .queue-page-handle:focus-visible,
   .queue-page-entry.cdk-drag-preview .queue-page-handle {
     opacity: 1;
-  }
-}
-
-// The subathon timer's command list, same shape: the command in one column, what it does in the
-// next, stacked once two columns of nowrap names stop fitting a phone.
-.queue-page-commands {
-  display: grid;
-  flex: 1 1 auto;
-  align-content: space-between;
-  gap: 0.25rem 1rem;
-  margin: 0;
-  grid-template-columns: max-content minmax(0, 1fr);
-
-  dt {
-    color: var(--mat-sys-primary);
-    font-family: var(--mat-sys-body-medium-font), monospace;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  dd {
-    margin: 0;
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-body-medium);
-  }
-
-  @media (max-width: 30rem) {
-    grid-template-columns: minmax(0, 1fr);
-
-    dd {
-      margin-block-end: 0.5rem;
-    }
   }
 }
 

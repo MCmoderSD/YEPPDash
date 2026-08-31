@@ -29,6 +29,7 @@
 // Reached through ::ng-deep because the span belongs to MatButton's template and so carries none of
 // this component's encapsulation attributes; the selector in front of it keeps the rule to this one
 // button.
+//noinspection CssUnusedSymbol
 .user-menu-trigger ::ng-deep .mdc-button__label {
   min-width: 0;
 }

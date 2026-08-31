@@ -1,0 +1,513 @@
+.broadcast-overview-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// The announcement is for screen readers, not for the column: left in flow a paragraph brings its
+// own margin with it, so the strip would sit an em lower while loading and jump up when the last
+// answer lands. The bot card's skeleton takes its own out of flow for the same reason.
+.broadcast-overview-stats > .app-visually-hidden {
+  position: absolute;
+  margin: 0;
+}
+
+// The frame is a live one, so the obvious thing to do with it is watch — the whole picture is the
+// target rather than a link tucked underneath it. rel="noopener" is on the anchor: a tab opened
+// with target="_blank" can otherwise reach back through window.opener.
+// The box the frame is drawn in, and the only thing that decides how big it is. 16:9 because that
+// is what Twitch cuts, and stated here rather than left to the file: the image is positioned, so
+// without a ratio this box would be nothing until the picture loaded and would jump when it did.
+//
+// position: relative is not decoration — the image fills this element, and an absolutely positioned
+// child resolves against the nearest positioned ancestor.
+.broadcast-overview-preview-frame {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--app-radius-md);
+}
+
+.broadcast-overview-preview-link {
+  transition: border-color var(--app-motion-fast) var(--app-ease);
+
+  &:hover .broadcast-overview-preview,
+  &:focus-visible .broadcast-overview-preview {
+    border-color: var(--mat-sys-primary);
+  }
+
+  &:hover .broadcast-overview-preview-badge,
+  &:focus-visible .broadcast-overview-preview-badge {
+    opacity: 1;
+  }
+}
+
+// Says what the click does, and stays out of the picture until someone reaches for it. Focus counts
+// as reaching for it: a keyboard tabbing onto the preview gets the same label a pointer does, or
+// the affordance would exist for one kind of visitor only.
+.broadcast-overview-preview-badge {
+  opacity: 0;
+  transition: opacity var(--app-motion-fast) var(--app-ease);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: absolute;
+  inset-block-end: 0.5rem;
+  inset-inline-end: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--app-radius-pill);
+
+  // Its own dark plate rather than a surface token: what sits behind it is a photograph, and no
+  // token in the theme is guaranteed to stand off an arbitrary frame of someone's gameplay.
+  background: rgb(0 0 0 / 65%);
+  color: #fff;
+  font: var(--mat-sys-label-medium);
+}
+
+// A touch screen has no hover to reveal it with, and tapping around a photograph to find out
+// whether it is a link is not a discovery anyone should have to make. There it simply stays.
+@media (hover: none) {
+  .broadcast-overview-preview-badge {
+    opacity: 1;
+  }
+}
+
+.broadcast-overview-preview-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  font-size: 0.875rem;
+}
+
+// First, so the card opens on the one thing that is actually happening. There is no honest
+// stand-in for it: a grey 16:9 box drawn before the answer arrives would be claiming the channel
+// is on air, so it appears with the answer or not at all.
+// Angular's fill: the image is laid out by its box rather than by its own dimensions, which is
+// what lets the CSS above decide the size and the browser do the scaling. It also means no width
+// and height on the tag — with fill they would be an error, and without fill their absence was the
+// bug: no numbers and no ratio, so `height: auto` resolved to zero.
+.broadcast-overview-preview {
+  border-radius: var(--app-radius-md);
+
+  // The frame Twitch cuts is a photograph of whatever is on screen, and against a dark card an
+  // image that ends in dark pixels has no edge at all.
+  border: 1px solid var(--mat-sys-outline-variant);
+  object-fit: cover;
+}
+
+// What the numbers look like with no preview above them: three boxes filling the room the preview
+// would have had, with the names written out rather than carried by an icon. There is space for the
+// words here, and a word is plainer than a glyph when there is no reason to be terse.
+.broadcast-overview-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(7rem, 100%), 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // The cell, made a flex container purely so the box inside can fill it by stretching. Two of the
+  // three are a link and a button, whose own height would otherwise be their content's.
+  > li {
+    display: flex;
+  }
+}
+
+// column-reverse, so the number is read after the name it belongs to but drawn above it. The order
+// in the markup is the one a screen reader follows — "Followers, 169" — and the one on screen is
+// the one an eye scans, which wants the figure first.
+.broadcast-overview-box {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 0.125rem;
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--app-radius-md);
+  background: var(--mat-sys-surface-container-high);
+}
+
+// Two of the boxes go somewhere — the followers to the community page, the chat to a dialog of who
+// is in it. A link and a button rather than a div with a handler, so each is reachable by keyboard
+// and announced as what it does; the global focus-visible outline in styles.scss then covers both.
+// Everything here is undoing what a browser paints on a button of its own accord.
+.broadcast-overview-box-action {
+  appearance: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    background: var(--mat-sys-surface-container-highest);
+  }
+}
+
+.broadcast-overview-box-value {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
+
+  // Lining figures of one width, so a number that ticks does not shuffle the digits beside it.
+  font-variant-numeric: tabular-nums;
+}
+
+.broadcast-overview-box-label {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// The boxes are painted the stand-ins' own grey, so inside them a bar has to step one tone up — a
+// bar that matches its background is no bar at all. Same reasoning as the bot card's row chips.
+.broadcast-overview-box .app-skeleton {
+  background: var(--mat-sys-surface-container-highest);
+}
+
+// Two groups on one line, pushed to opposite ends: what the channel *is* on the left, what it is
+// doing right now on the right. space-between rather than an auto margin on one item, because which
+// item starts the right-hand group changes — off air there is no uptime and no viewer count, and an
+// auto margin would then have to move to whichever one survived.
+//
+// Wraps rather than shrinking, so a narrow card breaks between the groups instead of inside a fact.
+.broadcast-overview-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1.25rem;
+}
+
+.broadcast-overview-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--mat-sys-body-medium);
+}
+
+// Once the row has wrapped the two groups are stacked, and a right-aligned group with nothing
+// across from it reads as pushed off the card rather than as deliberate.
+.broadcast-overview-group-end {
+  justify-content: flex-end;
+}
+
+.broadcast-overview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-height: 1.5rem;
+}
+
+// Same job as the boxes' action, at the size of a line of text: no plate to tint on hover, so the
+// number and its icon take the accent instead.
+.broadcast-overview-action {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--app-motion-fast) var(--app-ease);
+
+  .broadcast-overview-value,
+  .broadcast-overview-icon {
+    transition: color var(--app-motion-fast) var(--app-ease);
+  }
+
+  &:hover .broadcast-overview-value,
+  &:hover .broadcast-overview-icon,
+  &:focus-visible .broadcast-overview-value,
+  &:focus-visible .broadcast-overview-icon {
+    color: var(--mat-sys-primary);
+  }
+
+  // The live chip is already the accent, so there is no colour left to move it to.
+  &:hover .broadcast-overview-state,
+  &:focus-visible .broadcast-overview-state {
+    text-decoration: underline;
+  }
+}
+
+// The name of the number, for anyone who cannot see the icon carrying it. Out of flow, or it would
+// claim a slot and a gap of its own in the row.
+.broadcast-overview-item > .app-visually-hidden {
+  position: absolute;
+}
+
+// Material draws its icons at 24px, half again the height of the figures beside them.
+.broadcast-overview-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+  color: var(--mat-sys-outline);
+}
+
+.broadcast-overview-value {
+  color: var(--mat-sys-on-surface);
+
+  // Lining figures of one width, so a viewer count going from 998 to 1,004 does not shuffle the
+  // digits it kept.
+  font-variant-numeric: tabular-nums;
+}
+
+// A step above the numbers rather than level with them. It is the one fact on this strip that
+// answers the question the card is opened to answer, and the numbers beside it only mean anything
+// once it has been read.
+.broadcast-overview-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-title-small);
+}
+
+// The only place on the card where the accent means something.
+.broadcast-overview-on-air {
+  color: var(--mat-sys-primary);
+}
+
+.broadcast-overview-dot {
+  position: relative;
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+// A ring leaving the dot, the way a transmitter is drawn. Only while live: off air the dot is a
+// grey full stop, and something still pulsing there would say the opposite of the word beside it.
+//
+// A pseudo-element rather than a box-shadow, so it can scale. It paints over the dot rather than
+// behind it, which costs nothing: at its first frame it covers the dot exactly, in the dot's own
+// colour, so a translucent layer of that colour over an opaque one of the same colour changes
+// nothing. Pushing it behind with a negative z-index would have been the mistake — the dot sets no
+// stacking context, so the ring would have dropped behind the card's background and never shown.
+.broadcast-overview-on-air .broadcast-overview-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentcolor;
+  animation: broadcast-overview-pulse 2s var(--app-ease) infinite;
+}
+
+@keyframes broadcast-overview-pulse {
+  from {
+    opacity: 0.55;
+    scale: 1;
+  }
+
+  70%,
+  to {
+    opacity: 0;
+    scale: 2.75;
+  }
+}
+
+// The motion tokens are no help here: they shorten a transition, and shortening a loop only makes
+// it flicker. This one has to stop, the same way the skeleton pulse does.
+@media (prefers-reduced-motion: reduce) {
+  .broadcast-overview-on-air .broadcast-overview-dot::after {
+    animation: none;
+  }
+}
+
+// Holds the line box while a bar stands in it, so the strip is its final height from the first
+// frame and the facts around it do not step down as each one lands.
+.broadcast-overview-pending {
+  display: inline-flex;
+  align-items: center;
+}
+
+// Widths only; the height comes from .app-skeleton-text, which is the line box of the text that
+// will take its place. Wide enough for "Offline", the longer of the two words this one can hold.
+.broadcast-overview-skeleton-status {
+  width: 3.75rem;
+}
+
+// An icon and four digits — the shape of the two it stands in for, now that the word after the
+// number has become a glyph in front of it.
+.broadcast-overview-skeleton-number {
+  width: 3.5rem;
+}
+
+// --- the broadcast itself -----------------------------------------------------------
+
+.broadcast-overview {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 1rem;
+}
+
+// Tighter than it was, in both padding and the gap between rows. The card is now a preview with
+// four short lines under it rather than a stack of blocks, and at the old spacing those lines drift
+// apart into four separate things instead of reading as one description of the channel.
+.broadcast-overview-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container);
+}
+
+// Cover, then what is being played and what it is called, then the way to change it. One row: the
+// title used to have the card's full width and a line of its own, which is more room than a stream
+// title needs and left the cover stranded on the row below with nothing beside it.
+//
+// The auto margin sits on this row rather than on the tags below it, so everything from here down —
+// the row, the tags, the branded-content note — travels to the foot of the card as one block. Any
+// spare height the row beside it forces lands above the broadcast, under the numbers, where it
+// reads as room rather than as a gap torn through the middle of the card. The bot card pushes its
+// own status down the same way, so the two end level.
+.broadcast-overview-channel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-start: auto;
+}
+
+// Twitch draws box art at 3:4. Small enough now to stand as a mark beside two lines of text rather
+// than as a picture in its own right — the preview above is the picture.
+.broadcast-overview-art {
+  flex: none;
+  display: block;
+  width: 2.25rem;
+  height: 3rem;
+  border-radius: 0.25rem;
+  object-fit: cover;
+}
+
+// Holds the same space as a cover so the row does not change height once one arrives.
+.broadcast-overview-blank {
+  border: 1px dashed var(--mat-sys-outline-variant);
+}
+
+// min-width: 0, or a long unbroken title refuses to shrink and pushes the button off the card.
+.broadcast-overview-names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.broadcast-overview-title {
+  margin: 0;
+  font: var(--mat-sys-title-small);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.broadcast-overview-game {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  overflow-wrap: anywhere;
+}
+
+// Stands in for the title while it is still unknown whether it will run short or wrap. A percentage
+// resolves against the column the flex row has already settled, so it reads as one unfinished line
+// rather than the full width of the card.
+.broadcast-overview-skeleton-title {
+  width: min(14rem, 70%);
+}
+
+// A category name's usual length — not a percentage, because a shrink-to-fit item with no width of
+// its own would collapse to nothing.
+.broadcast-overview-skeleton-game {
+  width: 7rem;
+}
+
+// Language and tags on one wrapping line instead of a two-column list. Each of these is one or two
+// words; laid out as label-and-value rows they took four lines to say what fits on one.
+.broadcast-overview-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font: var(--mat-sys-body-small);
+}
+
+// The label is for screen readers, which otherwise meet a bare language name with nothing saying
+// what it is. Out of flow, or it would claim a slot and a gap in the row.
+.broadcast-overview-facts > .app-visually-hidden {
+  position: absolute;
+}
+
+.broadcast-overview-language {
+  color: var(--mat-sys-on-surface-variant);
+
+  // Sets the language apart from the pills after it without spending a separator character on it.
+  padding-inline-end: 0.25rem;
+}
+
+// Pills rather than the editable chips in the dialog: nothing here is removable, and a chip that
+// looks removable but is not would be the wrong promise.
+.broadcast-overview-tag {
+  padding: 0.0625rem 0.5rem;
+  border-radius: var(--app-radius-pill);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Delay and the content labels: the same line, but outlined rather than filled, so the run reads as
+// tags with a couple of notes after it rather than as a longer list of tags.
+.broadcast-overview-extra {
+  padding: 0.0625rem 0.5rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-pill);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.broadcast-overview-empty {
+  color: var(--mat-sys-on-surface-variant);
+  font-style: italic;
+}
+
+// The Language value is one short word or two.
+.broadcast-overview-skeleton-language {
+  width: 4rem;
+}
+
+// One bar for the whole run rather than pills for individual tags — a channel carries anywhere from
+// none to ten of them, and drawing a fixed number of pills would be claiming a count nobody knows
+// yet. Width is the only thing set: the height comes from .app-skeleton-text, which is the line box
+// this row will occupy either way, whether it ends up holding tags or the words "No tags".
+.broadcast-overview-skeleton-tags {
+  width: min(10rem, 55%);
+}
+
+// Not folded into the line above: this one is a warning about how the stream is presented to
+// viewers, and a pill among the tags is exactly where it would go unread.
+.broadcast-overview-branded {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--app-radius-md);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-body-small);
+  line-height: 1.5;
+}
+
+// Material draws its icons at 24px, taller than the text beside them.
+.broadcast-overview-branded-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 1.125rem;
+}

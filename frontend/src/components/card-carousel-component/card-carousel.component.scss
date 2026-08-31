@@ -1,0 +1,331 @@
+// The heading and the arrows share one row so the track keeps the section's full width — with the
+// arrows beside it, the cards started further right than every heading on the page.
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.carousel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+// The viewport is what the edge arrows are positioned against; the track's negative margins mean
+// its box is exactly as tall as the cards.
+.carousel-viewport {
+  // How far the arrows may sit outside the cards. Held to what the page keeps as its own margin,
+  // so an arrow never pushes the layout wider than the window.
+  --reach: 1rem;
+
+  position: relative;
+
+  // Reaches into that margin and gives the width straight back, so an arrow can stand clear of the
+  // cards instead of over them — and still inside the box that follows the pointer.
+  margin-inline: calc(var(--reach) * -1);
+  padding-inline: var(--reach);
+}
+
+// The page itself goes to a 2rem margin here, so the arrows may step further out too.
+@media (min-width: 60rem) {
+  .carousel-viewport {
+    --reach: 2rem;
+  }
+}
+
+// A hint rather than a control on display: it appears beside the end you can move toward, and
+// only once the pointer comes near that end.
+.carousel-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  opacity: 0;
+
+  // Invisible must also mean intangible, or it would swallow clicks meant for the card beneath.
+  pointer-events: none;
+
+  transition: opacity var(--app-motion-fast) var(--app-ease);
+}
+
+// Drawn rather than borrowed from the icon font: stretching a glyph to this height thins the
+// diagonals unevenly, while a stroked path keeps one weight however tall it is asked to be.
+.carousel-edge-icon {
+  width: 1rem;
+  height: 3rem;
+  color: var(--mat-sys-on-surface-variant);
+  transition:
+    color var(--app-motion-fast) var(--app-ease),
+    transform var(--app-motion-fast) var(--app-ease);
+}
+
+.carousel-edge-icon path {
+  stroke: currentcolor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  // The stroke is a screen measurement, not a shape one, so the weight stays put no matter what
+  // the box around it does.
+  vector-effect: non-scaling-stroke;
+}
+
+.carousel-edge:hover .carousel-edge-icon {
+  color: var(--mat-sys-on-surface);
+}
+
+// A short step in the direction it would take you.
+.carousel-edge-back:hover .carousel-edge-icon {
+  transform: translateX(-0.125rem);
+}
+
+.carousel-edge-forward:hover .carousel-edge-icon {
+  transform: translateX(0.125rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-edge-icon {
+    transition: color var(--app-motion-fast) var(--app-ease);
+  }
+
+  .carousel-edge-back:hover .carousel-edge-icon,
+  .carousel-edge-forward:hover .carousel-edge-icon {
+    transform: none;
+  }
+}
+
+.carousel-edge-back {
+  left: 0;
+}
+
+.carousel-edge-forward {
+  right: 0;
+}
+
+.carousel-edge-shown {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+// Reachable by keyboard whether or not anything is hovered.
+.carousel-edge:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: -2px;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+// The button is the target, the bar inside it is the picture. Padding rather than a bigger bar is
+// what makes it comfortable to hit: 4px of bar would be a 4px target, well under the 24px a
+// pointer can be expected to land on.
+.carousel-dot {
+  display: grid;
+  place-items: center;
+
+  padding: 0.625rem 0.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  &::after {
+    content: "";
+
+    display: block;
+    width: 1rem;
+    height: 0.25rem;
+    border-radius: var(--mat-sys-corner-full);
+
+    // Outline rather than its variant: the variant sits at 2:1 against this background, under the
+    // 3:1 a control needs to be made out at all.
+    background: var(--mat-sys-outline);
+
+    transition:
+      width var(--app-motion-fast) var(--app-ease),
+      background-color var(--app-motion-fast) var(--app-ease);
+  }
+
+  &:hover::after {
+    background: var(--mat-sys-on-surface-variant);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::after {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 3px;
+  }
+}
+
+// The page you are on is the longer, brighter one — the row's position read at a glance.
+.carousel-dot-here::after {
+  width: 1.75rem;
+  background: var(--mat-sys-primary);
+}
+
+.carousel-dot-here:hover::after {
+  background: var(--mat-sys-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-dot::after {
+    transition: none;
+  }
+}
+
+.carousel-track {
+  --per-page: 1;
+
+  display: flex;
+  gap: 0.75rem;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+
+  // A scrolling box clips its other axis too, which cut the top off a card as it lifted under the
+  // pointer. The negative margin gives the room back without moving anything around it.
+  padding-block: 0.375rem;
+  margin-block: -0.375rem;
+
+  // Keeps a flick at the end of the row from scrolling the page behind it.
+  overscroll-behavior-x: contain;
+
+  // The arrows are the visible control here, and a bar under a single row of cards reads as a
+  // second one competing with them.
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > li {
+    display: flex;
+    scroll-snap-align: start;
+
+    // Exactly as wide as an equal share of the row, so a page is filled edge to edge and no card
+    // is ever half in view.
+    flex: 0 0 calc((100% - (var(--per-page) - 1) * 0.75rem) / var(--per-page));
+  }
+}
+
+.carousel-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex: 1;
+  padding: 1rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+  transition:
+    border-color var(--app-motion-fast) var(--app-ease),
+    background-color var(--app-motion-fast) var(--app-ease),
+    transform var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container-high);
+
+    // A lift of one pixel. Enough to confirm the card is the thing under the pointer, small enough
+    // not to shove the row around when the pointer runs across several of them.
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: none;
+  }
+
+  // Drawn inside the card rather than around it: at either end of the track an outset ring would
+  // be cut off by the very overflow that makes the row scroll.
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+}
+
+.carousel-card-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--app-radius-md);
+  background: var(--app-tint-primary);
+  color: var(--mat-sys-primary);
+  transition: background-color var(--app-motion-fast) var(--app-ease);
+}
+
+.carousel-card:hover .carousel-card-icon {
+  background: var(--app-tint-primary-strong);
+}
+
+.carousel-card-glyph {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.carousel-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.carousel-card-title {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+}
+
+.carousel-card-text {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.carousel-card-chevron {
+  flex: none;
+  color: var(--mat-sys-outline);
+  transition:
+    transform var(--app-motion-fast) var(--app-ease),
+    color var(--app-motion-fast) var(--app-ease);
+}
+
+.carousel-card:hover .carousel-card-chevron {
+  transform: translateX(2px);
+  color: var(--mat-sys-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-card:hover {
+    transform: none;
+  }
+
+  .carousel-card:hover .carousel-card-chevron {
+    transform: none;
+  }
+}

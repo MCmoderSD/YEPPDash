@@ -18,7 +18,7 @@ public sealed class WheelService(WheelRepository repository, ILogger<WheelServic
         var entries = Normalize(request.Entries);
 
         await repository.SaveAsync(id, entries, cancellationToken);
-        logger.LogDebug("Stored {Count} entries for channel {ChannelId}", entries.Count, id);
+        logger.LogDebug("Stored {Count} entries for the channel {ChannelId}", entries.Count, id);
 
         return entries;
     }
@@ -61,11 +61,6 @@ public sealed class WheelService(WheelRepository repository, ILogger<WheelServic
 
     private static int ParseChannelId(string channelId)
     {
-        if (!int.TryParse(channelId, out var id))
-        {
-            throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId));
-        }
-
-        return id;
+        return !int.TryParse(channelId, out var id) ? throw new ArgumentException($"'{channelId}' is not a numeric Twitch user ID.", nameof(channelId)) : id;
     }
 }

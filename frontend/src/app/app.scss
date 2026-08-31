@@ -1,10 +1,6 @@
 :host {
   display: flex;
   flex-direction: column;
-
-  // Declared twice on purpose: an engine without dvh keeps the vh above rather than being left with
-  // no minimum at all. That is the browser OBS embeds, which is years behind Chrome.
-  min-height: 100vh;
   min-height: 100dvh;
 }
 

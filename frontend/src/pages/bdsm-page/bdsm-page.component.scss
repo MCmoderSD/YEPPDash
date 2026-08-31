@@ -51,49 +51,6 @@
   gap: 0.75rem;
 }
 
-// Material paints a panel in the same tone as the page and separates it with a drop shadow, which
-// on a near-black background is close to invisible — every result blends into the page until it
-// is opened, and even then only the arrow says so. Each one is a card instead, the same treatment
-// the FAQ entries use: a lifted surface with an edge of its own, so a result is visible whether it
-// is open or not, and unmistakably so once it is.
-.bdsm-page-panel {
-  --mat-expansion-container-background-color: var(--mat-sys-surface-container);
-  --mat-expansion-container-shape: var(--app-radius-lg);
-  --mat-expansion-container-text-color: var(--mat-sys-on-surface);
-  --mat-expansion-header-text-color: var(--mat-sys-on-surface);
-  --mat-expansion-header-indicator-color: var(--mat-sys-on-surface-variant);
-
-  // Neutral rather than the accent, matching every other control in the app — being open is what
-  // the accent marks here, not being hovered.
-  --mat-expansion-header-hover-state-layer-color: var(--app-tint-hover);
-  --mat-expansion-header-focus-state-layer-color: var(--app-tint-hover);
-
-  border: var(--app-border);
-  transition:
-    border-color var(--app-motion-fast) var(--app-ease),
-    background-color var(--app-motion-fast) var(--app-ease);
-
-  // Material's own shadow does nothing here and only muddies the card's edge against the page.
-  box-shadow: none !important;
-
-  &:hover {
-    border-color: var(--mat-sys-outline);
-  }
-}
-
-// The open card carries the brand colour on its edge and lifts a tone further, so which result is
-// expanded is obvious from the shape of the page rather than from the arrow alone.
-.bdsm-page-panel-open {
-  --mat-expansion-container-background-color: var(--mat-sys-surface-container-high);
-  --mat-expansion-header-indicator-color: var(--mat-sys-primary);
-
-  border-color: var(--mat-sys-primary);
-
-  &:hover {
-    border-color: var(--mat-sys-primary);
-  }
-}
-
 // The tab body clips its content while a tab slides in, so the panels need a little room above them
 // or the first one's shadow is cut off mid-animation.
 .bdsm-page-tabs {
@@ -178,4 +135,126 @@
   border-radius: var(--app-radius-outlined);
   color: var(--mat-sys-on-surface-variant);
   text-align: center;
+}
+
+// --- Initial-load skeleton -------------------------------------------------------------------
+// The real page with the data blanked out, and no further: the count line is the only thing on
+// either tab certain to be on screen whatever the answer turns out to be, so it is the only thing
+// stood in for. Result cards used to be drawn here too, at a guessed count — neither tab learns
+// how many results exist before the results themselves arrive, which made every one of those
+// frames a claim the page had no basis for. The pulse, surface tone and held-back appearance all
+// come from the global .app-skeleton utilities in styles.scss; only widths are set here.
+
+// display: flex only to keep the hidden status sentence out of the count bar's stacking order
+// without a class of its own; no gap is set, because .bdsm-page-count already spaces itself with
+// its own margin exactly as it does outside the skeleton, and a 1px hidden span costs nothing
+// extra to sit ahead of it.
+.bdsm-page-skeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+// "You have taken the test N times" / "N people in your channel shared a result" — a bar rather
+// than the wrong number while N is still unknown.
+.bdsm-page-skeleton-count {
+  width: min(15rem, 70%);
+
+  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
+  margin-inline: auto;
+}
+
+// One card, open — the shape the tab actually greets you with, since the first result expands
+// itself on arrival. A single open card claims no count; it only promises the form.
+.bdsm-page-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  margin-top: 1rem;
+  padding: 1rem 1.5rem 1.5rem;
+
+  // The open card’s own surface, one step above the closed ones — matching .app-expansion-card-open.
+  background: var(--mat-sys-surface-container-high);
+  border-radius: var(--app-radius-lg);
+}
+
+// The bars inside sit on the card’s raised surface, which is the tone they are usually painted
+// in — lifted one step so they read against it at all.
+.bdsm-page-skeleton-card .app-skeleton {
+  background: var(--mat-sys-surface-container-highest);
+}
+
+.bdsm-page-skeleton-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bdsm-page-skeleton-card-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  border-radius: 50%;
+}
+
+.bdsm-page-skeleton-card-title {
+  width: min(9rem, 40%);
+}
+
+// Pushed to the far end, where the real header keeps its date and meta line.
+.bdsm-page-skeleton-card-meta {
+  width: min(11rem, 35%);
+  margin-inline-start: auto;
+}
+
+// Stand-ins for the result chart: a label and a value bar per row, the widths staggered the way
+// real percentages land.
+.bdsm-page-skeleton-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.bdsm-page-skeleton-card-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bdsm-page-skeleton-card-label {
+  width: 6.5rem;
+  flex: none;
+}
+
+.bdsm-page-skeleton-card-bar {
+  height: 0.625rem;
+  border-radius: var(--app-radius-pill);
+}
+
+.bdsm-page-skeleton-card-row:nth-child(1) .bdsm-page-skeleton-card-bar { width: 72%; }
+.bdsm-page-skeleton-card-row:nth-child(2) .bdsm-page-skeleton-card-bar { width: 58%; }
+.bdsm-page-skeleton-card-row:nth-child(3) .bdsm-page-skeleton-card-bar { width: 44%; }
+.bdsm-page-skeleton-card-row:nth-child(4) .bdsm-page-skeleton-card-bar { width: 30%; }
+.bdsm-page-skeleton-card-row:nth-child(5) .bdsm-page-skeleton-card-bar { width: 18%; }
+
+// Shared by the per-row match chip patched in once the score fan-out resolves (see the community
+// tab's @else if (entry.matchPending) above) and the generic card below: both stand in for "87%"
+// alone, never for the "compatible" label beside it, which .bdsm-page-match-label already hides at
+// this width.
+.bdsm-page-match-skeleton {
+  width: 2.25rem;
+}
+
+// The chip's own status region has no box of its own — contents keeps its two children (the
+// hidden sentence and the bar) sitting directly in .bdsm-page-summary's flex row, exactly where
+// the bar sat alone before. Without this the wrapper would be an extra flex item, adding a gap
+// the real "87%" chip never has.
+.bdsm-page-match-pending {
+  display: contents;
+}
+
+// Clipped to a pixel but, left inline, it would still be a flex item in that row — the gap beside
+// it would shove the visible bar over from where the figure it announces is going to land.
+.bdsm-page-match-pending .app-visually-hidden {
+  position: absolute;
 }

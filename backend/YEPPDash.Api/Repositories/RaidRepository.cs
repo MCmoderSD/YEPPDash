@@ -23,6 +23,15 @@ public sealed class RaidRepository(MySqlConnection connection)
         return [.. rows.Select(ToRaid)];
     }
 
+    public Task<int> CountForChannelAsync(int channelId, CancellationToken cancellationToken)
+    {
+        return connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(
+                "SELECT COUNT(*) FROM RaidEvent WHERE channelId = @channelId",
+                new { channelId },
+                cancellationToken: cancellationToken));
+    }
+
     private static RaidEvent ToRaid(RaidRow row)
     {
         var firedAt = DateTime.SpecifyKind(row.FiredAt, DateTimeKind.Utc);

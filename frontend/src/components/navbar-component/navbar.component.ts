@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, Signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,4 +19,5 @@ export class NavbarComponent {
   protected readonly sidebar: SidebarService = inject(SidebarService);
   protected readonly loginUrl: string = this.auth.loginUrl(environment.production ? '/' : '/dash');
   protected readonly faqUrl: string | null = faqLink();
+  protected readonly pending: Signal<boolean> = computed((): boolean => this.auth.pending() && !this.auth.currentUser());
 }

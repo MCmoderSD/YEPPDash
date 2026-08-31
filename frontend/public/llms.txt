@@ -1,6 +1,6 @@
 # YEPPDash
 
-> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing roles, custom commands, quotes and follower birthdays.
+> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing roles, custom commands, quotes, and follower birthdays.
 
 YEPPDash is a free, open-source, solo-developed hobby project, not a commercial service. The dashboard lives at https://dash.yeppbot.com and the public site at https://www.yeppbot.com. Everything behind the dashboard requires a Twitch login and only ever acts on the signed-in user's own channel.
 
@@ -14,7 +14,7 @@ YEPPDash is a free, open-source, solo-developed hobby project, not a commercial 
 
 ## Features
 
-- [Bot management](https://dash.yeppbot.com/): Have YEPPBot join or leave a channel, and see whether it is banned, blocked or a moderator there.
+- [Bot management](https://dash.yeppbot.com/): Have YEPPBot join or leave a channel and see whether it is banned, blocked, or a moderator there.
 - [Role management](https://dash.yeppbot.com/role-management): Grant and revoke moderators and VIPs, and view editors, followers, banned and blocked users.
 - [Custom commands](https://dash.yeppbot.com/commands): Write chat commands and their replies, with a live reload of the running bot.
 - [Quotes](https://dash.yeppbot.com/quotes): Add, edit, reorder and bulk import or export a channel's quotes.

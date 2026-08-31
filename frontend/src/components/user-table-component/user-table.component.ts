@@ -37,6 +37,9 @@ export class UserTableComponent {
 
   readonly showId: InputSignal<boolean> = input<boolean>(true);
 
+  readonly loading: InputSignal<boolean> = input<boolean>(false);
+  readonly expected: InputSignal<number | null> = input<number | null>(null);
+
   readonly remove: OutputEmitterRef<TwitchUser> = output<TwitchUser>();
 
   protected readonly dataSource: MatTableDataSource<TwitchUser> = new MatTableDataSource<TwitchUser>([]);
@@ -51,6 +54,20 @@ export class UserTableComponent {
   });
 
   protected readonly role: Signal<string> = computed(() => ROLE_LABELS[this.mode()]);
+
+  protected readonly ghostColumns: Signal<string> = computed((): string => this.columns().map((column): string => {
+    if (column === 'id') return '7rem';
+    if (column === 'remove') return '3.5rem';
+    return 'minmax(0, 1fr)';
+  }).join(' '));
+
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
+    const expected: number | null = this.expected();
+    if (expected === null || expected <= 0) return [];
+    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
+  });
+
+  protected readonly loaded: Signal<boolean> = computed((): boolean => !this.loading());
 
   private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
 

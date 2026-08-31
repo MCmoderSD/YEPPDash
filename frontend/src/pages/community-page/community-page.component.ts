@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,7 @@ import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll
 import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
+import { wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { FollowerProfile } from '../../data/follower';
@@ -42,6 +43,16 @@ export class CommunityPageComponent {
   protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
 
   protected readonly count: Signal<number> = computed((): number => this.rows().length);
+  protected readonly skeleton: Signal<boolean> = computed((): boolean => this.isLoading() && this.rows().length === 0);
+  protected readonly refreshing: Signal<boolean> = computed((): boolean => this.isLoading() && this.rows().length > 0);
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
+    const expected: number | null = this.expected();
+    if (expected === null || expected <= 0) return [];
+    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
+  });
 
   protected readonly columns: string[] = ['user', 'followedAt'];
 
@@ -68,16 +79,7 @@ export class CommunityPageComponent {
         : entry.user.displayName.toLowerCase();
     };
 
-    effect((): CommunityEntry[] => this.dataSource.data = this.rows());
-    effect((): void => {
-      const sorter: MatSort | undefined = this.sorter();
-      if (sorter) this.dataSource.sort = sorter;
-    });
-
-    effect((): void => {
-      const pager: MatPaginator | undefined = this.pager();
-      if (pager) this.dataSource.paginator = pager;
-    });
+    wireDataSource(this.dataSource, this.rows, this.sorter, this.pager);
 
     void this.load();
   }
@@ -100,6 +102,16 @@ export class CommunityPageComponent {
   private async load(): Promise<void> {
     this.isLoading.set(true);
     this.failed.set(false);
+    this.expected.set(null);
+
+    if (this.rows().length === 0) {
+      void this.twitch.countFollowers()
+        .then((count: number): void => {
+          if (this.isLoading()) this.expected.set(count);
+        })
+        .catch((): void => void 0);
+    }
+
     try {
       const followers: FollowerProfile[] = await this.twitch.getFollowers();
 

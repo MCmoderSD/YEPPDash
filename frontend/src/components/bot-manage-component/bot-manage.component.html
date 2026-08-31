@@ -11,7 +11,7 @@
 
     @if (bot(); as bot) {
 
-      <div class="bot-manage-identity">
+      <div class="bot-manage-identity app-fade-in">
         <img
           class="bot-manage-avatar"
           [ngSrc]="bot.profileImageUrl"
@@ -25,29 +25,16 @@
         </div>
       </div>
 
-      <h2 class="bot-manage-heading" tabindex="-1" #statusHeading>Status</h2>
+      <h2 class="bot-manage-heading app-fade-in" tabindex="-1" #statusHeading>Status</h2>
 
       @if (healthy()) {
-        <p class="bot-manage-healthy">
+        <p class="bot-manage-healthy app-fade-in">
           <mat-icon class="bot-manage-icon bot-manage-icon-ok" aria-hidden="true">check_circle</mat-icon>
           <span>{{ bot.displayName }} is set up and in your chat.</span>
         </p>
       }
 
-      <ul class="bot-manage-issues">
-
-        @if (banned()) {
-          <li class="bot-manage-issue">
-            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">gavel</mat-icon>
-            <span class="bot-manage-text">
-              {{ bot.displayName }} is banned from your channel and cannot join chat.
-            </span>
-            <button mat-flat-button type="button" [disabled]="busy()" (click)="unban()">
-              Unban
-            </button>
-          </li>
-        }
-
+      <ul class="bot-manage-issues app-fade-in">
         @if (blocked()) {
           <li class="bot-manage-issue">
             <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">block</mat-icon>
@@ -58,41 +45,51 @@
               Unblock
             </button>
           </li>
-        }
-
-        @if (!moderator()) {
+        } @else if (banned()) {
           <li class="bot-manage-issue">
-            <span class="bot-manage-icon bot-manage-icon-warn bot-manage-icon-mask" aria-hidden="true"></span>
+            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">gavel</mat-icon>
             <span class="bot-manage-text">
-              {{ bot.displayName }} is not a moderator and will be limited by your chat settings.
+              {{ bot.displayName }} is banned from your channel and cannot join chat.
             </span>
-            <button mat-flat-button type="button" [disabled]="busy()" (click)="makeModerator()">
-              Make moderator
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="unban()">
+              Unban
             </button>
           </li>
-        }
-
-        <li class="bot-manage-issue">
-          @if (inChat()) {
-            <mat-icon class="bot-manage-icon bot-manage-icon-ok" aria-hidden="true">chat</mat-icon>
-            <span class="bot-manage-text">{{ bot.displayName }} is currently in your chat.</span>
-            <button mat-stroked-button type="button" [disabled]="busy()" (click)="leave()">
-              Leave
-            </button>
-          } @else {
-            <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">chat_bubble_outline</mat-icon>
-            <span class="bot-manage-text">{{ bot.displayName }} is not in your chat right now.</span>
-            <button mat-flat-button type="button" [disabled]="busy()" (click)="join()">
-              Join
-            </button>
+        } @else {
+          @if (!moderator()) {
+            <li class="bot-manage-issue">
+              <span class="bot-manage-icon bot-manage-icon-warn bot-manage-icon-mask" aria-hidden="true"></span>
+              <span class="bot-manage-text">
+                {{ bot.displayName }} is not a moderator and will be limited by your chat settings.
+              </span>
+              <button mat-flat-button type="button" [disabled]="busy()" (click)="makeModerator()">
+                Make moderator
+              </button>
+            </li>
           }
-        </li>
+
+          <li class="bot-manage-issue">
+            @if (inChat()) {
+              <mat-icon class="bot-manage-icon bot-manage-icon-ok" aria-hidden="true">chat</mat-icon>
+              <span class="bot-manage-text">{{ bot.displayName }} is currently in your chat.</span>
+              <button mat-stroked-button type="button" [disabled]="busy()" (click)="leave()">
+                Leave
+              </button>
+            } @else {
+              <mat-icon class="bot-manage-icon bot-manage-icon-warn" aria-hidden="true">chat_bubble_outline</mat-icon>
+              <span class="bot-manage-text">{{ bot.displayName }} is not in your chat right now.</span>
+              <button mat-flat-button type="button" [disabled]="busy()" (click)="join()">
+                Join
+              </button>
+            }
+          </li>
+        }
       </ul>
 
       @if (inChat() && shoutout()) {
-        <h2 class="bot-manage-heading">Settings</h2>
+        <h2 class="bot-manage-heading app-fade-in">Settings</h2>
 
-        <ul class="bot-manage-settings">
+        <ul class="bot-manage-settings app-fade-in">
           <li class="bot-manage-setting">
             <mat-icon class="bot-manage-icon" aria-hidden="true">campaign</mat-icon>
             <span class="bot-manage-text">
@@ -111,22 +108,43 @@
       }
 
     } @else if (loading()) {
+      <div class="bot-manage-skeleton app-skeleton-appear" role="status">
+        <span class="app-visually-hidden">Checking your bot…</span>
 
-      <div class="bot-manage-loading">
-        <mat-spinner diameter="40" aria-label="Checking your bot" />
-        <p class="bot-manage-loading-text">Checking your bot…</p>
+        <div class="bot-manage-identity" aria-hidden="true">
+          <span class="app-skeleton bot-manage-skeleton-avatar"></span>
+          <div class="bot-manage-names">
+            <p class="bot-manage-name">
+              <span class="app-skeleton app-skeleton-bar app-skeleton-text bot-manage-skeleton-name"></span>
+            </p>
+          </div>
+        </div>
+
+        <p class="bot-manage-heading" aria-hidden="true">
+          <span class="app-skeleton app-skeleton-bar app-skeleton-text bot-manage-skeleton-status"></span>
+        </p>
+
+        <ul class="bot-manage-issues" aria-hidden="true">
+          <li class="bot-manage-issue">
+            <span class="app-skeleton bot-manage-skeleton-icon"></span>
+            <span class="bot-manage-text">
+              <span class="app-skeleton app-skeleton-bar app-skeleton-text bot-manage-skeleton-line"></span>
+            </span>
+            <span class="app-skeleton bot-manage-skeleton-button"></span>
+          </li>
+        </ul>
       </div>
 
     } @else {
 
-      <p class="bot-manage-empty">
+      <p class="bot-manage-empty app-fade-in">
         <mat-icon class="bot-manage-icon bot-manage-icon-error" aria-hidden="true">error_outline</mat-icon>
         <span>
           {{ unreachable() ? 'Could not reach Twitch to read the bot status.' : 'No Twitch account matches the configured bot ID.' }}
         </span>
       </p>
 
-      <button mat-stroked-button type="button" class="bot-manage-retry" [disabled]="busy()" (click)="reload()">
+      <button mat-stroked-button type="button" class="bot-manage-retry app-fade-in" [disabled]="busy()" (click)="reload()">
         Try again
       </button>
     }

@@ -15,6 +15,6 @@ public static class ContentClassificationLabels
         "SexualThemes",
         "ViolentGraphic",
         "Gambling",
-        "ProfanityVulgarity",
+        "ProfanityVulgarity"
     };
 }
