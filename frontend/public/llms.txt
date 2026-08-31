@@ -20,6 +20,7 @@ YEPPDash is a free, open-source, solo-developed hobby project, not a commercial 
 - [Quotes](https://dash.yeppbot.com/quotes): Add, edit, reorder and bulk import or export a channel's quotes.
 - [Birthdays](https://dash.yeppbot.com/birthdays): Track the birthdays of followers who set one.
 - [Lucky Wheel](https://dash.yeppbot.com/wheel): Spin a wheel of entries, live on an OBS browser source.
+- [Subathon Timer](https://dash.yeppbot.com/timer): Count down live on an OBS browser source, driven from chat or the dashboard.
 
 ## Source
 
