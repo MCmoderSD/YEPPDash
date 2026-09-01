@@ -30,10 +30,10 @@ const REVALIDATE = 'no-cache';
  * - Documents keep their names and are the index into those hashed ones, which makes a stale copy a
  *   dead app rather than an old one: it goes on naming bundles the new build no longer publishes.
  *   A few kilobytes, so asking every time is cheaper than a deploy that half arrives.
- * - robots.txt, llms.txt and sitemap.xml are instructions rather than content. Their whole
- *   point is to be changeable, and an hour is about the shortest notice a crawler will act on.
- *   Nobody reading them is a visitor, so this is the one bucket where a stale copy cannot
- *   reach one.
+ * - robots.txt, llms.txt, sitemap.xml and security.txt are instructions rather than content.
+ *   Their whole point is to be changeable, and an hour is about the shortest notice a crawler
+ *   will act on. Nobody reading them is a visitor, so this is the one bucket where a stale copy
+ *   cannot reach one.
  * - Everything left is artwork: stable in name, replaceable in principle. It revalidates like the
  *   documents do, because a swapped image under an old name would otherwise show the old picture
  *   for as long as the lifetime says - and a 304 for an unchanged file costs a few hundred bytes,
@@ -42,8 +42,25 @@ const REVALIDATE = 'no-cache';
 const LIFETIMES: readonly (readonly [RegExp, string])[] = [
   [/-[A-Za-z0-9_-]{8,}\.(?:js|css)$/, 'public, max-age=31536000, immutable'],
   [/\.html$/, REVALIDATE],
-  [/(?:robots|llms)\.txt$|sitemap\.xml$/, 'public, max-age=3600'],
+  [/(?:robots|llms|security)\.txt$|sitemap\.xml$/, 'public, max-age=3600'],
 ];
+
+function lifetime(res: express.Response, path: string): void {
+  const match = LIFETIMES.find(([name]) => name.test(path));
+
+  res.setHeader('Cache-Control', match ? match[1] : REVALIDATE);
+}
+
+/**
+ * Its own mount, because express.static refuses anything with a dot-prefixed segment and the
+ * blanket way round that would serve every other dotfile the folder ever picks up. Rooted inside
+ * .well-known, so nothing below it is dotted any more and the refusal never applies.
+ */
+app.use('/.well-known', express.static(join(browserDistFolder, '.well-known'), {
+  index: false,
+  redirect: false,
+  setHeaders: lifetime,
+}));
 
 /**
  * Has to stay ahead of the host rewrite below: bundles and assets live at real paths in the
@@ -55,11 +72,7 @@ app.use(
   express.static(browserDistFolder, {
     index: false,
     redirect: false,
-    setHeaders: (res, path) => {
-      const match = LIFETIMES.find(([name]) => name.test(path));
-
-      res.setHeader('Cache-Control', match ? match[1] : REVALIDATE);
-    },
+    setHeaders: lifetime,
   }),
 );
 

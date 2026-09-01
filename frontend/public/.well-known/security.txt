@@ -1,0 +1,12 @@
+# How to report a security problem in YEPPDash or YEPPBot.
+#
+# Both are written by one person in their spare time, so there is no bounty and no rota. A report
+# is read and answered as soon as there is time for it.
+#
+# Expires has to be renewed: a file past its date is treated as stale and ignored.
+
+Contact: mailto:business@mcmodersd.de
+Expires: 2027-09-01T00:00:00.000Z
+Preferred-Languages: en, de
+Canonical: https://www.yeppbot.com/.well-known/security.txt
+Canonical: https://dash.yeppbot.com/.well-known/security.txt
