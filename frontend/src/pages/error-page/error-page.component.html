@@ -1,0 +1,14 @@
+<section class="error">
+  <mat-icon class="error-icon" aria-hidden="true">{{ copy().icon }}</mat-icon>
+
+  <p class="error-status">Error {{ status() }}</p>
+
+  <h1 class="error-heading">{{ copy().heading }}</h1>
+
+  <p class="error-body">{{ copy().body }}</p>
+
+  <a class="error-home" routerLink="/">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    <span>Back to the start</span>
+  </a>
+</section>

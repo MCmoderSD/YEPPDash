@@ -17,18 +17,18 @@ export const routes: Routes = [
   {
     path: WHEEL_OVERLAY_PATH,
     loadComponent: () => import('../pages/wheel-overlay-page/wheel-overlay-page.component').then((module) => module.WheelOverlayPageComponent),
-    title: 'Lucky Wheel',
+    title: 'Lucky Wheel'
   },
   {
     path: TIMER_OVERLAY_PATH,
     loadComponent: () => import('../pages/timer-overlay-page/timer-overlay-page.component').then((module) => module.TimerOverlayPageComponent),
-    title: 'Subathon Timer',
+    title: 'Subathon Timer'
   },
   {
     path: '',
     canActivate: [authGuard],
     canMatch: [dashHostMatch],
-    loadChildren: () => import('../pages/dash.routes').then((module) => module.DASH_ROUTES),
+    loadChildren: () => import('../pages/dash.routes').then((module) => module.DASH_ROUTES)
   },
   {
     path: '',
@@ -37,8 +37,8 @@ export const routes: Routes = [
     canMatch: [otherHostMatch],
     data: {
       description: 'Run YEPPBot from your browser. Sign in with Twitch to add the bot to your '
-        + 'channel, manage moderators, VIPs, custom commands, quotes and birthdays.',
-    },
+        + 'channel, manage moderators, VIPs, custom commands, quotes and birthdays.'
+    }
   },
   {
     path: 'faq',
@@ -46,16 +46,15 @@ export const routes: Routes = [
     title: 'FAQ',
     canMatch: [otherHostMatch],
     data: {
-      description: 'What YEPPBot is, what YEPPDash does with your Twitch account, which permissions '
-        + 'it asks for and why, and how finished any of it actually is.',
-    },
+      description: 'What YEPPBot is, what YEPPDash does with your Twitch account, which permissions it asks for and why, and how finished any of it actually is.'
+    }
   },
   {
     path: 'imprint',
     component: ImprintPageComponent,
     title: 'Imprint',
     canMatch: [otherHostMatch],
-    data: { description: 'Who runs YEPPDash and YEPPBot, and how to get in touch.' },
+    data: { description: 'Who runs YEPPDash and YEPPBot, and how to get in touch.' }
   },
   {
     path: 'privacy',
@@ -63,22 +62,29 @@ export const routes: Routes = [
     title: 'Privacy Policy',
     canMatch: [otherHostMatch],
     data: {
-      description: 'What YEPPDash processes about you and why, how your Twitch tokens are kept '
-        + 'encrypted, and your rights under the GDPR. No analytics, no data brokers.',
-    },
+      description: 'What YEPPDash processes about you and why, how your Twitch tokens are kept encrypted, and your rights under the GDPR. No analytics, no data brokers.'
+    }
   },
   {
     path: 'terms',
     component: TermsPageComponent,
     title: 'Terms of Service',
     canMatch: [otherHostMatch],
-    data: { description: 'The terms you agree to when using YEPPDash to run YEPPBot in your channel.' },
+    data: { description: 'The terms you agree to when using YEPPDash to run YEPPBot in your channel.' }
   },
   {
     path: 'dash',
     canActivate: [authGuard],
     canMatch: [devOnlyMatch],
-    loadChildren: () => import('../pages/dash.routes').then((module) => module.DASH_ROUTES),
+    loadChildren: () => import('../pages/dash.routes').then((module) => module.DASH_ROUTES)
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () => import('../pages/error-page/error-page.component').then((module) => module.ErrorPageComponent),
+    title: 'Page not found',
+    data: {
+      status: 404,
+      description: 'This address does not match a page on YEPPDash.'
+    }
+  }
 ];

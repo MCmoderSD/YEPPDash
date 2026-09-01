@@ -1,0 +1,76 @@
+:host {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+
+  width: 100%;
+  max-width: 32rem;
+  text-align: center;
+}
+
+.error-icon {
+  width: 3rem;
+  height: 3rem;
+  font-size: 3rem;
+  color: var(--mat-sys-outline);
+}
+
+// The number is the one part a reader may need to repeat to somebody, so it is legible rather than
+// decorative - the heading is what carries the page.
+.error-status {
+  margin: 0;
+  font: var(--mat-sys-label-large);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mat-sys-outline);
+}
+
+.error-heading {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.error-body {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  margin-top: 0.75rem;
+  padding: 0.625rem 1rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+
+  transition:
+    border-color var(--app-motion-fast) var(--app-ease),
+    background-color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}

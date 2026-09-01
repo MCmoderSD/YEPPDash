@@ -17,6 +17,9 @@ const angularApp = new AngularNodeAppEngine();
 const dashHost = new URL(environment.frontendBaseUrl).hostname;
 const isProd = process.env['NODE_ENV'] === 'production';
 
+// Matches no route, which is the point: it is how a request is handed to the wildcard.
+const NOWHERE = '/not-found';
+
 /**
  * Built from the environment rather than written out, so a local build names its own API and not
  * the live one.
@@ -204,8 +207,14 @@ app.use((req, res, next) => {
       req.originalUrl = rewritten;
     }
   } else if (targetsDash) {
-    res.status(404).end();
-    return;
+    /**
+     * The dashboard is not mounted on this host. Pointed at an address that matches nothing so
+     * the wildcard answers - the same page and the same 404 any other wrong address gets, rather
+     * than the empty body this used to send. Only the upstream request moves; the visitor keeps
+     * the address they typed.
+     */
+    req.url = NOWHERE;
+    req.originalUrl = NOWHERE;
   }
 
   next();
@@ -237,6 +246,57 @@ app.use((req, res, next) => {
       response ? writeResponseToNodeResponse(response, res) : next(),
     )
     .catch(next);
+});
+
+/**
+ * Deliberately not built from the app's stylesheet: this has to render when the build it would
+ * come from is the thing that broke.
+ */
+const FAILED = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Something went wrong</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 2rem;
+         background: #0e0e10; color: #f4f4f6; text-align: center;
+         font: 400 1rem/1.5 Roboto, system-ui, sans-serif; }
+  p { margin: 0 0 0.5rem; letter-spacing: 0.08em; text-transform: uppercase;
+      font-size: 0.8125rem; color: #87878f; }
+  h1 { margin: 0 0 0.75rem; font-size: 1.75rem; font-weight: 500; }
+  .body { margin: 0 0 1.5rem; color: #bcbcc7; }
+  a { display: inline-block; padding: 0.625rem 1rem; border: 1px solid #26262b;
+      border-radius: 0.5rem; color: #f4f4f6; text-decoration: none; }
+  a:hover { border-color: #a8e02f; }
+</style>
+</head>
+<body>
+  <main>
+    <p>Error 500</p>
+    <h1>Something went wrong</h1>
+    <div class="body">This page could not be built just now. Trying again in a moment is usually enough.</div>
+    <a href="/">Back to the home page</a>
+  </main>
+</body>
+</html>`;
+
+/**
+ * The last word when rendering itself failed. Angular cannot draw this one - it is what did not
+ * work - so the page is plain HTML with nothing to fetch, which is also what makes it safe to
+ * send when the app is in an unknown state.
+ *
+ * The reason stays in the log. A visitor gets the status and a way back; a stack trace on the
+ * page would tell an attacker about the inside of the server and tell everyone else nothing.
+ */
+app.use((error: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(`Failed to render ${req.originalUrl}`, error);
+
+  // Once the response has started there is no page left to replace it with.
+  if (res.headersSent) return next(error);
+
+  res.status(500).setHeader('Cache-Control', 'no-store').type('html').send(FAILED);
 });
 
 /**
