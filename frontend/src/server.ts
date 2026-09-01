@@ -17,6 +17,83 @@ const angularApp = new AngularNodeAppEngine();
 const dashHost = new URL(environment.frontendBaseUrl).hostname;
 const isProd = process.env['NODE_ENV'] === 'production';
 
+/**
+ * Built from the environment rather than written out, so a local build names its own API and not
+ * the live one.
+ *
+ * Both style-src and script-src have to allow inline, for different reasons.
+ *
+ * Styles: Angular and Material write component styles into <style> tags and set style attributes
+ * directly.
+ *
+ * Scripts: Angular's event replay ships two inline ones - the dispatch contract and the call that
+ * boots it - which is what remembers a click made before hydration finishes. A nonce cannot cover
+ * them: the contract is placed into index.html at build time, and the pages carrying it are
+ * prerendered, so there is no request to mint a nonce for. Hashes would fit today and rot quietly,
+ * because the second script names the event types the templates happen to register. And Angular
+ * offers withEventReplay to turn it on, with no counterpart to turn it off.
+ *
+ * What that costs is worth being clear about: this no longer stops an injected inline script. It
+ * still refuses scripts from any other origin, which is how an injection usually reaches for a
+ * payload. The app itself writes no HTML - no innerHTML, no bypassSecurityTrust, no eval - so
+ * Angular escaping every interpolation is what actually guards this, and the header is the
+ * second line rather than the first.
+ */
+const POLICY: readonly string[] = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: https://static-cdn.jtvnw.net",
+  `connect-src 'self' ${new URL(environment.apiBaseUrl).origin}`,
+];
+
+// Says which server software this is, to nobody who needs to know.
+app.disable('x-powered-by');
+
+/**
+ * Set on everything, static files included, and ahead of every other handler so a route added
+ * later cannot quietly opt out of them.
+ *
+ * Caddy and Cloudflare sit in front in production and may add their own; these are what the app
+ * itself guarantees, and what holds if it is ever served without either.
+ *
+ * HSTS is production-only because it would otherwise pin a local machine to https for a year over
+ * a self-signed certificate. It deliberately omits includeSubDomains and preload: both are hard to
+ * take back, and one plain-http subdomain would disappear for everyone who had already visited.
+ */
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+
+  if (isProd) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+
+  /**
+   * Nothing here is meant to be embedded, so framing is refused - except on the overlays, which
+   * are the one thing a streaming layout might legitimately put in an iframe. They carry no
+   * session and no controls, so there is no click on them worth hijacking.
+   */
+  const embeddable: boolean = isOverlayUrl(req.url);
+
+  if (!embeddable) res.setHeader('X-Frame-Options', 'DENY');
+
+  /**
+   * frame-ancestors is the modern half of the framing rule, and follows the same exception.
+   *
+   * Enforced. The whole app was walked through under this policy first, signed in and including
+   * the exports: the Twitch CDN, the blob downloads and the live stream all passed, and the only
+   * complaints were Angular's own inline scripts, which is why script-src allows them.
+   */
+  res.setHeader('Content-Security-Policy',
+    [...POLICY, ...(embeddable ? [] : ["frame-ancestors 'none'"])].join('; '));
+
+  next();
+});
+
 // Store it, but ask before using it - not, despite the name, a refusal to cache.
 const REVALIDATE = 'no-cache';
 
