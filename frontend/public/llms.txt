@@ -1,6 +1,6 @@
 # YEPPDash
 
-> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing roles, custom commands, quotes, and follower birthdays.
+> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing moderators and VIPs, timeouts and bans, custom commands, quotes, follower birthdays, raids, a viewer queue, two OBS overlays, and a channel point reward that buys a timeout.
 
 YEPPDash is a free, open-source, solo-developed hobby project, not a commercial service. The dashboard lives at https://dash.yeppbot.com and the public site at https://www.yeppbot.com. Everything behind the dashboard requires a Twitch login and only ever acts on the signed-in user's own channel.
 
@@ -14,13 +14,22 @@ YEPPDash is a free, open-source, solo-developed hobby project, not a commercial 
 
 ## Features
 
+Every page below is behind a Twitch login and acts only on the signed-in broadcaster's own channel.
+
 - [Bot management](https://dash.yeppbot.com/): Have YEPPBot join or leave a channel and see whether it is banned, blocked, or a moderator there.
-- [Role management](https://dash.yeppbot.com/role-management): Grant and revoke moderators and VIPs, and view editors, followers, banned and blocked users.
-- [Custom commands](https://dash.yeppbot.com/commands): Write chat commands and their replies, with a live reload of the running bot.
+- [Moderators](https://dash.yeppbot.com/role-management?mode=0): Grant and revoke moderator status.
+- [VIPs](https://dash.yeppbot.com/role-management?mode=1): Hand out and take back VIP badges.
+- [Timeouts and bans](https://dash.yeppbot.com/timeouts): Who is timed out or banned and until when, with the means to end either.
 - [Quotes](https://dash.yeppbot.com/quotes): Add, edit, reorder and bulk import or export a channel's quotes.
+- [Custom commands](https://dash.yeppbot.com/commands): Write chat commands and their replies, with a live reload of the running bot.
+- [Follower](https://dash.yeppbot.com/community): Who is around the channel and which roles they hold.
 - [Birthdays](https://dash.yeppbot.com/birthdays): Track the birthdays of followers who set one.
+- [Raids](https://dash.yeppbot.com/raids): Who raided the channel, with how many viewers, and when. Raiders are shouted out automatically.
+- [Queue](https://dash.yeppbot.com/queue): A waiting list worked through in order, for anything where viewers take turns.
 - [Lucky Wheel](https://dash.yeppbot.com/wheel): Spin a wheel of entries, live on an OBS browser source.
 - [Subathon Timer](https://dash.yeppbot.com/timer): Count down live on an OBS browser source, driven from chat or the dashboard.
+- [BDSM Test](https://dash.yeppbot.com/bdsm): Test results viewers have shared with the channel.
+- [Timeout Reward](https://dash.yeppbot.com/timeout-reward): A channel point reward viewers redeem by typing a name, which times that viewer out for as long as the broadcaster set. Protected roles and unknown names are refunded automatically.
 
 ## Source
 
