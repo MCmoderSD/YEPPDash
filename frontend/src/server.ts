@@ -73,6 +73,19 @@ app.use((req, res, next) => {
   if (isProd) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
 
   /**
+   * The dashboard has nothing to index: behind a login, and client-rendered, so a crawler reads
+   * an empty shell of a page it can never see the inside of.
+   *
+   * Said in a header rather than in robots.txt, for two reasons. That file is shared by both
+   * hosts, and its Disallow names /dash/ - the path the dashboard has on the marketing host, not
+   * the root it actually sits at here. And a Disallow is the wrong instrument anyway: it stops the
+   * fetch, so the crawler never reads the noindex it was supposed to obey.
+   */
+  if (isProd && (req.headers.host ?? '').split(':')[0] === dashHost) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  }
+
+  /**
    * Nothing here is meant to be embedded, so framing is refused - except on the overlays, which
    * are the one thing a streaming layout might legitimately put in an iframe. They carry no
    * session and no controls, so there is no click on them worth hijacking.
