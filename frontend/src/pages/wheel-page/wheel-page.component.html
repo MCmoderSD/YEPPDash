@@ -1,5 +1,4 @@
 <section class="wheel-page">
-
   <header class="wheel-page-header">
     <h1 class="wheel-page-title">Lucky Wheel</h1>
     @if (initialLoad()) {
@@ -241,19 +240,7 @@
                 here.
               </p>
 
-              @if (overlayUrl(); as url) {
-                <div class="wheel-page-overlay-link">
-                  <mat-form-field appearance="outline" class="wheel-page-field" subscriptSizing="dynamic">
-                    <mat-label>Overlay link</mat-label>
-                    <input matInput type="text" readonly [value]="url" />
-                  </mat-form-field>
-
-                  <button mat-stroked-button type="button" (click)="copyOverlayUrl()">
-                    <mat-icon aria-hidden="true">content_copy</mat-icon>
-                    <span>Copy</span>
-                  </button>
-                </div>
-              }
+              <app-overlay-link [url]="overlayUrl()"/>
             </section>
           </div>
         </mat-tab>

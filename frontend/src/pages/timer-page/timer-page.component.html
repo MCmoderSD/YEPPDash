@@ -142,19 +142,7 @@
       timer scales with it and follows every change, whether it came from this page or from chat.
     </p>
 
-    @if (overlayUrl(); as url) {
-      <div class="timer-page-row">
-        <mat-form-field appearance="outline" class="timer-page-field" subscriptSizing="dynamic">
-          <mat-label>Overlay link</mat-label>
-          <input matInput type="text" readonly [value]="url"/>
-        </mat-form-field>
-
-        <button mat-stroked-button type="button" (click)="copyOverlayUrl()">
-          <mat-icon aria-hidden="true">content_copy</mat-icon>
-          <span>Copy</span>
-        </button>
-      </div>
-    }
+    <app-overlay-link [url]="overlayUrl()"/>
   </section>
 
   <section class="timer-page-panel">

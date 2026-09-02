@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ColorPickerComponent } from '../../components/color-picker-component/color-picker.component';
+import { OverlayLinkComponent } from '../../components/overlay-link-component/overlay-link.component';
 import { NumberStepperComponent } from '../../components/number-stepper-component/number-stepper.component';
 import { TimerDisplayComponent } from '../../components/timer-display-component/timer-display.component';
 import { AuthService } from '../../services/auth.service';
@@ -14,13 +15,13 @@ import { NotificationService } from '../../services/notification.service';
 import { TimerService } from '../../services/timer.service';
 import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
 import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
-import { overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
+import { CHANNEL_PARAM, overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
 
 @Component({
   selector: 'app-timer-page',
   templateUrl: './timer-page.component.html',
   styleUrl: './timer-page.component.scss',
-  imports: [ColorPickerComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, NumberStepperComponent, TimerDisplayComponent],
+  imports: [ColorPickerComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSlideToggleModule, NumberStepperComponent, OverlayLinkComponent, TimerDisplayComponent],
   host: {
     '[style.--timer-animation-duration]': 'animation()',
   },
@@ -65,7 +66,7 @@ export class TimerPageComponent {
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const channelId: string | null = this.channelId();
-    return channelId === null ? null : overlayUrl(TIMER_OVERLAY_PATH, channelId);
+    return channelId === null ? null : overlayUrl(TIMER_OVERLAY_PATH, CHANNEL_PARAM, channelId);
   });
 
   constructor() {
@@ -172,12 +173,6 @@ export class TimerPageComponent {
     this.restyle({ color: value.trim().toLowerCase() });
   }
 
-  protected async copyOverlayUrl(): Promise<void> {
-    const url: string | null = this.overlayUrl();
-    if (url === null) return;
-
-    await this.copy(url, 'Overlay link copied.', 'Could not copy the overlay link.');
-  }
 
   protected async copyStyleCss(): Promise<void> {
     await this.copy(

@@ -10,6 +10,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
+import { OverlayLinkComponent } from '../../components/overlay-link-component/overlay-link.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
@@ -19,7 +20,7 @@ import { WheelService } from '../../services/wheel.service';
 import { WheelResultsService } from '../../services/wheel-results.service';
 import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, parseWheelFile, removeOne, shuffleEntries, sliceCount, sortEntries, splitEntries, WHEEL_FILE_NAME, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
 import { resultWonAt, WheelResult } from '../../data/wheel-result';
-import { overlayUrl, WHEEL_OVERLAY_PATH } from '../../data/overlay';
+import { CHANNEL_PARAM, overlayUrl, WHEEL_OVERLAY_PATH } from '../../data/overlay';
 
 type WheelEntryRow = WheelEntry & { readonly ghost?: true };
 
@@ -32,7 +33,7 @@ function ghostRows(count: number | null): WheelEntryRow[] {
   selector: 'app-wheel-page',
   templateUrl: './wheel-page.component.html',
   styleUrl: './wheel-page.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, ScrollBarComponent, WheelComponent, LocaleDatePipe],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, OverlayLinkComponent, ScrollBarComponent, WheelComponent, LocaleDatePipe],
 })
 export class WheelPageComponent {
 
@@ -79,7 +80,7 @@ export class WheelPageComponent {
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const channelId: string | null = this.channelId();
-    return channelId === null ? null : overlayUrl(WHEEL_OVERLAY_PATH, channelId);
+    return channelId === null ? null : overlayUrl(WHEEL_OVERLAY_PATH, CHANNEL_PARAM, channelId);
   });
 
   protected readonly label: (entry: WheelEntry) => string = entryText;
@@ -289,25 +290,6 @@ export class WheelPageComponent {
 
     await this.persist();
     this.notifications.success(`Imported ${parsed.entries.length} entries.`);
-  }
-
-  protected async copyOverlayUrl(): Promise<void> {
-    const url: string | null = this.overlayUrl();
-    if (url === null) return;
-
-    const clipboard: Clipboard | undefined = this.document.defaultView?.navigator?.clipboard;
-
-    if (!clipboard) {
-      this.notifications.failure('This browser will not let the page copy for you — select the link instead.');
-      return;
-    }
-
-    try {
-      await clipboard.writeText(url);
-      this.notifications.success('Overlay link copied.');
-    } catch {
-      this.notifications.failure('Could not copy the overlay link.');
-    }
   }
 
   private async load(): Promise<void> {

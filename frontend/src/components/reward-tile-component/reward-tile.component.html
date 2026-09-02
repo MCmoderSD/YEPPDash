@@ -1,0 +1,14 @@
+@if (missing()) {
+  <span class="tile tile-gone" [class.tile-large]="large()">
+    <mat-icon aria-hidden="true">warning</mat-icon>
+  </span>
+} @else {
+  <span class="tile" [class.tile-large]="large()" [style.background]="color()">
+    <img class="tile-image" [ngSrc]="image()" [width]=56 [height]=56 alt=""/>
+
+    <span class="tile-cost">
+      <span class="tile-points" aria-hidden="true"></span>
+      {{ cost() | number }}
+    </span>
+  </span>
+}

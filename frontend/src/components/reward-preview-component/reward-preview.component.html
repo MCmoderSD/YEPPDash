@@ -1,0 +1,13 @@
+<h3 class="preview-heading">{{ heading() }}</h3>
+
+<div class="preview-summary">
+  <app-reward-tile [image]="image()" [cost]="cost()" [color]="color()" [large]="true"/>
+
+  <p class="preview-name">{{ name() || placeholder() }}</p>
+</div>
+
+<p class="preview-note">
+  The icon itself can only be uploaded in
+  <a [href]="rewards" target="_blank" rel="noopener">Twitch's own dashboard</a>
+  — the API does not take images.
+</p>

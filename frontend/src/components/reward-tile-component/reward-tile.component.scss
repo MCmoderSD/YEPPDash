@@ -1,0 +1,66 @@
+.tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  width: 5.5rem;
+  aspect-ratio: 1;
+
+  // Tighter than the app's cards on purpose — it imitates Twitch's tile, not YEPPDash.
+  border-radius: 0.375rem;
+
+  transition: background-color var(--app-timing-base);
+}
+
+.tile-large {
+  width: 7.5rem;
+}
+
+.tile-gone {
+  background: var(--mat-sys-surface-container-high);
+  color: var(--app-warning);
+}
+
+.tile-image {
+  width: 2.5rem;
+  height: 2.5rem;
+
+  // Lifted a little so the cost pill below never crowds it.
+  margin-bottom: 0.75rem;
+}
+
+.tile-large .tile-image {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.tile-cost {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--app-radius-sm);
+  background: rgb(0 0 0 / 0.55);
+  color: #ffffff;
+  font: var(--mat-sys-label-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// Twitch's channel points mark. Painted through a mask rather than placed as an image: the file is
+// drawn in black, and the pill it sits in is white on a dark ground.
+.tile-points {
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
+
+  background: currentcolor;
+  //noinspection CssUnknownTarget
+  mask: url('/channel-points.svg') center / contain no-repeat;
+}

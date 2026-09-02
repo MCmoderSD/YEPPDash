@@ -1,0 +1,56 @@
+<div class="grid">
+  @if (loading()) {
+    @for (ghost of ghosts(); track ghost) {
+      <span class="app-skeleton app-skeleton-appear grid-ghost" aria-hidden="true"></span>
+    }
+  } @else {
+    @for (summary of giveaways(); track summary.id; let index = $index) {
+      <button
+        type="button"
+        class="card app-fade-in"
+        [style.animation-delay]="delay(index)"
+        (click)="opened.emit(summary.id)"
+      >
+        <span class="card-head">
+          <span class="card-name">{{ summary.title }}</span>
+
+          <app-status-badge
+            [label]="statusLabels[summary.status]"
+            [tone]="summary.status === 'Open' ? 'success' : 'neutral'"
+          />
+        </span>
+
+        <span class="card-description">{{ summary.description || 'No description.' }}</span>
+
+        <span class="card-middle">
+          <app-reward-tile
+            [image]="image(summary)"
+            [cost]="summary.cost"
+            [color]="colour(summary)"
+            [missing]="summary.rewardMissing"
+          />
+
+          @if (summary.rewardMissing) {
+            <span class="card-note">The Twitch reward is gone</span>
+          }
+        </span>
+
+        <span class="card-updated">Updated {{ summary.updatedAt | localeDate:'medium':'short' }}</span>
+      </button>
+    }
+
+    <button
+      type="button"
+      class="card card-new app-fade-in"
+      [style.animation-delay]="delay(giveaways().length)"
+      (click)="created.emit()"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      <span>New giveaway</span>
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <span class="app-visually-hidden" role="status">Loading your giveaways…</span>
+}

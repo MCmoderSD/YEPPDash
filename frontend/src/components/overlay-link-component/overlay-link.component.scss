@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.overlay-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overlay-link-field {
+  flex: 1 1 18rem;
+  min-width: 0;
+}

@@ -17,6 +17,7 @@ Disallow: /dash/
 # table belongs here too.
 Disallow: /wheel/overlay
 Disallow: /timer/overlay
+Disallow: /giveaway/overlay
 
 # Absolute because a sitemap reference has to be, and pointed at the marketing host from both:
 # the dashboard has nothing a crawler may index, so there is no second sitemap to name here.

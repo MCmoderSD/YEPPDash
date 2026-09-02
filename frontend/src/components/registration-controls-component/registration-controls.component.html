@@ -1,0 +1,39 @@
+@if (status(); as state) {
+  @if (state !== 'Draft') {
+    <button
+      mat-button
+      type="button"
+      class="controls-reset"
+      [disabled]="busy()"
+      matTooltip="Back to draft, clearing every entry and winner"
+      (click)="reset.emit()"
+    >
+      <mat-icon aria-hidden="true">restart_alt</mat-icon>
+      <span>Reset</span>
+    </button>
+  }
+
+  @if (state === 'Open') {
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="busy()"
+      matTooltip="Stop taking entries"
+      (click)="closed.emit()"
+    >
+      <mat-icon aria-hidden="true">lock</mat-icon>
+      <span>Close</span>
+    </button>
+  } @else {
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="busy()"
+      [matTooltip]="state === 'Closed' ? 'Take entries again' : 'Create the reward and start taking entries'"
+      (click)="opened.emit()"
+    >
+      <mat-icon aria-hidden="true">lock_open</mat-icon>
+      <span>Open</span>
+    </button>
+  }
+}

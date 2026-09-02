@@ -1,0 +1,36 @@
+<div class="switches">
+  <mat-slide-toggle
+    class="app-toggle-compact"
+    hideIcon="true"
+    [checked]="enabled()"
+    [disabled]="enabledLocked()"
+    [matTooltip]="enabledHint()"
+    [matTooltipDisabled]="!enabledLocked() || enabledHint().length === 0"
+    (change)="enabled.set($event.checked)"
+  >
+    Enabled
+  </mat-slide-toggle>
+
+  <span class="switches-colour">
+    <button
+      type="button"
+      class="switches-swatch"
+      [attr.aria-labelledby]="labelId()"
+      [disabled]="colorLocked()"
+      #paletteTrigger="matMenuTrigger"
+      [matMenuTriggerFor]="palette"
+      [style.background]="color()"
+    ></button>
+
+    <span class="switches-colour-label" [id]="labelId()">Edit color</span>
+  </span>
+</div>
+
+<mat-menu #palette="matMenu">
+  <app-color-picker
+    [showHex]="true"
+    [color]="color()"
+    (colorChange)="color.set($event)"
+    (picked)="paletteTrigger.closeMenu()"
+  />
+</mat-menu>

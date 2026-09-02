@@ -155,47 +155,6 @@
   font-size: 1.125rem;
 }
 
-.timeout-reward-switches {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-
-  // Wide column gap so the switch and the swatch read as two settings rather than one cluster; the
-  // row gap only comes into play once they no longer fit side by side.
-  gap: 0.75rem 1.25rem;
-  justify-content: center;
-  margin-block: 0.5rem;
-}
-
-.timeout-reward-colour {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-// Reads as a setting name like the switch's own label, not as a caption under it.
-.timeout-reward-colour-label {
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-}
-
-// The swatch is the colour it opens with — a button that is its own preview, and now the only way
-// into the colour, so it stands on its own rather than inside a field.
-.timeout-reward-swatch {
-  flex: none;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: var(--app-border-strong);
-  border-radius: 50%;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
-}
-
 .timeout-reward-shield {
   display: flex;
   flex-direction: column;
@@ -251,88 +210,6 @@
   gap: 0.5rem;
 }
 
-// The same card Twitch draws in its own "what your viewers will see" panel: the tile and its name
-// sit together on a darker ground, so the coloured square reads against the panel rather than
-// against the page.
-.timeout-reward-summary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.375rem;
-
-  padding: 0.875rem;
-  background: #18181b;
-  border-radius: var(--app-radius-md);
-}
-
-.timeout-reward-tile {
-  position: relative;
-  display: grid;
-  place-items: center;
-
-  width: 7.5rem;
-  aspect-ratio: 1;
-
-  // Tighter than the app's cards on purpose — it imitates Twitch's tile, not YEPPDash.
-  border-radius: 0.375rem;
-}
-
-.timeout-reward-tile-image {
-  width: 3.5rem;
-  height: 3.5rem;
-
-  // Lifted a little so the cost pill below never crowds it.
-  margin-bottom: 0.75rem;
-}
-
-.timeout-reward-tile-cost {
-  position: absolute;
-  bottom: 0.4rem;
-  left: 50%;
-  transform: translateX(-50%);
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--app-radius-sm);
-  background: rgb(0 0 0 / 0.55);
-  color: #ffffff;
-  font: var(--mat-sys-label-small);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-// Twitch's channel points mark. Painted through a mask rather than placed as an image: the file
-// is drawn in black, and the pill it sits in is white on a dark ground.
-.timeout-reward-tile-points {
-  flex: none;
-  width: 0.85rem;
-  height: 0.85rem;
-
-  background: currentcolor;
-  //noinspection CssUnknownTarget
-  mask: url('/channel-points.svg') center / contain no-repeat;
-}
-
-.timeout-reward-tile-name {
-  margin: 0;
-  max-width: 8.5rem;
-  font: var(--mat-sys-body-medium);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.timeout-reward-note {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-}
-
-.timeout-reward-note a {
-  color: var(--mat-sys-primary);
-}
 // --- The waiting state ----------------------------------------------------------------------
 // Stand-ins shaped like what replaces them, so nothing shifts when the real values arrive.
 

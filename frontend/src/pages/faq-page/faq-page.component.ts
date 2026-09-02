@@ -65,7 +65,7 @@ export class FaqPageComponent {
     },
     {
       question: 'Which features actually work right now?',
-      answer: 'Bot join and leave, moderator and VIP management, quotes, follower birthdays, BDSM test results, auto-shoutouts for raids and the channel point timeout reward are all live. Custom commands work but are still buggy.',
+      answer: 'Bot join and leave, moderator and VIP management, quotes, follower birthdays, BDSM test results, auto-shoutouts for raids, the channel point timeout reward and channel point giveaways are all live. Custom commands work but are still buggy.',
       details: [
         'The landing page carries a badge next to each feature saying how far along it is. Anything marked "Coming soon" is genuinely not built yet rather than hidden somewhere.',
       ],
@@ -76,6 +76,15 @@ export class FaqPageComponent {
       details: [
         'You set the price, the length, and who cannot be bought — editors, moderators, VIPs, subscribers by tier, followers. A protected name, a name nobody has, or your own gets the points refunded automatically.',
         'A timeout takes the moderator role with it and hands it back when it runs out. Lead moderator and editor cannot be given back through Twitch\'s API, so leave those protected unless you mean it.',
+      ],
+    },
+    {
+      question: 'Can I run a giveaway with channel points?',
+      answer: 'Yes. You set up a reward viewers redeem to enter, close entries when you are ready, and spin a wheel to draw the winner.',
+      details: [
+        'Roles decide both halves of it. Each of follower, subscriber, Tier 2, Tier 3, VIP and moderator can be required, excluded, or ignored, and each carries a multiplier that makes an entry count for more or less. A redemption that does not qualify is refunded automatically.',
+        'The wheel is weighted, so a slice is as big as that chance really is, and it runs on an OBS browser source your viewers can watch live. The same person can be drawn again unless you take them off the wheel first.',
+        'The reward stays switched off on Twitch until you open registration, and is switched off again when you close it — so nobody can enter while you are drawing, and nobody can enter a giveaway that has not started.',
       ],
     },
     {
