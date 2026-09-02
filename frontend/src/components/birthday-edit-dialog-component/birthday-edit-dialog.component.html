@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>{{ title }}</h2>
 
-<mat-dialog-content>
+<mat-dialog-content class="birthday-edit-content" #content>
   <div class="birthday-edit">
     <mat-form-field appearance="outline" class="birthday-edit-field">
       <mat-label>Date of birth</mat-label>
@@ -20,6 +20,8 @@
       <mat-datepicker #picker startView="multi-year"/>
     </mat-form-field>
   </div>
+
+  <app-scroll-bar [target]="content"/>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

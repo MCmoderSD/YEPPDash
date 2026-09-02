@@ -1,5 +1,6 @@
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserTableComponent } from '../user-table-component/user-table.component';
 import { TwitchUser } from '../../data/twitch-user';
 
@@ -15,7 +16,7 @@ export interface UserListDialogData {
   selector: 'app-user-list-dialog',
   templateUrl: './user-list-dialog.component.html',
   styleUrl: './user-list-dialog.component.scss',
-  imports: [MatDialogModule, UserTableComponent],
+  imports: [MatDialogModule, ScrollBarComponent, UserTableComponent],
 })
 export class UserListDialogComponent {
 

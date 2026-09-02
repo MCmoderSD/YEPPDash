@@ -1,3 +1,8 @@
+.birthday-edit-content {
+  // The containing block for the scroll bar drawn over this content.
+  position: relative;
+}
+
 .birthday-edit {
   display: flex;
   flex-direction: column;

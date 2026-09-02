@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>{{ title }}</h2>
 
-<mat-dialog-content>
+<mat-dialog-content class="quote-edit-content" #content>
   <form class="quote-edit" (submit)="$event.preventDefault(); save()">
     <mat-form-field appearance="outline" class="quote-edit-field">
       <mat-label>Quote</mat-label>
@@ -24,6 +24,8 @@
     <app-scroll-bar [target]="message" [endInset]="gripSize"/>
     <app-resize-grip [target]="message"/>
   </form>
+
+  <app-scroll-bar [target]="content"/>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

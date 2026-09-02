@@ -1,3 +1,10 @@
+.quote-edit-content {
+  // The containing block for the scroll bar drawn over this content, which is a second bar: the
+  // one below belongs to the textarea, this one to the dialog the textarea can be dragged taller
+  // than.
+  position: relative;
+}
+
 .quote-edit {
   display: flex;
   flex-direction: column;

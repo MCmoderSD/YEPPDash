@@ -5,6 +5,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { Birthday, BirthdayDraft, birthdayToDate, dateToBirthdayDraft } from '../../data/birthday';
 import { LocaleDateAdapter } from './locale-date.adapter';
 
@@ -26,6 +27,7 @@ export interface BirthdayEditDialogData {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
+    ScrollBarComponent,
   ],
   // MAT_DATE_LOCALE defaults to LOCALE_ID, which is fixed at build time and is en-US — the same
   // thing that pinned every other date here to the American order, and what LocaleDatePipe exists

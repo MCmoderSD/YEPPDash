@@ -2,6 +2,7 @@ import { Component, computed, DestroyRef, inject, signal, Signal, WritableSignal
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 
 let nextHintId: number = 0;
 
@@ -17,7 +18,7 @@ export interface ConfirmActionDialogData {
   selector: 'app-confirm-action-dialog',
   templateUrl: './confirm-action-dialog.component.html',
   styleUrl: './confirm-action-dialog.component.scss',
-  imports: [MatButtonModule, MatDialogModule],
+  imports: [MatButtonModule, MatDialogModule, ScrollBarComponent],
 })
 export class ConfirmActionDialogComponent {
 

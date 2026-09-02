@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>User details</h2>
 
-<mat-dialog-content class="user-info">
+<mat-dialog-content class="user-info" #content>
 
   <div class="user-info-identity">
     <img
@@ -47,6 +47,8 @@
       </div>
     }
   </dl>
+
+  <app-scroll-bar [target]="content"/>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

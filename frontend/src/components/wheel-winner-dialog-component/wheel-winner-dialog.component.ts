@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 
 export interface WheelWinnerDialogData {
   label: string;
@@ -13,7 +14,7 @@ export type WheelWinnerChoice = 'close' | 'remove';
   selector: 'app-wheel-winner-dialog',
   templateUrl: './wheel-winner-dialog.component.html',
   styleUrl: './wheel-winner-dialog.component.scss',
-  imports: [MatButtonModule, MatDialogModule],
+  imports: [MatButtonModule, MatDialogModule, ScrollBarComponent],
 })
 export class WheelWinnerDialogComponent {
 

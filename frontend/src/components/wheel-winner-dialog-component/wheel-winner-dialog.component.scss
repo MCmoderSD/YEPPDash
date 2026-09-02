@@ -5,6 +5,11 @@
   color: var(--mat-sys-primary);
 }
 
+.wheel-winner {
+  // The containing block for the scroll bar drawn over this content.
+  position: relative;
+}
+
 .wheel-winner-name {
   margin: 0;
   font: var(--mat-sys-headline-medium);

@@ -5,6 +5,9 @@
   flex-direction: column;
   gap: 1.5rem;
   padding-block: 0.5rem;
+
+  // The containing block for the scroll bar drawn over this content.
+  position: relative;
 }
 
 .user-info-identity {
