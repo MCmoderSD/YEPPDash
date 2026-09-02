@@ -2,6 +2,7 @@ import { Component, computed, inject, signal, Signal, WritableSignal } from '@an
 import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { BirthdayService } from '../../services/birthday.service';
@@ -13,7 +14,7 @@ import { BadgeSize } from '../../data/badge';
   selector: 'app-user-info-dialog',
   templateUrl: './user-info-dialog.component.html',
   styleUrl: './user-info-dialog.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, UserBadgesComponent, LocaleDatePipe],
+  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
 })
 export class UserInfoDialogComponent {
 

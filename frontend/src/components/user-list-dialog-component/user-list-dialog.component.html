@@ -1,6 +1,6 @@
 <h2 mat-dialog-title class="user-list-title">{{ data.title }}</h2>
 
-<mat-dialog-content class="user-list">
+<mat-dialog-content class="user-list" #content>
   @if (failed()) {
     <p class="user-list-message">{{ data.failure ?? 'Could not read this list.' }}</p>
   } @else {
@@ -11,4 +11,6 @@
       [showId]="data.showId ?? false"
     />
   }
+
+  <app-scroll-bar [target]="content"/>
 </mat-dialog-content>

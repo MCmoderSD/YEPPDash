@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>{{ data.title }}</h2>
 
-<mat-dialog-content>
+<mat-dialog-content class="confirm-action" #content>
   <p class="confirm-action-message">{{ data.message }}</p>
 
   @if (locked()) {
@@ -14,6 +14,8 @@
       {{ data.confirmLabel ?? 'Confirm' }} is now available.
     }
   </span>
+
+  <app-scroll-bar [target]="content"/>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

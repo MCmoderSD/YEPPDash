@@ -6,6 +6,9 @@
   display: flex;
   flex-direction: column;
 
+  // The containing block for the scroll bar drawn over this content.
+  position: relative;
+
   // A floor rather than a height. A list can hold three names or three hundred, and it is the
   // dialog that scrolls the long case — without this it would open at whatever the short case
   // needed and then jump as the names land.
