@@ -13,12 +13,13 @@ import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { OverlayLinkComponent } from '../../components/overlay-link-component/overlay-link.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
+import { TextEditDialogComponent } from '../../components/text-edit-dialog-component/text-edit-dialog.component';
 import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WheelService } from '../../services/wheel.service';
 import { WheelResultsService } from '../../services/wheel-results.service';
-import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, parseWheelFile, removeOne, shuffleEntries, sliceCount, sortEntries, splitEntries, WHEEL_FILE_NAME, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
+import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, labelProblem, parseWheelFile, removeOne, renameEntry, shuffleEntries, sliceCount, sortEntries, splitEntries, WHEEL_FILE_NAME, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
 import { resultWonAt, WheelResult } from '../../data/wheel-result';
 import { CHANNEL_PARAM, overlayUrl, WHEEL_OVERLAY_PATH } from '../../data/overlay';
 
@@ -168,6 +169,26 @@ export class WheelPageComponent {
     }
 
     this.entries.update((entries: WheelEntry[]): WheelEntry[] => addEntry(entries, label));
+    void this.persist();
+  }
+
+  protected async rename(entry: WheelEntryRow, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (entry.ghost || this.busy()) return;
+
+    const label: string | undefined = await TextEditDialogComponent.ask(this.dialog, {
+      title: 'Edit entry',
+      label: 'Entry',
+      text: entry.label,
+      maxLength: WHEEL_LABEL_MAX_LENGTH,
+      multiline: false,
+      hint: 'Renaming onto a name already listed merges the two.',
+      problem: labelProblem,
+    });
+
+    if (label === undefined) return;
+
+    this.entries.update((entries: WheelEntry[]): WheelEntry[] => renameEntry(entries, entry.label, label));
     void this.persist();
   }
 
