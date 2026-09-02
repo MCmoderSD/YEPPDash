@@ -1,0 +1,58 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+
+<mat-dialog-content class="text-edit-content" #content>
+  <form class="text-edit" (submit)="$event.preventDefault(); save()">
+
+    @if (multiline) {
+      <mat-form-field appearance="outline" class="text-edit-field" subscriptSizing="dynamic">
+        <mat-label>{{ data.label }}</mat-label>
+
+        <textarea
+          matInput
+          #area
+          [rows]="rows"
+          autocomplete="off"
+          [attr.maxlength]="data.maxLength"
+          [value]="text()"
+          (input)="edit(area.value)"
+        ></textarea>
+      </mat-form-field>
+
+      <app-scroll-bar [target]="area" [endInset]="gripSize"/>
+      <app-resize-grip [target]="area"/>
+    } @else {
+      <mat-form-field appearance="outline" class="text-edit-field" subscriptSizing="dynamic">
+        <mat-label>{{ data.label }}</mat-label>
+
+        <input
+          matInput
+          #line
+          type="text"
+          autocomplete="off"
+          [attr.maxlength]="data.maxLength"
+          [value]="text()"
+          (input)="edit(line.value)"
+        />
+      </mat-form-field>
+    }
+
+    <p class="text-edit-footer">
+      @if (problem(); as reason) {
+        <span class="text-edit-problem" role="alert">{{ reason }}</span>
+      } @else {
+        <span>{{ data.hint }}</span>
+      }
+
+      <span class="text-edit-count">{{ length() }} / {{ data.maxLength }}</span>
+    </p>
+  </form>
+
+  <app-scroll-bar [target]="content"/>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button type="button" [disabled]="!canSave()" (click)="save()">
+    {{ confirmLabel }}
+  </button>
+</mat-dialog-actions>

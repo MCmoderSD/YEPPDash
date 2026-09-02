@@ -137,7 +137,12 @@
                         @if (entry.count > 1) {
                           <span class="wheel-page-badge">{{ entry.count }}x</span>
                         }
-                        <span class="wheel-page-name">{{ entry.label }}</span>
+                        <button
+                          type="button"
+                          class="wheel-page-name"
+                          [attr.aria-label]="'Edit ' + entry.label"
+                          (click)="rename(entry, $event)"
+                        >{{ entry.label }}</button>
                       </div>
                     }
                   </td>
@@ -157,7 +162,7 @@
                         type="button"
                         [attr.aria-label]="'Add another ' + entry.label"
                         [disabled]="busy() || full()"
-                        (click)="addOne(entry.label)"
+                        (click)="addOne(entry.label); $event.stopPropagation()"
                       >
                         <mat-icon aria-hidden="true">add</mat-icon>
                       </button>
@@ -169,7 +174,7 @@
                         ? 'Remove one ' + entry.label
                         : 'Remove ' + entry.label + ' from the wheel'"
                         [disabled]="busy()"
-                        (click)="removeOne(entry.label)"
+                        (click)="removeOne(entry.label); $event.stopPropagation()"
                       >
                         <mat-icon aria-hidden="true">remove</mat-icon>
                       </button>
@@ -183,9 +188,11 @@
                   *matRowDef="let entry; columns: columns"
                   class="wheel-page-row"
                   [class.wheel-page-row-ghost]="entry.ghost"
+                  [class.wheel-page-row-editable]="!entry.ghost"
                   [class.app-skeleton-appear]="entry.ghost"
                   [class.app-fade-in]="!entry.ghost"
                   [attr.aria-hidden]="entry.ghost || null"
+                  (click)="rename(entry)"
                 ></tr>
 
                 <tr class="wheel-page-empty-row" *matNoDataRow>

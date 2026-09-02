@@ -9,15 +9,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { firstValueFrom } from 'rxjs';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { QuoteEditDialogComponent } from '../quote-edit-dialog-component/quote-edit-dialog.component';
+import { TextEditDialogComponent } from '../text-edit-dialog-component/text-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { QuoteService } from '../../services/quote.service';
 import { NotificationService } from '../../services/notification.service';
-import { Quote } from '../../data/quote';
+import { Quote, QUOTE_MAX_LENGTH } from '../../data/quote';
 
 function reasonFor(error: unknown): string | null {
   if (!(error instanceof HttpErrorResponse) || error.status !== 400) return null;
@@ -216,7 +215,13 @@ export class QuoteManagementComponent {
   }
 
   private async ask(quote: Quote | null): Promise<string | undefined> {
-    return firstValueFrom(QuoteEditDialogComponent.open(this.dialog, quote).afterClosed());
+    return TextEditDialogComponent.ask(this.dialog, {
+      title: quote === null ? 'Add quote' : `Edit quote ${quote.id}`,
+      label: 'Quote',
+      text: quote?.quote,
+      maxLength: QUOTE_MAX_LENGTH,
+      confirmLabel: quote === null ? 'Add quote' : 'Save',
+    });
   }
 
   private async run(action: (channelId: string) => Promise<void>, failure: string, options: { reload: boolean } = { reload: true }): Promise<void> {

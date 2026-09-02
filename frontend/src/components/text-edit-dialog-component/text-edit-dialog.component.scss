@@ -1,0 +1,64 @@
+.text-edit-content {
+  // The containing block for the scroll bar drawn over this content, which is a second bar in the
+  // multiline case: the one below belongs to the textarea, this one to the dialog the textarea can
+  // be dragged taller than.
+  position: relative;
+}
+
+.text-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  // Dialog content clips its own overflow, and without this the outlined field's border sits flush
+  // against that edge.
+  padding-block-start: 0.5rem;
+
+  // The containing block for the scroll bar and the resize grip drawn over the textarea.
+  position: relative;
+}
+
+.text-edit-field {
+  width: 100%;
+
+  // Keeps the text clear of the scroll bar laid over the field's inner edge. Reserved at all times
+  // rather than only while the bar shows, because this padding is what decides where the text
+  // wraps — and where it wraps is what decides whether the bar is needed at all.
+  textarea {
+    padding-inline-end: 0.75rem;
+
+    // ResizeGripComponent draws and drags the corner instead — see the note there for why the
+    // native one could not stay.
+    resize: none;
+  }
+}
+
+// What mat-hint would have held, written out here instead: the field's own subscript is switched
+// off so that the row survives the two shapes the field can take, and so the count can sit at the
+// far end of it while the reason for a blocked save takes the other.
+//
+// Inset by the 1rem Material insets its subscript by, so both ends line up with the text in the
+// field above rather than with its outline.
+.text-edit-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+
+  margin: 0;
+  padding-inline: 1rem;
+
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.text-edit-problem {
+  color: var(--mat-sys-error);
+}
+
+// Never wrapped and never squeezed: it is the shortest thing in the row and the one that changes
+// on every keystroke, so a hint growing beside it must not push it onto a second line.
+.text-edit-count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}

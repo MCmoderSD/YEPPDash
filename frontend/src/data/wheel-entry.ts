@@ -32,6 +32,10 @@ export function entryProblem(text: string): string | null {
     : `An entry cannot be longer than ${WHEEL_LABEL_MAX_LENGTH} characters — that one is ${overlong.length}.`;
 }
 
+export function labelProblem(label: string): string | null {
+  return label.includes(',') ? 'An entry cannot contain a comma.' : null;
+}
+
 export const WHEEL_MAX_SLICES: number = 200;
 
 export function cleanLabel(value: string): string {
@@ -62,6 +66,22 @@ export function addEntry(entries: readonly WheelEntry[], label: string, count = 
   if (!existing) return [...entries, { label: clean, count }];
 
   return entries.map((entry: WheelEntry): WheelEntry => entry === existing ? { ...entry, count: entry.count + count } : entry);
+}
+
+export function renameEntry(entries: readonly WheelEntry[], from: string, to: string): WheelEntry[] {
+  const clean: string = cleanLabel(to);
+  if (!clean) return [...entries];
+
+  const existing: WheelEntry | undefined = findEntry(entries, from);
+  if (!existing) return [...entries];
+
+  const collision: WheelEntry | undefined = sameLabel(existing.label, clean) ? undefined : findEntry(entries, clean);
+
+  const renamed: WheelEntry[] = entries.map((entry: WheelEntry): WheelEntry => entry === existing
+    ? { ...entry, label: clean, count: entry.count + (collision?.count ?? 0) }
+    : entry);
+
+  return collision === undefined ? renamed : renamed.filter((entry: WheelEntry): boolean => entry !== collision);
 }
 
 export function removeEntry(entries: readonly WheelEntry[], label: string): WheelEntry[] {
