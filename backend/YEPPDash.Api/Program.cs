@@ -78,6 +78,11 @@ builder.Services.AddScoped<TimeoutRewardService>();
 builder.Services.AddSingleton<IEventSubSource, TimeoutRewardSource>();
 // Handing a stripped role back is the one part no event announces, so it stays on a clock.
 builder.Services.AddHostedService<TimeoutRewardWatcher>();
+builder.Services.AddScoped<GiveawayRepository>();
+builder.Services.AddScoped<GiveawayService>();
+// Holds the open dashboard and overlay connections, and what the overlay is currently showing.
+builder.Services.AddSingleton<GiveawayHub>();
+builder.Services.AddSingleton<IEventSubSource, GiveawaySource>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
