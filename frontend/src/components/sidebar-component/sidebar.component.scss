@@ -1,11 +1,5 @@
 :host {
   display: block;
-
-  // The scroll bars are inserted as a sibling of the nav and positioned against the nearest
-  // positioned ancestor, so without this they would be laid out against the drawer and land
-  // somewhere other than on the nav they belong to. The pinning below replaces this with `sticky`,
-  // which is positioned as well — either way the bars have this element to measure from.
-  position: relative;
 }
 
 .sidebar {
@@ -30,10 +24,6 @@
 // The navigation stays where the eye left it while the content column beside it moves, and runs its
 // own scroll once the list outgrows the band the navbar leaves of the viewport.
 //
-// The whole component sticks rather than the nav alone: the scroll bars are a sibling of that nav
-// and are positioned against this element, so moving the two together keeps the bar sitting on the
-// nav it belongs to at every scroll position, with nothing to re-measure on the way down the page.
-//
 // Sticky rather than fixed, on purpose. A sticky box may only travel inside its containing block,
 // which here is the drawer — and the drawer ends where the content column does, above the footer.
 // So the panel rides back up out of the way as the footer arrives instead of being parked over it,
@@ -54,13 +44,27 @@
   // A maximum and not a height: a nav shorter than the band keeps its own size, so a short list does
   // not end up standing in a tall empty panel with the gap showing under the last entry.
   //
-  // The platform's bar is taken off this element and the app's own drawn over it by the appScrollBar
-  // directive in the template, which is why neither the drawer nor Material's wrapper inside it may
-  // catch the overflow first — see dash-page.component.scss and styles.scss.
+  // Neither the drawer nor Material's wrapper inside it may catch the overflow first, or the wheel
+  // would scroll them instead of this — see dash-page.component.scss and styles.scss.
   .sidebar {
+    // The band is measured from the viewport, so the padding has to count towards it. Left on the
+    // app's content-box default the maximum applies to the content alone and the panel ends up a
+    // padding taller than the space it was fitted to — the last entry then sits below the fold with
+    // no way to scroll to it, because the nav does not consider itself overfull.
+    box-sizing: border-box;
     max-height: calc(100dvh - var(--app-navbar-block));
 
     overflow-y: auto;
+
+    // No bar of any kind down the navigation: neither the platform's nor the app's own. The list is
+    // short enough that the wheel or a touchpad reaches all of it, and a bar sitting over the links
+    // costs more than it explains. Both styling models are declared because Firefox only has the
+    // standard property and older Blink only the pseudo-element.
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     // Nothing here is meant to scroll sideways, and the rail transition briefly overruns its own
     // width on the way between the two shapes — left to `auto` that flickers a horizontal bar in
