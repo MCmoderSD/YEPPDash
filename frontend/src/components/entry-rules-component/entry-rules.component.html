@@ -1,0 +1,114 @@
+<mat-form-field appearance="outline" class="rules-base">
+  <mat-label>Base multiplier</mat-label>
+  <input
+    matInput
+    #baseField
+    type="text"
+    inputmode="decimal"
+    autocomplete="off"
+    [disabled]="disabled()"
+    [attr.aria-invalid]="baseBroken()"
+    [value]="baseOf()"
+    (input)="setBaseText(baseField.value)"
+    (blur)="baseField.value = baseOf().toString()"
+  />
+  <span matTextPrefix>×&nbsp;</span>
+  <app-number-stepper
+    matSuffix
+    [value]="baseOf()"
+    [min]="multiplierStep"
+    [max]="multiplierMax"
+    [step]="multiplierStep"
+    (valueChange)="setBase($event)"
+  />
+  <mat-hint>What every entry starts at, before any role is counted</mat-hint>
+</mat-form-field>
+
+<p class="rules-hint" [class.rules-hint-error]="baseBroken()" aria-live="polite">
+  @if (baseBroken()) {
+    The base has to be greater than 0 — it is what every entry starts from.
+  } @else {
+    Set it below 1 to make every entry count for less, and let the roles below raise it again.
+  }
+</p>
+
+<div class="rules-panel">
+  <div class="rules-head" aria-hidden="true">
+    <span>Role</span>
+    <span>Entry rule</span>
+    <span>Multiplier</span>
+  </div>
+
+  @for (role of roles; track role) {
+    <div class="rules-row">
+      <span class="rules-role">
+        <span class="rules-label" [id]="labelId(role)">{{ roleLabels[role] }}</span>
+        <span class="rules-role-hint">{{ roleHints[role] }}</span>
+      </span>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="rules-state">
+        <mat-select
+          panelClass="app-select-panel"
+          [disabled]="disabled()"
+          [attr.aria-labelledby]="labelId(role)"
+          [value]="requirementOf(role)"
+          (valueChange)="setRequirement(role, $event)"
+        >
+          @for (state of requirementStates; track state) {
+            <mat-option [value]="state">{{ requirementLabels[state] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="rules-multiplier">
+        <input
+          matInput
+          #multiplierField
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          [disabled]="disabled()"
+          [attr.aria-labelledby]="labelId(role)"
+          [attr.aria-invalid]="multiplierInvalid(role)"
+          [value]="multiplierOf(role)"
+          (input)="setMultiplierText(role, multiplierField.value)"
+          (blur)="multiplierField.value = multiplierOf(role).toString()"
+        />
+        <span matTextPrefix>×&nbsp;</span>
+        <app-number-stepper
+          matSuffix
+          [value]="multiplierOf(role)"
+          [min]="multiplierMin"
+          [max]="multiplierMax"
+          [step]="multiplierStep"
+          (valueChange)="setMultiplier(role, $event)"
+        />
+      </mat-form-field>
+    </div>
+  }
+</div>
+
+<p class="rules-hint" [class.rules-hint-error]="anyBroken()" aria-live="polite">
+  @if (anyBroken()) {
+    A multiplier has to be between {{ multiplierMin }} and {{ multiplierMax | number }}, and the base above 0.
+  } @else {
+    A multiplier below 1 makes an entry count for less; 0 lets somebody enter without ever winning.
+  }
+</p>
+
+<div class="rules-formula">
+  <h4 class="rules-formula-title">How an entry is weighed</h4>
+
+  <p class="rules-formula-line"><code>Base × Follower × Subscriber × Tier × VIP × Moderator</code></p>
+
+  <p class="rules-formula-text">
+    Only what the viewer actually holds is multiplied in — no roles at all means plain
+    <strong>Base</strong>. A subscription brings two of them: <strong>Subscriber</strong> for the sub
+    itself, plus <strong>Tier&nbsp;2</strong> or <strong>Tier&nbsp;3</strong> for the tier, never both.
+  </p>
+
+  <p class="rules-formula-text">
+    A Tier&nbsp;3 sub who also follows:
+    <code>Base × Follower × Subscriber × Tier&nbsp;3</code>
+  </p>
+</div>

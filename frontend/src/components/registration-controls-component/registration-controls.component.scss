@@ -1,0 +1,28 @@
+// Side by side and sharing the width evenly, so the pair reads as one switch with two settings.
+:host {
+  display: flex;
+  gap: 0.75rem;
+}
+
+// Even halves by default. A custom property rather than a class, because view encapsulation stops
+// a parent stylesheet from reaching these buttons - but a variable set on the host inherits down to
+// them, which is how the settings aside asks for content-sized ones instead.
+button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+// A draft has nothing to reset, so the one switch left has nothing to sit beside and takes the row
+// rather than leaving a gap where the other one would have been. Both properties are here because
+// a parent may lay the host out either way; each is ignored under the other.
+button:only-child {
+  flex: 1 1 auto;
+  grid-column: 1 / -1;
+}
+
+// Reset throws away every entry and winner, so it carries the same red as Delete, and the same
+// borderless treatment - a text button rather than an outlined one, which also gives it Delete's
+// padding so the two line up when they sit in the same column.
+.controls-reset {
+  color: var(--app-danger);
+}

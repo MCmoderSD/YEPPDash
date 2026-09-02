@@ -1,0 +1,109 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.rules-base {
+  width: 100%;
+}
+
+.rules-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.rules-hint-error {
+  color: var(--app-danger);
+}
+
+.rules-panel {
+  display: flex;
+  flex-direction: column;
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+}
+
+// The three columns the rules are read across. The header row is decoration for a sighted reader
+// only - each control names its own role through aria-labelledby.
+.rules-head,
+.rules-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10rem 9rem;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+}
+
+.rules-head {
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+}
+
+.rules-row + .rules-row {
+  border-top: var(--app-border);
+}
+
+.rules-role {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.rules-label {
+  font: var(--mat-sys-body-medium);
+}
+
+.rules-role-hint {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+@media (max-width: 40rem) {
+  .rules-head {
+    display: none;
+  }
+
+  .rules-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// A worked example rather than another paragraph: the formulas are what a streamer checks when a
+// weight surprises them, and a list of cases answers that faster than prose does.
+.rules-formula {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  padding: 0.75rem 0.875rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.rules-formula-title {
+  margin: 0;
+  font: var(--mat-sys-label-large);
+}
+
+.rules-formula-text {
+  margin: 0 0 0.125rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.rules-formula-line {
+  margin: 0;
+}
+
+.rules-formula code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface);
+}

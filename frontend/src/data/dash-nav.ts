@@ -136,6 +136,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         description: 'Let channel points buy a timeout, on your terms.',
         path: `${BASE}/timeout-reward`,
       },
+      {
+        label: 'Giveaways',
+        icon: 'celebration',
+        description: 'Channel point giveaways, drawn on a weighted wheel live on stream.',
+        path: `${BASE}/giveaway`,
+      },
     ],
   },
 ];

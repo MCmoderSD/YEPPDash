@@ -1,0 +1,447 @@
+<section class="giveaway">
+  <header class="giveaway-header">
+    <h1 class="giveaway-title">Giveaways</h1>
+    <p class="giveaway-sub">
+      A channel point reward viewers redeem to enter. Roles decide who may enter and how much their
+      entry counts, and the winners are drawn on a weighted wheel your viewers can watch.
+    </p>
+  </header>
+
+  <mat-progress-bar
+    class="giveaway-progress"
+    mode="indeterminate"
+    [attr.aria-hidden]="!busy()"
+    [style.visibility]="busy() ? 'visible' : 'hidden'"
+  />
+
+  @if (!detail()) {
+    <app-giveaway-grid
+      class="giveaway-overview"
+      [giveaways]="summaries()"
+      [loading]="skeleton()"
+      [expected]="expected()"
+      (opened)="select($event)"
+      (created)="openNew()"
+    />
+  } @else {
+
+    <div class="giveaway-detail-head app-fade-in">
+      <button mat-button type="button" class="giveaway-back" (click)="back()">
+        <mat-icon aria-hidden="true">arrow_back</mat-icon>
+        <span>All giveaways</span>
+      </button>
+
+      <h2 class="giveaway-detail-name">{{ creating() ? 'New giveaway' : (title() || 'Giveaway') }}</h2>
+
+      @if (status(); as current) {
+        <app-status-badge
+          [label]="statusLabels[current]"
+          [tone]="current === 'Open' ? 'success' : 'neutral'"
+        />
+      }
+    </div>
+
+    @if (selected()?.rewardMissing) {
+      <p class="giveaway-warning app-fade-in" role="status">
+        <mat-icon aria-hidden="true">warning</mat-icon>
+        <span>
+          The channel point reward behind this giveaway is gone from Twitch, so nobody can enter.
+          Opening it again creates a new reward; everybody who already entered stays.
+        </span>
+      </p>
+    }
+
+    <mat-tab-group class="giveaway-tabs">
+      <mat-tab label="Settings">
+        <form class="giveaway-layout app-fade-in" (submit)="$event.preventDefault(); save()">
+
+          <div class="giveaway-form">
+            <h3 class="giveaway-heading">The reward</h3>
+
+            @if (!editable()) {
+              <p class="giveaway-hint">
+                Close registration to change anything — the rules cannot move while people are
+                entering under them.
+              </p>
+            } @else if (status() === 'Closed' && participants().length > 0) {
+              <p class="giveaway-hint">
+                Changing a multiplier reweighs everybody who already entered, using the roles they
+                held at the time. Nobody is taken off the wheel.
+              </p>
+            }
+
+            <mat-form-field appearance="outline" class="giveaway-field">
+              <mat-label>Name</mat-label>
+              <input
+                matInput
+                #titleField
+                type="text"
+                autocomplete="off"
+                [disabled]="!editable()"
+                [attr.maxlength]="maxTitleLength"
+                [value]="title()"
+                (input)="title.set(titleField.value)"
+              />
+              <mat-hint align="end">{{ maxTitleLength - title().length }} characters left</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="giveaway-field">
+              <mat-label>Cost</mat-label>
+              <input
+                matInput
+                #costField
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [disabled]="!editable()"
+                [attr.aria-invalid]="cost() < 1"
+                [value]="costText()"
+                (input)="setCost(costField.value)"
+              />
+              <app-number-stepper matSuffix [value]="cost()" [min]="1" [step]="100" (valueChange)="cost.set($event)"/>
+              <mat-hint>Channel points per entry</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="giveaway-field">
+              <mat-label>Description (optional)</mat-label>
+              <input
+                matInput
+                #descriptionField
+                type="text"
+                autocomplete="off"
+                [disabled]="!editable()"
+                [attr.maxlength]="maxDescriptionLength"
+                [value]="description()"
+                (input)="description.set(descriptionField.value)"
+              />
+              <mat-hint>Shown in the redeem dialog on Twitch</mat-hint>
+              <mat-hint align="end">{{ descriptionLeft() }} left</mat-hint>
+            </mat-form-field>
+
+            <h3 class="giveaway-heading">Cooldown &amp; limits</h3>
+            <p class="giveaway-hint">Leave a field empty to switch that limit off.</p>
+
+            <app-reward-limits
+              group="giveaway"
+              [disabled]="!editable()"
+              [(cooldownSeconds)]="cooldownSeconds"
+              [(maxPerStream)]="maxPerStream"
+              [(maxPerUserPerStream)]="maxPerUserPerStream"
+            />
+
+            <h3 class="giveaway-heading">Who may enter, and for how much</h3>
+
+            <app-entry-rules
+              group="giveaway"
+              [disabled]="!editable()"
+              [(requirements)]="requirements"
+              [(multipliers)]="multipliers"
+            />
+          </div>
+
+          <aside class="giveaway-preview" aria-label="How the reward looks on Twitch">
+            <app-reward-preview
+              [image]="tileImage()"
+              [cost]="cost() || 0"
+              [color]="colorInvalid() ? '#9147FF' : color()"
+              [name]="title()"
+            />
+
+            <app-reward-switches
+              group="giveaway"
+              [enabled]="status() === 'Open'"
+              [enabledLocked]="true"
+              enabledHint="Open or close registration to switch the reward"
+              [colorLocked]="!editable()"
+              [(color)]="color"
+            />
+
+            @if (!creating()) {
+              <app-registration-controls
+                class="giveaway-status-actions"
+                [status]="status()"
+                [busy]="busy()"
+                (opened)="open()"
+                (closed)="close()"
+                (reset)="resetToDraft()"
+              />
+            }
+
+            <div class="giveaway-actions">
+              @if (!creating()) {
+                <button mat-button type="button" class="giveaway-delete" [disabled]="busy()" (click)="remove()">
+                  <mat-icon aria-hidden="true">delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              }
+
+              <button mat-flat-button type="submit" [disabled]="!canSave()">
+                {{ creating() ? 'Create giveaway' : 'Save changes' }}
+              </button>
+            </div>
+
+            <p class="giveaway-state">
+              @if (creating()) {
+                Nothing exists on Twitch yet. Creating this makes the reward, switched off, until
+                you open registration.
+              } @else if (status() === 'Open') {
+                <strong>Registration is open.</strong> The reward is live in your channel, and every
+                redemption enters the giveaway.
+              } @else if (status() === 'Closed') {
+                <strong>Registration is closed.</strong> The reward is switched off on Twitch, so
+                nobody new can enter — and the wheel can be spun.
+              } @else {
+                <strong>This is a draft.</strong> The reward exists but is switched off, so nobody
+                can see or redeem it yet.
+              }
+            </p>
+          </aside>
+        </form>
+      </mat-tab>
+
+      <mat-tab label="Draw &amp; entries" [disabled]="creating()">
+          <div class="giveaway-tab-body app-fade-in">
+            <div class="giveaway-draw">
+              <app-wheel
+                class="giveaway-wheel"
+                [slices]="slices()"
+                [weights]="weights()"
+                [interactive]="canDraw()"
+                (spinRequested)="draw()"
+                (spun)="landed($event)"
+              />
+
+              <div class="giveaway-controls">
+                <button mat-flat-button type="button" [disabled]="!canDraw()" (click)="draw()">
+                  <mat-icon aria-hidden="true">casino</mat-icon>
+                  <span>Draw a winner</span>
+                </button>
+
+                <app-registration-controls
+                  [status]="status()"
+                  [busy]="busy()"
+                  (opened)="open()"
+                  (closed)="close()"
+                  (reset)="resetToDraft()"
+                />
+
+                <app-overlay-link [url]="overlayUrl()" label="Browser source"/>
+
+                <div class="giveaway-guide">
+                  <h4 class="giveaway-guide-title">How a draw works</h4>
+
+                  <ol class="giveaway-guide-steps">
+                    <li><strong>Open</strong> puts the reward live in your channel. Viewers redeem it to enter.</li>
+                    <li>
+                      <strong>Close</strong> stops new entries. The wheel only spins while
+                      registration is closed, so nobody can enter mid-draw and shift everybody's
+                      odds.
+                    </li>
+                    <li>
+                      <strong>Draw a winner</strong> spins the wheel and records the result. A
+                      bigger slice is a bigger multiplier.
+                    </li>
+                    <li>
+                      <strong>Reset</strong> goes back to draft and clears every entry and winner.
+                      There is no undo.
+                    </li>
+                  </ol>
+
+                  <p class="giveaway-guide-note">
+                    The same person can be drawn twice — take them off the wheel to stop that. The
+                    browser source above always shows this giveaway; add it to OBS once and leave it.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="giveaway-tables">
+              <section class="giveaway-table-block">
+                <h3 class="giveaway-side-heading">Entries ({{ participants().length }})</h3>
+
+                <div class="giveaway-table-wrap">
+                  <div class="giveaway-scroll" #entryScroll>
+                    <table mat-table matSort #participantSort="matSort" [dataSource]="participantSource" class="giveaway-table">
+
+                      <ng-container matColumnDef="user">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
+                        <td mat-cell *matCellDef="let entry">
+                          <div class="giveaway-identity">
+                            @if (entry.user) {
+                              <img
+                                class="giveaway-avatar"
+                                [ngSrc]="entry.user.profileImageUrl"
+                                [width]=32
+                                [height]=32
+                                loading="eager"
+                                alt=""
+                              />
+
+                              <app-user-badges [user]="entry.user"/>
+
+                              <button
+                                type="button"
+                                class="giveaway-name"
+                                [attr.aria-label]="'Details for ' + label(entry)"
+                                (click)="showDetails(entry.user, $event)"
+                              >
+                                <span class="giveaway-display-name" [style.--chat-color]="entry.user.color">
+                                  {{ label(entry) }}
+                                </span>
+                              </button>
+                            } @else {
+                              <span class="giveaway-avatar giveaway-avatar-blank" aria-hidden="true"></span>
+                              <span class="giveaway-display-name">{{ label(entry) }}</span>
+                            }
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="roles">
+                        <th mat-header-cell *matHeaderCellDef scope="col">Counted as</th>
+                        <td mat-cell *matCellDef="let entry">
+                          <span class="giveaway-roles">
+                            @if (entry.isFollower) { <span class="giveaway-role-tag">Follower</span> }
+                            @if (tier(entry); as tierName) { <span class="giveaway-role-tag">{{ tierName }}</span> }
+                            @if (entry.isVip) { <span class="giveaway-role-tag">VIP</span> }
+                            @if (entry.isModerator) { <span class="giveaway-role-tag">Moderator</span> }
+                            @if (!entry.isFollower && entry.subTier === 'None' && !entry.isVip && !entry.isModerator) {
+                              <span class="giveaway-role-none">—</span>
+                            }
+                          </span>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="multiplier">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Weight</th>
+                        <td mat-cell *matCellDef="let entry" class="giveaway-weight">
+                          <span class="giveaway-weight-value">×{{ entry.multiplier | number:'1.0-2' }}</span>
+                          <span class="giveaway-weight-odds">{{ odds(entry) | percent:'1.0-1' }}</span>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="entered">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Entered</th>
+                        <td mat-cell *matCellDef="let entry" class="giveaway-when">
+                          {{ entry.enteredAt | localeDate:'medium':'short' }}
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef scope="col">
+                          <span class="app-visually-hidden">Actions</span>
+                        </th>
+                        <td mat-cell *matCellDef="let entry" class="giveaway-row-actions">
+                          <button
+                            mat-icon-button
+                            type="button"
+                            [disabled]="busy()"
+                            [attr.aria-label]="'Take ' + label(entry) + ' off the wheel'"
+                            matTooltip="Take off the wheel"
+                            (click)="removeParticipant(entry)"
+                          >
+                            <mat-icon aria-hidden="true">person_remove</mat-icon>
+                          </button>
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="participantColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: participantColumns"></tr>
+
+                      <tr class="giveaway-empty-row" *matNoDataRow>
+                        <td class="giveaway-empty" [attr.colspan]="participantColumns.length">
+                          @if (status() === 'Open') {
+                            Nobody has entered yet. The reward is live in your channel.
+                          } @else {
+                            Nobody has entered yet.
+                          }
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <app-scroll-bar [target]="entryScroll"/>
+                </div>
+              </section>
+
+              <section class="giveaway-table-block">
+                <h3 class="giveaway-side-heading">Winners ({{ winners().length }})</h3>
+
+                <div class="giveaway-table-wrap">
+                  <div class="giveaway-scroll" #winnerScroll>
+                    <table mat-table matSort #winnerSort="matSort" matSortActive="order" matSortDirection="asc"
+                           [dataSource]="winnerSource" class="giveaway-table">
+
+                      <ng-container matColumnDef="order">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">#</th>
+                        <td mat-cell *matCellDef="let winner" class="giveaway-order">{{ winner.drawOrder }}</td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="user">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
+                        <td mat-cell *matCellDef="let winner">
+                          <div class="giveaway-identity">
+                            @if (winner.user) {
+                              <img
+                                class="giveaway-avatar"
+                                [ngSrc]="winner.user.profileImageUrl"
+                                [width]=32
+                                [height]=32
+                                loading="eager"
+                                alt=""
+                              />
+
+                              <app-user-badges [user]="winner.user"/>
+
+                              <button
+                                type="button"
+                                class="giveaway-name"
+                                [attr.aria-label]="'Details for ' + winnerName(winner)"
+                                (click)="showDetails(winner.user, $event)"
+                              >
+                                <span class="giveaway-display-name" [style.--chat-color]="winner.user.color">
+                                  {{ winnerName(winner) }}
+                                </span>
+                              </button>
+                            } @else {
+                              <span class="giveaway-avatar giveaway-avatar-blank" aria-hidden="true"></span>
+                              <span class="giveaway-display-name">{{ winnerName(winner) }}</span>
+                            }
+                          </div>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="multiplier">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Weight</th>
+                        <td mat-cell *matCellDef="let winner" class="giveaway-weight">
+                          <span class="giveaway-weight-value">×{{ winner.multiplier | number:'1.0-2' }}</span>
+                        </td>
+                      </ng-container>
+
+                      <ng-container matColumnDef="won">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Drawn</th>
+                        <td mat-cell *matCellDef="let winner" class="giveaway-when">
+                          {{ winner.wonAt | localeDate:'medium':'short' }}
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="winnerColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: winnerColumns"></tr>
+
+                      <tr class="giveaway-empty-row" *matNoDataRow>
+                        <td class="giveaway-empty" [attr.colspan]="winnerColumns.length">
+                          Nobody has been drawn yet.
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <app-scroll-bar [target]="winnerScroll"/>
+                </div>
+              </section>
+            </div>
+          </div>
+        </mat-tab>
+    </mat-tab-group>
+  }
+</section>

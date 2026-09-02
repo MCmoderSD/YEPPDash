@@ -1,0 +1,387 @@
+.giveaway {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  width: min(62rem, 100%);
+  margin-inline: auto;
+}
+
+.giveaway-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.giveaway-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.giveaway-sub {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+// Kept in the layout while idle so nothing jumps every time a request starts.
+.giveaway-progress {
+  flex: none;
+  align-self: stretch;
+}
+
+.giveaway-heading {
+  align-self: stretch;
+  margin: 0.5rem 0 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.giveaway-hint {
+  align-self: stretch;
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.giveaway-hint-error {
+  color: var(--app-danger);
+}
+
+.giveaway-overview {
+  align-self: stretch;
+}
+
+// --- The detail view ---------------------------------------------------------------------------
+
+.giveaway-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  align-self: stretch;
+}
+
+.giveaway-detail-name {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  overflow-wrap: anywhere;
+}
+
+.giveaway-tabs {
+  align-self: stretch;
+  min-width: 0;
+}
+
+.giveaway-tab-body,
+.giveaway-layout {
+  padding-top: 1.25rem;
+}
+
+// Form on the left, the Twitch-side preview beside it — and stacked again once the viewport cannot
+// carry both.
+.giveaway-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 2rem;
+
+  @media (max-width: 48rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.giveaway-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.giveaway-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.giveaway-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.giveaway-warning {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  align-self: stretch;
+
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--app-radius-md);
+  background: var(--app-warning-container);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-small);
+}
+
+.giveaway-field {
+  width: 100%;
+}
+
+// The four switches read as one 2x2 block: two containers, but the same two columns and the same
+// gap in both directions, so every box lines up with the one beside and below it.
+.giveaway-status-actions,
+.giveaway-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.giveaway-status-actions {
+  margin-top: 0.75rem;
+}
+
+// The aside stacks its children 0.5rem apart, so this trims the pair to the same 0.75rem the
+// columns use and the block becomes an even 2x2.
+.giveaway-actions {
+  margin-top: 0.25rem;
+}
+
+// Half a column is tighter than 'Save changes' expects, so it gives back some padding rather than
+// breaking across two lines. Only this row needs it - the switches above carry one word each.
+.giveaway-actions button {
+  padding-inline: 0.5rem;
+  white-space: nowrap;
+}
+
+// Nothing to delete on a giveaway that does not exist yet, so Create has the row to itself.
+.giveaway-actions button:only-child {
+  grid-column: 1 / -1;
+}
+
+// What the switches above have actually done to the reward on Twitch, which is the thing a
+// streamer cannot see from here.
+.giveaway-state {
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: var(--app-border);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.giveaway-delete {
+  color: var(--app-danger);
+}
+
+// --- The draw -------------------------------------------------------------------------------
+
+// One split for the whole tab: the seam between the wheel and its switches lands on the same line
+// as the seam between the two tables. Entries takes the wider half because it carries five columns
+// against the winners' four.
+.giveaway-draw,
+.giveaway-tables {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+// The sidebar eats ~16rem of the window, so these thresholds are what the content column needs
+// rather than what the wheel and the switches measure on their own.
+.giveaway-draw {
+  @media (max-width: 54rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.giveaway-tables {
+  @media (max-width: 62rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.giveaway-wheel {
+  width: 100%;
+  max-width: 26rem;
+  justify-self: center;
+}
+
+// Stacked and filling the column, so every switch is the same target and the block lines up with
+// the winners table underneath it.
+.giveaway-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+// The column runs as tall as the wheel beside it, and the room under the switches is where somebody
+// new to this actually looks for what the four of them do.
+.giveaway-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  padding: 0.75rem 0.875rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.giveaway-guide-title {
+  margin: 0;
+  font: var(--mat-sys-label-medium);
+}
+
+// Sized so the whole column lands on the wheel's height rather than running past it. The type
+// tokens step too coarsely for that, so the size and leading are set outright.
+.giveaway-guide-steps,
+.giveaway-guide-note {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.giveaway-guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+
+  padding-left: 1rem;
+
+  strong {
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.giveaway-side-heading {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+// --- The tables -----------------------------------------------------------------------------
+
+.giveaway-table-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+
+  // Two tables side by side are tighter than one across the page, so the cells give back some of
+  // their padding rather than putting every row behind a scrollbar.
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding-inline: 0.5rem;
+  }
+}
+
+.giveaway-table-wrap {
+  min-width: 0;
+}
+
+.giveaway-scroll {
+  overflow: auto;
+  max-height: 30rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+}
+
+.giveaway-table {
+  width: 100%;
+  background: transparent;
+}
+
+.giveaway-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.giveaway-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--app-radius-pill);
+  object-fit: cover;
+}
+
+.giveaway-avatar-blank {
+  background: var(--mat-sys-surface-container-high);
+}
+
+.giveaway-name {
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+    border-radius: var(--app-radius-sm);
+  }
+}
+
+.giveaway-display-name {
+  color: var(--chat-color, var(--mat-sys-on-surface));
+  font: var(--mat-sys-body-medium);
+}
+
+.giveaway-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.giveaway-role-tag {
+  padding: 0.0625rem 0.4375rem;
+  border-radius: var(--app-radius-pill);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+  white-space: nowrap;
+}
+
+.giveaway-role-none {
+  color: var(--mat-sys-outline);
+}
+
+.giveaway-weight {
+  white-space: nowrap;
+}
+
+.giveaway-weight-value {
+  font: var(--mat-sys-body-medium);
+}
+
+// The share of the wheel that weight actually buys, which is the number a streamer is asked about.
+.giveaway-weight-odds {
+  margin-left: 0.5rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.giveaway-order,
+.giveaway-when {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  white-space: nowrap;
+}
+
+.giveaway-row-actions {
+  text-align: right;
+}
+
+.giveaway-empty {
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  text-align: center;
+}
