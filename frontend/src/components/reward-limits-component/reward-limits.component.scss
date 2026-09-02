@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+// The nested block Twitch draws around its cooldown and limit fields: each setting is a name on the
+// left, its control on the right, and the explanation under the control rather than beside it.
+.limits {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  padding: 1rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-md);
+}
+
+.limits-setting {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  align-items: start;
+
+  // Below this the two columns stop being worth the squeeze on the fields.
+  @media (max-width: 34rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.limits-label {
+  // Nudged down so it reads level with the text inside the field, not with the field's top edge.
+  padding-top: 0.875rem;
+  font: var(--mat-sys-title-small);
+}
+
+.limits-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.limits-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.limits-amount,
+.limits-unit {
+  flex: 1 1 0;
+}
+
+.limits-field {
+  width: 100%;
+}
+
+.limits-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.limits-hint-error {
+  color: var(--app-danger);
+}

@@ -1,27 +1,23 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { DecimalPipe, NgOptimizedImage } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { firstValueFrom } from 'rxjs';
-import { ColorPickerComponent } from '../color-picker-component/color-picker.component';
+import { RewardSwitchesComponent } from '../reward-switches-component/reward-switches.component';
 import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { NumberStepperComponent } from '../number-stepper-component/number-stepper.component';
+import { RewardLimitsComponent } from '../reward-limits-component/reward-limits.component';
+import { bestUnit, COOLDOWN_MAX_SECONDS, DURATION_UNITS, DurationUnit } from '../../data/duration';
+import { RewardPreviewComponent } from '../reward-preview-component/reward-preview.component';
 import { NotificationService } from '../../services/notification.service';
 import { TimeoutRewardService } from '../../services/timeout-reward.service';
 import { ProtectedRole, TimeoutRewardSettings, TimeoutRewardUpdate } from '../../data/timeout-reward';
-
-interface DurationUnit {
-  label: string;
-  seconds: number;
-}
 
 interface ProtectedRoleOption {
   role: ProtectedRole;
@@ -34,15 +30,7 @@ interface ProtectedRoleGroup {
   options: readonly ProtectedRoleOption[];
 }
 
-const UNITS: readonly DurationUnit[] = [
-  { label: 'Seconds', seconds: 1 },
-  { label: 'Minutes', seconds: 60 },
-  { label: 'Hours', seconds: 3_600 },
-  { label: 'Days', seconds: 86_400 },
-];
-
 const MAX_TIMEOUT_SECONDS: number = 1_209_600;
-const MAX_COOLDOWN_SECONDS: number = 604_800;
 
 const MAX_TITLE_LENGTH: number = 45;
 const MAX_PROMPT_LENGTH: number = 200;
@@ -71,22 +59,14 @@ const PROTECTED_GROUPS: readonly ProtectedRoleGroup[] = [
   },
 ];
 
-function bestUnit(seconds: number): DurationUnit {
-  for (let index = UNITS.length - 1; index > 0; index--) {
-    if (seconds % UNITS[index].seconds === 0 && seconds >= UNITS[index].seconds) return UNITS[index];
-  }
-
-  return UNITS[0];
-}
-
 @Component({
   selector: 'app-timeout-reward',
   templateUrl: './timeout-reward.component.html',
   styleUrl: './timeout-reward.component.scss',
   imports: [
-    DecimalPipe, NgOptimizedImage, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    MatMenuModule, MatProgressBarModule, MatSelectModule, MatSlideToggleModule,
-    ColorPickerComponent, NumberStepperComponent
+    DecimalPipe, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule,
+    MatProgressBarModule, MatSelectModule,
+    NumberStepperComponent, RewardLimitsComponent, RewardPreviewComponent, RewardSwitchesComponent
   ],
 })
 export class TimeoutRewardComponent {
@@ -95,7 +75,7 @@ export class TimeoutRewardComponent {
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  protected readonly units: readonly DurationUnit[] = UNITS;
+  protected readonly units: readonly DurationUnit[] = DURATION_UNITS;
   protected readonly protectedGroups: readonly ProtectedRoleGroup[] = PROTECTED_GROUPS;
   protected readonly maxTitleLength: number = MAX_TITLE_LENGTH;
   protected readonly maxPromptLength: number = MAX_PROMPT_LENGTH;
@@ -118,8 +98,7 @@ export class TimeoutRewardComponent {
   protected readonly durationAmount: WritableSignal<number> = signal(90);
   protected readonly durationUnit: WritableSignal<number> = signal(1);
 
-  protected readonly cooldownAmount: WritableSignal<number> = signal(0);
-  protected readonly cooldownUnit: WritableSignal<number> = signal(60);
+  protected readonly cooldownSeconds: WritableSignal<number> = signal(0);
   protected readonly maxPerStream: WritableSignal<number> = signal(0);
   protected readonly maxPerUser: WritableSignal<number> = signal(0);
 
@@ -135,10 +114,10 @@ export class TimeoutRewardComponent {
   });
 
   private readonly durationSeconds: Signal<number> = computed((): number => Math.floor(this.durationAmount()) * this.durationUnit());
-  private readonly cooldownSeconds: Signal<number> = computed((): number => Math.floor(this.cooldownAmount()) * this.cooldownUnit());
+
 
   protected readonly maxDurationAmount: Signal<number> = computed((): number => Math.floor(MAX_TIMEOUT_SECONDS / this.durationUnit()));
-  protected readonly maxCooldownAmount: Signal<number> = computed((): number => Math.floor(MAX_COOLDOWN_SECONDS / this.cooldownUnit()));
+
 
   protected readonly durationInvalid: Signal<boolean> = computed((): boolean => {
     const seconds: number = this.durationSeconds();
@@ -147,7 +126,7 @@ export class TimeoutRewardComponent {
 
   protected readonly cooldownInvalid: Signal<boolean> = computed((): boolean => {
     const seconds: number = this.cooldownSeconds();
-    return !Number.isFinite(seconds) || seconds < 0 || seconds > MAX_COOLDOWN_SECONDS;
+    return !Number.isFinite(seconds) || seconds < 0 || seconds > COOLDOWN_MAX_SECONDS;
   });
 
   protected readonly colorInvalid: Signal<boolean> = computed(
@@ -293,10 +272,7 @@ export class TimeoutRewardComponent {
     this.durationUnit.set(duration.seconds);
     this.durationAmount.set(settings.durationSeconds / duration.seconds);
 
-    const cooldownSeconds: number = reward.globalCooldownSetting.isEnabled ? reward.globalCooldownSetting.globalCooldownSeconds : 0;
-    const cooldown: DurationUnit = cooldownSeconds > 0 ? bestUnit(cooldownSeconds) : UNITS[1];
-    this.cooldownUnit.set(cooldown.seconds);
-    this.cooldownAmount.set(cooldownSeconds / cooldown.seconds);
+    this.cooldownSeconds.set(reward.globalCooldownSetting.isEnabled ? reward.globalCooldownSetting.globalCooldownSeconds : 0);
 
     this.maxPerStream.set(reward.maxPerStreamSetting.isEnabled ? reward.maxPerStreamSetting.maxPerStream : 0);
     this.maxPerUser.set(reward.maxPerUserPerStreamSetting.isEnabled ? reward.maxPerUserPerStreamSetting.maxPerUserPerStream : 0);
@@ -313,8 +289,7 @@ export class TimeoutRewardComponent {
     this.enabled.set(true);
     this.durationAmount.set(90);
     this.durationUnit.set(1);
-    this.cooldownAmount.set(0);
-    this.cooldownUnit.set(60);
+    this.cooldownSeconds.set(0);
     this.maxPerStream.set(0);
     this.maxPerUser.set(0);
     this.shielded.set(new Set(['Moderator', 'Editor']));

@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+.switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  // Wide column gap so the switch and the swatch read as two settings rather than one cluster; the
+  // row gap only comes into play once they no longer fit side by side.
+  gap: 0.75rem 1.25rem;
+  justify-content: center;
+  margin-block: 0.5rem;
+}
+
+.switches-colour {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Reads as a setting name like the switch's own label, not as a caption under it.
+.switches-colour-label {
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}
+
+// The swatch is the colour it opens with - a button that is its own preview, and the only way into
+// the colour, so it stands on its own rather than inside a field.
+.switches-swatch {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: var(--app-border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}

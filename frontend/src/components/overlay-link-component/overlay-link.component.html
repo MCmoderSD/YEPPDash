@@ -1,0 +1,13 @@
+@if (url(); as link) {
+  <div class="overlay-link">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="overlay-link-field">
+      <mat-label>{{ label() }}</mat-label>
+      <input matInput type="text" readonly [value]="link"/>
+    </mat-form-field>
+
+    <button mat-stroked-button type="button" (click)="copy(link)">
+      <mat-icon aria-hidden="true">content_copy</mat-icon>
+      <span>Copy</span>
+    </button>
+  </div>
+}
