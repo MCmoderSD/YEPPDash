@@ -78,6 +78,14 @@
       response type and required user level, per channel.
     </li>
     <li>
+      <strong>Giveaway entries.</strong> Where a broadcaster runs a channel point giveaway, every
+      redemption is stored against the entrant's Twitch user ID and display name, together with the
+      ID of the redemption itself, the roles they held at the time (following, subscription tier,
+      VIP, moderator), the resulting weight, and when they entered. Anyone drawn as a winner is
+      stored the same way, with their position in the draw. The broadcaster running the giveaway
+      sees this list; nobody else can read it through YEPPDash.
+    </li>
+    <li>
       <strong>BDSM test results.</strong> Where a user has taken YEPPBot's BDSM test in chat, the
       result is stored with their Twitch user ID, a timestamp, the stated gender and age group, and a
       score per trait. YEPPDash only displays these results — it never creates or edits them.
@@ -124,6 +132,8 @@
     revokes the token and removes the stored row. Channel data — birthdays, quotes, custom commands
     and BDSM results — belongs to YEPPBot and stays in the shared database until it is deleted in the
     dashboard, in chat, or on request; revoking YEPPDash's Twitch access alone does not remove it.
+    Giveaway entries and winners are removed when the broadcaster resets or deletes that giveaway,
+    and on request.
     The live channel lists live only in memory, and server logs are rotated out after a short period.
   </p>
 

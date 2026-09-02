@@ -1,6 +1,6 @@
 # YEPPDash
 
-> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing moderators and VIPs, timeouts and bans, custom commands, quotes, follower birthdays, raids, a viewer queue, two OBS overlays, and a channel point reward that buys a timeout.
+> Web dashboard for [YEPPBot](https://github.com/MCmoderSD/YEPPBot), a Twitch chatbot. Broadcasters sign in with Twitch and run the bot from a browser instead of only through chat commands: adding the bot to their channel, managing moderators and VIPs, timeouts and bans, custom commands, quotes, follower birthdays, raids, a viewer queue, three OBS overlays, and channel point rewards that buy a timeout or enter a giveaway.
 
 YEPPDash is a free, open-source, solo-developed hobby project, not a commercial service. The dashboard lives at https://dash.yeppbot.com and the public site at https://www.yeppbot.com. Everything behind the dashboard requires a Twitch login and only ever acts on the signed-in user's own channel.
 
@@ -30,6 +30,7 @@ Every page below is behind a Twitch login and acts only on the signed-in broadca
 - [Subathon Timer](https://dash.yeppbot.com/timer): Count down live on an OBS browser source, driven from chat or the dashboard.
 - [BDSM Test](https://dash.yeppbot.com/bdsm): Test results viewers have shared with the channel.
 - [Timeout Reward](https://dash.yeppbot.com/timeout-reward): A channel point reward viewers redeem by typing a name, which times that viewer out for as long as the broadcaster set. Protected roles and unknown names are refunded automatically.
+- [Giveaways](https://dash.yeppbot.com/giveaway): A channel point reward viewers redeem to enter a draw. Roles decide who may enter and how much an entry counts, and winners are drawn on a weighted wheel shown on an OBS browser source. Entries that do not qualify are refunded automatically.
 
 ## Source
 

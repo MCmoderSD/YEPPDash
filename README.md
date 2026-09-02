@@ -18,6 +18,7 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 - **Queue** — a waiting list chat joins from and the dashboard works through, in order (the dashboard half; the `!queue` commands are not in YEPPBot yet, so nothing can join it today)
 - **Auto-shoutouts** — shout out whoever raids you, without touching chat yourself
 - **Timeout reward** — a channel point reward viewers redeem by typing a name, which times that viewer out for as long as you set; unknown names and the roles you protect are refunded automatically
+- **Giveaways** — a channel point reward viewers redeem to enter a draw; roles decide who may enter and how much their entry counts, and winners are drawn on a weighted wheel your viewers can watch on an OBS browser source
 
 ## Tech Stack
 
@@ -52,6 +53,7 @@ Reverse proxying (Caddy) is not part of this repo — it's handled by the operat
 - [`docs/yeppbot-api-client.md`](docs/yeppbot-api-client.md) — the HTTP client YEPPDash uses to talk to a running YEPPBot instance (join/leave a channel, reload custom commands)
 - [`docs/subathon-timer.md`](docs/subathon-timer.md) — the table the subathon timer shares with YEPPBot: the statements each chat command is, and what either side must not touch
 - [`docs/queue.md`](docs/queue.md) — the same for the queue: why the waiting list is one text column, and which half owns which command
+- [`docs/giveaway.md`](docs/giveaway.md) — how a channel point redemption becomes a weighted slice: why the reward filter runs before the shared redemption log, and why the overlay stream never sees the entrants
 
 ## Relationship to YEPPBot
 
