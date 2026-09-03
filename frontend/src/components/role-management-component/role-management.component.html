@@ -4,9 +4,9 @@
     <p class="app-visually-hidden" role="status">Loading your {{ roleName() }}s…</p>
   }
 
-  <header class="role-management-header">
-    <h1 class="role-management-title">{{ title() }}</h1>
-    <p class="role-management-count">
+  <header class="app-page-header">
+    <h1 class="app-page-title">{{ title() }}</h1>
+    <p class="app-page-sub">
       @if (initialLoading()) {
         <span class="app-skeleton app-skeleton-bar app-skeleton-text role-management-count-skeleton" aria-hidden="true"></span>
       } @else {
@@ -26,12 +26,7 @@
     <span>Add {{ roleName() }}</span>
   </button>
 
-  <mat-progress-bar
-    class="role-management-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!showProgress()"
-    [style.visibility]="showProgress() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="showProgress()"/>
 
   <app-user-table
     [users]="users()"
