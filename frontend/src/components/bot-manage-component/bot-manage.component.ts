@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, ElementRef, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,19 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { AuthService } from '../../services/auth.service';
-import { BotResult, BotService } from '../../services/bot.service';
+import { BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
 import { ShoutoutService } from '../../services/shoutout.service';
 import { NotificationService } from '../../services/notification.service';
+import { errorMessage } from '../../services/http-error';
 import { TwitchUser } from '../../data/twitch-user';
 import { BannedUser } from '../../data/banned-user';
 import { ShoutoutSettings } from '../../data/shoutout';
-
-function reasonFor(error: unknown): string | null {
-  if (!(error instanceof HttpErrorResponse)) return null;
-  const message: unknown = (error.error as BotResult | null)?.message;
-  return typeof message === 'string' && message.trim() ? message.trim() : null;
-}
 
 @Component({
   selector: 'app-bot-manage',
@@ -131,7 +125,7 @@ export class BotManageComponent {
       this.notifications.success(`Automatic shoutouts are ${autoShoutout ? 'on' : 'off'}.`);
     } catch (error: unknown) {
       this.shoutout.set(previous);
-      this.notifications.failure(reasonFor(error) ?? 'Could not change the automatic shoutouts.');
+      this.notifications.failure(errorMessage(error, 'Could not change the automatic shoutouts.'));
     } finally {
       this.busy.set(false);
     }
@@ -148,7 +142,7 @@ export class BotManageComponent {
       await this.load(this.botUserId());
       this.statusHeading()?.nativeElement.focus();
     } catch (error: unknown) {
-      this.notifications.failure(reasonFor(error) ?? failure);
+      this.notifications.failure(errorMessage(error, failure));
     } finally {
       this.busy.set(false);
     }

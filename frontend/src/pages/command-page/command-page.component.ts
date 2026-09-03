@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,13 +8,8 @@ import { ConfirmActionDialogComponent } from '../../components/confirm-action-di
 import { AuthService } from '../../services/auth.service';
 import { CommandService } from '../../services/command.service';
 import { NotificationService } from '../../services/notification.service';
+import { errorMessage } from '../../services/http-error';
 import { CustomCommand, CustomCommandDraft, sameTrigger } from '../../data/custom-command';
-
-function reasonFor(error: unknown): string | null {
-  if (!(error instanceof HttpErrorResponse)) return null;
-  if (error.status !== 400 && error.status !== 409) return null;
-  return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
-}
 
 @Component({
   selector: 'app-command-page',
@@ -144,7 +138,7 @@ export class CommandPageComponent {
       return true;
     } catch (error: unknown) {
       options.revert?.();
-      this.notifications.failure(reasonFor(error) ?? failure);
+      this.notifications.failure(errorMessage(error, failure));
 
       return false;
     } finally {
