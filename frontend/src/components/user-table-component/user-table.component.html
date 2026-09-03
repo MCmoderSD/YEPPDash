@@ -13,35 +13,13 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="user-table-scroll">
-    <table mat-table matSort [dataSource]="dataSource" class="user-table-grid">
+  <app-table-frame>
+    <table mat-table matSort [dataSource]="dataSource" class="app-data-table">
 
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
         <td mat-cell *matCellDef="let user">
-          <div class="user-table-identity">
-            <img
-              class="user-table-avatar"
-              [ngSrc]="user.profileImageUrl"
-              [width]=32
-              [height]=32
-              loading="eager"
-              alt=""
-            />
-
-            <app-user-badges [user]="user"/>
-
-            <button
-              type="button"
-              class="user-table-name"
-              [attr.aria-label]="'Details for ' + user.displayName"
-              (click)="showDetails(user, $event)"
-            >
-              <span class="user-table-display-name" [style.--chat-color]="user.color">
-                {{ user.displayName }}
-              </span>
-            </button>
-          </div>
+          <app-user-identity [user]="user"/>
         </td>
       </ng-container>
 
@@ -98,7 +76,7 @@
             </div>
           </td>
         } @else {
-          <td class="user-table-empty" [attr.colspan]="columns().length">
+          <td class="app-table-empty" [attr.colspan]="columns().length">
             @if (query()) {
               No user matches “{{ query() }}”.
             } @else {
@@ -108,7 +86,5 @@
         }
       </tr>
     </table>
-  </div>
-
-  <app-scroll-bar [target]="scroll"/>
+  </app-table-frame>
 </div>

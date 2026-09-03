@@ -1,11 +1,6 @@
-@use '../../styles/chat-color' as chat;
-
 .user-table {
   display: flex;
   flex-direction: column;
-
-  // The containing block for the scroll bar drawn over the table below.
-  position: relative;
 
   // A user list is a small side task, not the page's main content — it should read as a
   // compact panel, not stretch across the full width available to it. Wide enough for a name with
@@ -17,34 +12,6 @@
   width: 100%;
 }
 
-// Narrow viewports scroll the table instead of squashing the columns into unreadable slivers.
-// The outline is drawn here rather than on the table itself so it always spans the full width of
-// the search box above — the same width the flex column already gives this element — instead of
-// shrink-wrapping to whatever width the table content happens to need.
-.user-table-scroll {
-  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
-  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
-  overflow: auto hidden;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-outlined);
-}
-
-table.user-table-grid {
-  // Fills the outline drawn around it, the way the quote table does: the fixed columns below keep
-  // their width and the name column takes whatever is left, so the row reads as one band of
-  // content instead of a small table floating in a wide box.
-  width: 100%;
-  background: transparent;
-
-  // Material's default 16px inline padding on every cell adds up fast across three columns —
-  // tightened so name, id and remove sit close together instead of spread across the row.
-  //noinspection CssUnusedSymbol
-  .mdc-data-table__cell,
-  .mdc-data-table__header-cell {
-    padding: 0 0.5rem;
-  }
-}
-
 .user-table-row {
   cursor: pointer;
 
@@ -52,46 +19,6 @@ table.user-table-grid {
   &:focus-within {
     background: var(--mat-sys-surface-container-high);
   }
-}
-
-.user-table-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-// The row itself is the mouse path, so this is what carries the keyboard path to the details
-// dialog. It wraps the name alone: the badges sit ahead of it, and nesting them in a control with
-// its own aria-label would hide them from a screen reader.
-.user-table-name {
-  flex: none;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
-}
-
-// Never wrapped: a Twitch name is at most 25 characters, and letting the longest one break across
-// several lines would make its row tower over the rest. The table scrolls sideways instead.
-.user-table-display-name {
-  @include chat.chat-color;
-
-  white-space: nowrap;
-}
-
-.user-table-avatar {
-  flex: none;
-  display: block;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 // A fixed, quieter column, like the date column in the quote table: it is there to be read off
@@ -135,12 +62,6 @@ table.user-table-grid {
       transition: none;
     }
   }
-}
-
-.user-table-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: center;
 }
 
 // --- Ghost rows (first load) ----------------------------------------------------------------

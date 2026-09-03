@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, input, InputSignal, output, OutputEmitterRef, Signal, signal, viewChild, WritableSignal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -7,10 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
+import { TableFrameComponent } from '../table-frame-component/table-frame.component';
+import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
 import { TwitchUser } from '../../data/twitch-user';
+import { ghostRows } from '../../data/skeleton';
 
 export type UserTableMode = 'user' | 'vip' | 'editor' | 'moderator';
 
@@ -25,7 +25,7 @@ const ROLE_LABELS: Record<UserTableMode, string> = {
   selector: 'app-user-table',
   templateUrl: './user-table.component.html',
   styleUrl: './user-table.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
 })
 export class UserTableComponent {
 
@@ -61,11 +61,7 @@ export class UserTableComponent {
     return 'minmax(0, 1fr)';
   }).join(' '));
 
-  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
-    const expected: number | null = this.expected();
-    if (expected === null || expected <= 0) return [];
-    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
-  });
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
 
   protected readonly loaded: Signal<boolean> = computed((): boolean => !this.loading());
 
@@ -95,8 +91,7 @@ export class UserTableComponent {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  protected showDetails(user: TwitchUser, event?: Event): void {
-    event?.stopPropagation();
+  protected showDetails(user: TwitchUser): void {
     UserInfoDialogComponent.open(this.dialog, user);
   }
 
