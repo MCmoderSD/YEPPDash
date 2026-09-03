@@ -16,7 +16,7 @@ public sealed class QueueController(
     QueueHub hub,
     ILogger<QueueController> logger) : ControllerBase
 {
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:int}")]
     public async Task<IActionResult> GetQueue(string userId, CancellationToken cancellationToken)
     {
         if (!int.TryParse(userId, out _)) return BadRequest("That is not a Twitch user ID.");
@@ -25,7 +25,7 @@ public sealed class QueueController(
         return Ok(QueueResponse.From(await queues.GetAsync(userId, cancellationToken)));
     }
 
-    [HttpGet("{userId}/stream")]
+    [HttpGet("{userId:int}/stream")]
     public async Task Stream(string userId, CancellationToken cancellationToken)
     {
         if (!int.TryParse(userId, out var channelId))
@@ -36,7 +36,7 @@ public sealed class QueueController(
 
         if (!string.Equals(User.GetTwitchId(), userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to watch the queue of the channel {UserId}", User.GetTwitchId(), userId);
+            logger.LogWarning("User {TwitchId} tried to watch the queue of the channel {UserId}", User.GetTwitchId(), LogSafe.OneLine(userId));
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return;
         }
@@ -49,43 +49,43 @@ public sealed class QueueController(
         logger.LogDebug("A dashboard stopped watching the queue of the channel {ChannelId}", channelId);
     }
 
-    [HttpPost("{userId}/open")]
+    [HttpPost("{userId:int}/open")]
     public Task<IActionResult> Open(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.OpenAsync(userId, token), cancellationToken);
     }
 
-    [HttpPost("{userId}/close")]
+    [HttpPost("{userId:int}/close")]
     public Task<IActionResult> Close(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.CloseAsync(userId, token), cancellationToken);
     }
 
-    [HttpPost("{userId}/next")]
+    [HttpPost("{userId:int}/next")]
     public Task<IActionResult> Next(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.NextAsync(userId, token), cancellationToken);
     }
 
-    [HttpDelete("{userId}/entries")]
+    [HttpDelete("{userId:int}/entries")]
     public Task<IActionResult> Clear(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.ClearAsync(userId, token), cancellationToken);
     }
 
-    [HttpDelete("{userId}/entries/{entryId}")]
+    [HttpDelete("{userId:int}/entries/{entryId}")]
     public Task<IActionResult> Remove(string userId, string entryId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.RemoveAsync(userId, entryId, token), cancellationToken);
     }
 
-    [HttpPut("{userId}/entries/{entryId}/position")]
+    [HttpPut("{userId:int}/entries/{entryId}/position")]
     public Task<IActionResult> Move(string userId, string entryId, [FromBody] QueuePositionRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.MoveAsync(userId, entryId, request.Position, token), cancellationToken);
     }
 
-    [HttpPut("{userId}/requirement")]
+    [HttpPut("{userId:int}/requirement")]
     public Task<IActionResult> SaveRequirement(string userId, [FromBody] QueueRequirementRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => queues.SaveRequirementAsync(userId, request.Requirement, token), cancellationToken);
@@ -112,7 +112,7 @@ public sealed class QueueController(
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the queue of the channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the queue of the channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

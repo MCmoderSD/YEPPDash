@@ -9,13 +9,13 @@ public static class TwitchFailures
     {
         if (exception is not TwitchOAuthException twitchException)
         {
-            logger.LogWarning(exception, "Twitch is unreachable, cannot {Description}", description);
+            logger.LogWarning(exception, "Twitch is unreachable, cannot {Description}", LogSafe.OneLine(description));
             return controller.StatusCode(StatusCodes.Status502BadGateway);
         }
 
         logger.LogWarning(
             "Twitch refused to {Description} ({StatusCode}): {Body}",
-            description, twitchException.StatusCode, twitchException.ResponseBody);
+            LogSafe.OneLine(description), twitchException.StatusCode, LogSafe.OneLine(twitchException.ResponseBody));
 
         if (twitchException.ResponseBody?.Contains("DUPLICATE_REWARD", StringComparison.OrdinalIgnoreCase) == true)
         {

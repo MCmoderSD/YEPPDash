@@ -3,6 +3,7 @@ using System.Security.Claims;
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Exceptions.Twitch;
+using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Twitch;
 
@@ -49,7 +50,7 @@ public sealed class TwitchAuthService(
         }
         catch (TwitchOAuthException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
         {
-            logger.LogWarning("Stored token for {TwitchId} was rejected by Twitch, dropping it", twitchUserId);
+            logger.LogWarning("Stored token for {TwitchId} was rejected by Twitch, dropping it", LogSafe.OneLine(twitchUserId));
             await tokenStore.DeleteAsync(twitchUserId, cancellationToken);
             return null;
         }
@@ -64,7 +65,7 @@ public sealed class TwitchAuthService(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            logger.LogDebug(exception, "Could not read the chat colour of {TwitchId}", twitchUserId);
+            logger.LogDebug(exception, "Could not read the chat colour of {TwitchId}", LogSafe.OneLine(twitchUserId));
             return null;
         }
     }
@@ -88,7 +89,7 @@ public sealed class TwitchAuthService(
             var token = ToStoredToken(twitchUserId, refreshed);
 
             await tokenStore.SaveAsync(token, cancellationToken);
-            logger.LogDebug("Refreshed Twitch token for {TwitchId}", twitchUserId);
+            logger.LogDebug("Refreshed Twitch token for {TwitchId}", LogSafe.OneLine(twitchUserId));
 
             return token;
         }
@@ -96,7 +97,7 @@ public sealed class TwitchAuthService(
         {
             logger.LogWarning(
                 "Refreshing the Twitch token for {TwitchId} failed ({StatusCode}), dropping it",
-                twitchUserId, exception.StatusCode);
+                LogSafe.OneLine(twitchUserId), exception.StatusCode);
 
             await tokenStore.DeleteAsync(twitchUserId, cancellationToken);
             return null;

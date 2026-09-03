@@ -3,6 +3,7 @@ using MySqlConnector;
 using YEPPDash.Api.Bot;
 using YEPPDash.Api.Data.CustomCommand;
 using YEPPDash.Api.Exceptions.CustomCommand;
+using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 
 namespace YEPPDash.Api.Services;
@@ -28,7 +29,7 @@ public sealed partial class CustomCommandService(
             throw new DuplicateCustomCommandException(command.Name);
         }
 
-        logger.LogInformation("Added command '{Name}' to channel {ChannelId}", command.Name, id);
+        logger.LogInformation("Added command '{Name}' to channel {ChannelId}", LogSafe.OneLine(command.Name), id);
 
         await ReloadBotAsync(id, cancellationToken);
         return command;
@@ -46,7 +47,7 @@ public sealed partial class CustomCommandService(
 
         if (updated is not null)
         {
-            logger.LogInformation("Updated command '{Name}' of channel {ChannelId}", stored, id);
+            logger.LogInformation("Updated command '{Name}' of channel {ChannelId}", LogSafe.OneLine(stored), id);
             await ReloadBotAsync(id, cancellationToken);
         }
 
@@ -61,7 +62,7 @@ public sealed partial class CustomCommandService(
 
         if (updated is not null)
         {
-            logger.LogInformation("Turned command '{Name}' of channel {ChannelId} {State}", updated.Name, id, active ? "on" : "off");
+            logger.LogInformation("Turned command '{Name}' of channel {ChannelId} {State}", LogSafe.OneLine(updated.Name), id, active ? "on" : "off");
 
             await ReloadBotAsync(id, cancellationToken);
         }
@@ -76,7 +77,7 @@ public sealed partial class CustomCommandService(
 
         if (deleted)
         {
-            logger.LogInformation("Deleted command '{Name}' of channel {ChannelId}", Lower(name), id);
+            logger.LogInformation("Deleted command '{Name}' of channel {ChannelId}", LogSafe.OneLine(Lower(name)), id);
             await ReloadBotAsync(id, cancellationToken);
         }
 
@@ -96,7 +97,7 @@ public sealed partial class CustomCommandService(
             return;
         }
 
-        logger.LogWarning("YEPPBot did not reload the commands of channel {ChannelId}: {Message}", channelId, result.Message);
+        logger.LogWarning("YEPPBot did not reload the commands of channel {ChannelId}: {Message}", channelId, LogSafe.OneLine(result.Message));
     }
 
     private static async Task<T> Guard<T>(int channelId, string name, Func<Task<T>> write)

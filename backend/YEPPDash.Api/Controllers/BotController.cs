@@ -10,7 +10,7 @@ namespace YEPPDash.Api.Controllers;
 [Route("bot")]
 public sealed class BotController(YeppBotClient bot, ILogger<BotController> logger) : ControllerBase
 {
-    [HttpPost("{userId}/join")]
+    [HttpPost("{userId:int}/join")]
     public async Task<IActionResult> Join(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -18,7 +18,7 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         return Answer(await bot.JoinChannelAsync(userId, cancellationToken));
     }
 
-    [HttpPost("{userId}/leave")]
+    [HttpPost("{userId:int}/leave")]
     public async Task<IActionResult> Leave(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -32,11 +32,9 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
 
         var status = result.Status is >= 400 and < 600 ? result.Status : StatusCodes.Status502BadGateway;
 
-        // The dashboard's own credentials are fine — it is ours to the bot that is not, and that is
-        // an operator problem rather than something to ask the reader to log in again over.
         if (status is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
         {
-            logger.LogError("YEPPBot rejected this dashboard's API key: {Message}", result.Message);
+            logger.LogError("YEPPBot rejected this dashboard's API key: {Message}", LogSafe.OneLine(result.Message));
             status = StatusCodes.Status502BadGateway;
         }
 
@@ -48,11 +46,9 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        // A session only ever speaks for its own channel — without this any logged-in user could
-        // pull the bot out of somebody else's chat.
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to move the bot in channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to move the bot in channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

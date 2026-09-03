@@ -1,6 +1,7 @@
 using System.Net;
 using YEPPDash.Api.Data.Twitch;
 using YEPPDash.Api.Exceptions.Twitch;
+using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Services;
@@ -177,14 +178,14 @@ public sealed class TwitchChannelService(
             await apiClient.RemoveVipAsync(broadcasterId, userId, accessToken, cancellationToken);
             SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: false);
 
-            logger.LogInformation("Removed {UserId} as VIP to make them a moderator in the channel {BroadcasterId}", userId, broadcasterId);
+            logger.LogInformation("Removed {UserId} as VIP to make them a moderator in the channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
         }
 
         await apiClient.AddModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
         SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: true);
         userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Added {UserId} as moderator in the channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Added {UserId} as moderator in the channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
     }
 
     public async Task RemoveModeratorAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -194,7 +195,7 @@ public sealed class TwitchChannelService(
         SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: false);
         userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Removed {UserId} as moderator in the channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Removed {UserId} as moderator in the channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
     }
     #endregion
 
@@ -245,14 +246,14 @@ public sealed class TwitchChannelService(
             await apiClient.RemoveModeratorAsync(broadcasterId, userId, accessToken, cancellationToken);
             SetRoleMembership(ChannelRole.Moderator, broadcasterId, userId, member: false);
 
-            logger.LogInformation("Removed {UserId} as moderator to make them a VIP in the channel {BroadcasterId}", userId, broadcasterId);
+            logger.LogInformation("Removed {UserId} as moderator to make them a VIP in the channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
         }
 
         await apiClient.AddVipAsync(broadcasterId, userId, accessToken, cancellationToken);
         SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: true);
         userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Added {UserId} as VIP in the channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Added {UserId} as VIP in the channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
     }
 
     public async Task RemoveVipAsync(string broadcasterId, string userId, CancellationToken cancellationToken)
@@ -262,7 +263,7 @@ public sealed class TwitchChannelService(
         SetRoleMembership(ChannelRole.Vip, broadcasterId, userId, member: false);
         userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Removed {UserId} as VIP in the channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Removed {UserId} as VIP in the channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
     }
     #endregion
 
@@ -437,7 +438,7 @@ public sealed class TwitchChannelService(
 
         logger.LogInformation(
             "Banned {UserId} in channel {BroadcasterId} until {EndTime}",
-            userId, broadcasterId, result.EndTime?.ToString("O") ?? "forever");
+            LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId), result.EndTime?.ToString("O") ?? "forever");
 
         return result;
     }
@@ -463,7 +464,7 @@ public sealed class TwitchChannelService(
 
         logger.LogDebug(
             "Paginated {Count} bans of channel {BroadcasterId} across {Pages} pages",
-            bans.Count, broadcasterId, pages);
+            bans.Count, LogSafe.OneLine(broadcasterId), pages);
 
         return bans;
     }
@@ -494,7 +495,7 @@ public sealed class TwitchChannelService(
         cache.Invalidate(ChannelRole.TimedOut, broadcasterId);
         cache.Invalidate(ChannelRole.Banned, broadcasterId);
 
-        logger.LogInformation("Unbanned {UserId} in channel {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Unbanned {UserId} in channel {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
     }
     #endregion
 
@@ -532,7 +533,7 @@ public sealed class TwitchChannelService(
         SetRoleMembership(ChannelRole.Blocked, broadcasterId, userId, member: false);
         userCache.Invalidate(broadcasterId, userId);
 
-        logger.LogInformation("Unblocked {UserId} for user {BroadcasterId}", userId, broadcasterId);
+        logger.LogInformation("Unblocked {UserId} for user {BroadcasterId}", LogSafe.OneLine(userId), LogSafe.OneLine(broadcasterId));
     }
     #endregion
 
@@ -550,7 +551,7 @@ public sealed class TwitchChannelService(
         var accessToken = await GetAccessTokenAsync(broadcasterId, cancellationToken);
         await apiClient.ModifyChannelAsync(broadcasterId, update, accessToken, cancellationToken);
 
-        logger.LogInformation("Updated the channel information of {BroadcasterId}", broadcasterId);
+        logger.LogInformation("Updated the channel information of {BroadcasterId}", LogSafe.OneLine(broadcasterId));
 
         return await GetChannelAsync(broadcasterId, cancellationToken);
     }
@@ -662,7 +663,7 @@ public sealed class TwitchChannelService(
 
         logger.LogDebug(
             "Paginated {Count} chatters of channel {BroadcasterId} across {Pages} pages",
-            all.Count, broadcasterId, pages);
+            all.Count, LogSafe.OneLine(broadcasterId), pages);
 
         return all;
     }
@@ -737,7 +738,7 @@ public sealed class TwitchChannelService(
         {
             logger.LogDebug(
                 "Cache for {Role}s of {BroadcasterId} still current ({Count} entries)",
-                role, broadcasterId, cached.Count);
+                role, LogSafe.OneLine(broadcasterId), cached.Count);
 
             return cached;
         }
@@ -756,7 +757,7 @@ public sealed class TwitchChannelService(
 
         logger.LogDebug(
             "Paginated {Count} {Role}s of channel {BroadcasterId} across {Pages} pages",
-            all.Count, role, broadcasterId, pages);
+            all.Count, role, LogSafe.OneLine(broadcasterId), pages);
 
         cache.Set(role, broadcasterId, all);
         return all;
