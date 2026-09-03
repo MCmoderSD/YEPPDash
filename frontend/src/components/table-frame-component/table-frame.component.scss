@@ -16,6 +16,13 @@
   overflow: auto hidden;
   border: var(--app-border);
   border-radius: var(--app-radius-outlined);
+
+  // The container anything inside measures itself against, declared here rather than on the host:
+  // this box carries the border, so its content width is two pixels narrower than the host's, and
+  // a child sized to the host is two pixels wider than the room it has. That was enough to leave
+  // the table permanently scrollable by a hair — far enough for the browser to scroll, not always
+  // far enough for the scroll bar to consider it worth showing.
+  container-type: inline-size;
 }
 
 .frame-scroll-y {
