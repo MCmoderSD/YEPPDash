@@ -1,18 +1,17 @@
 import { Component, computed, inject, input, InputSignal, output, OutputEmitterRef, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { TableFrameComponent } from '../table-frame-component/table-frame.component';
 import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
-import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
-import { filterRows, wireDataSource } from '../../services/data-source';
+import { TABLE_PAGE_SIZES, filterRows, wireDataSource } from '../../services/data-source';
 import { BannedUser } from '../../data/banned-user';
 import { ghostRows } from '../../data/skeleton';
 import { TableSearchComponent } from '../table-search-component/table-search.component';
+import { UserDetailsDirective } from '../../directives/user-details.directive';
 
 export type BanTableMode = 'timeout' | 'ban';
 
@@ -22,11 +21,10 @@ const COLUMNS: readonly string[] = ['user', 'when', 'reason', 'revoke'];
   selector: 'app-ban-table',
   templateUrl: './ban-table.component.html',
   styleUrl: './ban-table.component.scss',
-  imports: [TableSearchComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
+  imports: [UserDetailsDirective, TableSearchComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
 })
 export class BanTableComponent {
 
-  private readonly dialog: MatDialog = inject(MatDialog);
 
   readonly bans: InputSignal<BannedUser[]> = input.required<BannedUser[]>();
 
@@ -51,7 +49,7 @@ export class BanTableComponent {
 
   protected readonly loaded: Signal<boolean> = computed((): boolean => !this.loading());
 
-  protected readonly pageSizes: number[] = [10, 25, 50, 100];
+  protected readonly pageSizes: readonly number[] = TABLE_PAGE_SIZES;
 
   private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
   private readonly pager: Signal<MatPaginator | undefined> = viewChild(MatPaginator);
@@ -85,9 +83,6 @@ export class BanTableComponent {
     filterRows(this.dataSource, value);
   }
 
-  protected showDetails(ban: BannedUser): void {
-    UserInfoDialogComponent.open(this.dialog, ban);
-  }
 
   protected revokeBan(event: Event, ban: BannedUser): void {
     event.stopPropagation();

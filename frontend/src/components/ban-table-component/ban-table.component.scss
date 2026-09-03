@@ -3,15 +3,6 @@
   flex-direction: column;
 }
 
-.ban-table-row {
-  cursor: pointer;
-
-  &:hover,
-  &:focus-within {
-    background: var(--mat-sys-surface-container-high);
-  }
-}
-
 // Dates read off in passing, like the id column in the user table — quiet and never wrapped.
 .ban-table-when {
   color: var(--mat-sys-on-surface-variant);
@@ -81,31 +72,7 @@
   padding: 0 0.5rem;
 }
 
-.ban-table-ghost-identity {
-  gap: 0.5rem;
-}
-
-.ban-table-ghost-avatar {
-  width: 2rem;
-  height: 2rem;
-  flex: none;
-  border-radius: 50%;
-}
-
-.ban-table-ghost-name {
-  width: 9rem;
-  height: 1.25rem;
-}
-
 // Names are not all the same length, and four identical bars would read as a barcode, not a list.
-.ban-table-ghost-row:nth-child(3n) .ban-table-ghost-name {
-  width: 6rem;
-}
-
-.ban-table-ghost-row:nth-child(3n + 2) .ban-table-ghost-name {
-  width: 11rem;
-}
-
 .ban-table-ghost-when {
   width: 7rem;
   height: 1.25rem;

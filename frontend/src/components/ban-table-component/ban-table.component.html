@@ -48,9 +48,8 @@
       <tr
         mat-row
         *matRowDef="let ban; columns: columns"
-        class="ban-table-row"
         [class.app-fade-in]="loaded()"
-        (click)="showDetails(ban)"
+        [appUserDetails]="ban"
       ></tr>
 
       <tr class="ban-table-empty-row" *matNoDataRow>
@@ -59,9 +58,8 @@
             <div class="ban-table-ghost">
               @for (row of ghostRows(); track row) {
                 <div class="ban-table-ghost-row">
-                  <span class="ban-table-ghost-column ban-table-ghost-identity">
-                    <span class="app-skeleton ban-table-ghost-avatar"></span>
-                    <span class="app-skeleton app-skeleton-bar ban-table-ghost-name"></span>
+                  <span class="ban-table-ghost-column">
+                    <app-user-identity [ghost]="true"/>
                   </span>
                   <span class="ban-table-ghost-column">
                     <span class="app-skeleton app-skeleton-bar ban-table-ghost-when"></span>

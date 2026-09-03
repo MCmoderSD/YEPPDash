@@ -37,9 +37,8 @@
       <tr
         mat-row
         *matRowDef="let user; columns: columns()"
-        class="user-table-row"
         [class.app-fade-in]="loaded()"
-        (click)="showDetails(user)"
+        [appUserDetails]="user"
       ></tr>
 
       <tr class="user-table-empty-row" *matNoDataRow>
@@ -48,9 +47,8 @@
             <div class="user-table-ghost" [style.grid-template-columns]="ghostColumns()">
               @for (row of ghostRows(); track row) {
                 <div class="user-table-ghost-row">
-                  <span class="user-table-ghost-column user-table-ghost-identity">
-                    <span class="app-skeleton user-table-ghost-avatar"></span>
-                    <span class="app-skeleton app-skeleton-bar user-table-ghost-name"></span>
+                  <span class="user-table-ghost-column">
+                    <app-user-identity [ghost]="true"/>
                   </span>
                   @if (showId()) {
                     <span class="user-table-ghost-column">
