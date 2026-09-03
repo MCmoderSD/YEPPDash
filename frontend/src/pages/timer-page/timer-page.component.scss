@@ -6,24 +6,6 @@
   margin-inline: auto;
 }
 
-.timer-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.timer-page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.timer-page-state {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
 .timer-page-stage {
   display: flex;
   flex-direction: column;
@@ -76,16 +58,6 @@
   @media (min-width: 60rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
-
-.timer-page-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.25rem;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 1rem;
-  background: var(--mat-sys-surface-container-low);
 }
 
 .timer-page-panel-title {
