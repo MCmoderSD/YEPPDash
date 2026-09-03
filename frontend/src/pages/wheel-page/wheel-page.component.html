@@ -124,8 +124,8 @@
               }
             </div>
 
-            <div #scroll class="wheel-page-scroll">
-              <table mat-table [dataSource]="rows()" class="wheel-page-table">
+            <app-table-frame class="wheel-page-frame" maxHeight="24rem">
+              <table mat-table [dataSource]="rows()" class="app-data-table">
 
                 <ng-container matColumnDef="entry">
                   <th mat-header-cell *matHeaderCellDef scope="col">Entry</th>
@@ -196,16 +196,14 @@
                 ></tr>
 
                 <tr class="wheel-page-empty-row" *matNoDataRow>
-                  <td class="wheel-page-empty" [attr.colspan]="columns.length">
+                  <td class="app-table-empty" [attr.colspan]="columns.length">
                     @if (!initialLoad()) {
                       Nothing on the wheel yet. Add your first entry above.
                     }
                   </td>
                 </tr>
               </table>
-            </div>
-
-            <app-scroll-bar [target]="scroll"/>
+            </app-table-frame>
 
             <div class="wheel-page-toolbar wheel-page-transfer">
               <button
@@ -267,7 +265,7 @@
               </button>
             </div>
 
-            <div #resultsScroll class="wheel-page-scroll">
+            <app-table-frame class="wheel-page-frame" maxHeight="24rem">
               <table
                 mat-table
                 matSort
@@ -275,7 +273,7 @@
                 matSortDirection="desc"
                 matSortDisableClear="true"
                 [dataSource]="resultsDataSource"
-                class="wheel-page-table wheel-page-results-table"
+                class="app-data-table wheel-page-results-table"
               >
 
                 <ng-container matColumnDef="winner">
@@ -295,14 +293,12 @@
                 <tr mat-row *matRowDef="let result; columns: resultColumns" class="wheel-page-row"></tr>
 
                 <tr class="wheel-page-empty-row" *matNoDataRow>
-                  <td class="wheel-page-empty" [attr.colspan]="resultColumns.length">
+                  <td class="app-table-empty" [attr.colspan]="resultColumns.length">
                     Nothing recorded yet. Spin the wheel to log a result here.
                   </td>
                 </tr>
               </table>
-            </div>
-
-            <app-scroll-bar [target]="resultsScroll"/>
+            </app-table-frame>
           </div>
         </mat-tab>
       </mat-tab-group>

@@ -174,27 +174,10 @@
   line-height: 1.5;
 }
 
-// Matches the other tables in the dashboard: the outline sits on the scroll container so it spans
-// the full width, and a narrow viewport scrolls the columns instead of squashing them.
-.wheel-page-scroll {
-  align-self: stretch;
-  overflow: auto;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-outlined);
-
-  // Roughly ten rows before it starts scrolling, which keeps the wheel next to it in view.
-  max-height: 24rem;
-}
-
-table.wheel-page-table {
-  width: 100%;
-  background: transparent;
-
-  //noinspection CssUnusedSymbol
-  .mdc-data-table__cell,
-  .mdc-data-table__header-cell {
-    padding: 0 0.75rem;
-  }
+// A name and a pair of counters have more to say than a name alone, so these cells run wider than
+// the dashboard's default.
+.wheel-page-frame {
+  --app-table-cell-inline: 0.75rem;
 }
 
 .wheel-page-row {
@@ -371,12 +354,6 @@ table.wheel-page-table {
   white-space: nowrap;
 }
 
-.wheel-page-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: center;
-}
-
 .wheel-page-overlay {
   display: flex;
   flex-direction: column;
@@ -412,5 +389,5 @@ table.wheel-page-table {
 // Swapped in where the hint sits rather than added beside it, so telling someone what is wrong
 // does not push the table down a line and back up again as they type.
 .wheel-page-hint-problem {
-  color: var(--mat-sys-error);
+  color: var(--app-danger);
 }
