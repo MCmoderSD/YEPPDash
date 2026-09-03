@@ -23,7 +23,7 @@
     </section>
   </div>
 
-  @for (group of groups; track group.id) {
+  @for (group of groups(); track group.id) {
     <section class="dash-home-section" [attr.aria-labelledby]="'dash-home-' + group.id">
 
       <app-card-carousel [items]="group.items" [label]="group.label">

@@ -3,15 +3,17 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { filter, map } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
-import { groupForUrl, NAV_GROUPS, NavGroup, OVERVIEW_PATH } from '../../data/dash-nav';
+import { hasChannelPoints } from '../../data/broadcaster';
+import { groupForUrl, navGroupsFor, NavGroup, OVERVIEW_PATH } from '../../data/dash-nav';
 
-function headingRows(): ReadonlyMap<string, number> {
+function headingRows(groups: readonly NavGroup[]): ReadonlyMap<string, number> {
   const rows = new Map<string, number>();
 
   let row = 1;
 
-  for (const group of NAV_GROUPS) {
+  for (const group of groups) {
     rows.set(group.id, row);
     row += 1 + group.items.length;
   }
@@ -38,14 +40,17 @@ export class SidebarComponent {
 
   private readonly sidebar: SidebarService = inject(SidebarService);
   private readonly router: Router = inject(Router);
+  private readonly auth: AuthService = inject(AuthService);
 
   protected readonly activeMatch: IsActiveMatchOptions = ACTIVE_MATCH;
 
   protected readonly overviewPath: string = OVERVIEW_PATH;
 
-  protected readonly groups: readonly NavGroup[] = NAV_GROUPS;
+  protected readonly groups: Signal<readonly NavGroup[]> = computed((): readonly NavGroup[] =>
+    navGroupsFor(hasChannelPoints(this.auth.currentUser())));
 
-  private readonly headingRows: ReadonlyMap<string, number> = headingRows();
+  private readonly headingRows: Signal<ReadonlyMap<string, number>> =
+    computed((): ReadonlyMap<string, number> => headingRows(this.groups()));
 
 
   private readonly collapsed: WritableSignal<ReadonlySet<string>> = signal(new Set<string>());
@@ -59,7 +64,7 @@ export class SidebarComponent {
   );
 
   private readonly activeGroup: Signal<string | undefined> =
-    computed((): string | undefined => groupForUrl(this.groups, this.url()));
+    computed((): string | undefined => groupForUrl(this.groups(), this.url()));
 
   constructor() {
     effect((): void => {
@@ -77,7 +82,7 @@ export class SidebarComponent {
   }
 
   protected headingRow(group: NavGroup): number {
-    return this.headingRows.get(group.id) ?? 0;
+    return this.headingRows().get(group.id) ?? 0;
   }
 
   protected itemRow(group: NavGroup, index: number): number {

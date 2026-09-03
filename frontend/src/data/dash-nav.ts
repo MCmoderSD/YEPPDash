@@ -10,6 +10,7 @@ export interface NavItem {
   description: string;
   path: string;
   queryParams?: Params;
+  channelPoints?: boolean;
 }
 
 export interface NavGroup {
@@ -135,16 +136,29 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         icon: 'gavel',
         description: 'Let channel points buy a timeout, on your terms.',
         path: `${BASE}/timeout-reward`,
+        channelPoints: true,
       },
       {
         label: 'Giveaways',
         icon: 'celebration',
         description: 'Channel point giveaways, drawn on a weighted wheel live on stream.',
         path: `${BASE}/giveaway`,
+        channelPoints: true,
       },
     ],
   },
 ];
+
+export function navGroupsFor(channelPoints: boolean): readonly NavGroup[] {
+  if (channelPoints) return NAV_GROUPS;
+
+  return NAV_GROUPS
+    .map((group: NavGroup): NavGroup => ({
+      ...group,
+      items: group.items.filter((item: NavItem): boolean => item.channelPoints !== true),
+    }))
+    .filter((group: NavGroup): boolean => group.items.length > 0);
+}
 
 export function groupForUrl(groups: readonly NavGroup[], url: string): string | undefined {
   const path: string = url.split('?')[0];
