@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
-import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, input, InputSignal, NgZone, Signal, signal, WritableSignal } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, NgZone, Signal, signal, WritableSignal } from '@angular/core';
 import { scrollBarAxis, ScrollBarAxis } from '../scroll-bar-component/scroll-bar.component';
+import { ViewportInsetsService } from '../../services/viewport-insets.service';
 
 const REVEAL_DISTANCE: number = 48;
 const SCROLL_REVEAL_MS: number = 900;
@@ -14,12 +15,12 @@ const NO_POINTER: string = '(pointer: coarse), (hover: none)';
     'aria-hidden': 'true',
     '[class.page-scroll-bar-revealed]': 'revealed()',
     '[class.page-scroll-bar-dragging]': 'dragging()',
-    '[style.bottom.px]': 'footerInset()',
+    '[style.bottom.px]': 'insets.footerInset()',
   },
 })
 export class PageScrollBarComponent {
 
-  readonly endsAbove: InputSignal<HTMLElement | null> = input<HTMLElement | null>(null);
+  protected readonly insets: ViewportInsetsService = inject(ViewportInsetsService);
 
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly document: Document = inject(DOCUMENT);
@@ -31,8 +32,6 @@ export class PageScrollBarComponent {
   private readonly viewportHeight: WritableSignal<number> = signal(0);
 
   private readonly trackHeight: WritableSignal<number> = signal(0);
-
-  protected readonly footerInset: WritableSignal<number> = signal(0);
 
   private readonly pointerNear: WritableSignal<boolean> = signal(false);
   private readonly pointerOnBar: WritableSignal<boolean> = signal(false);
@@ -174,12 +173,6 @@ export class PageScrollBarComponent {
 
     const bandTop: number = this.host.nativeElement.getBoundingClientRect().top;
 
-    const footer: HTMLElement | null = this.endsAbove();
-    const inset: number = footer
-      ? Math.max(0, root.clientHeight - footer.getBoundingClientRect().top)
-      : 0;
-
-    this.footerInset.set(inset);
-    this.trackHeight.set(Math.max(0, root.clientHeight - bandTop - inset));
+    this.trackHeight.set(Math.max(0, root.clientHeight - bandTop - this.insets.footerInset()));
   }
 }
