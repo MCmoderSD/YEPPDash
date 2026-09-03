@@ -31,17 +31,22 @@
         <span>All giveaways</span>
       </button>
 
-      <h2 class="giveaway-detail-name">{{ creating() ? 'New giveaway' : (title() || 'Giveaway') }}</h2>
+      @if (detailLoading()) {
+        <span class="app-skeleton app-skeleton-bar giveaway-skeleton-name" aria-hidden="true"></span>
+        <span class="app-skeleton app-skeleton-bar giveaway-skeleton-badge" aria-hidden="true"></span>
+      } @else {
+        <h2 class="giveaway-detail-name">{{ creating() ? 'New giveaway' : (title() || 'Giveaway') }}</h2>
 
-      @if (status(); as current) {
-        <app-status-badge
-          [label]="statusLabels[current]"
-          [tone]="current === 'Open' ? 'success' : 'neutral'"
-        />
+        @if (status(); as current) {
+          <app-status-badge
+            [label]="statusLabels[current]"
+            [tone]="current === 'Open' ? 'success' : 'neutral'"
+          />
+        }
       }
     </div>
 
-    @if (selected()?.rewardMissing) {
+    @if (!detailLoading() && selected()?.rewardMissing) {
       <p class="giveaway-warning app-fade-in" role="status">
         <mat-icon aria-hidden="true">warning</mat-icon>
         <span>
@@ -53,6 +58,46 @@
 
     <mat-tab-group class="giveaway-tabs">
       <mat-tab label="Settings">
+        @if (detailLoading()) {
+        <div class="giveaway-detail-skeleton app-skeleton-appear" role="status">
+          <span class="app-visually-hidden">Loading this giveaway…</span>
+
+          <div class="giveaway-layout" aria-hidden="true">
+            <div class="giveaway-form">
+              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
+              <span class="app-skeleton giveaway-skeleton-field"></span>
+              <span class="app-skeleton giveaway-skeleton-field"></span>
+              <span class="app-skeleton giveaway-skeleton-field"></span>
+
+              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
+              <span class="app-skeleton giveaway-skeleton-panel giveaway-skeleton-limits"></span>
+
+              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
+              <span class="app-skeleton giveaway-skeleton-panel giveaway-skeleton-rules"></span>
+            </div>
+
+            <aside class="giveaway-preview">
+              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
+              <span class="app-skeleton giveaway-skeleton-tile"></span>
+
+              <span class="app-skeleton app-skeleton-bar app-skeleton-text"></span>
+              <span class="app-skeleton app-skeleton-bar app-skeleton-text giveaway-skeleton-short"></span>
+
+              <div class="giveaway-skeleton-switches">
+                <span class="app-skeleton app-skeleton-bar giveaway-skeleton-toggle"></span>
+                <span class="app-skeleton giveaway-skeleton-swatch"></span>
+              </div>
+
+              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-action"></span>
+
+              <div class="giveaway-skeleton-actions">
+                <span class="app-skeleton app-skeleton-bar giveaway-skeleton-delete"></span>
+                <span class="app-skeleton app-skeleton-bar giveaway-skeleton-save"></span>
+              </div>
+            </aside>
+          </div>
+        </div>
+        } @else {
         <form class="giveaway-layout app-fade-in" (submit)="$event.preventDefault(); save()">
 
           <div class="giveaway-form">
@@ -160,9 +205,10 @@
             </p>
           </aside>
         </form>
+        }
       </mat-tab>
 
-      <mat-tab label="Draw &amp; entries" [disabled]="creating()">
+      <mat-tab label="Draw &amp; entries" [disabled]="creating() || detailLoading()">
           <div class="giveaway-tab-body app-fade-in">
             <div class="giveaway-draw">
               <app-wheel

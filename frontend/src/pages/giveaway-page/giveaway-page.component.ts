@@ -81,6 +81,8 @@ export class GiveawayPageComponent {
 
   private readonly loaded: WritableSignal<boolean> = signal(false);
 
+  protected readonly detailLoading: WritableSignal<boolean> = signal(false);
+
   protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
   protected readonly skeleton: Signal<boolean> = computed((): boolean => !this.loaded());
   protected readonly busy: WritableSignal<boolean> = signal(false);
@@ -499,11 +501,15 @@ export class GiveawayPageComponent {
       return;
     }
 
+    this.detailLoading.set(true);
+
     try {
       this.apply(await this.giveaways.getGiveaway(id));
     } catch (error: unknown) {
       this.notifications.failure(errorMessage(error, 'Could not load that giveaway.'));
       this.select(null);
+    } finally {
+      this.detailLoading.set(false);
     }
   }
 
