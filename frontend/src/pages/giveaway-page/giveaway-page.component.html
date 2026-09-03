@@ -1,18 +1,13 @@
 <section class="giveaway">
-  <header class="giveaway-header">
-    <h1 class="giveaway-title">Giveaways</h1>
-    <p class="giveaway-sub">
+  <header class="app-page-header">
+    <h1 class="app-page-title">Giveaways</h1>
+    <p class="app-page-sub giveaway-sub">
       A channel point reward viewers redeem to enter. Roles decide who may enter and how much their
       entry counts, and the winners are drawn on a weighted wheel your viewers can watch.
     </p>
   </header>
 
-  <mat-progress-bar
-    class="giveaway-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!busy()"
-    [style.visibility]="busy() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="busy()"/>
 
   @if (!detail()) {
     <app-giveaway-grid
@@ -59,44 +54,12 @@
     <mat-tab-group class="giveaway-tabs">
       <mat-tab label="Settings">
         @if (detailLoading()) {
-        <div class="giveaway-detail-skeleton app-skeleton-appear" role="status">
-          <span class="app-visually-hidden">Loading this giveaway…</span>
-
-          <div class="giveaway-layout" aria-hidden="true">
-            <div class="giveaway-form">
-              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
-              <span class="app-skeleton giveaway-skeleton-field"></span>
-              <span class="app-skeleton giveaway-skeleton-field"></span>
-              <span class="app-skeleton giveaway-skeleton-field"></span>
-
-              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
-              <span class="app-skeleton giveaway-skeleton-panel giveaway-skeleton-limits"></span>
-
-              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
-              <span class="app-skeleton giveaway-skeleton-panel giveaway-skeleton-rules"></span>
-            </div>
-
-            <aside class="giveaway-preview">
-              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-heading"></span>
-              <span class="app-skeleton giveaway-skeleton-tile"></span>
-
-              <span class="app-skeleton app-skeleton-bar app-skeleton-text"></span>
-              <span class="app-skeleton app-skeleton-bar app-skeleton-text giveaway-skeleton-short"></span>
-
-              <div class="giveaway-skeleton-switches">
-                <span class="app-skeleton app-skeleton-bar giveaway-skeleton-toggle"></span>
-                <span class="app-skeleton giveaway-skeleton-swatch"></span>
-              </div>
-
-              <span class="app-skeleton app-skeleton-bar giveaway-skeleton-action"></span>
-
-              <div class="giveaway-skeleton-actions">
-                <span class="app-skeleton app-skeleton-bar giveaway-skeleton-delete"></span>
-                <span class="app-skeleton app-skeleton-bar giveaway-skeleton-save"></span>
-              </div>
-            </aside>
-          </div>
-        </div>
+        <app-reward-editor-skeleton
+          class="giveaway-detail-skeleton"
+          label="Loading this giveaway…"
+          [panels]="skeletonPanels"
+          [statusRow]="true"
+        />
         } @else {
         <form class="giveaway-layout app-fade-in" (submit)="$event.preventDefault(); save()">
 
@@ -104,12 +67,12 @@
             <h3 class="giveaway-heading">The reward</h3>
 
             @if (!editable()) {
-              <p class="giveaway-hint">
+              <p class="app-hint giveaway-hint">
                 Close registration to change anything — the rules cannot move while people are
                 entering under them.
               </p>
             } @else if (status() === 'Closed' && participants().length > 0) {
-              <p class="giveaway-hint">
+              <p class="app-hint giveaway-hint">
                 Changing a multiplier reweighs everybody who already entered, using the roles they
                 held at the time. Nobody is taken off the wheel.
               </p>
@@ -127,7 +90,7 @@
             />
 
             <h3 class="giveaway-heading">Cooldown &amp; limits</h3>
-            <p class="giveaway-hint">Leave a field empty to switch that limit off.</p>
+            <p class="app-hint giveaway-hint">Leave a field empty to switch that limit off.</p>
 
             <app-reward-limits
               group="giveaway"

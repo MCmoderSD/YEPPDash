@@ -199,10 +199,6 @@
   }
 }
 
-.giveaway-detail-skeleton {
-  align-self: stretch;
-}
-
 .giveaway-skeleton-name {
   width: 11rem;
   height: 1.75rem;
@@ -213,72 +209,15 @@
   height: 1.25rem;
 }
 
-.giveaway-skeleton-heading {
-  width: 8rem;
-  height: 1.25rem;
+// The ghosts are app-reward-editor-skeleton's; only where its two columns collapse is this page's to
+// say, because that follows the column width capped above. The top padding matches the form it
+// stands in for, which takes it from the tab body.
+.giveaway-detail-skeleton {
+  padding-top: 1.25rem;
 }
 
-.giveaway-skeleton-field {
-  height: 3.5rem;
-  border-radius: var(--app-radius-sm);
-}
-
-.giveaway-skeleton-panel {
-  border-radius: var(--app-radius-md);
-}
-
-.giveaway-skeleton-limits {
-  height: 13.5rem;
-}
-
-.giveaway-skeleton-rules {
-  height: 22rem;
-}
-
-.giveaway-skeleton-tile {
-  height: 10.875rem;
-  border-radius: var(--app-radius-md);
-}
-
-.giveaway-skeleton-short {
-  width: 60%;
-}
-
-.giveaway-skeleton-switches {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.giveaway-skeleton-toggle {
-  width: 5.5rem;
-  height: 1.25rem;
-}
-
-.giveaway-skeleton-swatch {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-}
-
-.giveaway-skeleton-action {
-  height: 2.5rem;
-}
-
-.giveaway-skeleton-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.giveaway-skeleton-delete,
-.giveaway-skeleton-save {
-  height: 2.5rem;
-}
-
-.giveaway-skeleton-delete {
-  width: 6.5rem;
-}
-
-.giveaway-skeleton-save {
-  width: 8.5rem;
+@media (max-width: 48rem) {
+  app-reward-editor-skeleton {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

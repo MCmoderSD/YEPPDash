@@ -134,65 +134,10 @@
 // centred and the cost pinned to the bottom.
 
 // --- The waiting state ----------------------------------------------------------------------
-// Stand-ins shaped like what replaces them, so nothing shifts when the real values arrive.
-
-.timeout-reward-skeleton-heading {
-  width: 8rem;
-  height: 1.25rem;
-}
-
-.timeout-reward-skeleton-field {
-  height: 3.5rem;
-  border-radius: var(--app-radius-sm);
-}
-
-.timeout-reward-skeleton-panel {
-  border-radius: var(--app-radius-md);
-}
-
-.timeout-reward-skeleton-limits {
-  height: 13.5rem;
-}
-
-.timeout-reward-skeleton-shield {
-  height: 17rem;
-}
-
-.timeout-reward-skeleton-summary {
-  height: 10.875rem;
-  border-radius: var(--app-radius-md);
-}
-
-.timeout-reward-skeleton-short {
-  width: 60%;
-}
-
-.timeout-reward-skeleton-toggle {
-  width: 5.5rem;
-  height: 1.25rem;
-}
-
-.timeout-reward-skeleton-swatch {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-}
-
-.timeout-reward-skeleton-remove,
-.timeout-reward-skeleton-save {
-  height: 2.5rem;
-}
-
-.timeout-reward-skeleton-remove {
-  width: 6.5rem;
-}
-
-.timeout-reward-skeleton-save {
-  width: 8.5rem;
-}
-
-// The status line has to sit outside the grid: as a grid item it would take the first column and
-// push the ghost form into the narrow one.
-.timeout-reward-skeleton {
-  align-self: stretch;
+// The ghosts are app-reward-editor-skeleton's; only where its two columns collapse is this page's
+// to say, because that follows the column width capped above.
+@media (max-width: 45rem) {
+  app-reward-editor-skeleton {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

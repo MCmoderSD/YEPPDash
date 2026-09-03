@@ -6,13 +6,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
+import { BusyBarComponent } from '../busy-bar-component/busy-bar.component';
 import { firstValueFrom } from 'rxjs';
 import { RewardSwitchesComponent } from '../reward-switches-component/reward-switches.component';
 import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { NumberStepperComponent } from '../number-stepper-component/number-stepper.component';
 import { RewardFieldsComponent } from '../reward-fields-component/reward-fields.component';
+import { RewardEditorSkeletonComponent } from '../reward-editor-skeleton-component/reward-editor-skeleton.component';
 import { RewardLimitsComponent } from '../reward-limits-component/reward-limits.component';
 import { bestUnit, COOLDOWN_MAX_SECONDS, DURATION_UNITS, DurationUnit } from '../../data/duration';
 import { RewardPreviewComponent } from '../reward-preview-component/reward-preview.component';
@@ -58,10 +59,11 @@ const PROTECTED_GROUPS: readonly ProtectedRoleGroup[] = [
   selector: 'app-timeout-reward',
   templateUrl: './timeout-reward.component.html',
   styleUrl: './timeout-reward.component.scss',
-  imports: [
+  imports: [BusyBarComponent,
     DecimalPipe, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    MatProgressBarModule, MatSelectModule,
-    NumberStepperComponent, RewardFieldsComponent, RewardLimitsComponent, RewardPreviewComponent, RewardSwitchesComponent
+    MatSelectModule,
+    NumberStepperComponent, RewardEditorSkeletonComponent, RewardFieldsComponent, RewardLimitsComponent,
+    RewardPreviewComponent, RewardSwitchesComponent
   ],
 })
 export class TimeoutRewardComponent {
@@ -78,6 +80,8 @@ export class TimeoutRewardComponent {
   private readonly loaded: WritableSignal<boolean> = signal(false);
 
   protected readonly skeleton: Signal<boolean> = computed((): boolean => !this.loaded());
+
+  protected readonly skeletonPanels: readonly string[] = ['3.5rem', '13.5rem', '17rem'];
   protected readonly busy: WritableSignal<boolean> = signal(false);
 
   protected readonly exists: Signal<boolean> = computed((): boolean => this.settings() !== null);

@@ -4,9 +4,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
 import { firstValueFrom } from 'rxjs';
+import { RewardEditorSkeletonComponent } from '../../components/reward-editor-skeleton-component/reward-editor-skeleton.component';
 import { RewardFieldsComponent } from '../../components/reward-fields-component/reward-fields.component';
 import { RewardSwitchesComponent } from '../../components/reward-switches-component/reward-switches.component';
 import { EntryRulesComponent } from '../../components/entry-rules-component/entry-rules.component';
@@ -54,10 +55,11 @@ const DEFAULT_COST: number = 1_000;
   selector: 'app-giveaway-page',
   templateUrl: './giveaway-page.component.html',
   styleUrl: './giveaway-page.component.scss',
-  imports: [
-    MatButtonModule, MatIconModule, MatProgressBarModule, MatTabsModule,
+  imports: [BusyBarComponent, 
+    MatButtonModule, MatIconModule, MatTabsModule,
     EntryRulesComponent, GiveawayEntriesTableComponent, GiveawayGridComponent, GiveawayWinnersTableComponent,
-    OverlayLinkComponent, RegistrationControlsComponent, RewardFieldsComponent, RewardLimitsComponent,
+    OverlayLinkComponent, RegistrationControlsComponent, RewardEditorSkeletonComponent, RewardFieldsComponent,
+    RewardLimitsComponent,
     RewardPreviewComponent, RewardSwitchesComponent, StatusBadgeComponent, WheelComponent,
   ],
 })
@@ -75,6 +77,9 @@ export class GiveawayPageComponent {
   protected readonly statusLabels: Readonly<Record<GiveawayStatus, string>> = STATUS_LABELS;
 
   protected readonly defaultColor: string = DEFAULT_REWARD_COLOR;
+
+  // Cooldown and limits panel, entry rules panel.
+  protected readonly skeletonPanels: readonly string[] = ['13.5rem', '22rem'];
 
   protected readonly summaries: WritableSignal<GiveawaySummary[]> = signal<GiveawaySummary[]>([]);
   protected readonly selected: WritableSignal<GiveawaySettings | null> = signal<GiveawaySettings | null>(null);
