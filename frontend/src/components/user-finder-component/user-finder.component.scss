@@ -1,9 +1,14 @@
-@use '../../styles/chat-color' as chat;
-
 :host {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+// Room above so the account clears the search field's hint line, and a little below so it does not
+// sit flush against the first warning. Both add to the dialog's own row gap rather than replacing
+// it. On the result only: the empty and searching states have nothing to give room to.
+.user-finder-result {
+  margin-block: 1rem 0.5rem;
 }
 
 .user-finder-field {
@@ -22,58 +27,6 @@
   flex-direction: column;
   justify-content: center;
   min-height: 9rem;
-}
-
-// Laid out exactly as the user details dialog lays the same three things out: the avatar carries
-// the row on its own, with the badges and the name reading as one line beneath it.
-.user-finder-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  text-align: center;
-
-  // Room above so the account clears the search field's hint line, and a little below so it does
-  // not sit flush against the first warning. Both add to the dialog's own row gap rather than
-  // replacing it, so they are smaller than the space they end up producing. On the result only:
-  // the empty and searching states have nothing to give room to.
-  margin-block: 1rem 0.5rem;
-}
-
-.user-finder-avatar {
-  border-radius: 50%;
-  object-fit: cover;
-
-  // The dialog scales with the viewport, so the avatar has to as well or it swallows a narrow one.
-  width: clamp(5rem, 20vw, 8rem);
-  height: auto;
-  aspect-ratio: 1;
-}
-
-// Badges in front of the name rather than above it, the way every list shows them. Never wrapped:
-// wrapping would push the badges onto their own line above the name, which is the arrangement this
-// row exists to avoid. The name breaks instead, since it is the part that can take a second line.
-.user-finder-title {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.user-finder-name {
-  @include chat.chat-color;
-
-  // Without this the name refuses to shrink below its longest word and pushes the badges out of
-  // the dialog instead of breaking.
-  min-width: 0;
-
-  margin: 0;
-
-  // A step up from headline-small so the name holds its own beside the medium badges: its line box
-  // is 36px, the height of the badges themselves, so the two sit on one another's baseline.
-  font: var(--mat-sys-headline-medium);
-  overflow-wrap: anywhere;
 }
 
 .user-finder-message {
