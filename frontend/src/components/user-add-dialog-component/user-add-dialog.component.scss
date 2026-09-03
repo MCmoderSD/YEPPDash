@@ -7,36 +7,3 @@
   // The containing block for the scroll bar drawn over this content.
   position: relative;
 }
-
-// Why the button will not move, or what pressing it will cost — always about the account found
-// above, never about the form.
-.user-add-notice {
-  display: flex;
-  align-items: start;
-  gap: 0.5rem;
-
-  margin: 0;
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--app-radius-outlined);
-  font: var(--mat-sys-body-small);
-}
-
-.user-add-notice-blocked {
-  background: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface-variant);
-}
-
-// A trade the broadcaster cannot undo from this dialog, so it carries more weight than a hint.
-.user-add-notice-swap {
-  background: var(--app-warning-container);
-  color: var(--mat-sys-on-surface);
-}
-
-.user-add-notice-icon {
-  flex: none;
-
-  // Material sizes its icons at 24px; these sit on body-small text and would tower over it.
-  width: 1.25rem;
-  height: 1.25rem;
-  font-size: 1.25rem;
-}

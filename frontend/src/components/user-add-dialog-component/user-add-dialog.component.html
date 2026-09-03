@@ -5,23 +5,20 @@
   <app-user-finder [(user)]="found"/>
 
   @if (broadcaster()) {
-    <p class="user-add-notice user-add-notice-blocked">
-      <mat-icon class="user-add-notice-icon" aria-hidden="true">block</mat-icon>
+    <app-notice icon="block" tone="neutral">
       <span>This is your own channel account — it already outranks every role you can grant.</span>
-    </p>
+    </app-notice>
   } @else if (alreadyHas()) {
-    <p class="user-add-notice user-add-notice-blocked">
-      <mat-icon class="user-add-notice-icon" aria-hidden="true">check_circle</mat-icon>
+    <app-notice icon="check_circle" tone="neutral">
       <span>{{ found()?.displayName }} is already a {{ data.role }}. There is nothing to add.</span>
-    </p>
+    </app-notice>
   } @else if (swaps()) {
-    <p class="user-add-notice user-add-notice-swap">
-      <mat-icon class="user-add-notice-icon" aria-hidden="true">swap_horiz</mat-icon>
+    <app-notice icon="swap_horiz" tone="warning">
       <span>
         {{ found()?.displayName }} is a {{ otherRole() }}. Twitch does not allow both, so that role
         is taken away first and cannot be handed back automatically.
       </span>
-    </p>
+    </app-notice>
   }
 
   <app-scroll-bar [target]="content"/>

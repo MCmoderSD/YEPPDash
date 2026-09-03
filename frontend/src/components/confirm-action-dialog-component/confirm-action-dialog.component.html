@@ -4,7 +4,7 @@
   <p class="confirm-action-message">{{ data.message }}</p>
 
   @if (locked()) {
-    <p class="confirm-action-hint" [id]="hintId">
+    <p class="app-hint confirm-action-hint" [id]="hintId">
       Available in {{ remaining() }} second{{ remaining() === 1 ? '' : 's' }}.
     </p>
   }

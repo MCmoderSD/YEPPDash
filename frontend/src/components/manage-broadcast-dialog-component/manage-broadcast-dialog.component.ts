@@ -20,6 +20,7 @@ import {
   TITLE_MAX_LENGTH,
 } from '../../data/channel';
 import { fullSizeUrl } from '../../data/twitch-image';
+import { openDialog } from '../../services/dialog';
 
 export interface ManageBroadcastData {
   channel: ChannelInformation;
@@ -149,14 +150,9 @@ export class ManageBroadcastDialogComponent {
   }
 
   static open(dialog: MatDialog, data: ManageBroadcastData): MatDialogRef<ManageBroadcastDialogComponent, ChannelInformation> {
-    return dialog.open<ManageBroadcastDialogComponent, ManageBroadcastData, ChannelInformation>(
-      ManageBroadcastDialogComponent,
-      {
-        data,
-        width: '44rem',
-        maxWidth: '94vw',
-        maxHeight: '92vh',
-      });
+    return openDialog<ManageBroadcastDialogComponent, ManageBroadcastData, ChannelInformation>(
+      dialog, ManageBroadcastDialogComponent, data,
+      { width: '44rem', maxWidth: '94vw', maxHeight: '92vh' });
   }
 
   protected retype(value: string): void {

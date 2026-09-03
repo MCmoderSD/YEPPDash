@@ -3,9 +3,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { firstValueFrom } from 'rxjs';
 import { ResizeGripComponent, RESIZE_GRIP_SIZE } from '../resize-grip-component/resize-grip.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { askDialog } from '../../services/dialog';
 
 export interface TextEditDialogData {
   title: string;
@@ -60,12 +60,8 @@ export class TextEditDialogComponent {
   protected readonly canSave: Signal<boolean> = computed((): boolean => this.text().trim().length > 0 && this.problem() === null && this.changed());
 
   static ask(dialog: MatDialog, data: TextEditDialogData): Promise<string | undefined> {
-    return firstValueFrom(dialog.open<TextEditDialogComponent, TextEditDialogData, string>(TextEditDialogComponent, {
-      data,
-      width: '40rem',
-      minWidth: 'min(22rem, 92vw)',
-      maxWidth: '92vw'
-    }).afterClosed());
+    return askDialog<TextEditDialogComponent, TextEditDialogData, string>(
+      dialog, TextEditDialogComponent, data, { width: '40rem' });
   }
 
   protected edit(value: string): void {

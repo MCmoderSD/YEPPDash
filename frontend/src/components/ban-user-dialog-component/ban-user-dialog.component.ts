@@ -11,6 +11,8 @@ import { UserFinderComponent } from '../user-finder-component/user-finder.compon
 import { TwitchUser } from '../../data/twitch-user';
 import { UserRoles } from '../../data/user-roles';
 import { environment } from '../../environments/environment';
+import { NoticeComponent } from '../notice-component/notice.component';
+import { openDialog } from '../../services/dialog';
 
 export interface BanChoice {
   user: TwitchUser;
@@ -44,7 +46,7 @@ const UNITS: readonly DurationUnit[] = [
   selector: 'app-ban-user-dialog',
   templateUrl: './ban-user-dialog.component.html',
   styleUrl: './ban-user-dialog.component.scss',
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, NumberStepperComponent, ScrollBarComponent, UserFinderComponent],
+  imports: [NoticeComponent, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, NumberStepperComponent, ScrollBarComponent, UserFinderComponent],
 })
 export class BanUserDialogComponent {
 
@@ -143,12 +145,8 @@ export class BanUserDialogComponent {
   protected readonly unitLabel: Signal<string> = computed((): string => this.permanent() ? 'Duration' : 'Unit');
 
   static open(dialog: MatDialog, permanent: boolean = false): MatDialogRef<BanUserDialogComponent, BanChoice> {
-    return dialog.open<BanUserDialogComponent, BanUserDialogData, BanChoice>(BanUserDialogComponent, {
-      data: { permanent },
-      width: '33vw',
-      minWidth: 'min(24rem, 92vw)',
-      maxWidth: '92vw',
-    });
+    return openDialog<BanUserDialogComponent, BanUserDialogData, BanChoice>(
+      dialog, BanUserDialogComponent, { permanent }, { width: '33vw', minWidth: 'min(24rem, 92vw)' });
   }
 
   protected confirm(): void {

@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angu
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserTableComponent } from '../user-table-component/user-table.component';
 import { TwitchUser } from '../../data/twitch-user';
+import { openDialog } from '../../services/dialog';
 
 export interface UserListDialogData {
   title: string;
@@ -31,12 +32,8 @@ export class UserListDialogComponent {
   }
 
   static open(dialog: MatDialog, data: UserListDialogData): MatDialogRef<UserListDialogComponent> {
-    return dialog.open(UserListDialogComponent, {
-      data,
-      width: '39rem',
-      minWidth: 'min(22rem, 92vw)',
-      maxWidth: '92vw'
-    });
+    return openDialog<UserListDialogComponent, UserListDialogData, void>(
+      dialog, UserListDialogComponent, data, { width: '39rem' });
   }
 
   private async load(): Promise<void> {

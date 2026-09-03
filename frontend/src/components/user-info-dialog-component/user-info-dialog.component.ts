@@ -9,6 +9,7 @@ import { BirthdayService } from '../../services/birthday.service';
 import { Birthday, birthdayToDate } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
 import { BadgeSize } from '../../data/badge';
+import { openDialog } from '../../services/dialog';
 
 @Component({
   selector: 'app-user-info-dialog',
@@ -40,12 +41,8 @@ export class UserInfoDialogComponent {
   }
 
   static open(dialog: MatDialog, user: TwitchUser): MatDialogRef<UserInfoDialogComponent> {
-    return dialog.open(UserInfoDialogComponent, {
-      data: user,
-      width: '33vw',
-      minWidth: 'min(22rem, 92vw)',
-      maxWidth: '92vw',
-    });
+    return openDialog<UserInfoDialogComponent, TwitchUser, void>(
+      dialog, UserInfoDialogComponent, user, { width: '33vw' });
   }
 
   private async loadBirthday(): Promise<void> {
