@@ -37,7 +37,7 @@
         </mat-form-field>
       </div>
 
-      <p class="limits-hint" [class.limits-hint-error]="invalid()" aria-live="polite">
+      <p class="app-hint" [class.limits-hint-error]="invalid()" aria-live="polite">
         @if (invalid()) {
           A cooldown runs for at most 7 days — up to {{ maxAmount() | number }} in this unit.
         } @else {
@@ -67,7 +67,7 @@
         <app-number-stepper matSuffix [value]="maxPerStream()" [min]="0" (valueChange)="setPerStream($event)"/>
       </mat-form-field>
 
-      <p class="limits-hint">Max total redemptions for viewers</p>
+      <p class="app-hint">Max total redemptions for viewers</p>
     </div>
   </div>
 
@@ -91,7 +91,7 @@
         <app-number-stepper matSuffix [value]="maxPerUserPerStream()" [min]="0" (valueChange)="setPerUser($event)"/>
       </mat-form-field>
 
-      <p class="limits-hint">Max individual redemptions per viewer per stream</p>
+      <p class="app-hint">Max individual redemptions per viewer per stream</p>
     </div>
   </div>
 </div>

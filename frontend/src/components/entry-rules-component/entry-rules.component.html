@@ -24,7 +24,7 @@
   <mat-hint>What every entry starts at, before any role is counted</mat-hint>
 </mat-form-field>
 
-<p class="rules-hint" [class.rules-hint-error]="baseBroken()" aria-live="polite">
+<p class="app-hint" [class.rules-hint-error]="baseBroken()" aria-live="polite">
   @if (baseBroken()) {
     The base has to be greater than 0 — it is what every entry starts from.
   } @else {
@@ -43,7 +43,7 @@
     <div class="rules-row">
       <span class="rules-role">
         <span class="rules-label" [id]="labelId(role)">{{ roleLabels[role] }}</span>
-        <span class="rules-role-hint">{{ roleHints[role] }}</span>
+        <span class="app-hint">{{ roleHints[role] }}</span>
       </span>
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic" class="rules-state">
@@ -88,7 +88,7 @@
   }
 </div>
 
-<p class="rules-hint" [class.rules-hint-error]="anyBroken()" aria-live="polite">
+<p class="app-hint" [class.rules-hint-error]="anyBroken()" aria-live="polite">
   @if (anyBroken()) {
     A multiplier has to be between {{ multiplierMin }} and {{ multiplierMax | number }}, and the base above 0.
   } @else {
