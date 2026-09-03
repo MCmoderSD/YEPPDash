@@ -15,6 +15,7 @@ import { BirthdayListComponent } from '../components/birthday-list-component/bir
 import { TimeoutManagementComponent } from '../components/timeout-management-component/timeout-management.component';
 import { TimeoutRewardComponent } from '../components/timeout-reward-component/timeout-reward.component';
 import { GiveawayPageComponent } from './giveaway-page/giveaway-page.component';
+import { channelPointsGated } from './gated-routes';
 
 export const DASH_ROUTES: Routes = [
   {
@@ -32,8 +33,8 @@ export const DASH_ROUTES: Routes = [
       { path: 'queue', component: QueuePageComponent, title: 'Queue' },
       { path: 'wheel', component: WheelPageComponent, title: 'Lucky Wheel' },
       { path: 'timer', component: TimerPageComponent, title: 'Subathon Timer' },
-      { path: 'timeout-reward', component: TimeoutRewardComponent, title: 'Timeout Reward' },
-      { path: 'giveaway', component: GiveawayPageComponent, title: 'Giveaways' },
+      ...channelPointsGated({ path: 'timeout-reward', component: TimeoutRewardComponent, title: 'Timeout Reward' }),
+      ...channelPointsGated({ path: 'giveaway', component: GiveawayPageComponent, title: 'Giveaways' }),
       { path: 'bdsm', component: BdsmPageComponent, title: 'BDSM Test' }
     ]
   }
