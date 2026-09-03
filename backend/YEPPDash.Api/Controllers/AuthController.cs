@@ -38,7 +38,7 @@ public sealed class AuthController(
         if (error is not null)
         {
             logger.LogInformation("Login via Twitch aborted: {Error} ({Description})", LogSafe.OneLine(error), LogSafe.OneLine(errorDescription));
-            return RedirectToFrontend(error);
+            return RedirectToFrontend(Known(error));
         }
 
         if (!stateValid)
@@ -125,6 +125,13 @@ public sealed class AuthController(
             returnUrl is not null
             && Uri.TryCreate(returnUrl, UriKind.Absolute, out var uri)
             && configuration.GetAllowedFrontendOrigins().Contains($"{uri.Scheme}://{uri.Authority}");
+    }
+
+    private static string Known(string error)
+    {
+        string[] codes = ["access_denied", "invalid_state", "missing_code", "twitch_error"];
+        return Array.Find(codes, code => string.Equals(code, error, StringComparison.Ordinal))
+            ?? "unknown_error";
     }
 
     private IActionResult RedirectToFrontend(string error)
