@@ -8,6 +8,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { NumberStepperComponent } from '../number-stepper-component/number-stepper.component';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserFinderComponent } from '../user-finder-component/user-finder.component';
+import { BanNoticeComponent } from '../ban-notice-component/ban-notice.component';
+import { BannedUser } from '../../data/banned-user';
 import { TwitchUser } from '../../data/twitch-user';
 import { UserRoles } from '../../data/user-roles';
 import { environment } from '../../environments/environment';
@@ -46,7 +48,7 @@ const UNITS: readonly DurationUnit[] = [
   selector: 'app-ban-user-dialog',
   templateUrl: './ban-user-dialog.component.html',
   styleUrl: './ban-user-dialog.component.scss',
-  imports: [NoticeComponent, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, NumberStepperComponent, ScrollBarComponent, UserFinderComponent],
+  imports: [BanNoticeComponent, NoticeComponent, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, NumberStepperComponent, ScrollBarComponent, UserFinderComponent],
 })
 export class BanUserDialogComponent {
 
@@ -122,6 +124,21 @@ export class BanUserDialogComponent {
     (): boolean => this.found()?.id === environment.botUserId,
   );
 
+  protected readonly restriction: WritableSignal<BannedUser | null> = signal<BannedUser | null>(null);
+
+  protected readonly banned: Signal<boolean> = computed((): boolean => {
+    const ban: BannedUser | null = this.restriction();
+    return ban !== null && ban.expiresAt === null;
+  });
+
+  protected readonly restrictionNote: Signal<string> = computed((): string => {
+    if (!this.banned()) return '';
+
+    return this.permanent()
+      ? 'The ban already holds until it is lifted, so there is nothing left for this one to add.'
+      : 'A timeout cannot be laid on top of a ban. Unban them first, then time them out.';
+  });
+
   protected readonly roleWarning: Signal<string | null> = computed((): string | null => {
     const dropped: readonly string[] = this.droppedRoles();
     if (dropped.length === 0) return null;
@@ -134,7 +151,7 @@ export class BanUserDialogComponent {
   });
 
   protected readonly valid: Signal<boolean> = computed((): boolean => {
-    if (!this.found() || this.broadcaster()) return false;
+    if (!this.found() || this.broadcaster() || this.banned()) return false;
 
     const duration: number | null = this.durationSeconds();
     return duration === null

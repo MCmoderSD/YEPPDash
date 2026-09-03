@@ -4,6 +4,13 @@
 
   <app-user-finder [(user)]="found"/>
 
+  <app-ban-notice
+    [user]="found()"
+    [(ban)]="restriction"
+    [note]="restrictionNote()"
+    [tone]="banned() ? 'error' : 'neutral'"
+  />
+
   @if (broadcaster()) {
     <app-notice icon="block" tone="error">
       <span>This is your own channel account. Twitch does not take a ban on it.</span>
