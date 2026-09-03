@@ -13,7 +13,8 @@ import { TimerDisplayComponent } from '../../components/timer-display-component/
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { TimerService } from '../../services/timer.service';
-import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
+import { TimerSyncService } from '../../services/timer-sync.service';
+import { StreamListener } from '../../services/sse.service';
 import { DEFAULT_TIMER_STYLE, durationText, EMPTY_TIMER, parseDuration, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle, timerStyleCss } from '../../data/subathon-timer';
 import { CHANNEL_PARAM, overlayUrl, TIMER_OVERLAY_PATH } from '../../data/overlay';
 
@@ -37,7 +38,7 @@ export class TimerPageComponent {
 
   private readonly channelId: Signal<string | null> = computed((): string | null => this.auth.currentUser()?.id ?? null);
 
-  private listener: TimerListener | null = null;
+  private listener: StreamListener | null = null;
 
   private writing: Promise<void> = Promise.resolve();
 
@@ -74,7 +75,7 @@ export class TimerPageComponent {
       const channelId: string | null = this.channelId();
       if (channelId === null) return;
 
-      const listener: TimerListener = this.sync.listen(
+      const listener: StreamListener = this.sync.listen(
         channelId, (timer: SubathonTimer): void => this.show(timer),
         (): void => void this.load(channelId)
       );
