@@ -2,8 +2,8 @@ import { Component, computed, inject, Signal, signal, WritableSignal } from '@an
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { BusyBarComponent } from '../busy-bar-component/busy-bar.component';
 import { firstValueFrom } from 'rxjs';
 import { BanChoice, BanUserDialogComponent } from '../ban-user-dialog-component/ban-user-dialog.component';
 import { BanTableComponent } from '../ban-table-component/ban-table.component';
@@ -20,7 +20,7 @@ export enum BanTab {
   selector: 'app-timeout-management',
   templateUrl: './timeout-management.component.html',
   styleUrl: './timeout-management.component.scss',
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, MatTabsModule, BanTableComponent],
+  imports: [BusyBarComponent, MatButtonModule, MatIconModule, MatTabsModule, BanTableComponent],
 })
 export class TimeoutManagementComponent {
 

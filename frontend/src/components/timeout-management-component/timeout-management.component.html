@@ -4,9 +4,9 @@
     <p class="app-visually-hidden" role="status">Loading the ban list…</p>
   }
 
-  <header class="timeout-management-header">
-    <h1 class="timeout-management-title">Timeouts &amp; Bans</h1>
-    <p class="timeout-management-count">Who is timed out or banned, and until when.</p>
+  <header class="app-page-header">
+    <h1 class="app-page-title">Timeouts &amp; Bans</h1>
+    <p class="app-page-sub">Who is timed out or banned, and until when.</p>
   </header>
 
   <button
@@ -20,12 +20,7 @@
     <span>{{ addLabel() }}</span>
   </button>
 
-  <mat-progress-bar
-    class="timeout-management-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!showProgress()"
-    [style.visibility]="showProgress() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="showProgress()"/>
 
   <mat-tab-group
     class="timeout-management-tabs"
