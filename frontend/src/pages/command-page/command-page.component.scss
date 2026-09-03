@@ -16,7 +16,6 @@
 // shows ("N commands in your channel, N active") so the swap to real text does not change width.
 .command-page-count-skeleton {
   width: min(14rem, 70vw);
-  margin-inline: auto;
 }
 
 // app-fade-in's rise is a translate, and translate does not move a plain inline box — every other

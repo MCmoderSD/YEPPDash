@@ -105,11 +105,6 @@ $header-gap: 0.25rem;
   }
 }
 
-.queue-page-panel-title {
-  margin: 0;
-  font: var(--mat-sys-title-medium);
-}
-
 // No auto margin to push it down: the content above already takes the slack, so this sits directly
 // under the last row wherever that lands.
 .queue-page-panel-note {

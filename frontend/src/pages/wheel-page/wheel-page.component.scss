@@ -18,9 +18,6 @@
 // entries yet" reading never has to grow into it.
 .wheel-skeleton-count {
   width: min(14rem, 70vw);
-
-  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
-  margin-inline: auto;
 }
 
 .wheel-page-layout {
@@ -236,13 +233,7 @@
 // than as part of it.
 .wheel-page-badge {
   flex: none;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--mat-sys-corner-extra-small);
-  background: var(--mat-sys-surface-container-highest);
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 // An entry may now run to five hundred characters, and a row that tall pushes everything after it
