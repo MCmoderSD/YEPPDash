@@ -16,6 +16,7 @@ import { BdsmMatchScore, BdsmResult, resultTakenAt, traitColor } from '../../dat
 import { Broadcaster } from '../../data/broadcaster';
 import { FollowerProfile } from '../../data/follower';
 import { TwitchUser } from '../../data/twitch-user';
+import { ListState } from '../../services/list-state';
 
 export interface BdsmResultEntry {
   result: BdsmResult;
@@ -50,34 +51,29 @@ export class BdsmPageComponent {
   private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
 
-  private readonly ownRows: WritableSignal<BdsmResultEntry[]> = signal<BdsmResultEntry[]>([]);
-  private readonly ownLoading: WritableSignal<boolean> = signal(false);
-  private readonly ownFailed: WritableSignal<boolean> = signal(false);
-
-  private readonly communityRows: WritableSignal<BdsmCommunityEntry[]> = signal<BdsmCommunityEntry[]>([]);
-  private readonly communityLoading: WritableSignal<boolean> = signal(false);
-  private readonly communityFailed: WritableSignal<boolean> = signal(false);
-
+  // Neither tab has a count endpoint, so both run without one: there is nothing to draw ghost rows
+  // from, and the skeleton card below stands in for the whole list instead.
+  private readonly ownState: ListState<BdsmResultEntry> = new ListState<BdsmResultEntry>();
+  private readonly communityState: ListState<BdsmCommunityEntry> = new ListState<BdsmCommunityEntry>();
 
   private communityRequested: boolean = false;
 
   protected readonly selected: WritableSignal<number> = signal(OWN_TAB);
 
-  protected readonly entries: Signal<BdsmResultEntry[]> = this.ownRows.asReadonly();
-  protected readonly community: Signal<BdsmCommunityEntry[]> = this.communityRows.asReadonly();
+  protected readonly entries: Signal<BdsmResultEntry[]> = this.ownState.rows.asReadonly();
+  protected readonly community: Signal<BdsmCommunityEntry[]> = this.communityState.rows.asReadonly();
 
-  protected readonly count: Signal<number> = computed((): number => this.ownRows().length);
-  protected readonly communityCount: Signal<number> = computed((): number => this.communityRows().length);
+  protected readonly count: Signal<number> = this.ownState.count;
+  protected readonly communityCount: Signal<number> = this.communityState.count;
 
-  protected readonly unreachable: Signal<boolean> = this.ownFailed.asReadonly();
-  protected readonly communityUnreachable: Signal<boolean> = this.communityFailed.asReadonly();
-
+  protected readonly unreachable: Signal<boolean> = this.ownState.failed.asReadonly();
+  protected readonly communityUnreachable: Signal<boolean> = this.communityState.failed.asReadonly();
 
   protected readonly loading: Signal<boolean> = computed((): boolean =>
-    this.selected() === COMMUNITY_TAB ? this.communityLoading() : this.ownLoading());
+    this.selected() === COMMUNITY_TAB ? this.communityState.loading() : this.ownState.loading());
 
   protected readonly showProgress: Signal<boolean> = computed((): boolean =>
-    this.loading() && (this.selected() === COMMUNITY_TAB ? this.communityRows().length > 0 : this.ownRows().length > 0));
+    this.selected() === COMMUNITY_TAB ? this.communityState.refreshing() : this.ownState.refreshing());
 
   constructor() {
     void this.load();
@@ -97,21 +93,12 @@ export class BdsmPageComponent {
     const userId: string | undefined = this.auth.currentUser()?.id;
     if (!userId) return;
 
-    this.ownLoading.set(true);
-    this.ownFailed.set(false);
-    try {
-      const results: BdsmResult[] = await this.bdsm.getResults(userId);
-
-      this.ownRows.set(results
+    await this.ownState.load(
+      async (): Promise<BdsmResultEntry[]> => (await this.bdsm.getResults(userId))
         .map((result: BdsmResult): BdsmResultEntry => ({ result, takenAt: resultTakenAt(result) }))
-        .sort((left: BdsmResultEntry, right: BdsmResultEntry): number => right.takenAt.getTime() - left.takenAt.getTime()));
-    } catch {
-      this.ownRows.set([]);
-      this.ownFailed.set(true);
-      this.notifications.failure('Could not load your BDSM test results.');
-    } finally {
-      this.ownLoading.set(false);
-    }
+        .sort((left: BdsmResultEntry, right: BdsmResultEntry): number => right.takenAt.getTime() - left.takenAt.getTime()),
+      (): void => this.notifications.failure('Could not load your BDSM test results.'),
+    );
   }
 
   private async loadCommunity(): Promise<void> {
@@ -120,44 +107,42 @@ export class BdsmPageComponent {
 
     this.communityRequested = true;
 
-    this.communityLoading.set(true);
-    this.communityFailed.set(false);
-    try {
-      const followers: FollowerProfile[] = await this.twitch.getFollowers();
-      const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
-      byId.set(me.id, me);
+    await this.communityState.load(
+      async (): Promise<BdsmCommunityEntry[]> => {
+        const followers: FollowerProfile[] = await this.twitch.getFollowers();
+        const byId: Map<string, TwitchUser> = new Map(followers.map((follower: FollowerProfile): [string, TwitchUser] => [follower.id, follower]));
+        byId.set(me.id, me);
 
-      const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
-      const entries: BdsmCommunityEntry[] = results
-        .map((result: BdsmResult): BdsmCommunityEntry => {
-          const user: TwitchUser | undefined = byId.get(result.userId);
+        const results: BdsmResult[] = await this.bdsm.getResultsFor([...byId.keys()]);
+        const entries: BdsmCommunityEntry[] = results
+          .map((result: BdsmResult): BdsmCommunityEntry => {
+            const user: TwitchUser | undefined = byId.get(result.userId);
 
-          return {
-            result,
-            takenAt: resultTakenAt(result),
-            user: user ?? null,
-            name: user?.displayName ?? result.userId,
-            match: null,
-            matchPending: true,
-          };
-        })
-        .sort((left: BdsmCommunityEntry, right: BdsmCommunityEntry): number => right.takenAt.getTime() - left.takenAt.getTime());
-      this.communityRows.set(entries);
+            return {
+              result,
+              takenAt: resultTakenAt(result),
+              user: user ?? null,
+              name: user?.displayName ?? result.userId,
+              match: null,
+              matchPending: true,
+            };
+          })
+          .sort((left: BdsmCommunityEntry, right: BdsmCommunityEntry): number => right.takenAt.getTime() - left.takenAt.getTime());
 
-      const matches: Map<string, number> = await this.matchesAgainst(me.id, results);
-      this.communityRows.update((rows: BdsmCommunityEntry[]): BdsmCommunityEntry[] =>
-        rows.map((entry: BdsmCommunityEntry): BdsmCommunityEntry => {
+        this.communityState.rows.set(entries);
+
+        const matches: Map<string, number> = await this.matchesAgainst(me.id, results);
+
+        return entries.map((entry: BdsmCommunityEntry): BdsmCommunityEntry => {
           const percent: number | undefined = matches.get(entry.result.userId);
           return { ...entry, match: percent === undefined ? null : { percent, color: traitColor(percent) }, matchPending: false };
-        }));
-    } catch {
-      this.communityRows.set([]);
-      this.communityFailed.set(true);
-      this.communityRequested = false;
-      this.notifications.failure('Could not load the BDSM test results of your followers.');
-    } finally {
-      this.communityLoading.set(false);
-    }
+        });
+      },
+      (): void => {
+        this.communityRequested = false;
+        this.notifications.failure('Could not load the BDSM test results of your followers.');
+      },
+    );
   }
 
   private async matchesAgainst(userId: string, results: BdsmResult[]): Promise<Map<string, number>> {
