@@ -1,22 +1,3 @@
-<div class="overlay">
+<app-overlay-frame [winner]="winner()" [hint]="hint()">
   <app-wheel class="overlay-wheel" [slices]="slices()" (spun)="landed($event)"/>
-
-  @if (winner()) {
-    <div class="overlay-winner" role="status">
-      <p class="overlay-winner-title">We have a winner!</p>
-      <p class="overlay-winner-name">{{ winner() }}</p>
-    </div>
-  }
-
-  @if (slices().length === 0) {
-    <p class="overlay-hint">
-      @if (!channel()) {
-        This link has no channel. Copy the overlay link again from the Lucky Wheel page.
-      } @else if (loaded()) {
-        No entries on this wheel yet. Add some on the Lucky Wheel page.
-      } @else {
-        Loading…
-      }
-    </p>
-  }
-</div>
+</app-overlay-frame>

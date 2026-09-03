@@ -1,17 +1,16 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from "@angular/core";
+import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from "@angular/core";
+import { OverlayFrameComponent } from '../../components/overlay-frame-component/overlay-frame.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { WheelService } from '../../services/wheel.service';
-import { WheelListener, WheelMessage, WheelSyncService } from '../../services/wheel-sync.service';
+import { WheelMessage, WheelSyncService } from '../../services/wheel-sync.service';
+import { StreamListener } from '../../services/sse.service';
 import { slicesFrom } from '../../data/wheel-entry';
-
-const TRANSPARENT: string = 'app-transparent';
 
 @Component({
   selector: 'app-wheel-overlay-page',
   templateUrl: './wheel-overlay-page.component.html',
   styleUrl: './wheel-overlay-page.component.scss',
-  imports: [WheelComponent],
+  imports: [OverlayFrameComponent, WheelComponent],
 })
 export class WheelOverlayPageComponent {
 
@@ -19,27 +18,29 @@ export class WheelOverlayPageComponent {
 
   private readonly wheels: WheelService = inject(WheelService);
   private readonly sync: WheelSyncService = inject(WheelSyncService);
-  private readonly document: Document = inject(DOCUMENT);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
   private readonly wheel: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
 
-  private listener: WheelListener | null = null;
+  private listener: StreamListener | null = null;
 
   protected readonly slices: WritableSignal<string[]> = signal<string[]>([]);
   protected readonly winner: WritableSignal<string | null> = signal<string | null>(null);
   protected readonly loaded: WritableSignal<boolean> = signal(false);
 
-  constructor() {
-    const root: HTMLElement = this.document.documentElement;
-    root.classList.add(TRANSPARENT);
-    this.destroyRef.onDestroy((): void => root.classList.remove(TRANSPARENT));
+  protected readonly hint: Signal<string | null> = computed((): string | null => {
+    if (this.slices().length > 0) return null;
+    if (!this.channel()) return 'This link has no channel. Copy the overlay link again from the Lucky Wheel page.';
 
+    return this.loaded() ? 'No entries on this wheel yet. Add some on the Lucky Wheel page.' : 'Loading…';
+  });
+
+  constructor() {
     effect((onCleanup: EffectCleanupRegisterFn): void => {
       const channelId: string | undefined = this.channel();
       if (!channelId) return;
 
-      const listener: WheelListener = this.sync.listen(
+      const listener: StreamListener = this.sync.listen(
         channelId, (message: WheelMessage): void => this.receive(message),
         (): void => void this.refresh(channelId)
       );
