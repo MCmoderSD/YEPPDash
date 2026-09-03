@@ -1,62 +1,141 @@
 using YEPPDash.Api.Data.Wheel;
 using YEPPDash.Api.Exceptions.Wheel;
 using YEPPDash.Api.Repositories;
+using YEPPDash.Api.Services.Streaming;
 
 namespace YEPPDash.Api.Services;
 
-public sealed class WheelService(WheelRepository repository, ILogger<WheelService> logger)
+public sealed class WheelService(WheelRepository repository, WheelHub hub, ILogger<WheelService> logger)
 {
-    public async Task<IReadOnlyList<string>> GetAsync(string channelId, CancellationToken cancellationToken)
+    public Task<int> CountAsync(string broadcasterId, CancellationToken cancellationToken)
+        => repository.CountAsync(ParseChannelId(broadcasterId), cancellationToken);
+
+    public async Task<IReadOnlyList<WheelSummary>> ListAsync(string broadcasterId, CancellationToken cancellationToken)
     {
-        return await repository.GetAsync(ParseChannelId(channelId), cancellationToken) ?? [];
+        var channelId = ParseChannelId(broadcasterId);
+
+        var configs = await repository.GetChannelAsync(channelId, cancellationToken);
+        if (configs.Count is 0) return [];
+
+        var counts = await repository.CountsAsync(channelId, cancellationToken);
+
+        return
+        [
+            .. configs.Select(config =>
+            {
+                counts.TryGetValue(config.Id, out var count);
+
+                return new WheelSummary(config.Id, config.Name, count.Entries, count.Slices, config.UpdatedAt);
+            }),
+        ];
     }
 
-    public async Task<IReadOnlyList<string>> SaveAsync(
-        string channelId, WheelRequest request, CancellationToken cancellationToken)
+    public async Task<WheelResponse?> GetAsync(string broadcasterId, Guid wheelId, CancellationToken cancellationToken)
     {
-        var id = ParseChannelId(channelId);
-        var entries = Normalize(request.Entries);
+        var config = await repository.GetAsync(ParseChannelId(broadcasterId), wheelId, cancellationToken);
+        if (config is null) return null;
 
-        await repository.SaveAsync(id, entries, cancellationToken);
-        logger.LogDebug("Stored {Count} entries for the channel {ChannelId}", entries.Count, id);
-
-        return entries;
+        return Describe(config, await repository.EntriesAsync(wheelId, cancellationToken));
     }
 
-    public Task<bool> DeleteAsync(string channelId, CancellationToken cancellationToken)
+    public async Task<WheelResponse> CreateAsync(
+        string broadcasterId, WheelUpdate update, CancellationToken cancellationToken)
     {
-        return repository.DeleteAsync(ParseChannelId(channelId), cancellationToken);
+        var channelId = ParseChannelId(broadcasterId);
+
+        var config = new WheelConfig(Guid.NewGuid(), channelId, Name(update.Name), DateTime.UtcNow);
+        var entries = Normalize(update.Entries);
+
+        await repository.InsertAsync(config, entries, cancellationToken);
+        logger.LogInformation("Channel {ChannelId} created the wheel {WheelId}", channelId, config.Id);
+
+        return Describe(config, entries);
     }
 
-    private static IReadOnlyList<string> Normalize(IReadOnlyList<string> entries)
+    public async Task<WheelResponse?> SaveAsync(
+        string broadcasterId, Guid wheelId, WheelUpdate update, CancellationToken cancellationToken)
     {
-        if (entries.Count > WheelLimits.MaxEntries)
+        var channelId = ParseChannelId(broadcasterId);
+
+        var stored = await repository.GetAsync(channelId, wheelId, cancellationToken);
+        if (stored is null) return null;
+
+        var config = stored with { Name = Name(update.Name), UpdatedAt = DateTime.UtcNow };
+        var entries = Normalize(update.Entries);
+
+        if (!await repository.UpdateAsync(config, entries, cancellationToken)) return null;
+
+        logger.LogDebug("Stored {Count} entries on the wheel {WheelId}", entries.Count, config.Id);
+
+        hub.Publish(channelId, WheelEvents.OverlayState(config.Id, Overlay(config, entries)), StreamAudience.Overlay);
+
+        return Describe(config, entries);
+    }
+
+    public async Task<bool> DeleteAsync(string broadcasterId, Guid wheelId, CancellationToken cancellationToken)
+    {
+        var channelId = ParseChannelId(broadcasterId);
+
+        if (!await repository.DeleteAsync(channelId, wheelId, cancellationToken)) return false;
+
+        logger.LogInformation("Channel {ChannelId} deleted the wheel {WheelId}", channelId, wheelId);
+
+        hub.Publish(channelId, WheelEvents.OverlayState(wheelId, null), StreamAudience.Overlay);
+
+        return true;
+    }
+
+    public void Spin(string broadcasterId, Guid wheelId, int index)
+    {
+        hub.Publish(ParseChannelId(broadcasterId), WheelEvents.OverlaySpin(wheelId, index), StreamAudience.Overlay);
+    }
+
+    public void Dismiss(string broadcasterId, Guid wheelId)
+    {
+        hub.Publish(ParseChannelId(broadcasterId), WheelEvents.OverlayDismiss(wheelId), StreamAudience.Overlay);
+    }
+
+    public async Task<WheelOverlayState?> OverlayAsync(Guid wheelId, CancellationToken cancellationToken)
+    {
+        var config = await repository.FindAsync(wheelId, cancellationToken);
+        if (config is null) return null;
+
+        return Overlay(config, await repository.EntriesAsync(wheelId, cancellationToken));
+    }
+
+    public async Task<int?> ChannelOfAsync(Guid wheelId, CancellationToken cancellationToken)
+        => (await repository.FindAsync(wheelId, cancellationToken))?.ChannelId;
+
+    private static WheelResponse Describe(WheelConfig config, IReadOnlyList<WheelEntry> entries)
+    {
+        return new WheelResponse(config.Id, config.Name, entries, config.UpdatedAt);
+    }
+
+    private static WheelOverlayState Overlay(WheelConfig config, IReadOnlyList<WheelEntry> entries)
+    {
+        return new WheelOverlayState(config.Id, config.Name, entries);
+    }
+
+    private static string Name(string? name)
+    {
+        var trimmed = (name ?? string.Empty).Trim();
+
+        if (trimmed.Length is 0)
         {
-            throw new InvalidWheelException($"A wheel cannot hold more than {WheelLimits.MaxEntries} entries.");
+            throw new InvalidWheelException("A wheel needs a name.");
         }
 
-        var normalized = new List<string>(entries.Count);
-
-        foreach (var entry in entries)
+        if (trimmed.Length > WheelLimits.MaxNameLength)
         {
-            var trimmed = entry.Trim();
-
-            if (trimmed.Length is 0) continue;
-
-            if (trimmed.Contains(WheelLimits.Separator))
-            {
-                throw new InvalidWheelException($"An entry cannot contain a '{WheelLimits.Separator}' — that is what separates them.");
-            }
-
-            if (trimmed.Length > WheelLimits.MaxEntryLength)
-            {
-                throw new InvalidWheelException($"An entry cannot be longer than {WheelLimits.MaxEntryLength} characters.");
-            }
-
-            normalized.Add(trimmed);
+            throw new InvalidWheelException($"A name cannot be longer than {WheelLimits.MaxNameLength} characters.");
         }
 
-        return normalized;
+        return trimmed;
+    }
+
+    private static IReadOnlyList<WheelEntry> Normalize(IReadOnlyList<WheelEntryUpdate> entries)
+    {
+        return WheelEntry.Merge(entries.Select(entry => new WheelEntry(entry.Label ?? string.Empty, entry.Count)));
     }
 
     private static int ParseChannelId(string channelId)

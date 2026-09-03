@@ -1,8 +1,14 @@
 <section class="wheel-page">
   <header class="app-page-header">
     <h1 class="app-page-title">Lucky Wheel</h1>
-    @if (initialLoad()) {
-      <span class="app-visually-hidden wheel-page-loading-status" role="status">Loading your wheel…</span>
+
+    @if (!detail()) {
+      <p class="app-page-sub">
+        Every wheel keeps its own entries, its own results and its own browser source, so you can set
+        one up per segment and switch between them.
+      </p>
+    } @else if (detailLoading()) {
+      <span class="app-visually-hidden wheel-page-loading-status" role="status">Loading this wheel…</span>
       <p class="app-page-sub app-skeleton-appear" aria-hidden="true">
         <span class="app-skeleton app-skeleton-bar app-skeleton-text wheel-skeleton-count"></span>
       </p>
@@ -17,13 +23,57 @@
     }
   </header>
 
+  @if (!detail()) {
+    <app-wheel-grid
+      class="wheel-page-overview"
+      [wheels]="summaries()"
+      [loading]="skeleton()"
+      [expected]="expected()"
+      (opened)="select($event)"
+      (created)="createWheel()"
+    />
+  } @else {
+
+  <div class="wheel-page-detail-head app-fade-in">
+    <button mat-button type="button" class="wheel-page-back" (click)="back()">
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
+      <span>All wheels</span>
+    </button>
+
+    @if (detailLoading()) {
+      <span class="app-skeleton app-skeleton-bar wheel-page-skeleton-name" aria-hidden="true"></span>
+    } @else {
+      <button
+        type="button"
+        class="wheel-page-detail-name"
+        [attr.aria-label]="'Rename ' + name()"
+        [disabled]="busy()"
+        (click)="renameWheel()"
+      >
+        <span class="wheel-page-detail-name-text">{{ name() }}</span>
+        <mat-icon aria-hidden="true">edit</mat-icon>
+      </button>
+
+      <button
+        mat-button
+        type="button"
+        class="wheel-page-delete"
+        [disabled]="busy()"
+        (click)="removeWheel()"
+      >
+        <mat-icon aria-hidden="true">delete</mat-icon>
+        <span>Delete</span>
+      </button>
+    }
+  </div>
+
   <div class="wheel-page-layout">
 
     <div class="wheel-page-stage">
       <div
         class="wheel-page-wheel-wrap"
-        [class.app-fade-in]="!initialLoad()"
-        [attr.aria-hidden]="initialLoad() ? true : null"
+        [class.app-fade-in]="!detailLoading()"
+        [attr.aria-hidden]="detailLoading() ? true : null"
       >
         <app-wheel
           [slices]="slices()"
@@ -32,7 +82,7 @@
           (spun)="landed($event)"
         />
 
-        @if (initialLoad()) {
+        @if (detailLoading()) {
           <span class="wheel-page-wheel-skeleton app-skeleton-appear">
             <span class="app-skeleton wheel-page-wheel-skeleton-fill"></span>
           </span>
@@ -161,7 +211,7 @@
                         mat-icon-button
                         type="button"
                         [attr.aria-label]="'Add another ' + entry.label"
-                        [disabled]="busy() || full()"
+                        [disabled]="busy()"
                         (click)="addOne(entry.label); $event.stopPropagation()"
                       >
                         <mat-icon aria-hidden="true">add</mat-icon>
@@ -197,7 +247,7 @@
 
                 <tr class="wheel-page-empty-row" *matNoDataRow>
                   <td class="app-table-empty" [attr.colspan]="columns.length">
-                    @if (!initialLoad()) {
+                    @if (!detailLoading()) {
                       Nothing on the wheel yet. Add your first entry above.
                     }
                   </td>
@@ -240,12 +290,12 @@
             <section class="wheel-page-overlay">
               <h2 class="wheel-page-overlay-title">OBS browser source</h2>
               <p class="app-hint">
-                This link is yours and stays the same. Add it as a browser source and resize it freely
-                — the wheel scales with it, follows the list on this page and spins along when you spin
-                here.
+                This link belongs to this wheel alone and stays the same. Add it as a browser source
+                and resize it freely — the wheel scales with it, follows the list on this page and
+                spins along when you spin here.
               </p>
 
-              <app-overlay-link [url]="overlayUrl()"/>
+              <app-overlay-link [url]="overlayUrl()" [secret]="true"/>
             </section>
           </div>
         </mat-tab>
@@ -304,4 +354,5 @@
       </mat-tab-group>
     </div>
   </div>
+  }
 </section>

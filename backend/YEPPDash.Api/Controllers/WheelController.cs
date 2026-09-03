@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Wheel;
@@ -14,47 +13,44 @@ namespace YEPPDash.Api.Controllers;
 [Route("wheel")]
 public sealed class WheelController(WheelService wheels, WheelHub hub, ILogger<WheelController> logger) : ControllerBase
 {
-
-    [AllowAnonymous]
-    [HttpGet("{userId}")]
-    public async Task<IActionResult> GetWheel(string userId, CancellationToken cancellationToken)
+    [HttpGet]
+    public async Task<IActionResult> List(CancellationToken cancellationToken)
     {
-        if (!int.TryParse(userId, out _)) return BadRequest("That is not a Twitch user ID.");
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
 
-        return Ok(new WheelResponse(await wheels.GetAsync(userId, cancellationToken)));
+        return Ok(await wheels.ListAsync(twitchId, cancellationToken));
     }
 
-
-    [AllowAnonymous]
-    [HttpGet("{userId}/stream")]
-    public async Task Stream(string userId, CancellationToken cancellationToken)
+    [HttpGet("count")]
+    public async Task<IActionResult> Count(CancellationToken cancellationToken)
     {
-        if (!int.TryParse(userId, out var channelId))
-        {
-            Response.StatusCode = StatusCodes.Status400BadRequest;
-            return;
-        }
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
 
-        using var subscription = hub.Subscribe(channelId);
-        logger.LogDebug("An overlay is watching channel {ChannelId}", channelId);
-
-        await Response.StreamAsync(subscription, cancellationToken);
-
-        logger.LogDebug("An overlay stopped watching channel {ChannelId}", channelId);
+        return Ok(await wheels.CountAsync(twitchId, cancellationToken));
     }
 
-    [HttpPut("{userId}")]
-    public async Task<IActionResult> SaveWheel(string userId, [FromBody] WheelRequest request, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
-        if (Denied(userId) is { } denied) return denied;
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        var wheel = await wheels.GetAsync(twitchId, id, cancellationToken);
+
+        return wheel is null ? NotFound() : Ok(wheel);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] WheelUpdate update, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
 
         try
         {
-            var entries = await wheels.SaveAsync(userId, request, cancellationToken);
-
-            Publish(userId, new { type = "state", entries });
-
-            return Ok(new WheelResponse(entries));
+            return Ok(await wheels.CreateAsync(twitchId, update, cancellationToken));
         }
         catch (InvalidWheelException exception)
         {
@@ -62,58 +58,79 @@ public sealed class WheelController(WheelService wheels, WheelHub hub, ILogger<W
         }
     }
 
-    [HttpPost("{userId}/spin")]
-    public IActionResult Spin(string userId, [FromBody] WheelSpinRequest request)
-    {
-        if (Denied(userId) is { } denied) return denied;
-        if (request.Index < 0) return BadRequest("A spin has to name the slice it landed on.");
-
-        Publish(userId, new { type = "spin", index = request.Index });
-
-        return NoContent();
-    }
-
-    [HttpPost("{userId}/dismiss")]
-    public IActionResult Dismiss(string userId)
-    {
-        if (Denied(userId) is { } denied) return denied;
-
-        Publish(userId, new { type = "dismiss" });
-
-        return NoContent();
-    }
-
-    [HttpDelete("{userId}")]
-    public async Task<IActionResult> DeleteWheel(string userId, CancellationToken cancellationToken)
-    {
-        if (Denied(userId) is { } denied) return denied;
-
-        if (!await wheels.DeleteAsync(userId, cancellationToken)) return NotFound();
-
-        Publish(userId, new { type = "state", entries = Array.Empty<string>() });
-
-        return NoContent();
-    }
-
-    private void Publish(string userId, object payload)
-    {
-        if (int.TryParse(userId, out var channelId))
-        {
-            hub.Publish(channelId, JsonSerializer.Serialize(payload, StreamJson.Options));
-        }
-    }
-
-    private IActionResult? Denied(string userId)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Save(Guid id, [FromBody] WheelUpdate update, CancellationToken cancellationToken)
     {
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
+        try
         {
-            logger.LogWarning("User {TwitchId} tried to reach the wheel of channel {UserId}", twitchId, userId);
-            return Forbid();
+            var wheel = await wheels.SaveAsync(twitchId, id, update, cancellationToken);
+
+            return wheel is null ? NotFound() : Ok(wheel);
+        }
+        catch (InvalidWheelException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        return await wheels.DeleteAsync(twitchId, id, cancellationToken) ? NoContent() : NotFound();
+    }
+
+    [HttpPost("{id:guid}/spin")]
+    public IActionResult Spin(Guid id, [FromBody] WheelSpinRequest request)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        if (request.Index < 0) return BadRequest("A spin has to name the slice it landed on.");
+
+        wheels.Spin(twitchId, id, request.Index);
+
+        return NoContent();
+    }
+
+    [HttpPost("{id:guid}/dismiss")]
+    public IActionResult Dismiss(Guid id)
+    {
+        var twitchId = User.GetTwitchId();
+        if (twitchId is null) return Unauthorized();
+
+        wheels.Dismiss(twitchId, id);
+
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpGet("overlay/{id:guid}")]
+    public async Task<IActionResult> GetOverlay(Guid id, CancellationToken cancellationToken)
+        => Ok(new WheelOverlayResponse(await wheels.OverlayAsync(id, cancellationToken)));
+
+    [AllowAnonymous]
+    [HttpGet("overlay/{id:guid}/stream")]
+    public async Task OverlayStream(Guid id, CancellationToken cancellationToken)
+    {
+        var channelId = await wheels.ChannelOfAsync(id, cancellationToken);
+
+        if (channelId is null)
+        {
+            Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
         }
 
-        return null;
+        using var subscription = hub.Subscribe(channelId.Value, StreamAudience.Overlay);
+        logger.LogDebug("An overlay is watching the wheel {WheelId} of channel {ChannelId}", id, channelId);
+
+        await Response.StreamAsync(subscription, cancellationToken);
+
+        logger.LogDebug("An overlay stopped watching the wheel {WheelId} of channel {ChannelId}", id, channelId);
     }
 }

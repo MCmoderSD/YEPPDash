@@ -21,7 +21,7 @@ function headingRows(): ReadonlyMap<string, number> {
 
 const ACTIVE_MATCH: IsActiveMatchOptions = {
   paths: 'exact',
-  queryParams: 'exact',
+  queryParams: 'ignored',
   matrixParams: 'ignored',
   fragment: 'ignored',
 };

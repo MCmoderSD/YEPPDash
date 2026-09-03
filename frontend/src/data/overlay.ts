@@ -5,6 +5,7 @@ export const TIMER_OVERLAY_PATH: string = 'timer/overlay';
 export const GIVEAWAY_OVERLAY_PATH: string = 'giveaway/overlay';
 
 export const CHANNEL_PARAM: string = 'channel';
+export const WHEEL_PARAM: string = 'wheel';
 export const GIVEAWAY_PARAM: string = 'giveaway';
 
 const OVERLAY_PATHS: readonly string[] = [WHEEL_OVERLAY_PATH, TIMER_OVERLAY_PATH, GIVEAWAY_OVERLAY_PATH];

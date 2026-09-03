@@ -12,7 +12,7 @@
           #area
           [rows]="rows"
           autocomplete="off"
-          [attr.maxlength]="data.maxLength"
+          [attr.maxlength]="data.maxLength ?? null"
           [value]="text()"
           (input)="edit(area.value)"
         ></textarea>
@@ -29,7 +29,7 @@
           #line
           type="text"
           autocomplete="off"
-          [attr.maxlength]="data.maxLength"
+          [attr.maxlength]="data.maxLength ?? null"
           [value]="text()"
           (input)="edit(line.value)"
         />
@@ -43,7 +43,13 @@
         <span>{{ data.hint }}</span>
       }
 
-      <span class="text-edit-count">{{ length() }} / {{ data.maxLength }}</span>
+      <span class="text-edit-count">
+        @if (data.maxLength; as limit) {
+          {{ length() }} / {{ limit }}
+        } @else {
+          {{ length() }}
+        }
+      </span>
     </p>
   </form>
 

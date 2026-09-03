@@ -1,0 +1,43 @@
+<div class="grid">
+  @if (loading()) {
+    @for (ghost of ghosts(); track ghost) {
+      <span class="app-skeleton app-skeleton-appear grid-ghost" aria-hidden="true"></span>
+    }
+  } @else {
+    @for (summary of wheels(); track summary.id) {
+      <button
+        type="button"
+        class="card app-fade-in"
+        (click)="opened.emit(summary.id)"
+      >
+        <span class="card-head">
+          <span class="card-name">{{ summary.name }}</span>
+        </span>
+
+        <span class="card-counts">
+          <span class="app-chip">{{ entries(summary) }}</span>
+          <span class="app-chip">{{ slices(summary) }}</span>
+        </span>
+
+        <span class="card-middle">
+          <span class="card-mark" aria-hidden="true"></span>
+        </span>
+
+        <span class="card-updated">Updated {{ summary.updatedAt | localeDate:'medium':'short' }}</span>
+      </button>
+    }
+
+    <button
+      type="button"
+      class="card card-new app-fade-in"
+      (click)="created.emit()"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>
+      <span>New wheel</span>
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <span class="app-visually-hidden" role="status">Loading your wheels…</span>
+}

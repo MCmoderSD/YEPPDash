@@ -4,7 +4,8 @@ import { WheelComponent, WheelSpin } from '../../components/wheel-component/whee
 import { WheelService } from '../../services/wheel.service';
 import { WheelMessage, WheelSyncService } from '../../services/wheel-sync.service';
 import { StreamListener } from '../../services/sse.service';
-import { slicesFrom } from '../../data/wheel-entry';
+import { wheelSlices } from '../../data/wheel-entry';
+import { WheelOverlayState } from '../../data/wheel';
 
 @Component({
   selector: 'app-wheel-overlay-page',
@@ -14,40 +15,44 @@ import { slicesFrom } from '../../data/wheel-entry';
 })
 export class WheelOverlayPageComponent {
 
-  readonly channel: InputSignal<string | undefined> = input<string>();
+  readonly wheel: InputSignal<string | undefined> = input<string>();
 
   private readonly wheels: WheelService = inject(WheelService);
   private readonly sync: WheelSyncService = inject(WheelSyncService);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
-  private readonly wheel: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
+  private readonly board: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
 
   private listener: StreamListener | null = null;
 
   protected readonly slices: WritableSignal<string[]> = signal<string[]>([]);
   protected readonly winner: WritableSignal<string | null> = signal<string | null>(null);
   protected readonly loaded: WritableSignal<boolean> = signal(false);
+  protected readonly known: WritableSignal<boolean> = signal(true);
 
   protected readonly hint: Signal<string | null> = computed((): string | null => {
     if (this.slices().length > 0) return null;
-    if (!this.channel()) return 'This link has no channel. Copy the overlay link again from the Lucky Wheel page.';
+    if (!this.wheel()) return 'This link names no wheel. Copy the overlay link again from the Lucky Wheel page.';
+    if (!this.loaded()) return 'Loading…';
 
-    return this.loaded() ? 'No entries on this wheel yet. Add some on the Lucky Wheel page.' : 'Loading…';
+    return this.known()
+      ? 'No entries on this wheel yet. Add some on the Lucky Wheel page.'
+      : 'This wheel is gone. Copy the overlay link again from the Lucky Wheel page.';
   });
 
   constructor() {
     effect((onCleanup: EffectCleanupRegisterFn): void => {
-      const channelId: string | undefined = this.channel();
-      if (!channelId) return;
+      const wheelId: string | undefined = this.wheel();
+      if (!wheelId) return;
 
-      const listener: StreamListener = this.sync.listen(
-        channelId, (message: WheelMessage): void => this.receive(message),
-        (): void => void this.refresh(channelId)
+      const listener: StreamListener = this.sync.listenOverlay(
+        wheelId, (message: WheelMessage): void => this.receive(message),
+        (): void => void this.refresh(wheelId)
       );
 
       this.listener = listener;
 
-      void this.refresh(channelId);
+      void this.refresh(wheelId);
 
       onCleanup((): void => {
         this.listener = null;
@@ -62,11 +67,11 @@ export class WheelOverlayPageComponent {
     this.winner.set(spin.label);
   }
 
-  private async refresh(channelId: string): Promise<void> {
-    if (this.wheel()?.spinning()) return;
+  private async refresh(wheelId: string): Promise<void> {
+    if (this.board()?.spinning()) return;
 
     try {
-      this.show(await this.wheels.getWheel(channelId));
+      this.show(await this.wheels.getOverlay(wheelId));
     } catch {
       // A stream that outlives a restart of the API picks the list up on the next connection rather
       // than sitting on an error.
@@ -76,25 +81,29 @@ export class WheelOverlayPageComponent {
   }
 
   private receive(message: WheelMessage): void {
+    if (message.wheelId !== this.wheel()) return;
+
     if (message.type === 'state') {
-      this.show(message.entries);
+      this.show(message.wheel);
       return;
     }
 
     if (message.type === 'spin') {
       this.winner.set(null);
-      this.wheel()?.spin(message.index);
+      this.board()?.spin(message.index);
       return;
     }
 
-    if (message.type === 'dismiss') this.winner.set(null);
+    this.winner.set(null);
   }
 
-  private show(entries: string[]): void {
-    const slices: string[] = slicesFrom(entries);
+  private show(state: WheelOverlayState | null): void {
+    this.known.set(state !== null);
+
+    const slices: string[] = wheelSlices(state?.entries ?? []);
 
     if (slices.join(' ') === this.slices().join(' ')) return;
-    if (this.wheel()?.spinning()) return;
+    if (this.board()?.spinning()) return;
 
     this.slices.set(slices);
   }

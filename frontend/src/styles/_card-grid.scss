@@ -1,0 +1,95 @@
+// The overview grid the giveaway and wheel pages are both built on. Geometry only — what each card
+// says stays with the component that writes it, because no two of them say the same thing.
+//
+// Every card and every placeholder is one --grid-card-height tall, and the host sets that height, so
+// nothing in the grid changes size when a placeholder is swapped for the card it stood in for.
+
+// Three to a row on a desktop, and fewer as the viewport gives out. Fixed rather than auto-filled
+// so the cards keep one size instead of growing with the window.
+@mixin grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+
+  @media (max-width: 60rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 40rem) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@mixin ghost {
+  display: block;
+  height: var(--grid-card-height);
+  border-radius: var(--app-radius-lg);
+}
+
+@mixin card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  // A floor rather than a height, so the button that only opens a new one is the same size as a
+  // card carrying a whole reward - including while it stands on its own row beside placeholders.
+  min-height: var(--grid-card-height);
+  padding: 1rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container-low);
+
+  color: var(--mat-sys-on-surface);
+  text-align: left;
+  cursor: pointer;
+
+  transition: border-color var(--app-motion-fast) var(--app-ease), background-color var(--app-motion-fast) var(--app-ease);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+@mixin card-new {
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+
+  border: 1px dashed var(--mat-sys-outline);
+  background: transparent;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-title-small);
+
+  &:hover {
+    background: var(--app-tint-hover);
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+@mixin head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+@mixin name {
+  font: var(--mat-sys-title-small);
+  overflow-wrap: anywhere;
+}
+
+// Pushed to the bottom of the card, so the line sits level across a row whatever the description
+// above it did.
+@mixin updated {
+  margin-top: auto;
+  padding-top: 0.25rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+  text-align: center;
+}
