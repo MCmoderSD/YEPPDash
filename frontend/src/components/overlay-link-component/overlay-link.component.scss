@@ -13,3 +13,27 @@
   flex: 1 1 18rem;
   min-width: 0;
 }
+
+.overlay-link-hint {
+  margin-block-start: 0.5rem;
+  line-height: 1.5;
+}
+
+// Blurred rather than replaced by dots: the shape of the line stays, so it still reads as the link
+// it is, and the real text is what the field holds — selecting it, copying it and reading it out to
+// a screen reader all go on working. Revealed on hover and on focus, so the keyboard reaches it too.
+:host(.overlay-link-secret) .overlay-link-field input {
+  filter: blur(0.3rem);
+  transition: filter var(--app-motion-fast) var(--app-ease);
+}
+
+:host(.overlay-link-secret) .overlay-link-field:hover input,
+:host(.overlay-link-secret) .overlay-link-field:focus-within input {
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.overlay-link-secret) .overlay-link-field input {
+    transition: none;
+  }
+}

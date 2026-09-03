@@ -10,4 +10,11 @@
       <span>Copy</span>
     </button>
   </div>
+
+  @if (secret()) {
+    <p class="app-hint overlay-link-hint">
+      Hidden until you point at it, so it cannot be read off a screenshot or a stream. Anyone holding
+      it can open the overlay.
+    </p>
+  }
 }

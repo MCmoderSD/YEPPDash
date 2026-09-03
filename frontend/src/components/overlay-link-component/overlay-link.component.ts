@@ -11,12 +11,16 @@ import { NotificationService } from '../../services/notification.service';
   templateUrl: './overlay-link.component.html',
   styleUrl: './overlay-link.component.scss',
   imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  host: {
+    '[class.overlay-link-secret]': 'secret()',
+  },
 })
 export class OverlayLinkComponent {
 
   readonly url: InputSignal<string | null> = input.required<string | null>();
 
   readonly label: InputSignal<string> = input<string>('Overlay link');
+  readonly secret: InputSignal<boolean> = input<boolean>(false);
 
   private readonly notifications: NotificationService = inject(NotificationService);
 
