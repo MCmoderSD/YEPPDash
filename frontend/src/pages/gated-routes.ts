@@ -3,7 +3,7 @@ import { ModuleBlockedComponent } from '../components/module-blocked-component/m
 import { channelPointsMatch } from '../services/channel-points.guard';
 
 const CHANNEL_POINTS_BLOCK: Data = {
-  icon: 'toll',
+  mask: 'channel-points.svg',
   label: 'Channel points required',
   heading: 'This module needs channel points',
   reason: 'Everything under Rewards is built on channel points, and Twitch only hands those to '

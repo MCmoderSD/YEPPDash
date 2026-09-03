@@ -1,5 +1,9 @@
 <section class="blocked">
-  <mat-icon class="blocked-icon" aria-hidden="true">{{ icon() }}</mat-icon>
+  @if (mask(); as art) {
+    <span class="blocked-icon blocked-icon-mask" [style.--icon]="'url(' + art + ')'" aria-hidden="true"></span>
+  } @else {
+    <mat-icon class="blocked-icon" aria-hidden="true">{{ icon() }}</mat-icon>
+  }
 
   <p class="blocked-label">{{ label() }}</p>
 
