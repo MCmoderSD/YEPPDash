@@ -32,8 +32,6 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
 
         var status = result.Status is >= 400 and < 600 ? result.Status : StatusCodes.Status502BadGateway;
 
-        // The dashboard's own credentials are fine — it is ours to the bot that is not, and that is
-        // an operator problem rather than something to ask the reader to log in again over.
         if (status is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
         {
             logger.LogError("YEPPBot rejected this dashboard's API key: {Message}", result.Message);
@@ -48,8 +46,6 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        // A session only ever speaks for its own channel — without this any logged-in user could
-        // pull the bot out of somebody else's chat.
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
             logger.LogWarning("User {TwitchId} tried to move the bot in channel {UserId}", twitchId, userId);

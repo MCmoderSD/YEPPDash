@@ -102,8 +102,6 @@ public sealed class CustomCommandController(
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        // Commands belong to a channel, and a session only ever speaks for its own — without this
-        // any logged-in user could rewrite what somebody else's bot says.
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
             logger.LogWarning("User {TwitchId} tried to reach the commands of channel {UserId}", twitchId, userId);
