@@ -1,3 +1,5 @@
+@use '../../styles/card-grid' as cards;
+
 :host {
   display: block;
 
@@ -6,68 +8,24 @@
   --grid-card-height: 15.8rem;
 }
 
-// Three to a row on a desktop, and fewer as the viewport gives out. Fixed rather than auto-filled
-// so the cards keep one size instead of growing with the window.
 .grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-
-  @media (max-width: 60rem) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (max-width: 40rem) {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  @include cards.grid;
 }
 
 .grid-ghost {
-  display: block;
-  height: var(--grid-card-height);
-  border-radius: var(--app-radius-lg);
+  @include cards.ghost;
 }
 
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  // A floor rather than a height, so the button that only says 'New giveaway' is the same size as
-  // a card carrying a whole reward - including while it stands on its own row beside placeholders.
-  min-height: var(--grid-card-height);
-  padding: 1rem;
-  border: var(--app-border);
-  border-radius: var(--app-radius-lg);
-  background: var(--mat-sys-surface-container-low);
-
-  color: var(--mat-sys-on-surface);
-  text-align: left;
-  cursor: pointer;
-
-  transition: border-color var(--app-motion-fast) var(--app-ease), background-color var(--app-motion-fast) var(--app-ease);
-
-  &:hover {
-    border-color: var(--mat-sys-primary);
-    background: var(--mat-sys-surface-container);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
+  @include cards.card;
 }
 
 .card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
+  @include cards.head;
 }
 
 .card-name {
-  font: var(--mat-sys-title-small);
-  overflow-wrap: anywhere;
+  @include cards.name;
 }
 
 // Two lines and then an ellipsis, so a long description cannot make one card taller than the rest
@@ -101,28 +59,10 @@
   text-align: center;
 }
 
-// Pushed to the bottom of the card, so the line sits level across a row whatever the description
-// above it did.
 .card-updated {
-  margin-top: auto;
-  padding-top: 0.25rem;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-label-small);
-  text-align: center;
+  @include cards.updated;
 }
 
 .card-new {
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-
-  border: 1px dashed var(--mat-sys-outline);
-  background: transparent;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-title-small);
-
-  &:hover {
-    background: var(--app-tint-hover);
-    color: var(--mat-sys-on-surface);
-  }
+  @include cards.card-new;
 }
