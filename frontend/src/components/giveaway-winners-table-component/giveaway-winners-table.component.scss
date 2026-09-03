@@ -1,0 +1,22 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.winners-heading {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+// Two tables side by side are tighter than one across the page, so the cells give back some of
+// their padding rather than putting every row behind a scrollbar.
+.winners-frame {
+  --app-table-cell-inline: 0.5rem;
+}
+
+.winners-weight {
+  font: var(--mat-sys-body-medium);
+  white-space: nowrap;
+}

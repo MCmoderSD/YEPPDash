@@ -1,0 +1,97 @@
+:host {
+  display: block;
+
+  // OBS strips the page background through its own custom CSS, so nothing here paints one either:
+  // whatever the browser source is laid over stays visible around the content.
+  background: transparent;
+}
+
+// Taken out of the flow entirely rather than sized to fill the page. A browser source must never
+// scroll, and anything that merely fills the viewport can still be pushed past it by a stray pixel;
+// fixed to the viewport, this cannot contribute to the page's height at all.
+//
+// It also keeps to CSS that the browser OBS embeds actually has. That browser is several years
+// behind Chrome — dvh units and the standalone translate property both postdate it, and a source
+// that quietly drops them ends up with no height limit and scroll bars at both edges.
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+// Laid over the centre element rather than under it: stacked below, it made the pair taller than the
+// source and brought back the scroll bars this layout exists to avoid. The middle of a wheel is
+// empty, which is where it sits.
+//
+// Everything here is measured in vmin rather than rem, which is what makes it grow and shrink with
+// the browser source the way the wheel does. The wheel is drawn in a 100-unit viewBox, so its labels
+// are a percentage of its own size and scale for free. rem is tied to the root font size instead,
+// which does not move when the source is set to 1920x1080 — the wheel would be huge and this would
+// stay at its 36px, then both get scaled down together and only this one ends up unreadable. vmin is
+// the same measure the wheel is sized by, so the two keep their proportions at any source size.
+//
+// The rem in each max() is a floor for absurdly small sources, not the usual case.
+.overlay-winner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: min(92%, 90vmin);
+
+  // The card's size came from its text alone, so shrinking the text shrank the card with it. This
+  // holds the box at a steady size instead — which also stops it jumping about between a short name
+  // and a long one.
+  min-width: min(90%, 72vmin);
+  padding: max(1.5rem, 7vmin) max(2rem, 6vmin);
+  box-sizing: border-box;
+  border-radius: max(1.5rem, 3.6vmin);
+
+  // On a stream this is over whatever the scene has behind it, and only its own background makes it
+  // reliably readable there.
+  background: rgb(0 0 0 / 82%);
+  text-align: center;
+}
+
+// The theme's token first, for the family and weight; the size and leading are then taken off it
+// again, because those are the parts that have to scale.
+.overlay-winner-title {
+  margin: 0;
+  color: #f9a825;
+  font: var(--mat-sys-title-large);
+  font-size: max(1.125rem, 4.4vmin);
+  line-height: 1.3;
+}
+
+.overlay-winner-name {
+  margin: max(0.2rem, 1vmin) 0 0;
+  color: #ffffff;
+  font: var(--mat-sys-display-small);
+  font-size: max(1.75rem, 9vmin);
+  line-height: 1.15;
+
+  // break-word rather than anywhere: both break a long unbroken name, but `anywhere` also counts
+  // towards the box's minimum width, and this box is shrink-to-fit — which collapsed it into a
+  // narrow column tall enough to run off the top and bottom of the source.
+  overflow-wrap: break-word;
+}
+
+// Scaled off the same measure as the card above, for the same reason.
+.overlay-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: min(90%, 55vmin);
+  margin: 0;
+  color: #ffffff;
+  font: var(--mat-sys-body-medium);
+  font-size: max(0.875rem, 2.4vmin);
+  line-height: 1.4;
+  text-align: center;
+  text-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 80%);
+}

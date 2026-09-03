@@ -274,8 +274,8 @@ body {
 // background of its own. OBS does strip one through its own custom CSS, but only while that setting
 // is left at its default — this makes it the page's own doing instead.
 //
-// Added and removed by WheelOverlayPageComponent. It is global because the elements it applies to,
-// the document and its body, sit outside that component.
+// Added and removed by OverlayFrameComponent, which every overlay page sits in. It is global because
+// the elements it applies to, the document and its body, sit outside that component.
 .app-transparent,
 .app-transparent body {
   background: transparent;
@@ -569,6 +569,40 @@ body {
       margin-block-end: 0.5rem;
     }
   }
+}
+
+// The three classes below belong to a table that `app-table-frame` wraps. They are global rather
+// than the frame's own because view encapsulation stops a component's stylesheet from reaching DOM
+// projected into it — the <table> stays in the parent's template, and so its styling has to reach it
+// from outside any component.
+
+// Fills the outline the frame draws around it: the fixed columns keep their width and the flexible
+// one takes what is left, so a row reads as one band of content instead of a small table floating in
+// a wide box. Material's default 16px inline padding on every cell adds up fast across three or four
+// columns, so a cell's own padding is a custom property a page can widen where its cells need it.
+.app-data-table {
+  width: 100%;
+  background: transparent;
+
+  //noinspection CssUnusedSymbol
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    padding: 0 var(--app-table-cell-inline, 0.5rem);
+  }
+}
+
+.app-table-empty {
+  padding: 1.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+// A fixed, quieter column — there to be read off when needed, not to compete with the row's subject
+// for attention or for width.
+.app-table-quiet {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  white-space: nowrap;
 }
 
 // The app draws its own arrows (components/number-stepper-component), so the browser's built-in

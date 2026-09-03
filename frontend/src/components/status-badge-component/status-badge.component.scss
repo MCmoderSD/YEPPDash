@@ -8,13 +8,16 @@
   color: var(--mat-sys-on-surface-variant);
 
   font: var(--mat-sys-label-small);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   white-space: nowrap;
 
   transition:
     background-color var(--app-timing-base),
     color var(--app-timing-base);
+}
+
+:host(.status-badge-caps) {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 :host(.status-badge-success) {

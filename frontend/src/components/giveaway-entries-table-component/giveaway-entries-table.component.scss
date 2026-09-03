@@ -1,0 +1,46 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.entries-heading {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+// Two tables side by side are tighter than one across the page, so the cells give back some of
+// their padding rather than putting every row behind a scrollbar.
+.entries-frame {
+  --app-table-cell-inline: 0.5rem;
+}
+
+.entries-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.entries-role-none {
+  color: var(--mat-sys-outline);
+}
+
+.entries-weight {
+  white-space: nowrap;
+}
+
+.entries-weight-value {
+  font: var(--mat-sys-body-medium);
+}
+
+// The share of the wheel that weight actually buys, which is the number a streamer is asked about.
+.entries-weight-odds {
+  margin-left: 0.5rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.entries-actions {
+  text-align: right;
+}

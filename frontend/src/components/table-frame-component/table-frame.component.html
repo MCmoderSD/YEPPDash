@@ -1,0 +1,10 @@
+<div
+  #scroll
+  class="frame-scroll"
+  [class.frame-scroll-y]="maxHeight() !== null"
+  [style.max-height]="maxHeight()"
+>
+  <ng-content/>
+</div>
+
+<app-scroll-bar [target]="scroll"/>

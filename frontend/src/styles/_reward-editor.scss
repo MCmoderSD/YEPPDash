@@ -1,0 +1,87 @@
+// The page geometry a channel point reward editor stands in: the centred column, its header, the
+// form-and-preview split and the quiet lines around them. The giveaway page and the timeout reward
+// both arrived at exactly this, down to the numbers.
+//
+// A mixin rather than a component because the <form> *is* the grid: projecting it would break the
+// timeout reward's skeleton, which renders these same class names with grey shapes in the data's
+// place and so has to be able to reach them.
+//
+// $prefix is the page's own class prefix, $width the centred column's cap, and $break the viewport
+// width at which the preview stops sitting beside the form and moves under it.
+@mixin shell($prefix, $width, $break) {
+  .#{$prefix} {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    width: min($width, 100%);
+    margin-inline: auto;
+  }
+
+  .#{$prefix}-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .#{$prefix}-title {
+    margin: 0;
+    font: var(--mat-sys-headline-medium);
+  }
+
+  .#{$prefix}-sub {
+    margin: 0;
+    max-width: 42rem;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-medium);
+  }
+
+  // Kept in the layout while idle so nothing jumps every time a request starts.
+  .#{$prefix}-progress {
+    flex: none;
+    align-self: stretch;
+  }
+
+  // Form on the left, the Twitch-side preview beside it — and stacked again once the viewport
+  // cannot carry both. The 16rem column is as narrow as the action buttons allow.
+  .#{$prefix}-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    gap: 2rem;
+    align-self: stretch;
+
+    @media (max-width: $break) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .#{$prefix}-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  .#{$prefix}-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .#{$prefix}-hint {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
+  }
+
+  .#{$prefix}-hint-error {
+    color: var(--app-danger);
+  }
+
+  // Removing a reward takes its redemption history with it, so the control that does it says so.
+  .#{$prefix}-delete {
+    color: var(--app-danger);
+  }
+}

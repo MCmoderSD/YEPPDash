@@ -8,14 +8,14 @@ export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger';
   styleUrl: './status-badge.component.scss',
   host: {
     'class': 'status-badge',
+    '[class.status-badge-caps]': 'caps()',
     '[class.status-badge-success]': "tone() === 'success'",
     '[class.status-badge-warning]': "tone() === 'warning'",
     '[class.status-badge-danger]': "tone() === 'danger'",
   },
 })
 export class StatusBadgeComponent {
-
   readonly label: InputSignal<string> = input.required<string>();
-
   readonly tone: InputSignal<BadgeTone> = input<BadgeTone>('neutral');
+  readonly caps: InputSignal<boolean> = input<boolean>(true);
 }
