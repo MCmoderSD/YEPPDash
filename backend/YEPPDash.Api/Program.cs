@@ -5,6 +5,7 @@ using YEPPDash.Api.EventSub;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services;
+using YEPPDash.Api.Services.Streaming;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +74,8 @@ builder.Services.AddHostedService<QueueWatcher>();
 // Spans every channel and every reward: it is what stops one redemption being acted on twice,
 // whichever socket or instance saw it.
 builder.Services.AddScoped<RedemptionLogRepository>();
+// The claim-settle-refund bookkeeping both channel point rewards share.
+builder.Services.AddScoped<RedemptionSettlement>();
 builder.Services.AddScoped<TimeoutRewardRepository>();
 builder.Services.AddScoped<TimeoutRewardService>();
 builder.Services.AddSingleton<IEventSubSource, TimeoutRewardSource>();

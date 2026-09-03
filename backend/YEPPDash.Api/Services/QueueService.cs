@@ -1,6 +1,7 @@
 using YEPPDash.Api.Data.Queue;
 using YEPPDash.Api.Exceptions.Queue;
 using YEPPDash.Api.Repositories;
+using YEPPDash.Api.Services.Streaming;
 
 namespace YEPPDash.Api.Services;
 
