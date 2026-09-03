@@ -10,9 +10,23 @@ import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchUser } from '../../data/twitch-user';
 
-export enum RoleManagementMode {
-  Moderator = 0,
-  Vip = 1,
+  export enum RoleManagementMode {
+  Moderator = 'moderator',
+  Vip = 'vip',
+}
+
+const LEGACY_MODES: Readonly<Record<string, RoleManagementMode>> = {
+  '0': RoleManagementMode.Moderator,
+  '1': RoleManagementMode.Vip,
+};
+
+function parseMode(value: string | RoleManagementMode): RoleManagementMode {
+  const raw: string = String(value).toLowerCase();
+
+  if (raw === RoleManagementMode.Vip) return RoleManagementMode.Vip;
+  if (raw === RoleManagementMode.Moderator) return RoleManagementMode.Moderator;
+
+  return LEGACY_MODES[raw] ?? RoleManagementMode.Moderator;
 }
 
 function titleFor(mode: RoleManagementMode): string {
@@ -52,8 +66,7 @@ export class RoleManagementComponent {
   private readonly dialog: MatDialog = inject(MatDialog);
 
   readonly mode: InputSignalWithTransform<RoleManagementMode, string | RoleManagementMode> = input.required({
-    transform: (value: string | RoleManagementMode): RoleManagementMode =>
-      typeof value === 'string' ? Number(value) : value,
+    transform: parseMode,
   });
 
   protected readonly title: Signal<string> = computed((): string => titleFor(this.mode()));
