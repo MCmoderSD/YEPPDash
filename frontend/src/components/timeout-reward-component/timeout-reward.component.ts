@@ -12,12 +12,14 @@ import { firstValueFrom } from 'rxjs';
 import { RewardSwitchesComponent } from '../reward-switches-component/reward-switches.component';
 import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { NumberStepperComponent } from '../number-stepper-component/number-stepper.component';
+import { RewardFieldsComponent } from '../reward-fields-component/reward-fields.component';
 import { RewardLimitsComponent } from '../reward-limits-component/reward-limits.component';
 import { bestUnit, COOLDOWN_MAX_SECONDS, DURATION_UNITS, DurationUnit } from '../../data/duration';
 import { RewardPreviewComponent } from '../reward-preview-component/reward-preview.component';
 import { NotificationService } from '../../services/notification.service';
 import { TimeoutRewardService } from '../../services/timeout-reward.service';
 import { ProtectedRole, TimeoutRewardSettings, TimeoutRewardUpdate } from '../../data/timeout-reward';
+import { DEFAULT_REWARD_COLOR, isHexColor, REWARD_PROMPT_MAX, REWARD_TITLE_MAX, rewardImage } from '../../data/custom-reward';
 
 interface ProtectedRoleOption {
   role: ProtectedRole;
@@ -31,13 +33,6 @@ interface ProtectedRoleGroup {
 }
 
 const MAX_TIMEOUT_SECONDS: number = 1_209_600;
-
-const MAX_TITLE_LENGTH: number = 45;
-const MAX_PROMPT_LENGTH: number = 200;
-
-const DEFAULT_COLOR: string = '#A8E02F';
-
-const DEFAULT_IMAGE: string = 'https://static-cdn.jtvnw.net/custom-reward-images/default-2.png';
 
 const PROTECTED_GROUPS: readonly ProtectedRoleGroup[] = [
   {
@@ -66,7 +61,7 @@ const PROTECTED_GROUPS: readonly ProtectedRoleGroup[] = [
   imports: [
     DecimalPipe, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule,
     MatProgressBarModule, MatSelectModule,
-    NumberStepperComponent, RewardLimitsComponent, RewardPreviewComponent, RewardSwitchesComponent
+    NumberStepperComponent, RewardFieldsComponent, RewardLimitsComponent, RewardPreviewComponent, RewardSwitchesComponent
   ],
 })
 export class TimeoutRewardComponent {
@@ -77,8 +72,6 @@ export class TimeoutRewardComponent {
 
   protected readonly units: readonly DurationUnit[] = DURATION_UNITS;
   protected readonly protectedGroups: readonly ProtectedRoleGroup[] = PROTECTED_GROUPS;
-  protected readonly maxTitleLength: number = MAX_TITLE_LENGTH;
-  protected readonly maxPromptLength: number = MAX_PROMPT_LENGTH;
 
   private readonly settings: WritableSignal<TimeoutRewardSettings | null> = signal<TimeoutRewardSettings | null>(null);
 
@@ -92,7 +85,10 @@ export class TimeoutRewardComponent {
   protected readonly title: WritableSignal<string> = signal('');
   protected readonly cost: WritableSignal<number> = signal(10_000);
   protected readonly prompt: WritableSignal<string> = signal('');
-  protected readonly color: WritableSignal<string> = signal(DEFAULT_COLOR);
+  protected readonly color: WritableSignal<string> = signal(DEFAULT_REWARD_COLOR);
+
+  // What the preview falls back to while the typed colour is not yet a valid hex value.
+  protected readonly defaultColor: string = DEFAULT_REWARD_COLOR;
   protected readonly enabled: WritableSignal<boolean> = signal(true);
 
   protected readonly durationAmount: WritableSignal<number> = signal(90);
@@ -104,14 +100,8 @@ export class TimeoutRewardComponent {
 
   protected readonly shielded: WritableSignal<ReadonlySet<ProtectedRole>> = signal<ReadonlySet<ProtectedRole>>(new Set(['Moderator', 'Editor']));
 
-  protected readonly promptLeft: Signal<number> = computed((): number => MAX_PROMPT_LENGTH - this.prompt().length);
   protected readonly editorAtRisk: Signal<boolean> = computed((): boolean => !this.shielded().has('Editor'));
   protected readonly leadModeratorAtRisk: Signal<boolean> = computed((): boolean => !this.shielded().has('Moderator'));
-
-  protected readonly costText: Signal<string> = computed((): string => {
-    const cost: number = this.cost();
-    return Number.isFinite(cost) && cost > 0 ? cost.toLocaleString('en-US') : '';
-  });
 
   private readonly durationSeconds: Signal<number> = computed((): number => Math.floor(this.durationAmount()) * this.durationUnit());
 
@@ -129,16 +119,14 @@ export class TimeoutRewardComponent {
     return !Number.isFinite(seconds) || seconds < 0 || seconds > COOLDOWN_MAX_SECONDS;
   });
 
-  protected readonly colorInvalid: Signal<boolean> = computed(
-    (): boolean => !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(this.color().trim()),
-  );
+  protected readonly colorInvalid: Signal<boolean> = computed((): boolean => !isHexColor(this.color()));
 
   protected readonly valid: Signal<boolean> = computed((): boolean => {
     const title: string = this.title().trim();
 
-    return title.length > 0 && title.length <= MAX_TITLE_LENGTH
+    return title.length > 0 && title.length <= REWARD_TITLE_MAX
       && Number.isFinite(this.cost()) && this.cost() >= 1
-      && this.prompt().length <= MAX_PROMPT_LENGTH
+      && this.prompt().length <= REWARD_PROMPT_MAX
       && !this.colorInvalid()
       && !this.durationInvalid()
       && !this.cooldownInvalid()
@@ -164,18 +152,10 @@ export class TimeoutRewardComponent {
   protected readonly canSave: Signal<boolean> = computed((): boolean =>
     !this.busy() && this.valid() && (!this.exists() || this.fingerprint() !== this.baseline()));
 
-  protected readonly tileImage: Signal<string> = computed((): string => {
-    const reward = this.settings()?.reward;
-    return reward?.image?.url_2x ?? reward?.defaultImage?.url_2x ?? DEFAULT_IMAGE;
-  });
+  protected readonly tileImage: Signal<string> = computed((): string => rewardImage(this.settings()?.reward ?? null));
 
   constructor() {
     void this.load();
-  }
-
-  protected setCost(value: string): void {
-    const digits: string = value.replace(/[^0-9]/g, '');
-    this.cost.set(digits.length === 0 ? 0 : Math.min(+digits, Number.MAX_SAFE_INTEGER));
   }
 
   protected has(role: ProtectedRole): boolean {
@@ -265,7 +245,7 @@ export class TimeoutRewardComponent {
     this.title.set(reward.title);
     this.cost.set(reward.cost);
     this.prompt.set(reward.prompt);
-    this.color.set(reward.backgroundColor || DEFAULT_COLOR);
+    this.color.set(reward.backgroundColor || DEFAULT_REWARD_COLOR);
     this.enabled.set(reward.isEnabled);
 
     const duration: DurationUnit = bestUnit(settings.durationSeconds);
@@ -285,7 +265,7 @@ export class TimeoutRewardComponent {
     this.title.set('');
     this.cost.set(10_000);
     this.prompt.set('');
-    this.color.set(DEFAULT_COLOR);
+    this.color.set(DEFAULT_REWARD_COLOR);
     this.enabled.set(true);
     this.durationAmount.set(90);
     this.durationUnit.set(1);

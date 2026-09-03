@@ -64,50 +64,14 @@
 
         <h2 class="timeout-reward-heading">The reward</h2>
 
-        <mat-form-field appearance="outline" class="timeout-reward-field">
-          <mat-label>Name</mat-label>
-          <input
-            matInput
-            #titleField
-            type="text"
-            autocomplete="off"
-            [attr.maxlength]="maxTitleLength"
-            [value]="title()"
-            (input)="title.set(titleField.value)"
-          />
-          <mat-hint align="end">{{ maxTitleLength - title().length }} characters left</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="timeout-reward-field">
-          <mat-label>Cost</mat-label>
-          <input
-            matInput
-            #costField
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            [attr.aria-invalid]="cost() < 1"
-            [value]="costText()"
-            (input)="setCost(costField.value)"
-          />
-          <app-number-stepper matSuffix [value]="cost()" [min]="1" [step]="100" (valueChange)="cost.set($event)"/>
-          <mat-hint>Channel points per redemption</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="timeout-reward-field">
-          <mat-label>Description (optional)</mat-label>
-          <input
-            matInput
-            #promptField
-            type="text"
-            autocomplete="off"
-            [attr.maxlength]="maxPromptLength"
-            [value]="prompt()"
-            (input)="prompt.set(promptField.value)"
-          />
-          <mat-hint>Shown in the redeem dialog on Twitch</mat-hint>
-          <mat-hint align="end">{{ promptLeft() }} left</mat-hint>
-        </mat-form-field>
+        <app-reward-fields
+          [title]="title()"
+          (titleChange)="title.set($event)"
+          [cost]="cost()"
+          (costChange)="cost.set($event)"
+          [description]="prompt()"
+          (descriptionChange)="prompt.set($event)"
+        />
 
         <h2 class="timeout-reward-heading">The timeout</h2>
 
@@ -214,7 +178,7 @@
         <app-reward-preview
           [image]="tileImage()"
           [cost]="cost() || 0"
-          [color]="colorInvalid() ? '#A8E02F' : color()"
+          [color]="colorInvalid() ? defaultColor : color()"
           [name]="title()"
           heading="What your viewers will see:"
         />
