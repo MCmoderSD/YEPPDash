@@ -4,6 +4,8 @@
 
   <app-user-finder [(user)]="found"/>
 
+  <app-ban-notice [user]="found()" [(ban)]="restriction" [note]="restrictionNote()" tone="error"/>
+
   @if (broadcaster()) {
     <app-notice icon="block" tone="neutral">
       <span>This is your own channel account — it already outranks every role you can grant.</span>
