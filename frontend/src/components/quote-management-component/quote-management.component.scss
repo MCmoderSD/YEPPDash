@@ -4,10 +4,6 @@
   align-items: center;
   gap: 1rem;
 
-  // The containing block for the scroll bar drawn over the table below, so its geometry stays a
-  // local matter instead of depending on whatever ancestor happens to be positioned.
-  position: relative;
-
   // Wider than the role management panel: a quote is a sentence, not a name, so the message column
   // needs the room to avoid wrapping every row into three lines.
   width: min(60rem, 100%);
@@ -81,28 +77,6 @@
 .quote-management-progress {
   flex: none;
   align-self: stretch;
-}
-
-// Matches the user table: the outline is on the scroll container so it spans the panel's full
-// width, and narrow viewports scroll the columns instead of squashing them.
-.quote-management-scroll {
-  align-self: stretch;
-  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
-  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
-  overflow: auto hidden;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-outlined);
-}
-
-table.quote-management-grid {
-  width: 100%;
-  background: transparent;
-
-  //noinspection CssUnusedSymbol
-  .mdc-data-table__cell,
-  .mdc-data-table__header-cell {
-    padding: 0 0.5rem;
-  }
 }
 
 .quote-management-row {
@@ -225,12 +199,6 @@ table.quote-management-grid {
       transition: none;
     }
   }
-}
-
-.quote-management-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: center;
 }
 
 // Header text the table needs for screen readers but that would only add noise on screen.

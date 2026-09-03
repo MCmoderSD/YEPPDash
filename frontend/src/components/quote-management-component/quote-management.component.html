@@ -79,8 +79,8 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="quote-management-scroll">
-    <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackQuote" class="quote-management-grid">
+  <app-table-frame>
+    <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackQuote" class="app-data-table">
 
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="quote-management-id">#</th>
@@ -175,7 +175,7 @@
       ></tr>
 
       <tr class="quote-management-empty-row" *matNoDataRow>
-        <td class="quote-management-empty" [attr.colspan]="columns.length">
+        <td class="app-table-empty" [attr.colspan]="columns.length">
           @if (loading()) {
           } @else if (unreachable()) {
             Could not load your quotes. Please try again.
@@ -187,7 +187,5 @@
         </td>
       </tr>
     </table>
-  </div>
-
-  <app-scroll-bar [target]="scroll"/>
+  </app-table-frame>
 </section>
