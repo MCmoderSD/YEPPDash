@@ -1,8 +1,8 @@
 <section class="command-page">
 
-  <header class="command-page-header">
-    <h1 class="command-page-title">Custom Commands</h1>
-    <p class="command-page-count">
+  <header class="app-page-header">
+    <h1 class="app-page-title">Custom Commands</h1>
+    <p class="app-page-sub">
       @if (loading() && count() === 0) {
         <span class="app-skeleton app-skeleton-bar app-skeleton-text command-page-count-skeleton" aria-hidden="true"></span>
       } @else {
@@ -19,7 +19,7 @@
     </p>
   </header>
 
-  <div class="command-page-toolbar">
+  <div class="app-toolbar">
     <button
       mat-flat-button
       type="button"
@@ -31,12 +31,7 @@
     </button>
   </div>
 
-  <mat-progress-bar
-    class="command-page-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!busy()"
-    [style.visibility]="busy() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="busy()"/>
 
   <app-command-table
     [commands]="commandList()"

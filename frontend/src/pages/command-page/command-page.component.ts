@@ -2,7 +2,7 @@ import { Component, computed, inject, Signal, signal, WritableSignal } from '@an
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
 import { CommandActiveChange, CommandSubmit, CommandTableComponent } from '../../components/command-table-component/command-table.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { AuthService } from '../../services/auth.service';
@@ -15,7 +15,7 @@ import { CustomCommand, CustomCommandDraft, sameTrigger } from '../../data/custo
   selector: 'app-command-page',
   templateUrl: './command-page.component.html',
   styleUrl: './command-page.component.scss',
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, CommandTableComponent],
+  imports: [BusyBarComponent, MatButtonModule, MatIconModule, CommandTableComponent],
 })
 export class CommandPageComponent {
 

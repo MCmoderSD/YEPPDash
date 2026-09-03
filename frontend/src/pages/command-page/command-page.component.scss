@@ -10,24 +10,6 @@
   margin-inline: auto;
 }
 
-.command-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.command-page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.command-page-count {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
 // The count line is centred by its ancestor's text-align, which only ever steers inline content —
 // .app-skeleton fixes this bar's own display to block, so it needs its own margin to land in the
 // middle instead of pinned to the start edge. Sized for the longest real sentence this line ever
@@ -42,16 +24,4 @@
 // be it here without the fade replaying every time the sentence's own wording changes underneath.
 .command-page-count-text {
   display: block;
-}
-
-.command-page-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.command-page-progress {
-  flex: none;
-  align-self: stretch;
 }
