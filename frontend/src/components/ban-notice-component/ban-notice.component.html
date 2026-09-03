@@ -1,0 +1,27 @@
+@if (ban(); as active) {
+  <app-notice [icon]="icon()" [tone]="tone()">
+    <span>
+      @if (active.expiresAt; as until) {
+        {{ active.displayName }} is timed out until {{ until | date: 'MMM d, y, HH:mm' }}.
+      } @else {
+        {{ active.displayName }} is banned.
+      }
+
+      @if (note(); as detail) {
+        {{ detail }}
+      }
+    </span>
+
+    <button
+      notice-action
+      mat-stroked-button
+      type="button"
+      class="ban-notice-action"
+      [disabled]="lifting()"
+      [attr.aria-label]="actionLabel()"
+      (click)="lift()"
+    >
+      {{ actionText() }}
+    </button>
+  </app-notice>
+}

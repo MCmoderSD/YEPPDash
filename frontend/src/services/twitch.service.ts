@@ -1,5 +1,5 @@
 import { HttpParams } from '@angular/common/http';
-import { Service } from '@angular/core';
+import { Service, signal, Signal, WritableSignal } from '@angular/core';
 import { ChannelMember, Editor, Moderator, Vip } from '../data/channel-roles';
 import { TwitchUser } from '../data/twitch-user';
 import { FollowerProfile, FollowStatus } from '../data/follower';
@@ -11,6 +11,10 @@ import { ApiService } from './api.service';
 
 @Service()
 export class TwitchService extends ApiService {
+
+  private readonly banRevision: WritableSignal<number> = signal(0);
+
+  readonly bansChanged: Signal<number> = this.banRevision.asReadonly();
 
   constructor() {
     super('twitch');
@@ -129,8 +133,10 @@ export class TwitchService extends ApiService {
     return this.get<BanCounts>('banned/count');
   }
 
-  banUser(userId: string, duration: number | null, reason: string | null): Promise<BanResult> {
-    return this.post<BanResult>(`banned/${encodeURIComponent(userId)}`, { duration, reason });
+  async banUser(userId: string, duration: number | null, reason: string | null): Promise<BanResult> {
+    const result: BanResult = await this.post<BanResult>(`banned/${encodeURIComponent(userId)}`, { duration, reason });
+    this.banRevision.update((revision: number): number => revision + 1);
+    return result;
   }
 
   getBan(userId: string): Promise<BannedUser | null> {
@@ -141,8 +147,9 @@ export class TwitchService extends ApiService {
     return (await this.getBan(userId)) !== null;
   }
 
-  unbanUser(userId: string): Promise<void> {
-    return this.delete(`banned/${encodeURIComponent(userId)}`);
+  async unbanUser(userId: string): Promise<void> {
+    await this.delete(`banned/${encodeURIComponent(userId)}`);
+    this.banRevision.update((revision: number): number => revision + 1);
   }
 
   getStreamStatus(): Promise<StreamStatus> {

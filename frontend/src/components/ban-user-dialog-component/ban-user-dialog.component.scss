@@ -8,6 +8,15 @@
   position: relative;
 }
 
+// Everything the dialog has to say about the account is one block, not a list of separate
+// paragraphs: two boxes a full row apart read as further from each other than the lower one is from
+// the fields under it, even though both gaps are the same. Half the gap inside the group, the whole
+// one to say where it ends.
+app-ban-notice + app-notice,
+app-notice + app-notice {
+  margin-top: -0.5rem;
+}
+
 // What the ban costs the account beyond the ban itself. Carries the error colour because it is a
 // consequence the broadcaster cannot undo from here, not a hint.
 .ban-user-note {

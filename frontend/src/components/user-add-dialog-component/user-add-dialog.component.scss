@@ -7,3 +7,9 @@
   // The containing block for the scroll bar drawn over this content.
   position: relative;
 }
+
+// Both notices talk about the same account, so they sit closer to each other than the group does to
+// anything else. See the same rule in the ban dialog for why the even gap read as uneven.
+app-ban-notice + app-notice {
+  margin-top: -0.5rem;
+}

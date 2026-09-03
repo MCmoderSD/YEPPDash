@@ -1,0 +1,45 @@
+// The notice is the whole component, so the host steps out of the way and lets it be the flex item
+// the dialog around it already spaces. A wrapper here would take that gap for itself.
+:host {
+  display: contents;
+}
+
+// The button sits on the notice's container colour, which is not the surface its own palette was
+// picked against. Taking the notice's text colour for the label and the outline is what keeps it
+// legible on all three tones instead of only on the neutral one.
+.ban-notice-action {
+  --mat-button-outlined-label-text-color: currentcolor;
+  --mat-button-outlined-state-layer-color: currentcolor;
+  --mat-button-outlined-ripple-color: currentcolor;
+  --mat-button-outlined-disabled-label-text-color: currentcolor;
+
+  // The outline is the one part that must not match the label. At full strength it draws a second
+  // hard edge inside a box that already has one, and the button ends up louder than the sentence it
+  // belongs to. A hint of the same colour is enough to say where it ends.
+  --mat-button-outlined-outline-color: color-mix(in srgb, currentcolor 28%, transparent);
+  --mat-button-outlined-disabled-outline-color: color-mix(in srgb, currentcolor 28%, transparent);
+
+  // Sized against the message rather than against the dialog's own buttons. This one is part of a
+  // sentence; at the height and weight Material gives a dialog action it reads as the main thing to
+  // press, which is exactly what it is not.
+  --mat-button-outlined-container-height: 1.75rem;
+  --mat-button-outlined-horizontal-padding: 0.625rem;
+  --mat-button-outlined-label-text-size: 0.75rem;
+
+  flex: none;
+
+  // The notice aligns its children to the top so the leading icon meets the first line of the
+  // message. The button answers the whole message rather than its first line, so it opts out and
+  // takes the middle of however many lines that turns out to be.
+  align-self: center;
+
+  // The outline alone left it looking cut out of the container. A wash of its own colour gives it a
+  // surface to sit on, and Material's hover layer still stacks on top of that.
+  background: color-mix(in srgb, currentcolor 10%, transparent);
+}
+
+// The colours above are the notice's own, so the disabled state can no longer be told apart by
+// colour alone while the unban is in flight.
+.ban-notice-action[disabled] {
+  opacity: 0.6;
+}

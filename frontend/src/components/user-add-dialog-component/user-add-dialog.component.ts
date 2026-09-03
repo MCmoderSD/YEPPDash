@@ -4,6 +4,8 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angu
 import { MatIconModule } from '@angular/material/icon';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserFinderComponent } from '../user-finder-component/user-finder.component';
+import { BanNoticeComponent } from '../ban-notice-component/ban-notice.component';
+import { BannedUser } from '../../data/banned-user';
 import { TwitchUser } from '../../data/twitch-user';
 import { NoticeComponent } from '../notice-component/notice.component';
 import { openDialog } from '../../services/dialog';
@@ -19,7 +21,7 @@ export interface UserAddDialogData {
   selector: 'app-user-add-dialog',
   templateUrl: './user-add-dialog.component.html',
   styleUrl: './user-add-dialog.component.scss',
-  imports: [NoticeComponent, MatButtonModule, MatDialogModule, MatIconModule, ScrollBarComponent, UserFinderComponent],
+  imports: [BanNoticeComponent, NoticeComponent, MatButtonModule, MatDialogModule, MatIconModule, ScrollBarComponent, UserFinderComponent],
 })
 export class UserAddDialogComponent {
 
@@ -47,8 +49,20 @@ export class UserAddDialogComponent {
 
   protected readonly broadcaster: Signal<boolean> = computed((): boolean => this.found()?.roles?.broadcaster === true);
 
+  protected readonly restriction: WritableSignal<BannedUser | null> = signal<BannedUser | null>(null);
+
+  protected readonly restrictionNote: Signal<string> = computed((): string => {
+    const ban: BannedUser | null = this.restriction();
+    if (ban === null) return '';
+
+    const lift: string = ban.expiresAt === null ? 'Unban them' : 'Lift the timeout';
+
+    return `Twitch does not hand a role to an account it is keeping out of the chat. ${lift} first, `
+      + `then add them as a ${this.data.role}.`;
+  });
+
   protected readonly valid: Signal<boolean> = computed(
-    (): boolean => this.found() !== null && !this.alreadyHas() && !this.broadcaster(),
+    (): boolean => this.found() !== null && !this.alreadyHas() && !this.broadcaster() && this.restriction() === null,
   );
 
   static open(dialog: MatDialog, title: string, role: ChannelRoleName): MatDialogRef<UserAddDialogComponent, TwitchUser> {

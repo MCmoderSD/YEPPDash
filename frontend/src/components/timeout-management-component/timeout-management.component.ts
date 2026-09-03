@@ -1,4 +1,4 @@
-import { Component, computed, inject, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, Signal, signal, untracked, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -53,7 +53,10 @@ export class TimeoutManagementComponent {
   protected readonly addLabel: Signal<string> = computed((): string => this.banning() ? 'Ban user' : 'Timeout user');
 
   constructor() {
-    void this.load();
+    effect((): void => {
+      this.twitch.bansChanged();
+      untracked((): void => void this.load());
+    });
   }
 
   protected select(index: BanTab): void {
@@ -77,8 +80,6 @@ export class TimeoutManagementComponent {
       this.notifications.success(timeout
         ? `The timeout on ${ban.displayName} is lifted.`
         : `${ban.displayName} is unbanned.`);
-
-      await this.load();
     } catch {
       this.notifications.failure(timeout
         ? `Could not lift the timeout on ${ban.displayName}.`
@@ -100,7 +101,6 @@ export class TimeoutManagementComponent {
         : `${choice.user.displayName} is banned.`);
 
       this.select(timeout ? BanTab.Timeouts : BanTab.Bans);
-      await this.load();
     } catch {
       this.notifications.failure(timeout
         ? `Could not time out ${choice.user.displayName}.`
