@@ -6,9 +6,6 @@
   align-items: center;
   gap: 1rem;
 
-  // The containing block for the scroll bar drawn over the table below.
-  position: relative;
-
   // Sized off the follower column, which takes whatever the fixed columns below leave. A Twitch name
   // is at most 25 characters, so this is wide enough for the longest one that can exist to sit on a
   // single line next to its avatar and badges — and no wider, since nothing can fill the space.
@@ -55,26 +52,6 @@
   align-self: stretch;
 }
 
-.birthday-list-scroll {
-  align-self: stretch;
-  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
-  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
-  overflow: auto hidden;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-outlined);
-}
-
-table.birthday-list-grid {
-  width: 100%;
-  background: transparent;
-
-  //noinspection CssUnusedSymbol
-  .mdc-data-table__cell,
-  .mdc-data-table__header-cell {
-    padding: 0 0.5rem;
-  }
-}
-
 .birthday-list-row {
   &:hover,
   &:focus-within {
@@ -88,38 +65,9 @@ table.birthday-list-grid {
   cursor: pointer;
 }
 
-.birthday-list-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-// Carries the keyboard path to the details dialog now that the row itself is the mouse path. It
-// wraps the name alone: the badges sit ahead of it, and nesting them in a control with its own
-// aria-label would hide them from a screen reader.
-.birthday-list-user {
-  flex: none;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
-}
-
-.birthday-list-avatar {
-  flex: none;
-  display: block;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
+// A follower Twitch no longer knows is shown by name alone — no avatar circle, since there is no
+// picture behind it and an empty one would only read as a failed load.
+//
 // Never wrapped: a Twitch name is at most 25 characters, and letting the longest one break across
 // several lines would make its row tower over the rest. The table scrolls sideways instead.
 .birthday-list-name {
@@ -161,12 +109,6 @@ table.birthday-list-grid {
 .birthday-list-today {
   color: var(--mat-sys-primary);
   font-weight: 600;
-}
-
-.birthday-list-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: center;
 }
 
 // While the ghost rows fill the cell, none of the empty state's own padding or centering applies —

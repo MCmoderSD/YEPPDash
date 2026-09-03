@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,8 +8,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
+import { TableFrameComponent } from '../table-frame-component/table-frame.component';
+import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
@@ -17,6 +17,7 @@ import { BirthdayService } from '../../services/birthday.service';
 import { NotificationService } from '../../services/notification.service';
 import { ageOn, Birthday, birthdayToDate, daysUntilNextBirthday, FollowerBirthday } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
+import { ghostRows } from '../../data/skeleton';
 
 export interface BirthdayEntry {
   birthday: Birthday;
@@ -38,7 +39,7 @@ function labelFor(daysUntil: number): string {
   selector: 'app-birthday-list',
   templateUrl: './birthday-list.component.html',
   styleUrl: './birthday-list.component.scss',
-  imports: [DatePipe, NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
+  imports: [DatePipe, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class BirthdayListComponent {
 
@@ -60,11 +61,7 @@ export class BirthdayListComponent {
 
   protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
 
-  protected readonly skeletonRows: Signal<readonly number[]> = computed((): readonly number[] => {
-    const expected: number | null = this.expected();
-    if (expected === null || expected <= 0) return [];
-    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
-  });
+  protected readonly skeletonRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
 
   protected readonly columns: string[] = ['user', 'date', 'age', 'next'];
 
@@ -102,8 +99,7 @@ export class BirthdayListComponent {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  protected showDetails(entry: BirthdayEntry, event?: Event): void {
-    event?.stopPropagation();
+  protected showDetails(entry: BirthdayEntry): void {
     if (entry.user) UserInfoDialogComponent.open(this.dialog, entry.user);
   }
 

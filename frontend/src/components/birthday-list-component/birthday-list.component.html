@@ -43,7 +43,7 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="birthday-list-scroll">
+  <app-table-frame>
     <table
       mat-table
       matSort
@@ -51,36 +51,14 @@
       matSortDirection="asc"
       matSortDisableClear="true"
       [dataSource]="dataSource"
-      class="birthday-list-grid"
+      class="app-data-table"
     >
 
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Follower</th>
         <td mat-cell *matCellDef="let entry">
           @if (entry.user) {
-            <div class="birthday-list-identity">
-              <img
-                class="birthday-list-avatar"
-                [ngSrc]="entry.user.profileImageUrl"
-                [width]=32
-                [height]=32
-                loading="eager"
-                alt=""
-              />
-
-              <app-user-badges [user]="entry.user"/>
-
-              <button
-                type="button"
-                class="birthday-list-user"
-                [attr.aria-label]="'Details for ' + entry.name"
-                (click)="showDetails(entry, $event)"
-              >
-                <span class="birthday-list-name" [style.--chat-color]="entry.user.color">
-                  {{ entry.name }}
-                </span>
-              </button>
-            </div>
+            <app-user-identity [user]="entry.user"/>
           } @else {
             <span class="birthday-list-name">{{ entry.name }}</span>
           }
@@ -119,7 +97,7 @@
       ></tr>
 
       <tr class="birthday-list-empty-row" *matNoDataRow>
-        <td class="birthday-list-empty" [class.birthday-list-empty-skeleton]="initialLoad()" [attr.colspan]="columns.length">
+        <td class="app-table-empty" [class.birthday-list-empty-skeleton]="initialLoad()" [attr.colspan]="columns.length">
           @if (initialLoad()) {
             <div class="birthday-list-skeleton app-skeleton-appear" role="status">
               <span class="app-visually-hidden">Loading your followers' birthdays…</span>
@@ -153,7 +131,5 @@
         </td>
       </tr>
     </table>
-  </div>
-
-  <app-scroll-bar [target]="scroll"/>
+  </app-table-frame>
 </section>
