@@ -4,9 +4,9 @@
     <p class="app-visually-hidden" role="status">Loading your community…</p>
   }
 
-  <header class="community-page-header">
-    <h1 class="community-page-title">Community</h1>
-    <p class="community-page-count" [class.app-fade-in]="!skeleton()">
+  <header class="app-page-header">
+    <h1 class="app-page-title">Community</h1>
+    <p class="app-page-sub" [class.app-fade-in]="!skeleton()">
       @if (skeleton()) {
         <span
           class="app-skeleton app-skeleton-bar app-skeleton-text community-page-count-skeleton"
@@ -18,7 +18,7 @@
     </p>
   </header>
 
-  <div class="community-page-toolbar">
+  <div class="app-toolbar">
     <button
       mat-stroked-button
       type="button"
@@ -30,25 +30,9 @@
     </button>
   </div>
 
-  <mat-progress-bar
-    class="community-page-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!refreshing()"
-    [style.visibility]="refreshing() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="refreshing()"/>
 
-  <mat-form-field appearance="outline" class="community-page-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name or user ID"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search class="table-search-tucked" placeholder="Name or user ID" (query)="filter($event)"/>
 
   <app-table-frame>
     <table

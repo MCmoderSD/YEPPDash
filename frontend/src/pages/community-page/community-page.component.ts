@@ -1,23 +1,22 @@
-import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
 import { TableFrameComponent } from '../../components/table-frame-component/table-frame.component';
 import { UserIdentityComponent } from '../../components/user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { wireDataSource } from '../../services/data-source';
+import { filterRows, wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { FollowerProfile } from '../../data/follower';
-import { ghostRows } from '../../data/skeleton';
+import { ListState } from '../../services/list-state';
+import { TableSearchComponent } from '../../components/table-search-component/table-search.component';
 
 export interface CommunityEntry {
   user: FollowerProfile;
@@ -28,7 +27,7 @@ export interface CommunityEntry {
   selector: 'app-community-page',
   templateUrl: './community-page.component.html',
   styleUrl: './community-page.component.scss',
-  imports: [DatePipe, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatProgressBarModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
+  imports: [TableSearchComponent, BusyBarComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class CommunityPageComponent {
 
@@ -36,20 +35,16 @@ export class CommunityPageComponent {
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  private readonly rows: WritableSignal<CommunityEntry[]> = signal<CommunityEntry[]>([]);
-  private readonly isLoading: WritableSignal<boolean> = signal(false);
-  private readonly failed: WritableSignal<boolean> = signal(false);
+  private readonly state: ListState<CommunityEntry> = new ListState<CommunityEntry>();
 
-  protected readonly loading: Signal<boolean> = this.isLoading.asReadonly();
-  protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
+  private readonly rows: Signal<CommunityEntry[]> = this.state.rows.asReadonly();
 
-  protected readonly count: Signal<number> = computed((): number => this.rows().length);
-  protected readonly skeleton: Signal<boolean> = computed((): boolean => this.isLoading() && this.rows().length === 0);
-  protected readonly refreshing: Signal<boolean> = computed((): boolean => this.isLoading() && this.rows().length > 0);
-
-  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
-
-  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
+  protected readonly loading: Signal<boolean> = this.state.loading.asReadonly();
+  protected readonly unreachable: Signal<boolean> = this.state.failed.asReadonly();
+  protected readonly count: Signal<number> = this.state.count;
+  protected readonly skeleton: Signal<boolean> = this.state.skeleton;
+  protected readonly refreshing: Signal<boolean> = this.state.refreshing;
+  protected readonly ghostRows: Signal<readonly number[]> = this.state.ghostRows;
 
   protected readonly columns: string[] = ['user', 'followedAt'];
 
@@ -83,8 +78,7 @@ export class CommunityPageComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
-    this.dataSource.paginator?.firstPage();
+    filterRows(this.dataSource, value);
   }
 
   protected showDetails(entry: CommunityEntry): void {
@@ -96,31 +90,11 @@ export class CommunityPageComponent {
   }
 
   private async load(): Promise<void> {
-    this.isLoading.set(true);
-    this.failed.set(false);
-    this.expected.set(null);
-
-    if (this.rows().length === 0) {
-      void this.twitch.countFollowers()
-        .then((count: number): void => {
-          if (this.isLoading()) this.expected.set(count);
-        })
-        .catch((): void => void 0);
-    }
-
-    try {
-      const followers: FollowerProfile[] = await this.twitch.getFollowers();
-
-      this.rows.set(followers.map((user: FollowerProfile): CommunityEntry => ({
-        user,
-        followedAt: new Date(user.followedAt),
-      })));
-    } catch {
-      this.rows.set([]);
-      this.failed.set(true);
-      this.notifications.failure('Could not load your community.');
-    } finally {
-      this.isLoading.set(false);
-    }
+    await this.state.load(
+      (): Promise<number> => this.twitch.countFollowers(),
+      async (): Promise<CommunityEntry[]> => (await this.twitch.getFollowers())
+        .map((user: FollowerProfile): CommunityEntry => ({ user, followedAt: new Date(user.followedAt) })),
+      (): void => this.notifications.failure('Could not load your community.'),
+    );
   }
 }
