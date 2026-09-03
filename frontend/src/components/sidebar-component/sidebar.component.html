@@ -13,7 +13,7 @@
     <span class="sidebar-link-label">Overview</span>
   </a>
 
-  @for (group of groups; track group.id) {
+  @for (group of groups(); track group.id) {
     <section class="sidebar-group">
       <h3 class="sidebar-group-heading">
         <button

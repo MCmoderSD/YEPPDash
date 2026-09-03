@@ -1,0 +1,18 @@
+<section class="blocked">
+  <mat-icon class="blocked-icon" aria-hidden="true">{{ icon() }}</mat-icon>
+
+  <p class="blocked-label">{{ label() }}</p>
+
+  <h1 class="blocked-heading">{{ heading() }}</h1>
+
+  <p class="blocked-reason">{{ reason() }}</p>
+
+  @if (note(); as detail) {
+    <p class="blocked-note">{{ detail }}</p>
+  }
+
+  <a class="blocked-home" [routerLink]="overviewPath">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    <span>Back to the dashboard</span>
+  </a>
+</section>

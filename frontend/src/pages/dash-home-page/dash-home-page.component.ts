@@ -1,4 +1,4 @@
-import { Component, inject, Signal } from '@angular/core';
+import { Component, computed, inject, Signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CardCarouselComponent } from '../../components/card-carousel-component/card-carousel.component';
 import { BotManageComponent } from '../../components/bot-manage-component/bot-manage.component';
@@ -6,7 +6,8 @@ import { BroadcastOverviewComponent } from '../../components/broadcast-overview-
 import { environment } from '../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { TwitchUser } from '../../data/twitch-user';
-import { NAV_GROUPS, NavGroup } from '../../data/dash-nav';
+import { hasChannelPoints } from '../../data/broadcaster';
+import { navGroupsFor, NavGroup } from '../../data/dash-nav';
 
 @Component({
   selector: 'app-dash-home-page',
@@ -22,5 +23,5 @@ export class DashHomePageComponent {
 
   protected readonly user: Signal<TwitchUser | null> = this.auth.currentUser;
 
-  protected readonly groups: readonly NavGroup[] = NAV_GROUPS;
+  protected readonly groups: Signal<readonly NavGroup[]> = computed((): readonly NavGroup[] => navGroupsFor(hasChannelPoints(this.user())));
 }
