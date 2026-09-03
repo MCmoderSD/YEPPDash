@@ -1,0 +1,14 @@
+<mat-form-field appearance="outline" class="table-search-field">
+  <mat-label>Search</mat-label>
+
+  <input
+    matInput
+    #search
+    type="search"
+    autocomplete="off"
+    [placeholder]="placeholder()"
+    (input)="query.emit(search.value.trim())"
+  />
+
+  <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+</mat-form-field>

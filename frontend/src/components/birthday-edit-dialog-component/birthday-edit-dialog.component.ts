@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { Birthday, BirthdayDraft, birthdayToDate, dateToBirthdayDraft } from '../../data/birthday';
 import { LocaleDateAdapter } from './locale-date.adapter';
+import { openDialog } from '../../services/dialog';
 
 const MIN_YEAR: number = 1900;
 
@@ -15,8 +16,6 @@ export interface BirthdayEditDialogData {
   birthday: Birthday | null;
 }
 
-// Standalone so it can be imported on demand: it is the only thing in the app that needs
-// Material's datepicker, and it is opened from the app shell, which every page loads.
 @Component({
   selector: 'app-birthday-edit-dialog',
   templateUrl: './birthday-edit-dialog.component.html',
@@ -29,15 +28,11 @@ export interface BirthdayEditDialogData {
     MatInputModule,
     ScrollBarComponent,
   ],
-  // MAT_DATE_LOCALE defaults to LOCALE_ID, which is fixed at build time and is en-US — the same
-  // thing that pinned every other date here to the American order, and what LocaleDatePipe exists
-  // to avoid. Handing it undefined lets Intl fall back to the platform's own locale instead, so the
-  // field is written the way the reader writes dates.
   providers: [
     provideNativeDateAdapter(),
     { provide: MAT_DATE_LOCALE, useValue: undefined },
-    { provide: DateAdapter, useClass: LocaleDateAdapter },
-  ],
+    { provide: DateAdapter, useClass: LocaleDateAdapter }
+  ]
 })
 export class BirthdayEditDialogComponent {
 
@@ -69,15 +64,8 @@ export class BirthdayEditDialogComponent {
   });
 
   static open(dialog: MatDialog, birthday: Birthday | null,): MatDialogRef<BirthdayEditDialogComponent, BirthdayDraft> {
-    return dialog.open<BirthdayEditDialogComponent, BirthdayEditDialogData, BirthdayDraft>(
-      BirthdayEditDialogComponent,
-      {
-        data: { birthday },
-        width: '26rem',
-        minWidth: 'min(20rem, 92vw)',
-        maxWidth: '92vw',
-      },
-    );
+    return openDialog<BirthdayEditDialogComponent, BirthdayEditDialogData, BirthdayDraft>(
+      dialog, BirthdayEditDialogComponent, { birthday }, { width: '26rem', minWidth: 'min(20rem, 92vw)' });
   }
 
   protected choose(date: Date | null): void {

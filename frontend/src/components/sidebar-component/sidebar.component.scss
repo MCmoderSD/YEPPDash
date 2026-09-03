@@ -26,8 +26,12 @@
 //
 // Sticky rather than fixed, on purpose. A sticky box may only travel inside its containing block,
 // which here is the drawer — and the drawer ends where the content column does, above the footer.
-// So the panel rides back up out of the way as the footer arrives instead of being parked over it,
-// and none of that has to be measured and fed back in.
+// So the panel rides back up out of the way as the footer arrives instead of being parked over it.
+// It keeps its full height while riding, though, which leaves its last entry behind that clip edge
+// with no scroll left to reach it. What comes off the maximum below is therefore how much of the
+// viewport the footer covers right now — nothing for most of the page, its full height at the
+// bottom — so the panel spans the navbar to the footer's top and never further. FooterComponent
+// measures that and publishes it as --app-footer-inset.
 //
 // All of it hangs on `overflow: clip` in dash-page.component.scss: a sticky box holds against the
 // nearest scroll container, and while Material's shell is one with `overflow: hidden` this pins
@@ -52,7 +56,7 @@
     // padding taller than the space it was fitted to — the last entry then sits below the fold with
     // no way to scroll to it, because the nav does not consider itself overfull.
     box-sizing: border-box;
-    max-height: calc(100dvh - var(--app-navbar-block));
+    max-height: calc(100dvh - var(--app-navbar-block) - var(--app-footer-inset, 0px));
 
     overflow-y: auto;
 

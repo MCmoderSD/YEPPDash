@@ -1,0 +1,12 @@
+<img
+  class="profile-avatar"
+  [ngSrc]="user().profileImageUrl"
+  [width]=128
+  [height]=128
+  alt=""
+/>
+
+<div class="profile-title">
+  <app-user-badges [user]="user()" [size]="badgeSize"/>
+  <p class="profile-name" [style.--chat-color]="user().color">{{ user().displayName }}</p>
+</div>

@@ -1,10 +1,10 @@
 <section class="bdsm-page">
 
-  <header class="bdsm-page-header">
-    <h1 class="bdsm-page-title">BDSM Test</h1>
+  <header class="app-page-header">
+    <h1 class="app-page-title">BDSM Test</h1>
   </header>
 
-  <div class="bdsm-page-toolbar">
+  <div class="app-toolbar">
     <button
       mat-stroked-button
       type="button"
@@ -16,12 +16,7 @@
     </button>
   </div>
 
-  <mat-progress-bar
-    class="bdsm-page-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!showProgress()"
-    [style.visibility]="showProgress() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="showProgress()"/>
 
   <mat-tab-group
     class="bdsm-page-tabs"

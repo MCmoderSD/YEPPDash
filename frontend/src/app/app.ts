@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, ElementRef, inject, Signal, viewChild } from '@angular/core';
+import { Component, computed, inject, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -29,10 +29,4 @@ export class App {
   );
 
   protected readonly chrome: Signal<boolean> = computed((): boolean => !isOverlayUrl(this.url()));
-
-  private readonly footer: Signal<ElementRef<HTMLElement> | undefined> =
-    viewChild('footer', { read: ElementRef });
-
-  protected readonly footerElement: Signal<HTMLElement | null> =
-    computed((): HTMLElement | null => this.footer()?.nativeElement ?? null);
 }

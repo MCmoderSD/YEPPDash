@@ -1,34 +1,30 @@
 import { Component, computed, inject, input, InputSignal, output, OutputEmitterRef, Signal, signal, viewChild, WritableSignal } from '@angular/core';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
-import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
-import { wireDataSource } from '../../services/data-source';
+import { TableFrameComponent } from '../table-frame-component/table-frame.component';
+import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
+import { TABLE_PAGE_SIZES, filterRows, wireDataSource } from '../../services/data-source';
 import { BannedUser } from '../../data/banned-user';
+import { ghostRows } from '../../data/skeleton';
+import { TableSearchComponent } from '../table-search-component/table-search.component';
+import { UserDetailsDirective } from '../../directives/user-details.directive';
 
 export type BanTableMode = 'timeout' | 'ban';
 
 const COLUMNS: readonly string[] = ['user', 'when', 'reason', 'revoke'];
 
-const MAX_GHOST_ROWS: number = 25;
-
 @Component({
   selector: 'app-ban-table',
   templateUrl: './ban-table.component.html',
   styleUrl: './ban-table.component.scss',
-  imports: [DatePipe, NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent],
+  imports: [UserDetailsDirective, TableSearchComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
 })
 export class BanTableComponent {
 
-  private readonly dialog: MatDialog = inject(MatDialog);
 
   readonly bans: InputSignal<BannedUser[]> = input.required<BannedUser[]>();
 
@@ -45,12 +41,7 @@ export class BanTableComponent {
 
   protected readonly columns: readonly string[] = COLUMNS;
 
-  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
-    const expected: number | null = this.expected();
-    if (expected === null || expected <= 0) return [];
-
-    return Array.from({ length: Math.min(expected, MAX_GHOST_ROWS) }, (_: unknown, index: number): number => index);
-  });
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
 
   protected readonly whenLabel: Signal<string> = computed((): string => this.mode() === 'timeout' ? 'Expires' : 'Banned');
 
@@ -58,7 +49,7 @@ export class BanTableComponent {
 
   protected readonly loaded: Signal<boolean> = computed((): boolean => !this.loading());
 
-  protected readonly pageSizes: number[] = [10, 25, 50, 100];
+  protected readonly pageSizes: readonly number[] = TABLE_PAGE_SIZES;
 
   private readonly sorter: Signal<MatSort | undefined> = viewChild(MatSort);
   private readonly pager: Signal<MatPaginator | undefined> = viewChild(MatPaginator);
@@ -89,14 +80,9 @@ export class BanTableComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
-    this.dataSource.paginator?.firstPage();
+    filterRows(this.dataSource, value);
   }
 
-  protected showDetails(ban: BannedUser, event?: Event): void {
-    event?.stopPropagation();
-    UserInfoDialogComponent.open(this.dialog, ban);
-  }
 
   protected revokeBan(event: Event, ban: BannedUser): void {
     event.stopPropagation();

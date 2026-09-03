@@ -1,0 +1,74 @@
+<h3 class="entries-heading">Entries ({{ participants().length }})</h3>
+
+<app-table-frame class="entries-frame" maxHeight="30rem">
+  <table mat-table matSort [dataSource]="dataSource" class="app-data-table">
+
+    <ng-container matColumnDef="user">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
+      <td mat-cell *matCellDef="let entry">
+        <app-user-identity [user]="entry.user ?? null" [name]="label(entry)"/>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="roles">
+      <th mat-header-cell *matHeaderCellDef scope="col">Counted as</th>
+      <td mat-cell *matCellDef="let entry">
+        <span class="entries-roles">
+          @if (entry.isFollower) { <app-status-badge label="Follower" [caps]="false"/> }
+          @if (tier(entry); as tierName) { <app-status-badge [label]="tierName" [caps]="false"/> }
+          @if (entry.isVip) { <app-status-badge label="VIP" [caps]="false"/> }
+          @if (entry.isModerator) { <app-status-badge label="Moderator" [caps]="false"/> }
+          @if (!entry.isFollower && entry.subTier === 'None' && !entry.isVip && !entry.isModerator) {
+            <span class="entries-role-none">—</span>
+          }
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="multiplier">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Weight</th>
+      <td mat-cell *matCellDef="let entry" class="entries-weight">
+        <span class="entries-weight-value">×{{ entry.multiplier | number:'1.0-2' }}</span>
+        <span class="entries-weight-odds">{{ odds(entry) | percent:'1.0-1' }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="entered">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Entered</th>
+      <td mat-cell *matCellDef="let entry" class="app-table-quiet">
+        {{ entry.enteredAt | localeDate:'medium':'short' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef scope="col">
+        <span class="app-visually-hidden">Actions</span>
+      </th>
+      <td mat-cell *matCellDef="let entry" class="entries-actions">
+        <button
+          mat-icon-button
+          type="button"
+          [disabled]="busy()"
+          [attr.aria-label]="'Take ' + label(entry) + ' off the wheel'"
+          matTooltip="Take off the wheel"
+          (click)="removed.emit(entry)"
+        >
+          <mat-icon aria-hidden="true">person_remove</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+
+    <tr *matNoDataRow>
+      <td class="app-table-empty" [attr.colspan]="columns.length">
+        @if (status() === 'Open') {
+          Nobody has entered yet. The reward is live in your channel.
+        } @else {
+          Nobody has entered yet.
+        }
+      </td>
+    </tr>
+  </table>
+</app-table-frame>

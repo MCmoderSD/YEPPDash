@@ -24,9 +24,6 @@ public sealed partial class TwitchController(
     private const int CategoryPageSize = 20;
     private const long BanMaxSeconds = 1_209_600;
     private const int BanReasonMaxLength = 500;
-    private const int RewardTitleMaxLength = 45;
-    private const int RewardPromptMaxLength = 200;
-    private const int RewardCooldownMaxSeconds = 604_800;
 
     #region Users
     
@@ -49,7 +46,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"look up {total} Twitch users");
+            return this.TwitchFailure(logger, exception, $"look up {total} Twitch users");
         }
     }
 
@@ -172,7 +169,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "list the editors");
+            return this.TwitchFailure(logger, exception, "list the editors");
         }
     }
 
@@ -204,7 +201,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "list the followers");
+            return this.TwitchFailure(logger, exception, "list the followers");
         }
     }
 
@@ -230,7 +227,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"check whether {userId} follows the channel");
+            return this.TwitchFailure(logger, exception, $"check whether {userId} follows the channel");
         }
     }
     #endregion
@@ -250,7 +247,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "list the banned users");
+            return this.TwitchFailure(logger, exception, "list the banned users");
         }
     }
 
@@ -267,7 +264,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "count the banned users");
+            return this.TwitchFailure(logger, exception, "count the banned users");
         }
     }
 
@@ -294,7 +291,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"ban {userId}");
+            return this.TwitchFailure(logger, exception, $"ban {userId}");
         }
     }
 
@@ -311,7 +308,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"check whether {userId} is banned");
+            return this.TwitchFailure(logger, exception, $"check whether {userId} is banned");
         }
     }
 
@@ -373,7 +370,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "read the channel information");
+            return this.TwitchFailure(logger, exception, "read the channel information");
         }
     }
 
@@ -427,7 +424,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "update the channel information");
+            return this.TwitchFailure(logger, exception, "update the channel information");
         }
     }
 
@@ -446,7 +443,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"look up {gameIds.Count} games");
+            return this.TwitchFailure(logger, exception, $"look up {gameIds.Count} games");
         }
     }
 
@@ -467,7 +464,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"search categories for '{search}'");
+            return this.TwitchFailure(logger, exception, $"search categories for '{search}'");
         }
     }
     #endregion
@@ -487,7 +484,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "read the stream status");
+            return this.TwitchFailure(logger, exception, "read the stream status");
         }
     }
     #endregion
@@ -544,7 +541,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "list the channel point rewards");
+            return this.TwitchFailure(logger, exception, "list the channel point rewards");
         }
     }
 
@@ -571,7 +568,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"create the reward '{create.Title}'");
+            return this.TwitchFailure(logger, exception, $"create the reward '{create.Title}'");
         }
     }
 
@@ -602,7 +599,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"update the reward {rewardId}");
+            return this.TwitchFailure(logger, exception, $"update the reward {rewardId}");
         }
     }
 
@@ -621,15 +618,15 @@ public sealed partial class TwitchController(
         if (title is not null)
         {
             if (string.IsNullOrWhiteSpace(title)) return "A reward title cannot be empty.";
-            if (title.Length > RewardTitleMaxLength) return $"A reward title cannot be longer than {RewardTitleMaxLength} characters.";
+            if (title.Length > RewardValidation.TitleMaxLength) return $"A reward title cannot be longer than {RewardValidation.TitleMaxLength} characters.";
         }
 
         if (cost is < 1) return "A reward has to cost at least 1 channel point.";
-        if (prompt?.Length > RewardPromptMaxLength) return $"A reward prompt cannot be longer than {RewardPromptMaxLength} characters.";
-        if (backgroundColor is not null && !HexColor().IsMatch(backgroundColor)) return "A background color has to be a hex color like #9147FF.";
+        if (prompt?.Length > RewardValidation.PromptMaxLength) return $"A reward prompt cannot be longer than {RewardValidation.PromptMaxLength} characters.";
+        if (backgroundColor is not null && !RewardValidation.HexColor().IsMatch(backgroundColor)) return "A background color has to be a hex color like #9147FF.";
         if (maxPerStream is < 1) return "A per-stream limit has to be at least 1.";
         if (maxPerUserPerStream is < 1) return "A per-user limit has to be at least 1.";
-        if (globalCooldownSeconds is < 1 or > RewardCooldownMaxSeconds) return $"A cooldown has to be between 1 and {RewardCooldownMaxSeconds} seconds.";
+        if (globalCooldownSeconds is < 1 or > RewardValidation.CooldownMaxSeconds) return $"A cooldown has to be between 1 and {RewardValidation.CooldownMaxSeconds} seconds.";
 
         return null;
     }
@@ -650,7 +647,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"check whether {userIds.Count} users {role}");
+            return this.TwitchFailure(logger, exception, $"check whether {userIds.Count} users {role}");
         }
     }
 
@@ -665,7 +662,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, description);
+            return this.TwitchFailure(logger, exception, description);
         }
     }
 
@@ -680,7 +677,7 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, description);
+            return this.TwitchFailure(logger, exception, description);
         }
     }
 
@@ -703,31 +700,10 @@ public sealed partial class TwitchController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, description);
+            return this.TwitchFailure(logger, exception, description);
         }
     }
 
     [GeneratedRegex("^(other|[a-z]{2,3}(-[a-z]{2,4})?)$", RegexOptions.IgnoreCase)]
     private static partial Regex LanguageCode();
-
-    [GeneratedRegex("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")]
-    private static partial Regex HexColor();
-
-    private IActionResult HandleTwitchFailure(Exception exception, string description)
-    {
-        if (exception is not TwitchOAuthException twitchException)
-        {
-            logger.LogWarning(exception, "Twitch is unreachable, cannot {Description}", description);
-            return StatusCode(StatusCodes.Status502BadGateway);
-        }
-
-        logger.LogWarning(
-            "Twitch refused to {Description} ({StatusCode}): {Body}",
-            description, twitchException.StatusCode, twitchException.ResponseBody);
-
-        var status = (int)twitchException.StatusCode;
-        return status is >= 400 and < 500
-            ? StatusCode(status)
-            : StatusCode(StatusCodes.Status502BadGateway);
-    }
 }

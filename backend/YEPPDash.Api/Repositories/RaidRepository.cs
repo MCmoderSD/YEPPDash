@@ -1,6 +1,7 @@
 using Dapper;
 using MySqlConnector;
 using YEPPDash.Api.Data.Raid;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -34,7 +35,7 @@ public sealed class RaidRepository(MySqlConnection connection)
 
     private static RaidEvent ToRaid(RaidRow row)
     {
-        var firedAt = DateTime.SpecifyKind(row.FiredAt, DateTimeKind.Utc);
+        var firedAt = row.FiredAt.AsUtc();
 
         return new RaidEvent(row.Id, row.ChannelId, row.UserId, row.Viewers, firedAt);
     }

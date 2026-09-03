@@ -9,12 +9,6 @@
   width: 100%;
 }
 
-.rules-hint {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-}
-
 .rules-hint-error {
   color: var(--app-danger);
 }
@@ -57,11 +51,6 @@
 
 .rules-label {
   font: var(--mat-sys-body-medium);
-}
-
-.rules-role-hint {
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
 }
 
 @media (max-width: 40rem) {

@@ -16,11 +16,6 @@
   background: var(--mat-sys-surface-container);
 }
 
-// Kept in the layout even when idle so showing it does not shift the card contents down.
-.bot-manage-progress {
-  visibility: hidden;
-}
-
 .bot-manage-body {
   display: flex;
   flex-direction: column;

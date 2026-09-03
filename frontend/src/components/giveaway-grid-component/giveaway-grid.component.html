@@ -4,11 +4,10 @@
       <span class="app-skeleton app-skeleton-appear grid-ghost" aria-hidden="true"></span>
     }
   } @else {
-    @for (summary of giveaways(); track summary.id; let index = $index) {
+    @for (summary of giveaways(); track summary.id) {
       <button
         type="button"
         class="card app-fade-in"
-        [style.animation-delay]="delay(index)"
         (click)="opened.emit(summary.id)"
       >
         <span class="card-head">
@@ -42,7 +41,6 @@
     <button
       type="button"
       class="card card-new app-fade-in"
-      [style.animation-delay]="delay(giveaways().length)"
       (click)="created.emit()"
     >
       <mat-icon aria-hidden="true">add</mat-icon>

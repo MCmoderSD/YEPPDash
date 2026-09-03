@@ -1,6 +1,6 @@
 <section class="queue-page">
-  <header class="queue-page-header">
-    <h1 class="queue-page-title">Queue</h1>
+  <header class="app-page-header">
+    <h1 class="app-page-title">Queue</h1>
     @if (loaded()) {
       <p class="queue-page-state app-fade-in" [class.queue-page-state-holding]="!queue().isOpen && rows().length > 0">
         <mat-icon class="queue-page-state-icon" aria-hidden="true">{{ queue().isOpen ? 'lock_open' : 'lock' }}</mat-icon>
@@ -81,8 +81,8 @@
 
     <div class="queue-page-panels app-fade-in">
 
-      <section class="queue-page-panel">
-        <h2 class="queue-page-panel-title">The order</h2>
+      <section class="app-panel">
+        <h2 class="app-panel-title">The order</h2>
         <p class="queue-page-panel-hint">
           Everyone who has joined, first at the top. Drag by the handle to move somebody, or focus a
           handle and use the arrow keys, Home and End. Chat sees whatever order you leave it in.
@@ -136,20 +136,7 @@
 
                   <span class="queue-page-identity" role="cell">
                     @if (row.user; as user) {
-                      <img class="queue-page-avatar" [ngSrc]="user.profileImageUrl" [width]=32 [height]=32 loading="eager" alt=""/>
-
-                      <app-user-badges [user]="user"/>
-
-                      <button
-                        type="button"
-                        class="queue-page-name"
-                        [attr.aria-label]="'Details for ' + user.displayName"
-                        (click)="details(row)"
-                      >
-                        <span class="queue-page-display-name" [style.--chat-color]="user.color">
-                          {{ user.displayName }}
-                        </span>
-                      </button>
+                      <app-user-identity [user]="user" [wrap]="true"/>
                     } @else {
                       <span class="queue-page-avatar queue-page-avatar-blank" aria-hidden="true"></span>
 
@@ -182,8 +169,8 @@
         }
       </section>
 
-      <section class="queue-page-panel">
-        <h2 class="queue-page-panel-title">Who may join</h2>
+      <section class="app-panel">
+        <h2 class="app-panel-title">Who may join</h2>
 
         <mat-form-field appearance="outline" class="queue-page-field" subscriptSizing="dynamic">
           <mat-label>Requirement</mat-label>
@@ -213,8 +200,8 @@
     <app-queue-skeleton [rows]="queue().entries.length"/>
   }
 
-  <section class="queue-page-panel">
-    <h2 class="queue-page-panel-title">Chat commands</h2>
+  <section class="app-panel">
+    <h2 class="app-panel-title">Chat commands</h2>
     <p class="queue-page-panel-hint">
       Chat and this page work on the same queue, so anything either side does shows up on the other
       within a second or two.

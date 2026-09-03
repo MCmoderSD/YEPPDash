@@ -1,10 +1,10 @@
-using MCmoderSD.BdsmTestApi.Core;
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Bot;
 using YEPPDash.Api.EventSub;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services;
+using YEPPDash.Api.Services.Streaming;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,59 +30,10 @@ builder.Services.AddYeppDashEventSub();
 // Constructed here rather than by the container, so uptime is measured from startup, not from the
 // first request that happens to ask for it.
 builder.Services.AddSingleton(new UptimeTracker());
-builder.Services.AddSingleton<TwitchChannelCache>();
-builder.Services.AddSingleton<TwitchUserCache>();
-builder.Services.AddHostedService<TwitchUserCacheSweeper>();
-builder.Services.AddSingleton<TwitchChannelWarmup>();
-builder.Services.AddHostedService<TwitchChannelWarmupWorker>();
-builder.Services.AddScoped<TwitchChannelService>();
-builder.Services.AddScoped<QuoteRepository>();
-builder.Services.AddScoped<QuoteService>();
-builder.Services.AddScoped<BirthdayRepository>();
-builder.Services.AddScoped<BirthdayService>();
-builder.Services.AddScoped<BdsmRepository>();
-builder.Services.AddScoped<BdsmService>();
-// Only matches are fetched from BDSMTest.org; the results themselves come out of the database.
-builder.Services.AddHttpClient<BdsmTestApi>();
-builder.Services.AddScoped<RaidRepository>();
-builder.Services.AddScoped<RaidService>();
-builder.Services.AddScoped<CustomCommandRepository>();
-builder.Services.AddScoped<CustomCommandService>();
-builder.Services.AddScoped<ShoutoutRepository>();
-builder.Services.AddScoped<ShoutoutService>();
-builder.Services.AddScoped<WheelRepository>();
-builder.Services.AddScoped<WheelService>();
-// Singleton: it is what holds the open overlay connections, which outlive any one request.
-builder.Services.AddSingleton<WheelHub>();
-builder.Services.AddScoped<SubathonTimerRepository>();
-builder.Services.AddScoped<SubathonTimerService>();
-// Singleton for the same reason as the wheel's: it is what holds the open overlay connections,
-// which outlive any one request.
-builder.Services.AddSingleton<SubathonTimerHub>();
-// The bot drives the timer by writing to the table this shares with it, and has no way to tell us
-// it did. This worker is what turns those writes into the events an overlay is waiting on.
-builder.Services.AddHostedService<SubathonTimerWatcher>();
-builder.Services.AddScoped<QueueRepository>();
-builder.Services.AddScoped<QueueService>();
-// Singleton for the same reason as the wheel's and the timer's: it is what holds the open
-// dashboard connections, which outlive any one request.
-builder.Services.AddSingleton<QueueHub>();
-// Chat is where the queue is joined and left, and the bot does that by writing to the table this
-// shares with it. This worker is what turns those writes into the events a dashboard is waiting on.
-builder.Services.AddHostedService<QueueWatcher>();
-// Spans every channel and every reward: it is what stops one redemption being acted on twice,
-// whichever socket or instance saw it.
-builder.Services.AddScoped<RedemptionLogRepository>();
-builder.Services.AddScoped<TimeoutRewardRepository>();
-builder.Services.AddScoped<TimeoutRewardService>();
-builder.Services.AddSingleton<IEventSubSource, TimeoutRewardSource>();
-// Handing a stripped role back is the one part no event announces, so it stays on a clock.
-builder.Services.AddHostedService<TimeoutRewardWatcher>();
-builder.Services.AddScoped<GiveawayRepository>();
-builder.Services.AddScoped<GiveawayService>();
-// Holds the open dashboard and overlay connections, and what the overlay is currently showing.
-builder.Services.AddSingleton<GiveawayHub>();
-builder.Services.AddSingleton<IEventSubSource, GiveawaySource>();
+builder.Services.AddYeppDashTwitch();
+builder.Services.AddYeppDashContent();
+builder.Services.AddYeppDashStreams();
+builder.Services.AddYeppDashRewards();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 

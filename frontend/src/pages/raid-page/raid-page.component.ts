@@ -1,22 +1,20 @@
 import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
-import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
+import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
+import { TableFrameComponent } from '../../components/table-frame-component/table-frame.component';
+import { UserIdentityComponent } from '../../components/user-identity-component/user-identity.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { wireDataSource } from '../../services/data-source';
+import { TABLE_PAGE_SIZES, filterRows, wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { RaidService } from '../../services/raid.service';
 import { Raid } from '../../data/raid';
+import { ListState } from '../../services/list-state';
+import { TableSearchComponent } from '../../components/table-search-component/table-search.component';
+import { UserDetailsDirective } from '../../directives/user-details.directive';
 
 export interface RaidEntry {
   raid: Raid;
@@ -27,40 +25,34 @@ export interface RaidEntry {
   selector: 'app-raid-page',
   templateUrl: './raid-page.component.html',
   styleUrl: './raid-page.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
+  imports: [UserDetailsDirective, TableSearchComponent, BusyBarComponent, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class RaidPageComponent {
 
   private readonly raids: RaidService = inject(RaidService);
   private readonly notifications: NotificationService = inject(NotificationService);
-  private readonly dialog: MatDialog = inject(MatDialog);
 
-  private readonly rows: WritableSignal<RaidEntry[]> = signal<RaidEntry[]>([]);
-  private readonly isLoading: WritableSignal<boolean> = signal(false);
-  private readonly failed: WritableSignal<boolean> = signal(false);
+  private readonly state: ListState<RaidEntry> = new ListState<RaidEntry>();
 
-  protected readonly loading: Signal<boolean> = this.isLoading.asReadonly();
-  protected readonly unreachable: Signal<boolean> = this.failed.asReadonly();
+  private readonly rows: Signal<RaidEntry[]> = this.state.rows.asReadonly();
 
-  protected readonly count: Signal<number> = computed((): number => this.rows().length);
+  protected readonly loading: Signal<boolean> = this.state.loading.asReadonly();
+  protected readonly unreachable: Signal<boolean> = this.state.failed.asReadonly();
+  protected readonly count: Signal<number> = this.state.count;
+  protected readonly skeleton: Signal<boolean> = this.state.skeleton;
+  protected readonly ghostRows: Signal<readonly number[]> = this.state.ghostRows;
 
   protected readonly viewers: Signal<number> = computed((): number =>
     this.rows().reduce((total: number, entry: RaidEntry): number => total + entry.raid.viewers, 0),
   );
 
-  protected readonly skeleton: Signal<boolean> = computed((): boolean => this.loading() && this.count() === 0);
 
+  // Three widths cycled down the ghost rows, so the waiting list reads as names of different
+  // lengths rather than as one bar repeated.
+  protected readonly ghostNameWidths: readonly string[] = ['min(9rem, 60%)', 'min(6rem, 45%)', 'min(11rem, 70%)'];
   protected readonly columns: string[] = ['raider', 'viewers', 'firedAt'];
 
-  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
-
-  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
-    const expected: number | null = this.expected();
-    if (expected === null || expected <= 0) return [];
-    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
-  });
-
-  protected readonly pageSizes: number[] = [10, 25, 50, 100];
+  protected readonly pageSizes: readonly number[] = TABLE_PAGE_SIZES;
 
   protected readonly dataSource: MatTableDataSource<RaidEntry> = new MatTableDataSource<RaidEntry>([]);
 
@@ -95,45 +87,20 @@ export class RaidPageComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
-    this.dataSource.paginator?.firstPage();
+    filterRows(this.dataSource, value);
   }
 
-  protected showDetails(entry: RaidEntry, event?: Event): void {
-    event?.stopPropagation();
-    UserInfoDialogComponent.open(this.dialog, entry.raid.raider);
-  }
 
   protected reload(): Promise<void> {
     return this.load();
   }
 
   private async load(): Promise<void> {
-    this.isLoading.set(true);
-    this.failed.set(false);
-    this.expected.set(null);
-
-    if (this.rows().length === 0) {
-      void this.raids.countRaids()
-        .then((count: number): void => {
-          if (this.isLoading()) this.expected.set(count);
-        })
-        .catch((): void => void 0);
-    }
-
-    try {
-      const raids: Raid[] = await this.raids.getRaids();
-
-      this.rows.set(raids.map((raid: Raid): RaidEntry => ({
-        raid,
-        firedAt: new Date(raid.firedAt),
-      })));
-    } catch {
-      this.rows.set([]);
-      this.failed.set(true);
-      this.notifications.failure('Could not load your raids.');
-    } finally {
-      this.isLoading.set(false);
-    }
+    await this.state.load(
+      async (): Promise<RaidEntry[]> => (await this.raids.getRaids())
+        .map((raid: Raid): RaidEntry => ({ raid, firedAt: new Date(raid.firedAt) })),
+      (): void => this.notifications.failure('Could not load your raids.'),
+      (): Promise<number> => this.raids.countRaids(),
+    );
   }
 }

@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Giveaway;
@@ -7,26 +5,20 @@ using YEPPDash.Api.Exceptions.Giveaway;
 using YEPPDash.Api.Exceptions.Twitch;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Services;
+using YEPPDash.Api.Services.Streaming;
 
 namespace YEPPDash.Api.Controllers;
 
 [ApiController]
 [Authorize]
 [Route("giveaway")]
-public sealed partial class GiveawayController(
+public sealed class GiveawayController(
     GiveawayService giveaways,
     GiveawayHub hub,
     ILogger<GiveawayController> logger) : ControllerBase
 {
-    private const int TitleMaxLength = 45;
-    private const int DescriptionMaxLength = 200;
-
-    private const long CooldownMaxSeconds = 604_800;
-
     private const double MultiplierMin = 0;
     private const double MultiplierMax = 1_000_000_000;
-
-    private static readonly TimeSpan KeepAlive = TimeSpan.FromSeconds(20);
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken cancellationToken)
@@ -40,7 +32,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "read the giveaways");
+            return this.TwitchFailure(logger, exception, "read the giveaways");
         }
     }
 
@@ -66,7 +58,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"read giveaway {id}");
+            return this.TwitchFailure(logger, exception, $"read giveaway {id}");
         }
     }
 
@@ -84,7 +76,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"create the giveaway '{update.Title}'");
+            return this.TwitchFailure(logger, exception, $"create the giveaway '{update.Title}'");
         }
     }
 
@@ -107,7 +99,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"save the giveaway '{update.Title}'");
+            return this.TwitchFailure(logger, exception, $"save the giveaway '{update.Title}'");
         }
     }
 
@@ -128,7 +120,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"open giveaway {id}");
+            return this.TwitchFailure(logger, exception, $"open giveaway {id}");
         }
     }
 
@@ -149,7 +141,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"close giveaway {id}");
+            return this.TwitchFailure(logger, exception, $"close giveaway {id}");
         }
     }
 
@@ -165,7 +157,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"delete giveaway {id}");
+            return this.TwitchFailure(logger, exception, $"delete giveaway {id}");
         }
     }
 
@@ -195,7 +187,7 @@ public sealed partial class GiveawayController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"reset giveaway {id}");
+            return this.TwitchFailure(logger, exception, $"reset giveaway {id}");
         }
     }
 
@@ -238,7 +230,7 @@ public sealed partial class GiveawayController(
             return;
         }
 
-        await StreamAsync(channelId, GiveawayAudience.Dashboard, cancellationToken);
+        await StreamAsync(channelId, StreamAudience.Dashboard, cancellationToken);
     }
 
     [AllowAnonymous]
@@ -258,64 +250,33 @@ public sealed partial class GiveawayController(
             return;
         }
 
-        await StreamAsync(channelId.Value, GiveawayAudience.Overlay, cancellationToken);
+        await StreamAsync(channelId.Value, StreamAudience.Overlay, cancellationToken);
     }
 
-    private async Task StreamAsync(int channelId, GiveawayAudience audience, CancellationToken cancellationToken)
+    private async Task StreamAsync(int channelId, StreamAudience audience, CancellationToken cancellationToken)
     {
-        Response.ContentType = "text/event-stream";
-        Response.Headers.CacheControl = "no-cache, no-store";
-
-        Response.Headers["X-Accel-Buffering"] = "no";
-
         using var subscription = hub.Subscribe(channelId, audience);
         logger.LogDebug("A {Audience} is watching the giveaways of channel {ChannelId}", audience, channelId);
 
-        await WriteAsync(": connected\n\n", cancellationToken);
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            string payload;
-
-            try
-            {
-                using var idle = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                idle.CancelAfter(KeepAlive);
-
-                payload = await subscription.Reader.ReadAsync(idle.Token);
-            }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-            {
-                await WriteAsync(": keep-alive\n\n", cancellationToken);
-                continue;
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            await WriteAsync($"data: {payload}\n\n", cancellationToken);
-        }
+        await Response.StreamAsync(subscription, cancellationToken);
 
         logger.LogDebug("A {Audience} stopped watching the giveaways of channel {ChannelId}", audience, channelId);
     }
 
-    private async Task WriteAsync(string text, CancellationToken cancellationToken)
-    {
-        await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(text), cancellationToken);
-        await Response.Body.FlushAsync(cancellationToken);
-    }
-
     private static string? Invalid(GiveawayUpdate update)
     {
-        if (string.IsNullOrWhiteSpace(update.Title)) return "The giveaway needs a name.";
-        if (update.Title.Length > TitleMaxLength) return $"A reward name cannot be longer than {TitleMaxLength} characters.";
-        if (update.Cost < 1) return "A reward has to cost at least 1 channel point.";
-        if (update.Description?.Length > DescriptionMaxLength) return $"A reward description cannot be longer than {DescriptionMaxLength} characters.";
-        if (update.BackgroundColor is not null && !HexColor().IsMatch(update.BackgroundColor)) return "A background color has to be a hex color like #9147FF.";
-        if (update.CooldownSeconds is < 0 or > CooldownMaxSeconds) return $"A cooldown has to be between 0 and {CooldownMaxSeconds} seconds.";
-        if (update.MaxPerStream is < 0) return "A per-stream limit cannot be negative.";
-        if (update.MaxPerUserPerStream is < 0) return "A per-user limit cannot be negative.";
+        var reward = RewardValidation.Invalid(
+            new RewardValidation.Fields(
+                update.Title,
+                update.Cost,
+                update.Description,
+                update.BackgroundColor,
+                update.CooldownSeconds,
+                update.MaxPerStream,
+                update.MaxPerUserPerStream),
+            "giveaway");
+
+        if (reward is not null) return reward;
 
         var multipliers = update.Multipliers;
 
@@ -361,31 +322,5 @@ public sealed partial class GiveawayController(
     private static double Round(double multiplier)
     {
         return double.IsFinite(multiplier) ? Math.Round(multiplier, 2) : 1;
-    }
-
-    [GeneratedRegex("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")]
-    private static partial Regex HexColor();
-
-    private IActionResult HandleTwitchFailure(Exception exception, string description)
-    {
-        if (exception is not TwitchOAuthException twitchException)
-        {
-            logger.LogWarning(exception, "Twitch is unreachable, cannot {Description}", description);
-            return StatusCode(StatusCodes.Status502BadGateway);
-        }
-
-        logger.LogWarning(
-            "Twitch refused to {Description} ({StatusCode}): {Body}",
-            description, twitchException.StatusCode, twitchException.ResponseBody);
-
-        if (twitchException.ResponseBody?.Contains("DUPLICATE_REWARD", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            return BadRequest("A reward with this name already exists in your channel.");
-        }
-
-        var status = (int)twitchException.StatusCode;
-        return status is >= 400 and < 500
-            ? StatusCode(status)
-            : StatusCode(StatusCodes.Status502BadGateway);
     }
 }

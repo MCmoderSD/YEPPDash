@@ -10,28 +10,6 @@
 
 // What the ban costs the account beyond the ban itself. Carries the error colour because it is a
 // consequence the broadcaster cannot undo from here, not a hint.
-.ban-user-warning {
-  display: flex;
-  align-items: start;
-  gap: 0.5rem;
-
-  margin: 0;
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--app-radius-outlined);
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
-  font: var(--mat-sys-body-small);
-}
-
-.ban-user-warning-icon {
-  flex: none;
-
-  // Material sizes its icons at 24px; the warning sits on body-small text and would tower over it.
-  width: 1.25rem;
-  height: 1.25rem;
-  font-size: 1.25rem;
-}
-
 .ban-user-note {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
@@ -52,14 +30,8 @@
   flex: 1 1 0;
 }
 
-.ban-user-hint {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-}
-
 // Once the number above it is past the ceiling the line stops being a hint and becomes the reason
 // the button will not move.
 .ban-user-hint-error {
-  color: var(--mat-sys-error);
+  color: var(--app-danger);
 }

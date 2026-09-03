@@ -1,27 +1,24 @@
 import { DOCUMENT } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { BusyBarComponent } from '../busy-bar-component/busy-bar.component';
+import { TableFrameComponent } from '../table-frame-component/table-frame.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { TextEditDialogComponent } from '../text-edit-dialog-component/text-edit-dialog.component';
 import { ConfirmActionDialogComponent } from '../confirm-action-dialog-component/confirm-action-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { QuoteService } from '../../services/quote.service';
 import { NotificationService } from '../../services/notification.service';
+import { errorMessage } from '../../services/http-error';
 import { Quote, QUOTE_MAX_LENGTH } from '../../data/quote';
-
-function reasonFor(error: unknown): string | null {
-  if (!(error instanceof HttpErrorResponse) || error.status !== 400) return null;
-  return typeof error.error === 'string' && error.error.trim() ? error.error.trim() : null;
-}
+import { TableSearchComponent } from '../table-search-component/table-search.component';
+import { filterRows } from '../../services/data-source';
 
 type QuoteRow = Quote & { readonly ghost?: true };
 
@@ -36,7 +33,7 @@ function ghostRows(count: number | null): QuoteRow[] {
   selector: 'app-quote-management',
   templateUrl: './quote-management.component.html',
   styleUrl: './quote-management.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, LocaleDatePipe],
+  imports: [TableSearchComponent, BusyBarComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, TableFrameComponent, LocaleDatePipe],
 })
 export class QuoteManagementComponent {
 
@@ -94,7 +91,7 @@ export class QuoteManagementComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
+    filterRows(this.dataSource, value);
   }
 
   protected async add(): Promise<void> {
@@ -197,7 +194,7 @@ export class QuoteManagementComponent {
       this.entries.set(imported);
       this.notifications.success(`Imported ${imported.length} quote${imported.length === 1 ? '' : 's'}.`);
     } catch (error: unknown) {
-      this.notifications.failure(reasonFor(error) ?? 'Could not import the file.');
+      this.notifications.failure(errorMessage(error, 'Could not import the file.'));
     } finally {
       this.isBusy.set(false);
     }

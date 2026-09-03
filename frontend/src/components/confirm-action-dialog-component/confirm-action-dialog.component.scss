@@ -12,9 +12,7 @@
 }
 
 .confirm-action-hint {
-  margin: 0.75rem 0 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
+  margin-block-start: 0.75rem;
 }
 
 // Carries the announcement for screen readers only; there is nothing to show once the button

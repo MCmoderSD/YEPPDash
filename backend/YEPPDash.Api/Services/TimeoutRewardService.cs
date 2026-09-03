@@ -1,4 +1,3 @@
-using System.Net;
 using YEPPDash.Api.Data.Redemption;
 using YEPPDash.Api.Data.TimeoutReward;
 using YEPPDash.Api.Data.Twitch;
@@ -12,6 +11,7 @@ namespace YEPPDash.Api.Services;
 public sealed class TimeoutRewardService(
     TimeoutRewardRepository repository,
     RedemptionLogRepository log,
+    RedemptionSettlement redemptions,
     TwitchChannelService channels,
     TwitchApiClient apiClient,
     TwitchAuthService authService,
@@ -25,6 +25,8 @@ public sealed class TimeoutRewardService(
 
     private static readonly TimeSpan InFlight = TimeSpan.FromMinutes(2);
 
+    private const string DefaultPrompt = "Type the name of the user to time out — @name works too.";
+
     public async Task<TimeoutRewardSettings?> GetAsync(string broadcasterId, CancellationToken cancellationToken)
     {
         var config = await repository.GetAsync(int.Parse(broadcasterId), cancellationToken);
@@ -35,7 +37,7 @@ public sealed class TimeoutRewardService(
             var rewards = await channels.GetCustomRewardsAsync(broadcasterId, [config.RewardId], cancellationToken);
             if (rewards.Count > 0) return new TimeoutRewardSettings(rewards[0], config.DurationSeconds, [.. config.Protected]);
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
         }
 
@@ -52,17 +54,17 @@ public sealed class TimeoutRewardService(
 
         if (existing is null)
         {
-            reward = await channels.CreateCustomRewardAsync(broadcasterId, ToCreate(update), cancellationToken);
+            reward = await channels.CreateCustomRewardAsync(broadcasterId, CustomRewardRequests.Create(Of(update)), cancellationToken);
         }
         else
         {
             try
             {
-                reward = await channels.UpdateCustomRewardAsync(broadcasterId, existing.RewardId, ToUpdate(update), cancellationToken);
+                reward = await channels.UpdateCustomRewardAsync(broadcasterId, existing.RewardId, CustomRewardRequests.Update(Of(update)), cancellationToken);
             }
-            catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+            catch (TwitchOAuthException exception) when (exception.IsNotFound())
             {
-                reward = await channels.CreateCustomRewardAsync(broadcasterId, ToCreate(update), cancellationToken);
+                reward = await channels.CreateCustomRewardAsync(broadcasterId, CustomRewardRequests.Create(Of(update)), cancellationToken);
             }
         }
 
@@ -95,13 +97,7 @@ public sealed class TimeoutRewardService(
         var config = await repository.GetAsync(channelId, cancellationToken);
         if (config is null) return;
 
-        try
-        {
-            await channels.DeleteCustomRewardAsync(broadcasterId, config.RewardId, cancellationToken);
-        }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
-        {
-        }
+        await channels.DeleteIfPresentAsync(broadcasterId, config.RewardId, cancellationToken);
 
         await repository.DeleteAsync(channelId, cancellationToken);
 
@@ -117,32 +113,12 @@ public sealed class TimeoutRewardService(
 
         var broadcasterId = channelId.ToString();
 
-        // Claimed only once there is something to act with: claiming first would mark a redemption
-        // as taken that nothing can touch, and leave it sitting open.
-        var token = await authService.GetValidTokenAsync(broadcasterId, cancellationToken);
-        if (token is null)
-        {
-            logger.LogWarning(
-                "Channel {ChannelId} has no usable Twitch token, leaving redemption {RedemptionId} open",
-                channelId, redemption.Id);
-
-            return;
-        }
-
-        var claimed = await log.TryRecordAsync(
-            new RedemptionRecord(
-                redemption.Id, channelId, rewardId, redemption.UserId, redemption.UserInput, redemption.RedeemedAt.UtcDateTime),
-            cancellationToken);
-
-        if (!claimed)
-        {
-            logger.LogDebug("Redemption {RedemptionId} in channel {ChannelId} was already handled", redemption.Id, channelId);
-            return;
-        }
+        var accessToken = await redemptions.ClaimAsync(channelId, rewardId, redemption, cancellationToken);
+        if (accessToken is null) return;
 
         try
         {
-            await HandleRedemptionAsync(config, broadcasterId, redemption, token.AccessToken, cancellationToken);
+            await HandleRedemptionAsync(config, broadcasterId, redemption, accessToken, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -152,7 +128,7 @@ public sealed class TimeoutRewardService(
         {
             logger.LogWarning(exception, "Handling redemption {RedemptionId} in channel {ChannelId} failed", redemption.Id, channelId);
 
-            await RefundAsync(config, broadcasterId, redemption, "handling it failed", token.AccessToken, cancellationToken);
+            await RefundAsync(config, broadcasterId, redemption, "handling it failed", accessToken, cancellationToken);
         }
     }
 
@@ -172,7 +148,7 @@ public sealed class TimeoutRewardService(
         {
             open = await apiClient.GetRedemptionsAsync(broadcasterId, config.RewardId, RedemptionStatus.Unfulfilled, token.AccessToken, cancellationToken);
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
             await repository.DeleteAsync(config.ChannelId, cancellationToken);
 
@@ -187,7 +163,7 @@ public sealed class TimeoutRewardService(
             var inFlight = DateTimeOffset.UtcNow - redemption.RedeemedAt < InFlight;
             if (inFlight && await log.HasAsync(redemption.Id, cancellationToken)) continue;
 
-            if (!await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Canceled, token.AccessToken, cancellationToken)) continue;
+            if (!await redemptions.SettleAsync(channelId, config.RewardId, redemption, RedemptionStatus.Canceled, token.AccessToken, cancellationToken)) continue;
 
             const string reason = "redeemed while nothing was listening";
 
@@ -306,8 +282,8 @@ public sealed class TimeoutRewardService(
 
             if (alreadyBanned)
             {
-                await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Fulfilled, accessToken, cancellationToken);
-                await log.MarkAsync(redemption.Id, RedemptionStatus.Fulfilled, $"{target.Id} was already banned", cancellationToken);
+                await redemptions.FulfilAsync(
+                    config.ChannelId, config.RewardId, redemption, $"{target.Id} was already banned", accessToken, cancellationToken);
 
                 logger.LogInformation(
                     "Redemption {RedemptionId} in channel {ChannelId} counted as spent: {TargetId} was already banned",
@@ -325,8 +301,9 @@ public sealed class TimeoutRewardService(
 
         if (hadModerator) await repository.ScheduleRestoreAsync(new RoleRestore(config.ChannelId, target.Id, RestorableRole.Moderator, restoreAt), cancellationToken);
 
-        await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Fulfilled, accessToken, cancellationToken);
-        await log.MarkAsync(redemption.Id, RedemptionStatus.Fulfilled, $"timed out {target.Id} for {config.DurationSeconds}s", cancellationToken);
+        await redemptions.FulfilAsync(
+            config.ChannelId, config.RewardId, redemption,
+            $"timed out {target.Id} for {config.DurationSeconds}s", accessToken, cancellationToken);
 
         logger.LogInformation(
             "Timed out {TargetId} for {Duration}s in channel {ChannelId}, redeemed by {RedeemerId}",
@@ -362,84 +339,23 @@ public sealed class TimeoutRewardService(
         return config.Protected.Contains(ProtectedRole.Tier3Subscriber) && subscription.Tier is "3000";
     }
 
-    private async Task RefundAsync(TimeoutRewardConfig config, string broadcasterId, TwitchRedemption redemption, string reason, string accessToken, CancellationToken cancellationToken)
+    private Task RefundAsync(TimeoutRewardConfig config, string broadcasterId, TwitchRedemption redemption, string reason, string accessToken, CancellationToken cancellationToken)
     {
-        var refunded = await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Canceled, accessToken, cancellationToken);
-        if (!refunded) return;
-
-        await log.MarkAsync(redemption.Id, RedemptionStatus.Canceled, reason, cancellationToken);
-
-        logger.LogInformation(
-            "Refunded redemption {RedemptionId} in channel {ChannelId} by {RedeemerId}: {Reason}",
-            redemption.Id, config.ChannelId, redemption.UserId, reason);
+        return redemptions.RefundAsync(config.ChannelId, config.RewardId, redemption, reason, accessToken, cancellationToken);
     }
 
-    private async Task<bool> SettleAsync(TimeoutRewardConfig config, string broadcasterId, TwitchRedemption redemption, string status, string accessToken, CancellationToken cancellationToken)
+    private static CustomRewardRequests.Fields Of(TimeoutRewardUpdate update)
     {
-        try
-        {
-            await apiClient.UpdateRedemptionStatusAsync(broadcasterId, config.RewardId, redemption.Id, status, accessToken, cancellationToken);
-            return true;
-        }
-        catch (TwitchOAuthException exception)
-        {
-            logger.LogWarning(
-                "Could not mark redemption {RedemptionId} as {Status} in channel {ChannelId} ({StatusCode})",
-                redemption.Id, status, config.ChannelId, exception.StatusCode);
-
-            return false;
-        }
-    }
-
-    private static CustomRewardCreate ToCreate(TimeoutRewardUpdate update)
-    {
-        return new CustomRewardCreate
-        {
-            Title = update.Title,
-            Cost = update.Cost,
-            Prompt = PromptOf(update),
-            BackgroundColor = update.BackgroundColor,
-            IsEnabled = update.IsEnabled ?? true,
-
-            IsUserInputRequired = true,
-            ShouldRedemptionsSkipRequestQueue = false,
-
-            IsGlobalCooldownEnabled = update.CooldownSeconds > 0,
-            GlobalCooldownSeconds = update.CooldownSeconds > 0 ? update.CooldownSeconds : null,
-            IsMaxPerStreamEnabled = update.MaxPerStream > 0,
-            MaxPerStream = update.MaxPerStream > 0 ? update.MaxPerStream : null,
-            IsMaxPerUserPerStreamEnabled = update.MaxPerUserPerStream > 0,
-            MaxPerUserPerStream = update.MaxPerUserPerStream > 0 ? update.MaxPerUserPerStream : null,
-        };
-    }
-
-    private static CustomRewardUpdate ToUpdate(TimeoutRewardUpdate update)
-    {
-        return new CustomRewardUpdate
-        {
-            Title = update.Title,
-            Cost = update.Cost,
-            Prompt = PromptOf(update),
-            BackgroundColor = update.BackgroundColor,
-            IsEnabled = update.IsEnabled ?? true,
-
-            IsUserInputRequired = true,
-            ShouldRedemptionsSkipRequestQueue = false,
-
-            IsGlobalCooldownEnabled = update.CooldownSeconds > 0,
-            GlobalCooldownSeconds = update.CooldownSeconds > 0 ? update.CooldownSeconds : null,
-            IsMaxPerStreamEnabled = update.MaxPerStream > 0,
-            MaxPerStream = update.MaxPerStream > 0 ? update.MaxPerStream : null,
-            IsMaxPerUserPerStreamEnabled = update.MaxPerUserPerStream > 0,
-            MaxPerUserPerStream = update.MaxPerUserPerStream > 0 ? update.MaxPerUserPerStream : null,
-        };
-    }
-
-    private static string PromptOf(TimeoutRewardUpdate update)
-    {
-        return string.IsNullOrWhiteSpace(update.Prompt)
-            ? "Type the name of the user to time out — @name works too."
-            : update.Prompt;
+        return new CustomRewardRequests.Fields(
+            update.Title,
+            update.Cost,
+            CustomRewardRequests.PromptOrDefault(update.Prompt, DefaultPrompt),
+            update.BackgroundColor,
+            update.IsEnabled ?? true,
+            UserInputRequired: true,
+            update.CooldownSeconds,
+            update.MaxPerStream,
+            update.MaxPerUserPerStream);
     }
 
     private static string? ParseTarget(string input)

@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { firstValueFrom } from 'rxjs';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { askDialog } from '../../services/dialog';
 
 export interface WheelWinnerDialogData {
   label: string;
@@ -23,18 +23,9 @@ export class WheelWinnerDialogComponent {
   protected readonly data: WheelWinnerDialogData = inject<WheelWinnerDialogData>(MAT_DIALOG_DATA);
 
   static async announce(dialog: MatDialog, label: string): Promise<WheelWinnerChoice> {
-    const dialogRef = dialog.open<WheelWinnerDialogComponent, WheelWinnerDialogData, WheelWinnerChoice>(
-      WheelWinnerDialogComponent,
-      {
-        data: { label },
-        width: '26rem',
-        minWidth: 'min(18rem, 92vw)',
-        maxWidth: '92vw',
-        autoFocus: 'dialog',
-      },
-    );
-
-    return await firstValueFrom(dialogRef.afterClosed()) ?? 'close';
+    return await askDialog<WheelWinnerDialogComponent, WheelWinnerDialogData, WheelWinnerChoice>(
+      dialog, WheelWinnerDialogComponent, { label },
+      { width: '26rem', minWidth: 'min(18rem, 92vw)', autoFocus: 'dialog' }) ?? 'close';
   }
 
   protected choose(choice: WheelWinnerChoice): void {

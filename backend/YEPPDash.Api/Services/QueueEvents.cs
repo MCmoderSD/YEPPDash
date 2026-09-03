@@ -1,12 +1,12 @@
 using System.Text.Json;
 using YEPPDash.Api.Data.Queue;
 
+using YEPPDash.Api.Services.Streaming;
+
 namespace YEPPDash.Api.Services;
 
 public static class QueueEvents
 {
-    private static readonly JsonSerializerOptions EventJson = new(JsonSerializerDefaults.Web);
-
     public static string Serialize(QueueState state)
     {
         return JsonSerializer.Serialize(
@@ -17,6 +17,6 @@ public static class QueueEvents
                 state.Requirement,
                 state.Entries
             },
-            EventJson);
+            StreamJson.Options);
     }
 }

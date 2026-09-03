@@ -1,0 +1,48 @@
+<h3 class="winners-heading">Winners ({{ winners().length }})</h3>
+
+<app-table-frame class="winners-frame" maxHeight="30rem">
+  <table
+    mat-table
+    matSort
+    matSortActive="order"
+    matSortDirection="asc"
+    [dataSource]="dataSource"
+    class="app-data-table"
+  >
+
+    <ng-container matColumnDef="order">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">#</th>
+      <td mat-cell *matCellDef="let winner" class="app-table-quiet">{{ winner.drawOrder }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="user">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
+      <td mat-cell *matCellDef="let winner">
+        <app-user-identity [user]="winner.user ?? null" [name]="name(winner)"/>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="multiplier">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Weight</th>
+      <td mat-cell *matCellDef="let winner" class="winners-weight">
+        ×{{ winner.multiplier | number:'1.0-2' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="won">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Drawn</th>
+      <td mat-cell *matCellDef="let winner" class="app-table-quiet">
+        {{ winner.wonAt | localeDate:'medium':'short' }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+
+    <tr *matNoDataRow>
+      <td class="app-table-empty" [attr.colspan]="columns.length">
+        Nobody has been drawn yet.
+      </td>
+    </tr>
+  </table>
+</app-table-frame>

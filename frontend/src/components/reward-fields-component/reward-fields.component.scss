@@ -1,0 +1,11 @@
+// The same column and gap the form around it uses, so the three fields sit in it as if they had
+// never been wrapped.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.fields-field {
+  width: 100%;
+}

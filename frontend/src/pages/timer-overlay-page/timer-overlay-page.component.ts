@@ -1,17 +1,16 @@
-import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, signal, Signal, WritableSignal } from '@angular/core';
+import { OverlayFrameComponent } from '../../components/overlay-frame-component/overlay-frame.component';
 import { TimerDisplayComponent } from '../../components/timer-display-component/timer-display.component';
 import { EMPTY_TIMER, SubathonTimer, TIMER_ANIMATION_MS, TimerStyle } from '../../data/subathon-timer';
 import { TimerService } from '../../services/timer.service';
-import { TimerListener, TimerSyncService } from '../../services/timer-sync.service';
-
-const TRANSPARENT: string = 'app-transparent';
+import { TimerSyncService } from '../../services/timer-sync.service';
+import { StreamListener } from '../../services/sse.service';
 
 @Component({
   selector: 'app-timer-overlay-page',
   templateUrl: './timer-overlay-page.component.html',
   styleUrl: './timer-overlay-page.component.scss',
-  imports: [TimerDisplayComponent],
+  imports: [OverlayFrameComponent, TimerDisplayComponent],
   host: {
     '[style.--timer-color]': 'style().color',
     '[style.--timer-font-family]': 'style().fontFamily',
@@ -26,10 +25,9 @@ export class TimerOverlayPageComponent {
 
   private readonly timers: TimerService = inject(TimerService);
   private readonly sync: TimerSyncService = inject(TimerSyncService);
-  private readonly document: Document = inject(DOCUMENT);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
-  private listener: TimerListener | null = null;
+  private listener: StreamListener | null = null;
 
   protected readonly timer: WritableSignal<SubathonTimer> = signal<SubathonTimer>(EMPTY_TIMER);
 
@@ -38,16 +36,15 @@ export class TimerOverlayPageComponent {
   protected readonly shadow: Signal<string> = computed((): string => this.style().shadow ? '0 0.4vmin 0.8vmin rgb(0 0 0 / 80%)' : 'none');
   protected readonly animation: Signal<string> = computed((): string => `${this.style().animate ? TIMER_ANIMATION_MS : 0}ms`);
 
-  constructor() {
-    const root: HTMLElement = this.document.documentElement;
-    root.classList.add(TRANSPARENT);
-    this.destroyRef.onDestroy((): void => root.classList.remove(TRANSPARENT));
+  protected readonly hint: Signal<string | null> = computed((): string | null =>
+    this.channel() ? null : 'This link has no channel on it. Copy the overlay link again from the Subathon Timer page.');
 
+  constructor() {
     effect((onCleanup: EffectCleanupRegisterFn): void => {
       const channelId: string | undefined = this.channel();
       if (!channelId) return;
 
-      const listener: TimerListener = this.sync.listen(
+      const listener: StreamListener = this.sync.listen(
         channelId, (timer: SubathonTimer): void => this.timer.set(timer),
         (): void => void this.refresh(channelId)
       );

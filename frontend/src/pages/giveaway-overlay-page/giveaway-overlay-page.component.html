@@ -1,22 +1,3 @@
-<div class="overlay">
+<app-overlay-frame [winner]="winner()" [hint]="hint()">
   <app-wheel class="overlay-wheel" [slices]="slices()" [weights]="weights()" (spun)="landed($event)"/>
-
-  @if (winner()) {
-    <div class="overlay-winner" role="status">
-      <p class="overlay-winner-title">We have a winner!</p>
-      <p class="overlay-winner-name">{{ winner() }}</p>
-    </div>
-  }
-
-  @if (slices().length === 0) {
-    <p class="overlay-hint">
-      @if (!giveaway()) {
-        This link names no giveaway. Copy the overlay link again from the Giveaways page.
-      } @else if (loaded()) {
-        Nothing is being drawn right now.
-      } @else {
-        Loading…
-      }
-    </p>
-  }
-</div>
+</app-overlay-frame>

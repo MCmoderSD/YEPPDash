@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { openDialog } from '../../services/dialog';
 
 let nextHintId: number = 0;
 
@@ -71,16 +72,9 @@ export class ConfirmActionDialogComponent {
   static open(
     dialog: MatDialog, data: ConfirmActionDialogData,
   ): MatDialogRef<ConfirmActionDialogComponent, boolean> {
-    return dialog.open<ConfirmActionDialogComponent, ConfirmActionDialogData, boolean>(
-      ConfirmActionDialogComponent,
-      {
-        data,
-        width: '32rem',
-        minWidth: 'min(20rem, 92vw)',
-        maxWidth: '92vw',
-        autoFocus: 'dialog'
-      },
-    );
+    return openDialog<ConfirmActionDialogComponent, ConfirmActionDialogData, boolean>(
+      dialog, ConfirmActionDialogComponent, data,
+      { width: '32rem', minWidth: 'min(20rem, 92vw)', autoFocus: 'dialog' });
   }
 
   static async confirm(dialog: MatDialog, data: ConfirmActionDialogData): Promise<boolean> {

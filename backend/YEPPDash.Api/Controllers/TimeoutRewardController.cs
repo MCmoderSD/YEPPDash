@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.TimeoutReward;
@@ -11,14 +10,11 @@ namespace YEPPDash.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("timeout-reward")]
-public sealed partial class TimeoutRewardController(
+public sealed class TimeoutRewardController(
     TimeoutRewardService rewards,
     ILogger<TimeoutRewardController> logger) : ControllerBase
 {
-    private const int TitleMaxLength = 45;
-    private const int PromptMaxLength = 200;
     private const int TimeoutMaxSeconds = 1_209_600;
-    private const long CooldownMaxSeconds = 604_800;
 
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
@@ -33,7 +29,7 @@ public sealed partial class TimeoutRewardController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "read the timeout reward");
+            return this.TwitchFailure(logger, exception, "read the timeout reward");
         }
     }
 
@@ -43,15 +39,19 @@ public sealed partial class TimeoutRewardController(
         var twitchId = User.GetTwitchId();
         if (twitchId is null) return Unauthorized();
 
-        if (string.IsNullOrWhiteSpace(update.Title)) return BadRequest("The reward needs a name.");
-        if (update.Title.Length > TitleMaxLength) return BadRequest($"A reward name cannot be longer than {TitleMaxLength} characters.");
-        if (update.Cost < 1) return BadRequest("A reward has to cost at least 1 channel point.");
-        if (update.Prompt?.Length > PromptMaxLength) return BadRequest($"A reward description cannot be longer than {PromptMaxLength} characters.");
-        if (update.BackgroundColor is not null && !HexColor().IsMatch(update.BackgroundColor)) return BadRequest("A background color has to be a hex color like #9147FF.");
+        var reward = RewardValidation.Invalid(
+            new RewardValidation.Fields(
+                update.Title,
+                update.Cost,
+                update.Prompt,
+                update.BackgroundColor,
+                update.CooldownSeconds,
+                update.MaxPerStream,
+                update.MaxPerUserPerStream),
+            "reward");
+
+        if (reward is not null) return BadRequest(reward);
         if (update.DurationSeconds is < 1 or > TimeoutMaxSeconds) return BadRequest($"A timeout has to run between 1 and {TimeoutMaxSeconds} seconds.");
-        if (update.CooldownSeconds is < 0 or > CooldownMaxSeconds) return BadRequest($"A cooldown has to be between 0 and {CooldownMaxSeconds} seconds.");
-        if (update.MaxPerStream is < 0) return BadRequest("A per-stream limit cannot be negative.");
-        if (update.MaxPerUserPerStream is < 0) return BadRequest("A per-user limit cannot be negative.");
 
         try
         {
@@ -59,7 +59,7 @@ public sealed partial class TimeoutRewardController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, $"save the timeout reward '{update.Title}'");
+            return this.TwitchFailure(logger, exception, $"save the timeout reward '{update.Title}'");
         }
     }
 
@@ -76,28 +76,7 @@ public sealed partial class TimeoutRewardController(
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            return HandleTwitchFailure(exception, "remove the timeout reward");
+            return this.TwitchFailure(logger, exception, "remove the timeout reward");
         }
-    }
-
-    [GeneratedRegex("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")]
-    private static partial Regex HexColor();
-
-    private IActionResult HandleTwitchFailure(Exception exception, string description)
-    {
-        if (exception is not TwitchOAuthException twitchException)
-        {
-            logger.LogWarning(exception, "Twitch is unreachable, cannot {Description}", description);
-            return StatusCode(StatusCodes.Status502BadGateway);
-        }
-
-        logger.LogWarning(
-            "Twitch refused to {Description} ({StatusCode}): {Body}",
-            description, twitchException.StatusCode, twitchException.ResponseBody);
-
-        var status = (int)twitchException.StatusCode;
-        return status is >= 400 and < 500
-            ? StatusCode(status)
-            : StatusCode(StatusCodes.Status502BadGateway);
     }
 }

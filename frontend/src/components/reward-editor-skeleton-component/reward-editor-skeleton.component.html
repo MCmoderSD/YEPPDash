@@ -1,0 +1,35 @@
+<span class="reward-skeleton-label">{{ label() }}</span>
+
+<div class="reward-skeleton-form" aria-hidden="true">
+  <span class="app-skeleton app-skeleton-bar reward-skeleton-heading"></span>
+  <span class="app-skeleton reward-skeleton-field"></span>
+  <span class="app-skeleton reward-skeleton-field"></span>
+  <span class="app-skeleton reward-skeleton-field"></span>
+
+  @for (height of panels(); track $index) {
+    <span class="app-skeleton app-skeleton-bar reward-skeleton-heading"></span>
+    <span class="app-skeleton reward-skeleton-panel" [style.height]="height"></span>
+  }
+</div>
+
+<aside class="reward-skeleton-preview" aria-hidden="true">
+  <span class="app-skeleton app-skeleton-bar reward-skeleton-heading"></span>
+  <span class="app-skeleton reward-skeleton-tile"></span>
+
+  <span class="app-skeleton app-skeleton-bar app-skeleton-text"></span>
+  <span class="app-skeleton app-skeleton-bar app-skeleton-text reward-skeleton-short"></span>
+
+  <div class="reward-skeleton-switches">
+    <span class="app-skeleton app-skeleton-bar reward-skeleton-toggle"></span>
+    <span class="app-skeleton reward-skeleton-swatch"></span>
+  </div>
+
+  @if (statusRow()) {
+    <span class="app-skeleton app-skeleton-bar reward-skeleton-status"></span>
+  }
+
+  <div class="reward-skeleton-actions">
+    <span class="app-skeleton app-skeleton-bar reward-skeleton-delete"></span>
+    <span class="app-skeleton app-skeleton-bar reward-skeleton-save"></span>
+  </div>
+</aside>

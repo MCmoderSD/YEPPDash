@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, InputSignalWithTransform, S
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { BusyBarComponent } from '../busy-bar-component/busy-bar.component';
 import { firstValueFrom } from 'rxjs';
 import { UserAddDialogComponent } from '../user-add-dialog-component/user-add-dialog.component';
 import { UserTableComponent, UserTableMode } from '../user-table-component/user-table.component';
@@ -43,7 +43,7 @@ function tableModeFor(mode: RoleManagementMode): UserTableMode {
   selector: 'app-role-management',
   templateUrl: './role-management.component.html',
   styleUrl: './role-management.component.scss',
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, UserTableComponent],
+  imports: [BusyBarComponent, MatButtonModule, MatIconModule, UserTableComponent],
 })
 export class RoleManagementComponent {
 

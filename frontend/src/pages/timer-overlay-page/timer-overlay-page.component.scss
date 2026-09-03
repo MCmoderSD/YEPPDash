@@ -1,31 +1,5 @@
-:host {
-  display: block;
-
-  // OBS strips the page background through its own custom CSS, so nothing here paints one either:
-  // whatever the browser source is laid over stays visible around the timer.
-  background: transparent;
-}
-
-// Taken out of the flow entirely rather than sized to fill the page. A browser source must never
-// scroll, and anything that merely fills the viewport can still be pushed past it by a stray pixel;
-// fixed to the viewport, this cannot contribute to the page's height at all.
-//
-// It also keeps to CSS that the browser OBS embeds actually has. That browser is several years
-// behind Chrome — dvh units and the standalone translate property both postdate it, and a source
-// that quietly drops them ends up with no height limit and scroll bars at both edges.
-.overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-// Centred by the flex parent rather than a top/left and translate pair: one less thing for the old
-// engine to get wrong, and it is the only child.
+// Centred by the frame's flex box rather than a top/left and translate pair: one less thing for the
+// old engine to get wrong, and it is the only child.
 .overlay-stack {
   display: flex;
   flex-direction: column;
@@ -68,17 +42,4 @@
   text-align: center;
   text-shadow: var(--timer-shadow, 0 0.4vmin 0.8vmin rgb(0 0 0 / 80%));
   overflow-wrap: break-word;
-}
-
-// Only ever seen by someone who opened the link by hand without the query string, so it is sized to
-// be read in a browser rather than from across a room.
-.overlay-hint {
-  max-width: min(90%, 55vmin);
-  margin: 0;
-  color: #ffffff;
-  font: var(--mat-sys-body-medium);
-  font-size: max(0.875rem, 2.4vmin);
-  line-height: 1.4;
-  text-align: center;
-  text-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 80%);
 }

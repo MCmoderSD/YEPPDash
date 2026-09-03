@@ -1,10 +1,10 @@
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YEPPDash.Api.Data.Queue;
 using YEPPDash.Api.Exceptions.Queue;
 using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Services;
+using YEPPDash.Api.Services.Streaming;
 
 namespace YEPPDash.Api.Controllers;
 
@@ -16,8 +16,6 @@ public sealed class QueueController(
     QueueHub hub,
     ILogger<QueueController> logger) : ControllerBase
 {
-    private static readonly TimeSpan KeepAlive = TimeSpan.FromSeconds(20);
-
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetQueue(string userId, CancellationToken cancellationToken)
     {
@@ -43,39 +41,10 @@ public sealed class QueueController(
             return;
         }
 
-        Response.ContentType = "text/event-stream";
-        Response.Headers.CacheControl = "no-cache, no-store";
-
-        Response.Headers["X-Accel-Buffering"] = "no";
-
         using var subscription = hub.Subscribe(channelId);
         logger.LogDebug("A dashboard is watching the queue of the channel {ChannelId}", channelId);
 
-        await WriteAsync(": connected\n\n", cancellationToken);
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            string payload;
-
-            try
-            {
-                using var idle = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                idle.CancelAfter(KeepAlive);
-
-                payload = await subscription.Reader.ReadAsync(idle.Token);
-            }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-            {
-                await WriteAsync(": keep-alive\n\n", cancellationToken);
-                continue;
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            await WriteAsync($"data: {payload}\n\n", cancellationToken);
-        }
+        await Response.StreamAsync(subscription, cancellationToken);
 
         logger.LogDebug("A dashboard stopped watching the queue of the channel {ChannelId}", channelId);
     }
@@ -134,12 +103,6 @@ public sealed class QueueController(
         {
             return BadRequest(exception.Message);
         }
-    }
-
-    private async Task WriteAsync(string text, CancellationToken cancellationToken)
-    {
-        await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(text), cancellationToken);
-        await Response.Body.FlushAsync(cancellationToken);
     }
 
     private IActionResult? Denied(string userId)

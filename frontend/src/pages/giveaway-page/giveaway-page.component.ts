@@ -1,41 +1,33 @@
-import { DecimalPipe, NgOptimizedImage, PercentPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, signal, Signal, untracked, viewChild, WritableSignal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
 import { firstValueFrom } from 'rxjs';
+import { RewardEditorSkeletonComponent } from '../../components/reward-editor-skeleton-component/reward-editor-skeleton.component';
+import { RewardFieldsComponent } from '../../components/reward-fields-component/reward-fields.component';
 import { RewardSwitchesComponent } from '../../components/reward-switches-component/reward-switches.component';
 import { EntryRulesComponent } from '../../components/entry-rules-component/entry-rules.component';
+import { GiveawayEntriesTableComponent } from '../../components/giveaway-entries-table-component/giveaway-entries-table.component';
 import { GiveawayGridComponent } from '../../components/giveaway-grid-component/giveaway-grid.component';
+import { GiveawayWinnersTableComponent } from '../../components/giveaway-winners-table-component/giveaway-winners-table.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
-import { NumberStepperComponent } from '../../components/number-stepper-component/number-stepper.component';
 import { OverlayLinkComponent } from '../../components/overlay-link-component/overlay-link.component';
 import { RegistrationControlsComponent } from '../../components/registration-controls-component/registration-controls.component';
 import { RewardLimitsComponent } from '../../components/reward-limits-component/reward-limits.component';
 import { RewardPreviewComponent } from '../../components/reward-preview-component/reward-preview.component';
 import { StatusBadgeComponent } from '../../components/status-badge-component/status-badge.component';
-import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
-import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { WheelWinnerDialogComponent } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
-import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { wireDataSource } from '../../services/data-source';
 import { GiveawayService } from '../../services/giveaway.service';
-import { GiveawayDashboardMessage, GiveawayListener, GiveawaySyncService } from '../../services/giveaway-sync.service';
+import { GiveawayDashboardMessage, GiveawaySyncService } from '../../services/giveaway-sync.service';
+import { StreamListener } from '../../services/sse.service';
 import { NotificationService } from '../../services/notification.service';
+import { errorMessage } from '../../services/http-error';
 import { GIVEAWAY_OVERLAY_PATH, GIVEAWAY_PARAM, overlayUrl } from '../../data/overlay';
-import { TwitchUser } from '../../data/twitch-user';
 import {
   DEFAULT_MULTIPLIERS,
   GiveawayDrawResult,
@@ -52,28 +44,23 @@ import {
   multipliersInvalid,
   NEW_GIVEAWAY,
   participantLabel,
-  rewardImage,
   STATUS_LABELS,
-  tierLabel,
   winnerLabel,
 } from '../../data/giveaway';
-
-const MAX_TITLE_LENGTH: number = 45;
-const MAX_DESCRIPTION_LENGTH: number = 200;
+import { DEFAULT_REWARD_COLOR, isHexColor, REWARD_PROMPT_MAX, REWARD_TITLE_MAX, rewardImage } from '../../data/custom-reward';
 
 const DEFAULT_COST: number = 1_000;
-const DEFAULT_COLOR: string = '#9147FF';
 
 @Component({
   selector: 'app-giveaway-page',
   templateUrl: './giveaway-page.component.html',
   styleUrl: './giveaway-page.component.scss',
-  imports: [
-    DecimalPipe, PercentPipe, NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    MatProgressBarModule, MatSortModule, MatTableModule, MatTabsModule, MatTooltipModule,
-    EntryRulesComponent, GiveawayGridComponent, NumberStepperComponent, OverlayLinkComponent, RegistrationControlsComponent,
-    RewardLimitsComponent, RewardPreviewComponent, RewardSwitchesComponent,
-    ScrollBarComponent, StatusBadgeComponent, UserBadgesComponent, WheelComponent, LocaleDatePipe,
+  imports: [BusyBarComponent, 
+    MatButtonModule, MatIconModule, MatTabsModule,
+    EntryRulesComponent, GiveawayEntriesTableComponent, GiveawayGridComponent, GiveawayWinnersTableComponent,
+    OverlayLinkComponent, RegistrationControlsComponent, RewardEditorSkeletonComponent, RewardFieldsComponent,
+    RewardLimitsComponent,
+    RewardPreviewComponent, RewardSwitchesComponent, StatusBadgeComponent, WheelComponent,
   ],
 })
 export class GiveawayPageComponent {
@@ -89,15 +76,17 @@ export class GiveawayPageComponent {
 
   protected readonly statusLabels: Readonly<Record<GiveawayStatus, string>> = STATUS_LABELS;
 
-  protected readonly maxTitleLength: number = MAX_TITLE_LENGTH;
-  protected readonly maxDescriptionLength: number = MAX_DESCRIPTION_LENGTH;
-  protected readonly participantColumns: readonly string[] = ['user', 'roles', 'multiplier', 'entered', 'actions'];
-  protected readonly winnerColumns: readonly string[] = ['order', 'user', 'multiplier', 'won'];
+  protected readonly defaultColor: string = DEFAULT_REWARD_COLOR;
+
+  // Cooldown and limits panel, entry rules panel.
+  protected readonly skeletonPanels: readonly string[] = ['13.5rem', '22rem'];
 
   protected readonly summaries: WritableSignal<GiveawaySummary[]> = signal<GiveawaySummary[]>([]);
   protected readonly selected: WritableSignal<GiveawaySettings | null> = signal<GiveawaySettings | null>(null);
 
   private readonly loaded: WritableSignal<boolean> = signal(false);
+
+  protected readonly detailLoading: WritableSignal<boolean> = signal(false);
 
   protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
   protected readonly skeleton: Signal<boolean> = computed((): boolean => !this.loaded());
@@ -106,7 +95,7 @@ export class GiveawayPageComponent {
   protected readonly title: WritableSignal<string> = signal('');
   protected readonly cost: WritableSignal<number> = signal(DEFAULT_COST);
   protected readonly description: WritableSignal<string> = signal('');
-  protected readonly color: WritableSignal<string> = signal(DEFAULT_COLOR);
+  protected readonly color: WritableSignal<string> = signal(DEFAULT_REWARD_COLOR);
   protected readonly cooldownSeconds: WritableSignal<number> = signal(0);
   protected readonly maxPerStream: WritableSignal<number> = signal(0);
   protected readonly maxPerUserPerStream: WritableSignal<number> = signal(0);
@@ -123,12 +112,7 @@ export class GiveawayPageComponent {
 
   private readonly wheel: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
 
-  private readonly participantSort: Signal<MatSort | undefined> = viewChild('participantSort', { read: MatSort });
-  private readonly winnerSort: Signal<MatSort | undefined> = viewChild('winnerSort', { read: MatSort });
   private readonly noPager: Signal<MatPaginator | undefined> = signal<MatPaginator | undefined>(undefined);
-
-  protected readonly participantSource: MatTableDataSource<GiveawayParticipant> = new MatTableDataSource<GiveawayParticipant>([]);
-  protected readonly winnerSource: MatTableDataSource<GiveawayWinner> = new MatTableDataSource<GiveawayWinner>([]);
 
   protected readonly creating: Signal<boolean> = computed((): boolean => this.giveaway() === NEW_GIVEAWAY);
 
@@ -152,32 +136,20 @@ export class GiveawayPageComponent {
   protected readonly weights: Signal<number[]> = computed((): number[] =>
     this.board().map((slice: GiveawayOverlaySlice): number => slice.weight));
 
-  protected readonly chance: Signal<Map<string, number>> = computed((): Map<string, number> => {
-    const rows: GiveawayParticipant[] = this.participants();
-    const total: number = rows.reduce((sum: number, row: GiveawayParticipant): number => sum + row.multiplier, 0);
-
-    return new Map<string, number>(rows.map((row: GiveawayParticipant): [string, number] =>
-      [row.userId, total > 0 ? row.multiplier / total : 0]));
-  });
-
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
     const id: string | null = this.selectedId();
 
     return id === null ? null : overlayUrl(GIVEAWAY_OVERLAY_PATH, GIVEAWAY_PARAM, id);
   });
 
-  protected readonly descriptionLeft: Signal<number> = computed((): number => MAX_DESCRIPTION_LENGTH - this.description().length);
-
-  protected readonly colorInvalid: Signal<boolean> = computed(
-    (): boolean => !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(this.color().trim())
-  );
+  protected readonly colorInvalid: Signal<boolean> = computed((): boolean => !isHexColor(this.color()));
 
   protected readonly valid: Signal<boolean> = computed((): boolean => {
     const title: string = this.title().trim();
 
-    return title.length > 0 && title.length <= MAX_TITLE_LENGTH
+    return title.length > 0 && title.length <= REWARD_TITLE_MAX
       && Number.isFinite(this.cost()) && this.cost() >= 1
-      && this.description().length <= MAX_DESCRIPTION_LENGTH
+      && this.description().length <= REWARD_PROMPT_MAX
       && !this.colorInvalid()
       && !multipliersInvalid(this.multipliers());
   });
@@ -206,30 +178,9 @@ export class GiveawayPageComponent {
 
   protected readonly tileImage: Signal<string> = computed((): string => rewardImage(this.selected()?.reward ?? null));
 
-  protected readonly costText: Signal<string> = computed((): string => {
-    const cost: number = this.cost();
-    return Number.isFinite(cost) && cost > 0 ? cost.toLocaleString('en-US') : '';
-  });
-
-  private listener: GiveawayListener | null = null;
+  private listener: StreamListener | null = null;
 
   constructor() {
-    wireDataSource(this.participantSource, this.participants, this.participantSort, this.noPager);
-    wireDataSource(this.winnerSource, this.winners, this.winnerSort, this.noPager);
-
-    this.participantSource.sortingDataAccessor = (row: GiveawayParticipant, column: string): string | number => {
-      if (column === 'multiplier') return row.multiplier;
-      if (column === 'entered') return row.enteredAt;
-      return participantLabel(row).toLowerCase();
-    };
-
-    this.winnerSource.sortingDataAccessor = (row: GiveawayWinner, column: string): string | number => {
-      if (column === 'order') return row.drawOrder;
-      if (column === 'multiplier') return row.multiplier;
-      if (column === 'won') return row.wonAt;
-      return winnerLabel(row).toLowerCase();
-    };
-
     void this.loadCount();
     void this.loadList();
 
@@ -239,7 +190,7 @@ export class GiveawayPageComponent {
     });
 
     effect((onCleanup: EffectCleanupRegisterFn): void => {
-      const listener: GiveawayListener = this.sync.listenDashboard((message: GiveawayDashboardMessage): void => this.receive(message));
+      const listener: StreamListener = this.sync.listenDashboard((message: GiveawayDashboardMessage): void => this.receive(message));
 
       this.listener = listener;
 
@@ -250,27 +201,6 @@ export class GiveawayPageComponent {
     });
 
     this.destroyRef.onDestroy((): void => this.listener?.close());
-  }
-
-  protected label(participant: GiveawayParticipant): string {
-    return participantLabel(participant);
-  }
-
-  protected winnerName(winner: GiveawayWinner): string {
-    return winnerLabel(winner);
-  }
-
-  protected tier(participant: GiveawayParticipant): string | null {
-    return tierLabel(participant.subTier);
-  }
-
-  protected odds(participant: GiveawayParticipant): number {
-    return this.chance().get(participant.userId) ?? 0;
-  }
-
-  protected setCost(value: string): void {
-    const digits: string = value.replace(/[^0-9]/g, '');
-    this.cost.set(digits.length === 0 ? 0 : Math.min(+digits, Number.MAX_SAFE_INTEGER));
   }
 
   protected openNew(): void {
@@ -294,13 +224,6 @@ export class GiveawayPageComponent {
     });
   }
 
-  protected showDetails(user: TwitchUser | null, event?: Event): void {
-    if (user === null) return;
-
-    event?.stopPropagation();
-    UserInfoDialogComponent.open(this.dialog, user);
-  }
-
   protected async save(): Promise<void> {
     if (!this.canSave()) return;
 
@@ -322,7 +245,7 @@ export class GiveawayPageComponent {
         this.notifications.success(`“${saved.title}” is saved.`);
       }
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, id === null
+      this.notifications.failure(errorMessage(error, id === null
         ? 'Could not create the giveaway.'
         : 'Could not save the giveaway.'));
     } finally {
@@ -341,7 +264,7 @@ export class GiveawayPageComponent {
 
       this.notifications.success(`“${settings.title}” is open — the reward is live in your channel.`);
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not open the giveaway.'));
+      this.notifications.failure(errorMessage(error, 'Could not open the giveaway.'));
     } finally {
       this.busy.set(false);
     }
@@ -358,7 +281,7 @@ export class GiveawayPageComponent {
 
       this.notifications.success(`“${settings.title}” is closed — the reward is hidden again.`);
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not close the giveaway.'));
+      this.notifications.failure(errorMessage(error, 'Could not close the giveaway.'));
     } finally {
       this.busy.set(false);
     }
@@ -384,7 +307,7 @@ export class GiveawayPageComponent {
       this.select(null);
       this.notifications.success(`“${settings.title}” and its history are gone.`);
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not delete the giveaway.'));
+      this.notifications.failure(errorMessage(error, 'Could not delete the giveaway.'));
     } finally {
       this.busy.set(false);
     }
@@ -396,7 +319,7 @@ export class GiveawayPageComponent {
 
     const confirmed: boolean | undefined = await firstValueFrom(ConfirmActionDialogComponent.open(this.dialog, {
       title: 'Take this entry off the wheel',
-      message: `${this.label(participant)} will not be drawn again. The points they spent are not refunded, and they cannot enter a second time.`,
+      message: `${participantLabel(participant)} will not be drawn again. The points they spent are not refunded, and they cannot enter a second time.`,
       confirmLabel: 'Remove entry',
     }).afterClosed());
 
@@ -424,7 +347,7 @@ export class GiveawayPageComponent {
 
       this.notifications.success(`“${settings.title}” is a draft again.`);
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not reset the giveaway.'));
+      this.notifications.failure(errorMessage(error, 'Could not reset the giveaway.'));
     } finally {
       this.busy.set(false);
     }
@@ -449,7 +372,7 @@ export class GiveawayPageComponent {
       else wheel.spin(result.index);
     } catch (error: unknown) {
       this.settleDraw(settings.id);
-      this.notifications.failure(this.messageFrom(error, 'Could not draw a winner.'));
+      this.notifications.failure(errorMessage(error, 'Could not draw a winner.'));
     } finally {
       this.busy.set(false);
     }
@@ -472,7 +395,7 @@ export class GiveawayPageComponent {
     const winner: GiveawayWinner | null = settings === null ? null : this.settleDraw(settings.id);
 
     const choice: 'close' | 'remove' = await WheelWinnerDialogComponent.announce(
-      this.dialog, winner === null ? spin.label : this.winnerName(winner));
+      this.dialog, winner === null ? spin.label : winnerLabel(winner));
 
     if (choice !== 'remove' || winner === null || settings === null) return;
 
@@ -492,7 +415,7 @@ export class GiveawayPageComponent {
       this.syncBoard();
       await this.loadList();
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not remove the entry.'));
+      this.notifications.failure(errorMessage(error, 'Could not remove the entry.'));
     } finally {
       this.busy.set(false);
     }
@@ -518,7 +441,7 @@ export class GiveawayPageComponent {
     this.title.set(settings.title);
     this.cost.set(settings.cost);
     this.description.set(settings.description);
-    this.color.set(settings.reward?.backgroundColor || DEFAULT_COLOR);
+    this.color.set(settings.reward?.backgroundColor || DEFAULT_REWARD_COLOR);
     this.cooldownSeconds.set(settings.cooldownSeconds ?? 0);
     this.maxPerStream.set(settings.maxPerStream ?? 0);
     this.maxPerUserPerStream.set(settings.maxPerUserPerStream ?? 0);
@@ -536,7 +459,7 @@ export class GiveawayPageComponent {
     this.title.set('');
     this.cost.set(DEFAULT_COST);
     this.description.set('');
-    this.color.set(DEFAULT_COLOR);
+    this.color.set(DEFAULT_REWARD_COLOR);
     this.cooldownSeconds.set(0);
     this.maxPerStream.set(0);
     this.maxPerUserPerStream.set(0);
@@ -571,7 +494,7 @@ export class GiveawayPageComponent {
       this.summaries.set(summaries);
       this.expected.set(summaries.length);
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not load your giveaways.'));
+      this.notifications.failure(errorMessage(error, 'Could not load your giveaways.'));
     } finally {
       this.loaded.set(true);
     }
@@ -583,11 +506,15 @@ export class GiveawayPageComponent {
       return;
     }
 
+    this.detailLoading.set(true);
+
     try {
       this.apply(await this.giveaways.getGiveaway(id));
     } catch (error: unknown) {
-      this.notifications.failure(this.messageFrom(error, 'Could not load that giveaway.'));
+      this.notifications.failure(errorMessage(error, 'Could not load that giveaway.'));
       this.select(null);
+    } finally {
+      this.detailLoading.set(false);
     }
   }
 
@@ -645,11 +572,5 @@ export class GiveawayPageComponent {
 
       return { ...current, winners: [...current.winners, winner] };
     });
-  }
-
-  private messageFrom(error: unknown, fallback: string): string {
-    if (!(error instanceof HttpErrorResponse)) return fallback;
-
-    return typeof error.error === 'string' && error.error.trim().length > 0 ? error.error : fallback;
   }
 }

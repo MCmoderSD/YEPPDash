@@ -1,0 +1,23 @@
+// The containing block for the scroll bar drawn over the table, which is what every caller used to
+// declare for itself. `align-self: stretch` keeps the frame as wide as the flex column around it
+// rather than shrink-wrapping to whatever width the table content happens to need.
+:host {
+  position: relative;
+  display: block;
+  align-self: stretch;
+  min-width: 0;
+}
+
+// Narrow viewports scroll the table instead of squashing the columns into unreadable slivers.
+//
+// Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel on a
+// scaled display is then enough to summon a vertical bar over rows that already fit.
+.frame-scroll {
+  overflow: auto hidden;
+  border: var(--app-border);
+  border-radius: var(--app-radius-outlined);
+}
+
+.frame-scroll-y {
+  overflow: auto;
+}

@@ -5,26 +5,23 @@
   <app-user-finder [(user)]="found"/>
 
   @if (broadcaster()) {
-    <p class="ban-user-warning">
-      <mat-icon class="ban-user-warning-icon" aria-hidden="true">block</mat-icon>
+    <app-notice icon="block" tone="error">
       <span>This is your own channel account. Twitch does not take a ban on it.</span>
-    </p>
+    </app-notice>
   } @else {
     @if (bot()) {
-      <p class="ban-user-warning">
-        <mat-icon class="ban-user-warning-icon" aria-hidden="true">smart_toy</mat-icon>
+      <app-notice icon="smart_toy" tone="error">
         <span>
           {{ found()?.displayName }} is the bot this dashboard manages. Banning it stops it working
           in your channel until the ban is lifted.
         </span>
-      </p>
+      </app-notice>
     }
 
     @if (roleWarning(); as warning) {
-      <p class="ban-user-warning">
-        <mat-icon class="ban-user-warning-icon" aria-hidden="true">warning</mat-icon>
+      <app-notice icon="warning" tone="error">
         <span>{{ warning }}</span>
-      </p>
+      </app-notice>
     }
   }
 
@@ -72,7 +69,7 @@
     </mat-form-field>
   </div>
 
-  <p class="ban-user-hint" [class.ban-user-hint-error]="tooLong() || tooShort()" aria-live="polite">
+  <p class="app-hint" [class.ban-user-hint-error]="tooLong() || tooShort()" aria-live="polite">
     @if (permanent()) {
       A permanent ban holds until it is lifted.
     } @else if (tooLong()) {

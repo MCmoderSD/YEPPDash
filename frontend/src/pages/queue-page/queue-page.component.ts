@@ -8,12 +8,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { QueueSkeletonComponent } from '../../components/queue-skeleton-component/queue-skeleton.component';
-import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
+import { UserIdentityComponent } from '../../components/user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { QueueService } from '../../services/queue.service';
-import { QueueListener, QueueSyncService } from '../../services/queue-sync.service';
+import { QueueSyncService } from '../../services/queue-sync.service';
+import { StreamListener } from '../../services/sse.service';
 import { TwitchService } from '../../services/twitch.service';
 import { EMPTY_QUEUE, Queue, QUEUE_REQUIREMENT_HINTS, QUEUE_REQUIREMENT_LABELS, QUEUE_REQUIREMENTS, QueueRequirement } from '../../data/queue';
 import { TwitchUser } from '../../data/twitch-user';
@@ -29,7 +30,7 @@ export interface QueueRow {
   selector: 'app-queue-page',
   templateUrl: './queue-page.component.html',
   styleUrl: './queue-page.component.scss',
-  imports: [CdkDrag, CdkDragHandle, CdkDropList, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, NgOptimizedImage, QueueSkeletonComponent, UserBadgesComponent],
+  imports: [CdkDrag, CdkDragHandle, CdkDropList, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, NgOptimizedImage, QueueSkeletonComponent, UserIdentityComponent],
 })
 export class QueuePageComponent {
 
@@ -43,7 +44,7 @@ export class QueuePageComponent {
 
   private readonly channelId: Signal<string | null> = computed((): string | null => this.auth.currentUser()?.id ?? null);
 
-  private listener: QueueListener | null = null;
+  private listener: StreamListener | null = null;
 
   private writing: Promise<void> = Promise.resolve();
 
@@ -82,7 +83,7 @@ export class QueuePageComponent {
 
       let connected = false;
 
-      const listener: QueueListener = this.sync.listen(
+      const listener: StreamListener = this.sync.listen(
         channelId, (queue: Queue): void => void this.show(queue),
         (): void => {
           if (connected) void this.load(channelId);

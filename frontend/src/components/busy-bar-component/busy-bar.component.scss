@@ -1,0 +1,7 @@
+:host {
+  // Hidden rather than removed, and never stretched or squeezed by the column it stands in: the bar
+  // keeps its slot while idle, so a request starting does not shift everything under it down a line.
+  display: block;
+  flex: none;
+  align-self: stretch;
+}

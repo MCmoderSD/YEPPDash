@@ -21,3 +21,10 @@ export function wireDataSource<T>(
     if (paginator) dataSource.paginator = paginator;
   });
 }
+
+export function filterRows<T>(dataSource: MatTableDataSource<T>, value: string): void {
+  dataSource.filter = value.trim().toLowerCase();
+  dataSource.paginator?.firstPage();
+}
+
+export const TABLE_PAGE_SIZES: readonly number[] = [10, 25, 50, 100];

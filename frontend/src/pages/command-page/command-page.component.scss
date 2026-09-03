@@ -10,31 +10,12 @@
   margin-inline: auto;
 }
 
-.command-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.command-page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.command-page-count {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
 // The count line is centred by its ancestor's text-align, which only ever steers inline content —
 // .app-skeleton fixes this bar's own display to block, so it needs its own margin to land in the
 // middle instead of pinned to the start edge. Sized for the longest real sentence this line ever
 // shows ("N commands in your channel, N active") so the swap to real text does not change width.
 .command-page-count-skeleton {
   width: min(14rem, 70vw);
-  margin-inline: auto;
 }
 
 // app-fade-in's rise is a translate, and translate does not move a plain inline box — every other
@@ -42,16 +23,4 @@
 // be it here without the fade replaying every time the sentence's own wording changes underneath.
 .command-page-count-text {
   display: block;
-}
-
-.command-page-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.command-page-progress {
-  flex: none;
-  align-self: stretch;
 }

@@ -9,33 +9,9 @@
   margin-inline: auto;
 }
 
-.timeout-management-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.timeout-management-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.timeout-management-count {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
 // Pulled out of flow so announcing the load costs no space while only screen readers listen.
 .timeout-management > .app-visually-hidden {
   position: absolute;
-}
-
-// Kept in the layout while idle so the tables do not jump every time a request starts.
-.timeout-management-progress {
-  flex: none;
-  align-self: stretch;
 }
 
 .timeout-management-tabs {

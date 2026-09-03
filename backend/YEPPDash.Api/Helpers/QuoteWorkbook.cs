@@ -32,7 +32,6 @@ public static class QuoteWorkbook
             sheet.Cell(row, IdColumn).Value = quote.Id;
             sheet.Cell(row, MessageColumn).Value = quote.Text;
 
-            // Written as a real date cell rather than text so Excel sorts and filters it properly.
             sheet.Cell(row, DateColumn).Value = quote.Timestamp.UtcDateTime;
             sheet.Cell(row, DateColumn).Style.DateFormat.Format = "yyyy-mm-dd hh:mm:ss";
         }
@@ -61,8 +60,6 @@ public static class QuoteWorkbook
         {
             var text = sheet.Cell(row, MessageColumn).GetString().Trim();
 
-            // Blank lines are skipped rather than rejected: a spreadsheet people have edited by
-            // hand usually has a few, and failing the whole import over one is not helpful.
             if (string.IsNullOrWhiteSpace(text)) continue;
 
             if (text.Length > QuoteLimits.MaxLength)
@@ -80,9 +77,6 @@ public static class QuoteWorkbook
                 $"No quotes found. Expected a header row, then one quote per row with the message in column {MessageColumn}.");
         }
 
-        // The ID column only decides the order — the positions are handed out fresh on import, so
-        // gaps or duplicates in the file are not worth rejecting. Rows without an ID keep their
-        // position in the sheet.
         return drafts
             .Select((entry, index) => (entry.Id, entry.Draft, Fallback: index))
             .OrderBy(entry => entry.Id ?? int.MaxValue)
@@ -116,10 +110,9 @@ public static class QuoteWorkbook
         var cell = sheet.Cell(row, DateColumn);
         if (cell.IsEmpty()) return null;
 
-        // A date cell comes back as DateTime; a sheet typed by hand hands over a string instead.
         if (cell.TryGetValue(out DateTime value))
         {
-            return new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+            return new DateTimeOffset(value.AsUtc());
         }
 
         return DateTimeOffset.TryParse(cell.GetString(), out var parsed) ? parsed : null;

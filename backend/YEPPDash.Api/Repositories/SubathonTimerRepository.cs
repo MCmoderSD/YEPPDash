@@ -1,6 +1,7 @@
 using Dapper;
 using MySqlConnector;
 using YEPPDash.Api.Data.SubathonTimer;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -174,11 +175,11 @@ public sealed class SubathonTimerRepository(MySqlConnection connection)
 
         public SubathonTimerState ToState()
         {
-            var endsAt = EndsAt is null ? (DateTime?)null : DateTime.SpecifyKind(EndsAt.Value, DateTimeKind.Utc);
+            var endsAt = EndsAt?.AsUtc();
 
             return new SubathonTimerState(
                 Id, Running, endsAt, Remaining, StartSeconds, Style,
-                DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc));
+                UpdatedAt.AsUtc());
         }
     }
 }

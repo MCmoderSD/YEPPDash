@@ -1,20 +1,19 @@
 import { Component, computed, inject, signal, Signal, WritableSignal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
+import { UserProfileComponent } from '../user-profile-component/user-profile.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { BirthdayService } from '../../services/birthday.service';
 import { Birthday, birthdayToDate } from '../../data/birthday';
 import { TwitchUser } from '../../data/twitch-user';
-import { BadgeSize } from '../../data/badge';
+import { openDialog } from '../../services/dialog';
 
 @Component({
   selector: 'app-user-info-dialog',
   templateUrl: './user-info-dialog.component.html',
   styleUrl: './user-info-dialog.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatDialogModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
+  imports: [MatButtonModule, MatDialogModule, ScrollBarComponent, UserProfileComponent, LocaleDatePipe],
 })
 export class UserInfoDialogComponent {
 
@@ -26,10 +25,6 @@ export class UserInfoDialogComponent {
 
   protected readonly pending: WritableSignal<boolean> = signal(true);
 
-  protected readonly chatColor: string | null = this.user.color ?? null;
-
-  protected readonly badgeSize: BadgeSize = BadgeSize.Medium;
-
   protected readonly birthdayDate: Signal<Date | null> = computed((): Date | null => {
     const birthday: Birthday | null = this.born();
     return birthday ? birthdayToDate(birthday) : null;
@@ -40,12 +35,8 @@ export class UserInfoDialogComponent {
   }
 
   static open(dialog: MatDialog, user: TwitchUser): MatDialogRef<UserInfoDialogComponent> {
-    return dialog.open(UserInfoDialogComponent, {
-      data: user,
-      width: '33vw',
-      minWidth: 'min(22rem, 92vw)',
-      maxWidth: '92vw',
-    });
+    return openDialog<UserInfoDialogComponent, TwitchUser, void>(
+      dialog, UserInfoDialogComponent, user, { width: '33vw' });
   }
 
   private async loadBirthday(): Promise<void> {

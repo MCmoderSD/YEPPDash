@@ -1,0 +1,14 @@
+<div class="overlay">
+  <ng-content/>
+
+  @if (winner(); as name) {
+    <div class="overlay-winner" role="status">
+      <p class="overlay-winner-title">We have a winner!</p>
+      <p class="overlay-winner-name">{{ name }}</p>
+    </div>
+  }
+
+  @if (hint(); as text) {
+    <p class="overlay-hint">{{ text }}</p>
+  }
+</div>

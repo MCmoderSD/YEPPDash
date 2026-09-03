@@ -1,0 +1,47 @@
+<mat-form-field appearance="outline" class="fields-field">
+  <mat-label>Name</mat-label>
+  <input
+    matInput
+    #titleField
+    type="text"
+    autocomplete="off"
+    [disabled]="disabled()"
+    [attr.maxlength]="maxTitleLength"
+    [value]="title()"
+    (input)="title.set(titleField.value)"
+  />
+  <mat-hint align="end">{{ titleLeft() }} characters left</mat-hint>
+</mat-form-field>
+
+<mat-form-field appearance="outline" class="fields-field">
+  <mat-label>Cost</mat-label>
+  <input
+    matInput
+    #costField
+    type="text"
+    inputmode="numeric"
+    autocomplete="off"
+    [disabled]="disabled()"
+    [attr.aria-invalid]="cost() < 1"
+    [value]="costText()"
+    (input)="setCost(costField.value)"
+  />
+  <app-number-stepper matSuffix [value]="cost()" [min]="1" [step]="100" (valueChange)="cost.set($event)"/>
+  <mat-hint>{{ costHint() }}</mat-hint>
+</mat-form-field>
+
+<mat-form-field appearance="outline" class="fields-field">
+  <mat-label>Description (optional)</mat-label>
+  <input
+    matInput
+    #descriptionField
+    type="text"
+    autocomplete="off"
+    [disabled]="disabled()"
+    [attr.maxlength]="maxDescriptionLength"
+    [value]="description()"
+    (input)="description.set(descriptionField.value)"
+  />
+  <mat-hint>Shown in the redeem dialog on Twitch</mat-hint>
+  <mat-hint align="end">{{ descriptionLeft() }} left</mat-hint>
+</mat-form-field>

@@ -1,4 +1,3 @@
-using System.Net;
 using YEPPDash.Api.Data.Giveaway;
 using YEPPDash.Api.Data.Redemption;
 using YEPPDash.Api.Data.Twitch;
@@ -6,13 +5,14 @@ using YEPPDash.Api.EventSub;
 using YEPPDash.Api.Exceptions.Giveaway;
 using YEPPDash.Api.Exceptions.Twitch;
 using YEPPDash.Api.Repositories;
+using YEPPDash.Api.Services.Streaming;
 using YEPPDash.Api.Twitch;
 
 namespace YEPPDash.Api.Services;
 
 public sealed class GiveawayService(
     GiveawayRepository repository,
-    RedemptionLogRepository log,
+    RedemptionSettlement redemptions,
     TwitchChannelService channels,
     TwitchApiClient apiClient,
     TwitchAuthService authService,
@@ -72,7 +72,7 @@ public sealed class GiveawayService(
     {
         var channelId = int.Parse(broadcasterId);
 
-        var reward = await channels.CreateCustomRewardAsync(broadcasterId, ToCreate(update, enabled: false), cancellationToken);
+        var reward = await channels.CreateCustomRewardAsync(broadcasterId, CustomRewardRequests.Create(Of(update, enabled: false)), cancellationToken);
 
         var config = new GiveawayConfig(
             Guid.NewGuid(),
@@ -111,9 +111,9 @@ public sealed class GiveawayService(
 
         try
         {
-            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, ToUpdate(update, enabled: false), cancellationToken);
+            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, CustomRewardRequests.Update(Of(update, enabled: false)), cancellationToken);
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
             reward = await RecreateAsync(config, broadcasterId, enabled: false, cancellationToken);
         }
@@ -156,9 +156,9 @@ public sealed class GiveawayService(
 
         try
         {
-            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, EnabledUpdate(true), cancellationToken);
+            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, CustomRewardRequests.SetEnabled(true), cancellationToken);
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
             reward = await RecreateAsync(config, broadcasterId, enabled: true, cancellationToken);
             config = config with { RewardId = reward.Id };
@@ -167,7 +167,7 @@ public sealed class GiveawayService(
         config = config with { Status = GiveawayStatus.Open, UpdatedAt = DateTime.UtcNow };
         await repository.SetStatusAsync(config.Id, config.Status, config.UpdatedAt, cancellationToken);
 
-        hub.Publish(channelId, GiveawayAudience.Dashboard, GiveawayEvents.Status(config.Id, config.Status));
+        hub.Publish(channelId, GiveawayEvents.Status(config.Id, config.Status), StreamAudience.Dashboard);
 
         eventSub.Resync();
 
@@ -194,9 +194,9 @@ public sealed class GiveawayService(
 
         try
         {
-            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, EnabledUpdate(false), cancellationToken);
+            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, CustomRewardRequests.SetEnabled(false), cancellationToken);
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
             logger.LogWarning("Reward {RewardId} of giveaway {GiveawayId} is gone, closing it anyway", config.RewardId, config.Id);
         }
@@ -204,7 +204,7 @@ public sealed class GiveawayService(
         config = config with { Status = GiveawayStatus.Closed, UpdatedAt = DateTime.UtcNow };
         await repository.SetStatusAsync(config.Id, config.Status, config.UpdatedAt, cancellationToken);
 
-        hub.Publish(channelId, GiveawayAudience.Dashboard, GiveawayEvents.Status(config.Id, config.Status));
+        hub.Publish(channelId, GiveawayEvents.Status(config.Id, config.Status), StreamAudience.Dashboard);
 
         eventSub.Resync();
 
@@ -220,13 +220,7 @@ public sealed class GiveawayService(
         var config = await repository.GetAsync(channelId, giveawayId, cancellationToken);
         if (config is null) return false;
 
-        try
-        {
-            await channels.DeleteCustomRewardAsync(broadcasterId, config.RewardId, cancellationToken);
-        }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
-        {
-        }
+        await channels.DeleteIfPresentAsync(broadcasterId, config.RewardId, cancellationToken);
 
         await repository.DeleteAsync(config.Id, cancellationToken);
 
@@ -262,9 +256,9 @@ public sealed class GiveawayService(
 
         try
         {
-            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, EnabledUpdate(false), cancellationToken);
+            reward = await channels.UpdateCustomRewardAsync(broadcasterId, config.RewardId, CustomRewardRequests.SetEnabled(false), cancellationToken);
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
             logger.LogWarning("Reward {RewardId} of giveaway {GiveawayId} is gone, resetting it anyway", config.RewardId, config.Id);
         }
@@ -274,11 +268,11 @@ public sealed class GiveawayService(
         config = config with { Status = GiveawayStatus.Draft, UpdatedAt = DateTime.UtcNow };
         await repository.SetStatusAsync(config.Id, config.Status, config.UpdatedAt, cancellationToken);
 
-        hub.Publish(channelId, GiveawayAudience.Dashboard, GiveawayEvents.Status(config.Id, config.Status));
+        hub.Publish(channelId, GiveawayEvents.Status(config.Id, config.Status), StreamAudience.Dashboard);
         hub.Publish(
             channelId,
-            GiveawayAudience.Overlay,
-            GiveawayEvents.OverlayState(new GiveawayOverlayState(config.Id, config.Title, [])));
+            GiveawayEvents.OverlayState(new GiveawayOverlayState(config.Id, config.Title, [])),
+            StreamAudience.Overlay);
 
         eventSub.Resync();
 
@@ -314,9 +308,9 @@ public sealed class GiveawayService(
         var drawn = Respond(winner, profiles);
         var state = new GiveawayOverlayState(config.Id, config.Title, SlicesOf(participants, profiles));
 
-        hub.Publish(channelId, GiveawayAudience.Overlay, GiveawayEvents.OverlayState(state));
-        hub.Publish(channelId, GiveawayAudience.Overlay, GiveawayEvents.OverlaySpin(config.Id, index));
-        hub.Publish(channelId, GiveawayAudience.Dashboard, GiveawayEvents.Winner(config.Id, drawn));
+        hub.Publish(channelId, GiveawayEvents.OverlayState(state), StreamAudience.Overlay);
+        hub.Publish(channelId, GiveawayEvents.OverlaySpin(config.Id, index), StreamAudience.Overlay);
+        hub.Publish(channelId, GiveawayEvents.Winner(config.Id, drawn), StreamAudience.Dashboard);
 
         logger.LogInformation(
             "Giveaway {GiveawayId} in channel {ChannelId} drew {UserId} as winner {DrawOrder}",
@@ -340,7 +334,7 @@ public sealed class GiveawayService(
 
     public void Dismiss(int channelId, Guid giveawayId)
     {
-        hub.Publish(channelId, GiveawayAudience.Overlay, GiveawayEvents.OverlayDismiss(giveawayId));
+        hub.Publish(channelId, GiveawayEvents.OverlayDismiss(giveawayId), StreamAudience.Overlay);
     }
 
     public async Task HandleRedemptionAsync(int channelId, string rewardId, TwitchRedemption redemption, CancellationToken cancellationToken)
@@ -350,30 +344,12 @@ public sealed class GiveawayService(
 
         var broadcasterId = channelId.ToString();
 
-        var token = await authService.GetValidTokenAsync(broadcasterId, cancellationToken);
-        if (token is null)
-        {
-            logger.LogWarning(
-                "Channel {ChannelId} has no usable Twitch token, leaving redemption {RedemptionId} open",
-                channelId, redemption.Id);
-
-            return;
-        }
-
-        var claimed = await log.TryRecordAsync(
-            new RedemptionRecord(
-                redemption.Id, channelId, rewardId, redemption.UserId, redemption.UserInput, redemption.RedeemedAt.UtcDateTime),
-            cancellationToken);
-
-        if (!claimed)
-        {
-            logger.LogDebug("Redemption {RedemptionId} in channel {ChannelId} was already handled", redemption.Id, channelId);
-            return;
-        }
+        var accessToken = await redemptions.ClaimAsync(channelId, rewardId, redemption, cancellationToken);
+        if (accessToken is null) return;
 
         try
         {
-            await RegisterAsync(config, broadcasterId, redemption, token.AccessToken, cancellationToken);
+            await RegisterAsync(config, broadcasterId, redemption, accessToken, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -383,7 +359,7 @@ public sealed class GiveawayService(
         {
             logger.LogWarning(exception, "Handling redemption {RedemptionId} in channel {ChannelId} failed", redemption.Id, channelId);
 
-            await RefundAsync(config, broadcasterId, redemption, "handling it failed", token.AccessToken, cancellationToken);
+            await RefundAsync(config, broadcasterId, redemption, "handling it failed", accessToken, cancellationToken);
         }
     }
 
@@ -408,7 +384,7 @@ public sealed class GiveawayService(
                 open = await apiClient.GetRedemptionsAsync(
                     broadcasterId, config.RewardId, RedemptionStatus.Unfulfilled, token.AccessToken, cancellationToken);
             }
-            catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+            catch (TwitchOAuthException exception) when (exception.IsNotFound())
             {
                 logger.LogWarning(
                     "Reward {RewardId} of giveaway {GiveawayId} is gone from Twitch, the giveaway and its history stay",
@@ -480,13 +456,13 @@ public sealed class GiveawayService(
             return;
         }
 
-        await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Fulfilled, accessToken, cancellationToken);
-        await log.MarkAsync(redemption.Id, RedemptionStatus.Fulfilled, $"entered with x{multiplier:0.##}", cancellationToken);
+        await redemptions.FulfilAsync(
+            config.ChannelId, config.RewardId, redemption, $"entered with x{multiplier:0.##}", accessToken, cancellationToken);
 
         hub.Publish(
             config.ChannelId,
-            GiveawayAudience.Dashboard,
-            GiveawayEvents.Participant(config.Id, Respond(participant, profile)));
+            GiveawayEvents.Participant(config.Id, Respond(participant, profile)),
+            StreamAudience.Dashboard);
 
         await RefreshOverlayAsync(config, broadcasterId, cancellationToken);
 
@@ -579,7 +555,7 @@ public sealed class GiveawayService(
         var participants = await repository.GetParticipantsAsync(config.Id, cancellationToken);
         var state = await OverlayOf(config, broadcasterId, participants, cancellationToken);
 
-        hub.Publish(config.ChannelId, GiveawayAudience.Overlay, GiveawayEvents.OverlayState(state));
+        hub.Publish(config.ChannelId, GiveawayEvents.OverlayState(state), StreamAudience.Overlay);
     }
 
     private async Task<GiveawayOverlayState> OverlayOf(GiveawayConfig config, string broadcasterId, IReadOnlyList<GiveawayParticipantRecord> participants, CancellationToken cancellationToken)
@@ -628,7 +604,7 @@ public sealed class GiveawayService(
             var rewards = await channels.GetCustomRewardsAsync(broadcasterId, [config.RewardId], cancellationToken);
             return rewards.Count > 0 ? rewards[0] : null;
         }
-        catch (TwitchOAuthException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
+        catch (TwitchOAuthException exception) when (exception.IsNotFound())
         {
             return null;
         }
@@ -638,21 +614,7 @@ public sealed class GiveawayService(
     {
         var reward = await channels.CreateCustomRewardAsync(
             broadcasterId,
-            new CustomRewardCreate
-            {
-                Title = config.Title,
-                Cost = config.Cost,
-                Prompt = string.IsNullOrWhiteSpace(config.Description) ? DefaultDescription : config.Description,
-                IsEnabled = enabled,
-                IsUserInputRequired = false,
-                ShouldRedemptionsSkipRequestQueue = false,
-                IsGlobalCooldownEnabled = config.CooldownSeconds > 0,
-                GlobalCooldownSeconds = config.CooldownSeconds > 0 ? config.CooldownSeconds : null,
-                IsMaxPerStreamEnabled = config.MaxPerStream > 0,
-                MaxPerStream = config.MaxPerStream > 0 ? config.MaxPerStream : null,
-                IsMaxPerUserPerStreamEnabled = config.MaxPerUserPerStream > 0,
-                MaxPerUserPerStream = config.MaxPerUserPerStream > 0 ? config.MaxPerUserPerStream : null,
-            },
+            CustomRewardRequests.Create(Of(config, enabled)),
             cancellationToken);
 
         await repository.SetRewardAsync(config.Id, reward.Id, DateTime.UtcNow, cancellationToken);
@@ -683,33 +645,9 @@ public sealed class GiveawayService(
         }
     }
 
-    private async Task RefundAsync(GiveawayConfig config, string broadcasterId, TwitchRedemption redemption, string reason, string accessToken, CancellationToken cancellationToken)
+    private Task RefundAsync(GiveawayConfig config, string broadcasterId, TwitchRedemption redemption, string reason, string accessToken, CancellationToken cancellationToken)
     {
-        var refunded = await SettleAsync(config, broadcasterId, redemption, RedemptionStatus.Canceled, accessToken, cancellationToken);
-        if (!refunded) return;
-
-        await log.MarkAsync(redemption.Id, RedemptionStatus.Canceled, reason, cancellationToken);
-
-        logger.LogInformation(
-            "Refunded redemption {RedemptionId} in channel {ChannelId} by {RedeemerId}: {Reason}",
-            redemption.Id, config.ChannelId, redemption.UserId, reason);
-    }
-
-    private async Task<bool> SettleAsync(GiveawayConfig config, string broadcasterId, TwitchRedemption redemption, string status, string accessToken, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await apiClient.UpdateRedemptionStatusAsync(broadcasterId, config.RewardId, redemption.Id, status, accessToken, cancellationToken);
-            return true;
-        }
-        catch (TwitchOAuthException exception)
-        {
-            logger.LogWarning(
-                "Could not mark redemption {RedemptionId} as {Status} in channel {ChannelId} ({StatusCode})",
-                redemption.Id, status, config.ChannelId, exception.StatusCode);
-
-            return false;
-        }
+        return redemptions.RefundAsync(config.ChannelId, config.RewardId, redemption, reason, accessToken, cancellationToken);
     }
 
     private static IReadOnlyList<GiveawayOverlaySlice> SlicesOf(IReadOnlyList<GiveawayParticipantRecord> participants, IReadOnlyDictionary<string, TwitchUser> profiles)
@@ -753,57 +691,32 @@ public sealed class GiveawayService(
             Profile(winner.UserId, profiles));
     }
 
-    private static CustomRewardCreate ToCreate(GiveawayUpdate update, bool enabled)
+    // A giveaway never asks the redeemer to type anything: the entry is the redemption itself.
+    private static CustomRewardRequests.Fields Of(GiveawayUpdate update, bool enabled)
     {
-        return new CustomRewardCreate
-        {
-            Title = update.Title,
-            Cost = update.Cost,
-            Prompt = DescriptionOf(update),
-            BackgroundColor = update.BackgroundColor,
-            IsEnabled = enabled,
-
-            IsUserInputRequired = false,
-            ShouldRedemptionsSkipRequestQueue = false,
-
-            IsGlobalCooldownEnabled = update.CooldownSeconds > 0,
-            GlobalCooldownSeconds = update.CooldownSeconds > 0 ? update.CooldownSeconds : null,
-            IsMaxPerStreamEnabled = update.MaxPerStream > 0,
-            MaxPerStream = update.MaxPerStream > 0 ? update.MaxPerStream : null,
-            IsMaxPerUserPerStreamEnabled = update.MaxPerUserPerStream > 0,
-            MaxPerUserPerStream = update.MaxPerUserPerStream > 0 ? update.MaxPerUserPerStream : null,
-        };
+        return new CustomRewardRequests.Fields(
+            update.Title,
+            update.Cost,
+            CustomRewardRequests.PromptOrDefault(update.Description, DefaultDescription),
+            update.BackgroundColor,
+            enabled,
+            UserInputRequired: false,
+            update.CooldownSeconds,
+            update.MaxPerStream,
+            update.MaxPerUserPerStream);
     }
 
-    private static CustomRewardUpdate ToUpdate(GiveawayUpdate update, bool enabled)
+    private static CustomRewardRequests.Fields Of(GiveawayConfig config, bool enabled)
     {
-        return new CustomRewardUpdate
-        {
-            Title = update.Title,
-            Cost = update.Cost,
-            Prompt = DescriptionOf(update),
-            BackgroundColor = update.BackgroundColor,
-            IsEnabled = enabled,
-
-            IsUserInputRequired = false,
-            ShouldRedemptionsSkipRequestQueue = false,
-
-            IsGlobalCooldownEnabled = update.CooldownSeconds > 0,
-            GlobalCooldownSeconds = update.CooldownSeconds > 0 ? update.CooldownSeconds : null,
-            IsMaxPerStreamEnabled = update.MaxPerStream > 0,
-            MaxPerStream = update.MaxPerStream > 0 ? update.MaxPerStream : null,
-            IsMaxPerUserPerStreamEnabled = update.MaxPerUserPerStream > 0,
-            MaxPerUserPerStream = update.MaxPerUserPerStream > 0 ? update.MaxPerUserPerStream : null,
-        };
-    }
-
-    private static CustomRewardUpdate EnabledUpdate(bool enabled)
-    {
-        return new CustomRewardUpdate { IsEnabled = enabled };
-    }
-
-    private static string DescriptionOf(GiveawayUpdate update)
-    {
-        return string.IsNullOrWhiteSpace(update.Description) ? DefaultDescription : update.Description;
+        return new CustomRewardRequests.Fields(
+            config.Title,
+            config.Cost,
+            CustomRewardRequests.PromptOrDefault(config.Description, DefaultDescription),
+            BackgroundColor: null,
+            enabled,
+            UserInputRequired: false,
+            config.CooldownSeconds,
+            config.MaxPerStream,
+            config.MaxPerUserPerStream);
     }
 }

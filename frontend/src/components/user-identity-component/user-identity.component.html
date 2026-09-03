@@ -1,0 +1,35 @@
+@if (ghost()) {
+  <span class="app-skeleton identity-avatar" aria-hidden="true"></span>
+
+  <span
+    class="app-skeleton app-skeleton-bar identity-ghost-name"
+    [style.width]="ghostWidth()"
+    aria-hidden="true"
+  ></span>
+} @else if (user(); as known) {
+  <img
+    class="identity-avatar"
+    [ngSrc]="known.profileImageUrl"
+    [width]=32
+    [height]=32
+    loading="eager"
+    alt=""
+  />
+
+  <app-user-badges [user]="known"/>
+
+  <button
+    type="button"
+    class="identity-name"
+    [attr.aria-label]="'Details for ' + known.displayName"
+    (click)="show(known, $event)"
+  >
+    <span class="identity-display-name" [style.--chat-color]="known.color">
+      {{ known.displayName }}
+    </span>
+  </button>
+} @else {
+  <span class="identity-avatar identity-avatar-blank" aria-hidden="true"></span>
+
+  <span class="identity-display-name">{{ name() }}</span>
+}

@@ -1,19 +1,19 @@
 <section class="raid-page">
 
-  <header class="raid-page-header">
-    <h1 class="raid-page-title">Raid Overview</h1>
+  <header class="app-page-header">
+    <h1 class="app-page-title">Raid Overview</h1>
     @if (skeleton()) {
-      <p class="raid-page-count" aria-hidden="true">
+      <p class="app-page-sub" aria-hidden="true">
         <span class="app-skeleton app-skeleton-bar app-skeleton-text raid-page-count-skeleton"></span>
       </p>
     } @else {
-      <p class="raid-page-count app-fade-in">
+      <p class="app-page-sub app-fade-in">
         {{ count() }} raid{{ count() === 1 ? '' : 's' }}, {{ viewers() }} viewer{{ viewers() === 1 ? '' : 's' }} brought along
       </p>
     }
   </header>
 
-  <div class="raid-page-toolbar">
+  <div class="app-toolbar">
     <button
       mat-stroked-button
       type="button"
@@ -25,27 +25,11 @@
     </button>
   </div>
 
-  <mat-progress-bar
-    class="raid-page-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!loading() || skeleton()"
-    [style.visibility]="loading() && !skeleton() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="loading() && !skeleton()"/>
 
-  <mat-form-field appearance="outline" class="raid-page-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name or user ID"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search class="table-search-tucked" placeholder="Name or user ID" (query)="filter($event)"/>
 
-  <div #scroll class="raid-page-scroll">
+  <app-table-frame>
     <table
       mat-table
       matSort
@@ -53,36 +37,14 @@
       matSortDirection="desc"
       matSortDisableClear="true"
       [dataSource]="dataSource"
-      class="raid-page-grid"
+      class="app-data-table"
       [class.app-fade-in]="!skeleton()"
     >
 
       <ng-container matColumnDef="raider">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Raider</th>
         <td mat-cell *matCellDef="let entry">
-          <div class="raid-page-identity">
-            <img
-              class="raid-page-avatar"
-              [ngSrc]="entry.raid.raider.profileImageUrl"
-              [width]=32
-              [height]=32
-              loading="eager"
-              alt=""
-            />
-
-            <app-user-badges [user]="entry.raid.raider"/>
-
-            <button
-              type="button"
-              class="raid-page-user"
-              [attr.aria-label]="'Details for ' + entry.raid.raider.displayName"
-              (click)="showDetails(entry, $event)"
-            >
-              <span class="raid-page-name" [style.--chat-color]="entry.raid.raider.color">
-                {{ entry.raid.raider.displayName }}
-              </span>
-            </button>
-          </div>
+          <app-user-identity [user]="entry.raid.raider"/>
         </td>
       </ng-container>
 
@@ -104,22 +66,18 @@
       <tr
         mat-row
         *matRowDef="let entry; columns: columns"
-        class="raid-page-row"
-        (click)="showDetails(entry)"
+        [appUserDetails]="entry.raid.raider"
       ></tr>
 
       <tr class="raid-page-empty-row" *matNoDataRow>
-        <td class="raid-page-empty" [class.raid-page-empty-skeleton]="skeleton()" [attr.colspan]="columns.length">
+        <td class="app-table-empty" [class.raid-page-empty-skeleton]="skeleton()" [attr.colspan]="columns.length">
           @if (skeleton()) {
             <div class="raid-page-skeleton-rows app-skeleton-appear" role="status">
               <span class="app-visually-hidden">Loading your raids…</span>
               <div class="raid-page-skeleton-list" aria-hidden="true">
                 @for (row of ghostRows(); track row) {
                   <div class="raid-page-skeleton-row">
-                    <span class="raid-page-skeleton-identity">
-                      <span class="app-skeleton raid-page-skeleton-avatar"></span>
-                      <span class="app-skeleton app-skeleton-bar raid-page-skeleton-name"></span>
-                    </span>
+                    <app-user-identity [ghost]="true" [ghostWidth]="ghostNameWidths[$index % 3]"/>
                     <span class="app-skeleton app-skeleton-bar raid-page-skeleton-viewers"></span>
                     <span class="app-skeleton app-skeleton-bar raid-page-skeleton-date"></span>
                   </div>
@@ -136,7 +94,7 @@
         </td>
       </tr>
     </table>
-  </div>
+  </app-table-frame>
 
   <mat-paginator
     class="raid-page-paginator"
@@ -145,6 +103,4 @@
     showFirstLastButtons="true"
     aria-label="Select a page of raids"
   />
-
-  <app-scroll-bar [target]="scroll"/>
 </section>

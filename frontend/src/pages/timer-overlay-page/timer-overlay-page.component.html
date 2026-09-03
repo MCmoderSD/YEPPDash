@@ -1,4 +1,4 @@
-<div class="overlay">
+<app-overlay-frame [hint]="hint()">
   @if (channel()) {
     <div class="overlay-stack">
       @if (style().label) {
@@ -9,7 +9,5 @@
         <app-timer-display [timer]="timer()"/>
       </p>
     </div>
-  } @else {
-    <p class="overlay-hint">This link has no channel on it. Copy the overlay link again from the Subathon Timer page.</p>
   }
-</div>
+</app-overlay-frame>

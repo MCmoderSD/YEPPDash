@@ -1,62 +1,19 @@
 <section class="timeout-reward">
-  <header class="timeout-reward-header">
-    <h1 class="timeout-reward-title">Timeout Reward</h1>
-    <p class="timeout-reward-sub">
+  <header class="app-page-header">
+    <h1 class="app-page-title">Timeout Reward</h1>
+    <p class="app-page-sub timeout-reward-sub">
       A channel point reward that times someone out. Viewers redeem it and type a name — &#64;name
       works too. Unknown names and protected users are refunded automatically.
     </p>
   </header>
 
-  <mat-progress-bar
-    class="timeout-reward-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!busy()"
-    [style.visibility]="busy() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="busy()"/>
 
   @if (skeleton()) {
-    <div class="timeout-reward-skeleton" role="status">
-      <span class="app-visually-hidden">Loading your timeout reward…</span>
-
-      <div class="timeout-reward-layout" aria-hidden="true">
-        <div class="timeout-reward-form">
-          <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-heading"></span>
-          <span class="app-skeleton timeout-reward-skeleton-field"></span>
-          <span class="app-skeleton timeout-reward-skeleton-field"></span>
-          <span class="app-skeleton timeout-reward-skeleton-field"></span>
-
-          <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-heading"></span>
-          <div class="timeout-reward-row">
-            <span class="app-skeleton timeout-reward-skeleton-field timeout-reward-amount"></span>
-            <span class="app-skeleton timeout-reward-skeleton-field timeout-reward-unit"></span>
-          </div>
-
-          <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-heading"></span>
-          <span class="app-skeleton timeout-reward-skeleton-panel timeout-reward-skeleton-limits"></span>
-
-          <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-heading"></span>
-          <span class="app-skeleton timeout-reward-skeleton-panel timeout-reward-skeleton-shield"></span>
-        </div>
-
-        <aside class="timeout-reward-preview">
-          <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-heading"></span>
-          <span class="app-skeleton timeout-reward-skeleton-summary"></span>
-
-          <span class="app-skeleton app-skeleton-bar app-skeleton-text"></span>
-          <span class="app-skeleton app-skeleton-bar app-skeleton-text timeout-reward-skeleton-short"></span>
-
-          <div class="timeout-reward-switches">
-            <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-toggle"></span>
-            <span class="app-skeleton timeout-reward-skeleton-swatch"></span>
-          </div>
-
-          <div class="timeout-reward-actions">
-            <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-remove"></span>
-            <span class="app-skeleton app-skeleton-bar timeout-reward-skeleton-save"></span>
-          </div>
-        </aside>
-      </div>
-    </div>
+    <app-reward-editor-skeleton
+      label="Loading your timeout reward…"
+      [panels]="skeletonPanels"
+    />
   } @else {
     <form class="timeout-reward-layout" (submit)="$event.preventDefault(); save()">
 
@@ -64,50 +21,14 @@
 
         <h2 class="timeout-reward-heading">The reward</h2>
 
-        <mat-form-field appearance="outline" class="timeout-reward-field">
-          <mat-label>Name</mat-label>
-          <input
-            matInput
-            #titleField
-            type="text"
-            autocomplete="off"
-            [attr.maxlength]="maxTitleLength"
-            [value]="title()"
-            (input)="title.set(titleField.value)"
-          />
-          <mat-hint align="end">{{ maxTitleLength - title().length }} characters left</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="timeout-reward-field">
-          <mat-label>Cost</mat-label>
-          <input
-            matInput
-            #costField
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            [attr.aria-invalid]="cost() < 1"
-            [value]="costText()"
-            (input)="setCost(costField.value)"
-          />
-          <app-number-stepper matSuffix [value]="cost()" [min]="1" [step]="100" (valueChange)="cost.set($event)"/>
-          <mat-hint>Channel points per redemption</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="timeout-reward-field">
-          <mat-label>Description (optional)</mat-label>
-          <input
-            matInput
-            #promptField
-            type="text"
-            autocomplete="off"
-            [attr.maxlength]="maxPromptLength"
-            [value]="prompt()"
-            (input)="prompt.set(promptField.value)"
-          />
-          <mat-hint>Shown in the redeem dialog on Twitch</mat-hint>
-          <mat-hint align="end">{{ promptLeft() }} left</mat-hint>
-        </mat-form-field>
+        <app-reward-fields
+          [title]="title()"
+          (titleChange)="title.set($event)"
+          [cost]="cost()"
+          (costChange)="cost.set($event)"
+          [description]="prompt()"
+          (descriptionChange)="prompt.set($event)"
+        />
 
         <h2 class="timeout-reward-heading">The timeout</h2>
 
@@ -138,7 +59,7 @@
           </mat-form-field>
         </div>
 
-        <p class="timeout-reward-hint" [class.timeout-reward-hint-error]="durationInvalid()" aria-live="polite">
+        <p class="app-hint" [class.timeout-reward-hint-error]="durationInvalid()" aria-live="polite">
           @if (durationInvalid()) {
             A timeout runs for at least 1 second and at most 14 days — up to {{ maxDurationAmount() | number }} in this unit.
           } @else {
@@ -147,7 +68,7 @@
         </p>
 
         <h2 class="timeout-reward-heading">Cooldown &amp; limits</h2>
-        <p class="timeout-reward-hint">Use redemption cooldowns and limits for viewers.</p>
+        <p class="app-hint">Use redemption cooldowns and limits for viewers.</p>
 
         <app-reward-limits
           group="timeout"
@@ -156,11 +77,11 @@
           [(maxPerUserPerStream)]="maxPerUser"
         />
 
-        <p class="timeout-reward-hint">Leave a field empty to switch that limit off.</p>
+        <p class="app-hint">Leave a field empty to switch that limit off.</p>
 
         <h2 class="timeout-reward-heading">Timeout protection</h2>
 
-        <p class="timeout-reward-hint">
+        <p class="app-hint">
           Redemptions against protected users are refunded. You can never be timed out yourself.
         </p>
 
@@ -185,7 +106,7 @@
           }
         </div>
 
-        <p class="timeout-reward-hint">
+        <p class="app-hint">
           A timeout only takes the lead moderator, moderator and editor roles — VIP, artist and
           business manager are left alone. An ordinary moderator gets the role back once the timeout
           runs out. Lead moderator and editor cannot be restored through Twitch's API and have to be
@@ -214,7 +135,7 @@
         <app-reward-preview
           [image]="tileImage()"
           [cost]="cost() || 0"
-          [color]="colorInvalid() ? '#A8E02F' : color()"
+          [color]="colorInvalid() ? defaultColor : color()"
           [name]="title()"
           heading="What your viewers will see:"
         />

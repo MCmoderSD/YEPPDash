@@ -43,9 +43,11 @@ var config = await repository.GetByRewardAsync(channelId, rewardId, cancellation
 if (config is null) return;
 ```
 
-That check must stay **above** `RedemptionLogRepository.TryRecordAsync`. The log is shared and
-claims a redemption id exactly once; claiming first and filtering second would have whichever source
-ran first swallow the other's redemption, and the viewer would never be refunded.
+That check must stay **above** `RedemptionSettlement.ClaimAsync`. The log is shared and claims a
+redemption id exactly once; claiming first and filtering second would have whichever source ran first
+swallow the other's redemption, and the viewer would never be refunded. `RedemptionSource<TService>`
+now hands both features the same deserialised redemption, which makes that first line easier to
+forget than it was when each source had its own copy of the handler.
 
 ## The reward must not skip the request queue
 
@@ -84,7 +86,8 @@ lands a hair short cannot return somebody with no chance.
 
 ## Two audiences on one hub
 
-`GiveawayHub.Publish` takes a `GiveawayAudience`, and a listener only receives its own:
+`GiveawayHub` is a `StreamHub` like the wheel's, the queue's and the timer's, and `Publish` takes a
+`StreamAudience` that a listener only receives its own of:
 
 - `Dashboard` — authenticated. Entrants as they arrive, status changes, winners.
 - `Overlay` — anonymous. The slice list, spins, and dismissals.
@@ -109,3 +112,19 @@ the other way round.
 
 The winner row is written before the wheel finishes, so the dashboard holds the SSE `winner` event
 until the wheel lands — otherwise the name appears seconds before the spin ends.
+
+## What the giveaway and the timeout reward deliberately do differently
+
+`RedemptionSettlement` and `RedemptionSource<TService>` make the two features look alike, which makes
+it easy to assume the rest matches too. Two things do not, and both are product decisions rather than
+drift:
+
+- **Catch-up.** The giveaway reprocesses the redemptions it missed while nothing was listening; the
+  timeout reward refunds them wholesale, behind an in-flight guard. A timeout served minutes late is
+  worse than no timeout at all, while a late entry is still a valid entry.
+- **A reward that has vanished from Twitch.** The giveaway raises its `RewardMissing` flag and keeps
+  the giveaway and its history; the timeout reward deletes the config row. A giveaway holds entrants
+  and winners that outlive the reward — a timeout reward holds nothing but its own settings.
+
+One more mismatch is recorded rather than fixed: `rewardId` is `CHAR(36)`/`Guid` on `Giveaway` but
+`VARCHAR(64)`/`string` on `TimeoutReward` and `RedemptionLog`. Aligning them is a migration.

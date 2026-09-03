@@ -1,19 +1,8 @@
 <div class="command-table">
 
-  <mat-form-field appearance="outline" class="command-table-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name, alias or message"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search class="table-search-tucked" placeholder="Name, alias or message" (query)="filter($event)"/>
 
-  <div #scroll class="command-table-scroll" [attr.role]="initialLoad() ? 'status' : null">
+  <app-table-frame class="command-table-frame" [attr.role]="initialLoad() ? 'status' : null">
     @if (initialLoad()) {
       <span class="app-visually-hidden">Loading your commands…</span>
     }
@@ -26,7 +15,7 @@
       [dataSource]="dataSource"
       [trackBy]="trackByName"
       [attr.aria-hidden]="initialLoad() ? 'true' : null"
-      class="command-table-grid"
+      class="app-data-table"
     >
 
       <ng-container matColumnDef="name">
@@ -58,7 +47,7 @@
               <span class="app-skeleton app-skeleton-text command-table-skeleton-chip command-table-skeleton-chip-narrow" aria-hidden="true"></span>
             } @else {
               @for (alias of command.aliases; track alias) {
-                <span class="command-table-alias">{{ alias }}</span>
+                <span class="app-chip">{{ alias }}</span>
               } @empty {
                 <span class="command-table-none">{{ isDraft(command) ? '—' : 'None' }}</span>
               }
@@ -102,7 +91,7 @@
         <th mat-header-cell *matHeaderCellDef scope="col">
           <span class="command-table-hidden-label">Actions</span>
         </th>
-        <td mat-cell *matCellDef="let command" class="command-table-actions">
+        <td mat-cell *matCellDef="let command" class="app-table-actions command-table-actions">
           @if (isSkeleton(command)) {
             <span class="app-skeleton command-table-skeleton-action" aria-hidden="true"></span>
           } @else {
@@ -169,10 +158,9 @@
       ></tr>
 
       <tr class="command-table-empty-row" *matNoDataRow>
-        <td class="command-table-empty" [attr.colspan]="columns.length">
+        <td class="app-table-empty" [attr.colspan]="columns.length">
           @if (initialLoad()) {
-            <!-- Nothing: the scroll container above already carries the one role="status" that
-                 says the table is loading, and a second sentence here would repeat it. -->
+            <!-- Nothing: the scroll container above already carries the one role="status" that says the table is loading, and a second sentence here would repeat it. -->
           } @else if (unreachable()) {
             Could not load your commands. Please try again.
           } @else if (query()) {
@@ -183,7 +171,5 @@
         </td>
       </tr>
     </table>
-  </div>
-
-  <app-scroll-bar [target]="scroll"/>
+  </app-table-frame>
 </div>

@@ -1,15 +1,16 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 
-namespace YEPPDash.Api.Services;
+namespace YEPPDash.Api.Services.Streaming;
 
-public enum GiveawayAudience
+public enum StreamAudience
 {
+    Shared,
     Dashboard,
     Overlay
 }
 
-public sealed class GiveawaySubscription(ChannelReader<string> reader, Action release) : IDisposable
+public sealed class StreamSubscription(ChannelReader<string> reader, Action release) : IDisposable
 {
     public ChannelReader<string> Reader { get; } = reader;
 
@@ -19,15 +20,15 @@ public sealed class GiveawaySubscription(ChannelReader<string> reader, Action re
     }
 }
 
-public sealed class GiveawayHub
+public class StreamHub
 {
     private const int Backlog = 32;
 
     private readonly ConcurrentDictionary<Guid, Listener> _listeners = new();
 
-    private readonly record struct Listener(int ChannelId, GiveawayAudience Audience, Channel<string> Queue);
+    private readonly record struct Listener(int ChannelId, StreamAudience Audience, Channel<string> Queue);
 
-    public GiveawaySubscription Subscribe(int channelId, GiveawayAudience audience)
+    public StreamSubscription Subscribe(int channelId, StreamAudience audience = StreamAudience.Shared)
     {
         var id = Guid.NewGuid();
         var queue = Channel.CreateBounded<string>(new BoundedChannelOptions(Backlog)
@@ -38,10 +39,10 @@ public sealed class GiveawayHub
 
         _listeners[id] = new Listener(channelId, audience, queue);
 
-        return new GiveawaySubscription(queue.Reader, () => Release(id));
+        return new StreamSubscription(queue.Reader, () => Release(id));
     }
 
-    public void Publish(int channelId, GiveawayAudience audience, string payload)
+    public void Publish(int channelId, string payload, StreamAudience audience = StreamAudience.Shared)
     {
         foreach (var (_, listener) in _listeners)
         {
@@ -49,8 +50,21 @@ public sealed class GiveawayHub
         }
     }
 
+    public IReadOnlyCollection<int> WatchedChannels()
+    {
+        return [.. _listeners.Values.Select(listener => listener.ChannelId).Distinct()];
+    }
+
     private void Release(Guid id)
     {
         _listeners.TryRemove(id, out _);
     }
 }
+
+public sealed class WheelHub : StreamHub;
+
+public sealed class QueueHub : StreamHub;
+
+public sealed class SubathonTimerHub : StreamHub;
+
+public sealed class GiveawayHub : StreamHub;

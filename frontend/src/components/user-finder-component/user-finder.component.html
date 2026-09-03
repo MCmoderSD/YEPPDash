@@ -25,21 +25,7 @@
   @if (status() === 'searching') {
     <mat-progress-bar mode="indeterminate"/>
   } @else if (user(); as found) {
-    <div class="user-finder-result">
-      <img
-        class="user-finder-avatar"
-        [ngSrc]="found.profileImageUrl"
-        [width]=128
-        [height]=128
-        alt=""
-      />
-
-      <div class="user-finder-title">
-        <app-user-badges [user]="found" [size]="badgeSize"/>
-
-        <p class="user-finder-name" [style.--chat-color]="found.color">{{ found.displayName }}</p>
-      </div>
-    </div>
+    <app-user-profile class="user-finder-result" [user]="found"/>
   } @else if (status() === 'empty') {
     <p class="user-finder-message">No Twitch account matches “{{ query() }}”.</p>
   } @else if (status() === 'failed') {

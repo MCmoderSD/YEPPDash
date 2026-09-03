@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
-import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
+import { TableFrameComponent } from '../../components/table-frame-component/table-frame.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { OverlayLinkComponent } from '../../components/overlay-link-component/overlay-link.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
@@ -34,7 +34,7 @@ function ghostRows(count: number | null): WheelEntryRow[] {
   selector: 'app-wheel-page',
   templateUrl: './wheel-page.component.html',
   styleUrl: './wheel-page.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, OverlayLinkComponent, ScrollBarComponent, WheelComponent, LocaleDatePipe],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, OverlayLinkComponent, TableFrameComponent, WheelComponent, LocaleDatePipe],
 })
 export class WheelPageComponent {
 

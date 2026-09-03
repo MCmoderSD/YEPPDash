@@ -1,12 +1,12 @@
 using System.Text.Json;
 using YEPPDash.Api.Data.SubathonTimer;
 
+using YEPPDash.Api.Services.Streaming;
+
 namespace YEPPDash.Api.Services;
 
 public static class SubathonTimerEvents
 {
-    private static readonly JsonSerializerOptions EventJson = new(JsonSerializerDefaults.Web);
-
     public static string Serialize(SubathonTimerState state, DateTime serverNow)
     {
         return JsonSerializer.Serialize(
@@ -20,6 +20,6 @@ public static class SubathonTimerEvents
                 state.Style,
                 ServerNow = serverNow
             },
-            EventJson);
+            StreamJson.Options);
     }
 }

@@ -1,10 +1,10 @@
 <section class="timer-page">
 
-  <header class="timer-page-header">
-    <h1 class="timer-page-title">Subathon Timer</h1>
+  <header class="app-page-header">
+    <h1 class="app-page-title">Subathon Timer</h1>
 
     @if (loaded()) {
-      <p class="timer-page-state app-fade-in">
+      <p class="app-page-sub app-fade-in">
         @if (timer().running) {
           Running — chat can add to it with !timer add
         } @else {
@@ -12,7 +12,7 @@
         }
       </p>
     } @else {
-      <p class="timer-page-state app-skeleton-appear" aria-hidden="true">
+      <p class="app-page-sub app-skeleton-appear" aria-hidden="true">
         <span class="app-skeleton app-skeleton-bar app-skeleton-text timer-page-skeleton-state"></span>
       </p>
     }
@@ -53,8 +53,8 @@
 
   <div class="timer-page-panels">
 
-    <section class="timer-page-panel">
-      <h2 class="timer-page-panel-title">Change the time</h2>
+    <section class="app-panel">
+      <h2 class="app-panel-title">Change the time</h2>
       <p class="timer-page-panel-hint">
         Seconds, or something friendlier — 300, 5m, 1h30m, 01:30:00 all work, here and in chat.
       </p>
@@ -102,8 +102,8 @@
       </div>
     </section>
 
-    <section class="timer-page-panel">
-      <h2 class="timer-page-panel-title">Chat commands</h2>
+    <section class="app-panel">
+      <h2 class="app-panel-title">Chat commands</h2>
       <p class="timer-page-panel-hint">
         The bot drives the same timer this page does, so anything here can be done from chat instead.
       </p>
@@ -135,8 +135,8 @@
     </section>
   </div>
 
-  <section class="timer-page-panel">
-    <h2 class="timer-page-panel-title">OBS browser source</h2>
+  <section class="app-panel">
+    <h2 class="app-panel-title">OBS browser source</h2>
     <p class="timer-page-panel-hint">
       This link is yours and stays the same. Add it as a browser source and resize it freely — the
       timer scales with it and follows every change, whether it came from this page or from chat.
@@ -145,8 +145,8 @@
     <app-overlay-link [url]="overlayUrl()"/>
   </section>
 
-  <section class="timer-page-panel">
-    <h2 class="timer-page-panel-title">How it looks</h2>
+  <section class="app-panel">
+    <h2 class="app-panel-title">How it looks</h2>
     <p class="timer-page-panel-hint">
       Saved settings reach the overlay on their own. Copying the CSS is only needed to override them
       from inside OBS — handy if OBS is holding on to an older version of the page.

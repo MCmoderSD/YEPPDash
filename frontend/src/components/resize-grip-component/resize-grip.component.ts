@@ -23,54 +23,8 @@ const NO_CORNER: GripCorner = { top: 0, left: 0 };
     '[class.resize-grip-dragging]': 'dragging()',
     '(pointerdown)': 'grab($event)'
   },
-  template: `
-    <svg viewBox="0 0 12 12" focusable="false" aria-hidden="true">
-      <path d="M11 4 4 11M11 8 8 11" />
-    </svg>
-  `,
-  styles: `
-    :host {
-      position: absolute;
-
-      // One above ScrollBarComponent, which is on 2: the two overlap in exactly this corner, and
-      // the bar taking the pointer here is what made the native resizer unreachable.
-      z-index: 3;
-
-      display: flex;
-
-      // Vertical only. The width belongs to the form field the box sits in, and a text box dragged
-      // narrower than its own label reads as broken rather than as resized.
-      cursor: ns-resize;
-
-      color: var(--mat-sys-outline);
-
-      transition: color var(--app-motion-fast) var(--app-ease);
-    }
-
-    // Takes the brand colour under the pointer and keeps it for the whole drag, which is mostly
-    // spent away from the corner where :hover no longer holds. The same rule and the same colour
-    // as both scroll bars, since the grip sits right beside one of them.
-    :host(:hover),
-    :host(.resize-grip-dragging) {
-      color: var(--mat-sys-primary);
-    }
-
-    svg {
-      width: 100%;
-      height: 100%;
-
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      :host {
-        transition: none;
-      }
-    }
-  `
+  templateUrl: './resize-grip.component.html',
+  styleUrl: './resize-grip.component.scss',
 })
 export class ResizeGripComponent {
 

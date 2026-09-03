@@ -1,6 +1,7 @@
 using Dapper;
 using MySqlConnector;
 using YEPPDash.Api.Data.Giveaway;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -502,11 +503,6 @@ public sealed class GiveawayRepository(YeppDashConnectionFactory connections)
         return RequirementState.Ignored;
     }
 
-    private static DateTime AsUtc(DateTime stored)
-    {
-        return DateTime.SpecifyKind(stored, DateTimeKind.Utc);
-    }
-
     private sealed class ConfigRow
     {
         public Guid Id { get; init; }
@@ -550,7 +546,7 @@ public sealed class GiveawayRepository(YeppDashConnectionFactory connections)
                 Description,
                 Cost,
                 Enum.TryParse<GiveawayStatus>(Status, out var status) ? status : GiveawayStatus.Draft,
-                AsUtc(UpdatedAt),
+                UpdatedAt.AsUtc(),
                 CooldownSeconds,
                 MaxPerStream,
                 MaxPerUserPerStream,
@@ -597,7 +593,7 @@ public sealed class GiveawayRepository(YeppDashConnectionFactory connections)
                 IsVip,
                 IsModerator,
                 Multiplier,
-                AsUtc(EnteredAt));
+                EnteredAt.AsUtc());
         }
     }
 
@@ -612,7 +608,7 @@ public sealed class GiveawayRepository(YeppDashConnectionFactory connections)
 
         public GiveawayWinnerRecord ToWinner()
         {
-            return new GiveawayWinnerRecord(GiveawayId, DrawOrder, UserId, UserName, Multiplier, AsUtc(WonAt));
+            return new GiveawayWinnerRecord(GiveawayId, DrawOrder, UserId, UserName, Multiplier, WonAt.AsUtc());
         }
     }
 

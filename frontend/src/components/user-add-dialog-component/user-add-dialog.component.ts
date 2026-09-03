@@ -5,6 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
 import { UserFinderComponent } from '../user-finder-component/user-finder.component';
 import { TwitchUser } from '../../data/twitch-user';
+import { NoticeComponent } from '../notice-component/notice.component';
+import { openDialog } from '../../services/dialog';
 
 export type ChannelRoleName = 'moderator' | 'VIP';
 
@@ -17,7 +19,7 @@ export interface UserAddDialogData {
   selector: 'app-user-add-dialog',
   templateUrl: './user-add-dialog.component.html',
   styleUrl: './user-add-dialog.component.scss',
-  imports: [MatButtonModule, MatDialogModule, MatIconModule, ScrollBarComponent, UserFinderComponent],
+  imports: [NoticeComponent, MatButtonModule, MatDialogModule, MatIconModule, ScrollBarComponent, UserFinderComponent],
 })
 export class UserAddDialogComponent {
 
@@ -50,12 +52,8 @@ export class UserAddDialogComponent {
   );
 
   static open(dialog: MatDialog, title: string, role: ChannelRoleName): MatDialogRef<UserAddDialogComponent, TwitchUser> {
-    return dialog.open<UserAddDialogComponent, UserAddDialogData, TwitchUser>(UserAddDialogComponent, {
-      data: { title, role },
-      width: '33vw',
-      minWidth: 'min(24rem, 92vw)',
-      maxWidth: '92vw',
-    });
+    return openDialog<UserAddDialogComponent, UserAddDialogData, TwitchUser>(
+      dialog, UserAddDialogComponent, { title, role }, { width: '33vw', minWidth: 'min(24rem, 92vw)' });
   }
 
   protected add(): void {

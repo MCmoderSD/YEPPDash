@@ -1,47 +1,14 @@
 <div class="user-table">
 
-  <mat-form-field appearance="outline" class="user-table-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name or user ID"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search placeholder="Name or user ID" (query)="filter($event)"/>
 
-  <div #scroll class="user-table-scroll">
-    <table mat-table matSort [dataSource]="dataSource" class="user-table-grid">
+  <app-table-frame>
+    <table mat-table matSort [dataSource]="dataSource" class="app-data-table">
 
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
         <td mat-cell *matCellDef="let user">
-          <div class="user-table-identity">
-            <img
-              class="user-table-avatar"
-              [ngSrc]="user.profileImageUrl"
-              [width]=32
-              [height]=32
-              loading="eager"
-              alt=""
-            />
-
-            <app-user-badges [user]="user"/>
-
-            <button
-              type="button"
-              class="user-table-name"
-              [attr.aria-label]="'Details for ' + user.displayName"
-              (click)="showDetails(user, $event)"
-            >
-              <span class="user-table-display-name" [style.--chat-color]="user.color">
-                {{ user.displayName }}
-              </span>
-            </button>
-          </div>
+          <app-user-identity [user]="user"/>
         </td>
       </ng-container>
 
@@ -54,7 +21,7 @@
         <th mat-header-cell *matHeaderCellDef scope="col">
           <span class="user-table-hidden-label">Remove</span>
         </th>
-        <td mat-cell *matCellDef="let user" class="user-table-actions">
+        <td mat-cell *matCellDef="let user" class="app-table-actions">
           <button
             mat-icon-button
             type="button"
@@ -70,9 +37,8 @@
       <tr
         mat-row
         *matRowDef="let user; columns: columns()"
-        class="user-table-row"
         [class.app-fade-in]="loaded()"
-        (click)="showDetails(user)"
+        [appUserDetails]="user"
       ></tr>
 
       <tr class="user-table-empty-row" *matNoDataRow>
@@ -81,9 +47,8 @@
             <div class="user-table-ghost" [style.grid-template-columns]="ghostColumns()">
               @for (row of ghostRows(); track row) {
                 <div class="user-table-ghost-row">
-                  <span class="user-table-ghost-column user-table-ghost-identity">
-                    <span class="app-skeleton user-table-ghost-avatar"></span>
-                    <span class="app-skeleton app-skeleton-bar user-table-ghost-name"></span>
+                  <span class="user-table-ghost-column">
+                    <app-user-identity [ghost]="true"/>
                   </span>
                   @if (showId()) {
                     <span class="user-table-ghost-column">
@@ -98,7 +63,7 @@
             </div>
           </td>
         } @else {
-          <td class="user-table-empty" [attr.colspan]="columns().length">
+          <td class="app-table-empty" [attr.colspan]="columns().length">
             @if (query()) {
               No user matches “{{ query() }}”.
             } @else {
@@ -108,7 +73,5 @@
         }
       </tr>
     </table>
-  </div>
-
-  <app-scroll-bar [target]="scroll"/>
+  </app-table-frame>
 </div>

@@ -1,37 +1,6 @@
-.giveaway {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+@use '../../styles/reward-editor' as editor;
 
-  width: min(62rem, 100%);
-  margin-inline: auto;
-}
-
-.giveaway-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.giveaway-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.giveaway-sub {
-  margin: 0;
-  max-width: 42rem;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
-// Kept in the layout while idle so nothing jumps every time a request starts.
-.giveaway-progress {
-  flex: none;
-  align-self: stretch;
-}
+@include editor.shell('giveaway', 62rem, 48rem);
 
 .giveaway-heading {
   align-self: stretch;
@@ -39,15 +8,10 @@
   font: var(--mat-sys-title-medium);
 }
 
+// Lives under the tab body rather than in the page column, so it needs the stretch the shell's
+// centred column would otherwise deny it.
 .giveaway-hint {
   align-self: stretch;
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-}
-
-.giveaway-hint-error {
-  color: var(--app-danger);
 }
 
 .giveaway-overview {
@@ -82,34 +46,11 @@
 
 // Form on the left, the Twitch-side preview beside it — and stacked again once the viewport cannot
 // carry both.
-.giveaway-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 16rem;
-  gap: 2rem;
-
-  @media (max-width: 48rem) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.giveaway-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  min-width: 0;
-}
-
 .giveaway-tab-body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
-}
-
-.giveaway-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
 .giveaway-warning {
@@ -124,10 +65,15 @@
   background: var(--app-warning-container);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-small);
-}
 
-.giveaway-field {
-  width: 100%;
+  // mat-icon carries its own 24px box, which would sit a line taller than the text beside it — the
+  // same sizing its four sibling banners give theirs.
+  mat-icon {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+  }
 }
 
 // The four switches read as one 2x2 block: two containers, but the same two columns and the same
@@ -169,10 +115,6 @@
   border-top: var(--app-border);
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
-}
-
-.giveaway-delete {
-  color: var(--app-danger);
 }
 
 // --- The draw -------------------------------------------------------------------------------
@@ -257,131 +199,25 @@
   }
 }
 
-.giveaway-side-heading {
-  margin: 0;
-  font: var(--mat-sys-title-medium);
+.giveaway-skeleton-name {
+  width: 11rem;
+  height: 1.75rem;
 }
 
-// --- The tables -----------------------------------------------------------------------------
+.giveaway-skeleton-badge {
+  width: 4.5rem;
+  height: 1.25rem;
+}
 
-.giveaway-table-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  min-width: 0;
+// The ghosts are app-reward-editor-skeleton's; only where its two columns collapse is this page's to
+// say, because that follows the column width capped above. The top padding matches the form it
+// stands in for, which takes it from the tab body.
+.giveaway-detail-skeleton {
+  padding-top: 1.25rem;
+}
 
-  // Two tables side by side are tighter than one across the page, so the cells give back some of
-  // their padding rather than putting every row behind a scrollbar.
-  .mat-mdc-header-cell,
-  .mat-mdc-cell {
-    padding-inline: 0.5rem;
+@media (max-width: 48rem) {
+  app-reward-editor-skeleton {
+    grid-template-columns: minmax(0, 1fr);
   }
-}
-
-.giveaway-table-wrap {
-  min-width: 0;
-}
-
-.giveaway-scroll {
-  overflow: auto;
-  max-height: 30rem;
-  border: var(--app-border);
-  border-radius: var(--app-radius-md);
-}
-
-.giveaway-table {
-  width: 100%;
-  background: transparent;
-}
-
-.giveaway-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.giveaway-avatar {
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--app-radius-pill);
-  object-fit: cover;
-}
-
-.giveaway-avatar-blank {
-  background: var(--mat-sys-surface-container-high);
-}
-
-.giveaway-name {
-  min-width: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-    border-radius: var(--app-radius-sm);
-  }
-}
-
-.giveaway-display-name {
-  color: var(--chat-color, var(--mat-sys-on-surface));
-  font: var(--mat-sys-body-medium);
-}
-
-.giveaway-roles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.giveaway-role-tag {
-  padding: 0.0625rem 0.4375rem;
-  border-radius: var(--app-radius-pill);
-  background: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-label-small);
-  white-space: nowrap;
-}
-
-.giveaway-role-none {
-  color: var(--mat-sys-outline);
-}
-
-.giveaway-weight {
-  white-space: nowrap;
-}
-
-.giveaway-weight-value {
-  font: var(--mat-sys-body-medium);
-}
-
-// The share of the wheel that weight actually buys, which is the number a streamer is asked about.
-.giveaway-weight-odds {
-  margin-left: 0.5rem;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-}
-
-.giveaway-order,
-.giveaway-when {
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-  white-space: nowrap;
-}
-
-.giveaway-row-actions {
-  text-align: right;
-}
-
-.giveaway-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-  text-align: center;
 }
