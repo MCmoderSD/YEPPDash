@@ -136,20 +136,7 @@
 
                   <span class="queue-page-identity" role="cell">
                     @if (row.user; as user) {
-                      <img class="queue-page-avatar" [ngSrc]="user.profileImageUrl" [width]=32 [height]=32 loading="eager" alt=""/>
-
-                      <app-user-badges [user]="user"/>
-
-                      <button
-                        type="button"
-                        class="queue-page-name"
-                        [attr.aria-label]="'Details for ' + user.displayName"
-                        (click)="details(row)"
-                      >
-                        <span class="queue-page-display-name" [style.--chat-color]="user.color">
-                          {{ user.displayName }}
-                        </span>
-                      </button>
+                      <app-user-identity [user]="user" [wrap]="true"/>
                     } @else {
                       <span class="queue-page-avatar queue-page-avatar-blank" aria-hidden="true"></span>
 
