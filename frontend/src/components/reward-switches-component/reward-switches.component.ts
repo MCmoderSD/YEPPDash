@@ -3,6 +3,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ColorPickerComponent } from '../color-picker-component/color-picker.component';
+import { DEFAULT_REWARD_COLOR } from '../../data/custom-reward';
 
 @Component({
   selector: 'app-reward-switches',
@@ -13,7 +14,7 @@ import { ColorPickerComponent } from '../color-picker-component/color-picker.com
 export class RewardSwitchesComponent {
 
   readonly enabled: ModelSignal<boolean> = model<boolean>(false);
-  readonly color: ModelSignal<string> = model<string>('#9147FF');
+  readonly color: ModelSignal<string> = model<string>(DEFAULT_REWARD_COLOR);
 
   readonly enabledLocked: InputSignal<boolean> = input<boolean>(false);
   readonly enabledHint: InputSignal<string> = input<string>('');

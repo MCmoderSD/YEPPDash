@@ -1,14 +1,11 @@
 import { Component, computed, input, InputSignal, output, OutputEmitterRef, Signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { GiveawayStatus, GiveawaySummary, rewardImage, STATUS_LABELS } from '../../data/giveaway';
+import { DEFAULT_REWARD_COLOR, rewardImage } from '../../data/custom-reward';
+import { GiveawayStatus, GiveawaySummary, STATUS_LABELS } from '../../data/giveaway';
 import { RewardTileComponent } from '../reward-tile-component/reward-tile.component';
 import { StatusBadgeComponent } from '../status-badge-component/status-badge.component';
 
-const DEFAULT_COLOR: string = '#9147FF';
-
-const STAGGER_MS: number = 40;
-const STAGGER_CAP: number = 6;
 
 @Component({
   selector: 'app-giveaway-grid',
@@ -37,15 +34,11 @@ export class GiveawayGridComponent {
 
   protected readonly statusLabels: Readonly<Record<GiveawayStatus, string>> = STATUS_LABELS;
 
-  protected delay(index: number): string {
-    return `${Math.min(index, STAGGER_CAP) * STAGGER_MS}ms`;
-  }
-
   protected image(summary: GiveawaySummary): string {
     return rewardImage(summary.reward);
   }
 
   protected colour(summary: GiveawaySummary): string {
-    return summary.reward?.backgroundColor || DEFAULT_COLOR;
+    return summary.reward?.backgroundColor || DEFAULT_REWARD_COLOR;
   }
 }
