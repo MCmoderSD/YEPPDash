@@ -6,30 +6,12 @@
   margin-inline: auto;
 }
 
-.wheel-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
 // The global utility stays in normal flow on purpose, but here that would make the announcement a
 // real child of the header's flex column — one pixel tall, plus the header's own 0.25rem gap on
 // both sides of it — pushing the count line that visible amount lower while it is up. Taken out of
 // flow instead: a screen reader hears it regardless of where it sits on screen.
 .wheel-page-loading-status {
   position: absolute;
-}
-
-.wheel-page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.wheel-page-count {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
 }
 
 // Roughly the width of "3 entries, 5 slices on the wheel" — long enough that the shorter "No
@@ -165,12 +147,8 @@
   min-width: 0;
 }
 
+// Two lines of small text at the theme's own leading run together; this is what keeps them apart.
 .wheel-page-hint {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
-
-  // Two lines of small text at the theme's own leading run together; this is what keeps them apart.
   line-height: 1.5;
 }
 
@@ -309,9 +287,7 @@
 }
 
 .wheel-page-actions {
-  width: 1%;
-  white-space: nowrap;
-  text-align: end;
+  --app-table-actions-width: 1%;
 }
 
 // The row's controls stay out of the way until the row is actually pointed at, as they do in the
@@ -368,12 +344,6 @@
 .wheel-page-overlay-title {
   margin: 0;
   font: var(--mat-sys-title-small);
-}
-
-.wheel-page-overlay-hint {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
 }
 
 .wheel-page-overlay-link {

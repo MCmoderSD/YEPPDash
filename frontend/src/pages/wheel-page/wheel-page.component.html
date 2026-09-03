@@ -1,13 +1,13 @@
 <section class="wheel-page">
-  <header class="wheel-page-header">
-    <h1 class="wheel-page-title">Lucky Wheel</h1>
+  <header class="app-page-header">
+    <h1 class="app-page-title">Lucky Wheel</h1>
     @if (initialLoad()) {
       <span class="app-visually-hidden wheel-page-loading-status" role="status">Loading your wheel…</span>
-      <p class="wheel-page-count app-skeleton-appear" aria-hidden="true">
+      <p class="app-page-sub app-skeleton-appear" aria-hidden="true">
         <span class="app-skeleton app-skeleton-bar app-skeleton-text wheel-skeleton-count"></span>
       </p>
     } @else {
-      <p class="wheel-page-count app-fade-in">
+      <p class="app-page-sub app-fade-in">
         @if (total() === 0) {
           No entries yet — add one below
         } @else {
@@ -115,9 +115,9 @@
               </form>
 
               @if (problem(); as reason) {
-                <p class="wheel-page-hint wheel-page-hint-problem" role="alert">{{ reason }}</p>
+                <p class="app-hint wheel-page-hint wheel-page-hint-problem" role="alert">{{ reason }}</p>
               } @else {
-                <p class="wheel-page-hint">
+                <p class="app-hint wheel-page-hint">
                   Adding a name that is already listed makes it 2x instead of a second row. Paste a
                   list and every line becomes its own entry — commas split the same way.
                 </p>
@@ -152,7 +152,7 @@
                   <th mat-header-cell *matHeaderCellDef scope="col">
                     <span class="wheel-page-hidden-label">Actions</span>
                   </th>
-                  <td mat-cell *matCellDef="let entry" class="wheel-page-actions">
+                  <td mat-cell *matCellDef="let entry" class="app-table-actions wheel-page-actions">
                     @if (entry.ghost) {
                       <span class="app-skeleton wheel-skeleton-action" aria-hidden="true"></span>
                       <span class="app-skeleton wheel-skeleton-action" aria-hidden="true"></span>
@@ -239,7 +239,7 @@
 
             <section class="wheel-page-overlay">
               <h2 class="wheel-page-overlay-title">OBS browser source</h2>
-              <p class="wheel-page-overlay-hint">
+              <p class="app-hint">
                 This link is yours and stays the same. Add it as a browser source and resize it freely
                 — the wheel scales with it, follows the list on this page and spins along when you spin
                 here.
