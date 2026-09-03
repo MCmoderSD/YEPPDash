@@ -9,45 +9,6 @@
   margin-inline: auto;
 }
 
-.raid-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.raid-page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.raid-page-count {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
-.raid-page-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.raid-page-search {
-  align-self: stretch;
-
-  // Material reserves room under the field for a hint or error; there is neither here, so it would
-  // only push the table away from the search box.
-  margin-block-end: -1.25rem;
-}
-
-// Kept in the layout while idle so the table does not jump every time a request starts.
-.raid-page-progress {
-  flex: none;
-  align-self: stretch;
-}
-
 .raid-page-row {
   cursor: pointer;
 
