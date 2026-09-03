@@ -1,3 +1,4 @@
+using YEPPDash.Api.Data.Queue;
 using YEPPDash.Api.Repositories;
 using YEPPDash.Api.Services.Streaming;
 
@@ -7,60 +8,29 @@ public sealed class QueueWatcher(
     QueueHub hub,
     IServiceScopeFactory scopeFactory,
     ILogger<QueueWatcher> logger
-) : BackgroundService {
+) : ChangeWatcher<QueueState>(hub, scopeFactory, logger) {
 
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(2);
+    protected override TimeSpan Interval { get; } = TimeSpan.FromSeconds(2);
 
-    private readonly Dictionary<int, DateTime> _published = [];
+    protected override string Subject { get; } = "the queues";
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task<IReadOnlyList<QueueState>> FetchAsync(IServiceProvider services, IReadOnlyCollection<int> watched, CancellationToken cancellationToken)
     {
-        using var ticks = new PeriodicTimer(Interval);
-
-        while (await ticks.WaitForNextTickAsync(stoppingToken))
-        {
-
-            var watched = hub.WatchedChannels();
-
-            if (watched.Count is 0)
-            {
-                _published.Clear();
-                continue;
-            }
-
-            try
-            {
-                await PublishChangesAsync(watched, stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception exception)
-            {
-
-                logger.LogWarning(exception, "Could not check the queues for changes");
-            }
-        }
+        return services.GetRequiredService<QueueRepository>().GetManyAsync(watched, cancellationToken);
     }
 
-    private async Task PublishChangesAsync(IReadOnlyCollection<int> watched, CancellationToken cancellationToken)
+    protected override int ChannelOf(QueueState state)
     {
-        using var scope = scopeFactory.CreateScope();
-        var queues = scope.ServiceProvider.GetRequiredService<QueueRepository>();
+        return state.ChannelId;
+    }
 
-        foreach (var state in await queues.GetManyAsync(watched, cancellationToken))
-        {
+    protected override DateTime UpdatedAtOf(QueueState state)
+    {
+        return state.UpdatedAt;
+    }
 
-            if (_published.TryGetValue(state.ChannelId, out var published) && published == state.UpdatedAt) continue;
-
-            _published[state.ChannelId] = state.UpdatedAt;
-            hub.Publish(state.ChannelId, QueueEvents.Serialize(state));
-        }
-
-        foreach (var channelId in _published.Keys.Where(id => !watched.Contains(id)).ToArray())
-        {
-            _published.Remove(channelId);
-        }
+    protected override string Serialize(QueueState state, DateTime serverNow)
+    {
+        return QueueEvents.Serialize(state);
     }
 }
