@@ -10,8 +10,8 @@ import { askDialog } from '../../services/dialog';
 export interface TextEditDialogData {
   title: string;
   label: string;
-  maxLength: number;
   text?: string;
+  maxLength?: number;
   confirmLabel?: string;
   hint?: string;
   multiline?: boolean;
@@ -49,8 +49,10 @@ export class TextEditDialogComponent {
     const trimmed: string = this.text().trim();
     if (trimmed.length === 0) return null;
 
-    if (trimmed.length > this.data.maxLength) {
-      return `That is ${trimmed.length} characters — the limit is ${this.data.maxLength}.`;
+    const limit: number | undefined = this.data.maxLength;
+
+    if (limit !== undefined && trimmed.length > limit) {
+      return `That is ${trimmed.length} characters — the limit is ${limit}.`;
     }
 
     return this.data.problem?.(trimmed) ?? null;
