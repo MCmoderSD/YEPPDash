@@ -12,42 +12,20 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="ban-table-scroll">
+  <app-table-frame>
     <table
       mat-table
       matSort
       matSortActive="when"
       [matSortDirection]="defaultDirection()"
       [dataSource]="dataSource"
-      class="ban-table-grid"
+      class="app-data-table"
     >
 
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
         <td mat-cell *matCellDef="let ban">
-          <div class="ban-table-identity">
-            <img
-              class="ban-table-avatar"
-              [ngSrc]="ban.profileImageUrl"
-              [width]=32
-              [height]=32
-              loading="eager"
-              alt=""
-            />
-
-            <app-user-badges [user]="ban"/>
-
-            <button
-              type="button"
-              class="ban-table-name"
-              [attr.aria-label]="'Details for ' + ban.displayName"
-              (click)="showDetails(ban, $event)"
-            >
-              <span class="ban-table-display-name" [style.--chat-color]="ban.color">
-                {{ ban.displayName }}
-              </span>
-            </button>
-          </div>
+          <app-user-identity [user]="ban"/>
         </td>
       </ng-container>
 
@@ -108,7 +86,7 @@
             </div>
           </td>
         } @else {
-          <td class="ban-table-empty" [attr.colspan]="columns.length">
+          <td class="app-table-empty" [attr.colspan]="columns.length">
             @if (query()) {
               No entry matches “{{ query() }}”.
             } @else if (mode() === 'timeout') {
@@ -120,7 +98,7 @@
         }
       </tr>
     </table>
-  </div>
+  </app-table-frame>
 
   <mat-paginator
     class="ban-table-paginator"
@@ -129,6 +107,4 @@
     showFirstLastButtons="true"
     [attr.aria-label]="mode() === 'timeout' ? 'Select a page of timeouts' : 'Select a page of bans'"
   />
-
-  <app-scroll-bar [target]="scroll"/>
 </div>

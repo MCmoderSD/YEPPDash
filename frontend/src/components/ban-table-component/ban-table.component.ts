@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, InputSignal, output, OutputEmitterRef, Signal, signal, viewChild, WritableSignal } from '@angular/core';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,23 +8,22 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../user-badges-component/user-badges.component';
+import { TableFrameComponent } from '../table-frame-component/table-frame.component';
+import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
 import { wireDataSource } from '../../services/data-source';
 import { BannedUser } from '../../data/banned-user';
+import { ghostRows } from '../../data/skeleton';
 
 export type BanTableMode = 'timeout' | 'ban';
 
 const COLUMNS: readonly string[] = ['user', 'when', 'reason', 'revoke'];
 
-const MAX_GHOST_ROWS: number = 25;
-
 @Component({
   selector: 'app-ban-table',
   templateUrl: './ban-table.component.html',
   styleUrl: './ban-table.component.scss',
-  imports: [DatePipe, NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent],
+  imports: [DatePipe, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
 })
 export class BanTableComponent {
 
@@ -45,12 +44,7 @@ export class BanTableComponent {
 
   protected readonly columns: readonly string[] = COLUMNS;
 
-  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
-    const expected: number | null = this.expected();
-    if (expected === null || expected <= 0) return [];
-
-    return Array.from({ length: Math.min(expected, MAX_GHOST_ROWS) }, (_: unknown, index: number): number => index);
-  });
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
 
   protected readonly whenLabel: Signal<string> = computed((): string => this.mode() === 'timeout' ? 'Expires' : 'Banned');
 
@@ -93,8 +87,7 @@ export class BanTableComponent {
     this.dataSource.paginator?.firstPage();
   }
 
-  protected showDetails(ban: BannedUser, event?: Event): void {
-    event?.stopPropagation();
+  protected showDetails(ban: BannedUser): void {
     UserInfoDialogComponent.open(this.dialog, ban);
   }
 
