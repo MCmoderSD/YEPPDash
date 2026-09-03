@@ -1,6 +1,5 @@
 import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -8,14 +7,14 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
 import { TableFrameComponent } from '../../components/table-frame-component/table-frame.component';
 import { UserIdentityComponent } from '../../components/user-identity-component/user-identity.component';
-import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { filterRows, wireDataSource } from '../../services/data-source';
+import { TABLE_PAGE_SIZES, filterRows, wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { RaidService } from '../../services/raid.service';
 import { Raid } from '../../data/raid';
 import { ListState } from '../../services/list-state';
 import { TableSearchComponent } from '../../components/table-search-component/table-search.component';
+import { UserDetailsDirective } from '../../directives/user-details.directive';
 
 export interface RaidEntry {
   raid: Raid;
@@ -26,13 +25,12 @@ export interface RaidEntry {
   selector: 'app-raid-page',
   templateUrl: './raid-page.component.html',
   styleUrl: './raid-page.component.scss',
-  imports: [TableSearchComponent, BusyBarComponent, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
+  imports: [UserDetailsDirective, TableSearchComponent, BusyBarComponent, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class RaidPageComponent {
 
   private readonly raids: RaidService = inject(RaidService);
   private readonly notifications: NotificationService = inject(NotificationService);
-  private readonly dialog: MatDialog = inject(MatDialog);
 
   private readonly state: ListState<RaidEntry> = new ListState<RaidEntry>();
 
@@ -48,9 +46,13 @@ export class RaidPageComponent {
     this.rows().reduce((total: number, entry: RaidEntry): number => total + entry.raid.viewers, 0),
   );
 
+
+  // Three widths cycled down the ghost rows, so the waiting list reads as names of different
+  // lengths rather than as one bar repeated.
+  protected readonly ghostNameWidths: readonly string[] = ['min(9rem, 60%)', 'min(6rem, 45%)', 'min(11rem, 70%)'];
   protected readonly columns: string[] = ['raider', 'viewers', 'firedAt'];
 
-  protected readonly pageSizes: number[] = [10, 25, 50, 100];
+  protected readonly pageSizes: readonly number[] = TABLE_PAGE_SIZES;
 
   protected readonly dataSource: MatTableDataSource<RaidEntry> = new MatTableDataSource<RaidEntry>([]);
 
@@ -88,9 +90,6 @@ export class RaidPageComponent {
     filterRows(this.dataSource, value);
   }
 
-  protected showDetails(entry: RaidEntry): void {
-    UserInfoDialogComponent.open(this.dialog, entry.raid.raider);
-  }
 
   protected reload(): Promise<void> {
     return this.load();
@@ -98,10 +97,10 @@ export class RaidPageComponent {
 
   private async load(): Promise<void> {
     await this.state.load(
-      (): Promise<number> => this.raids.countRaids(),
       async (): Promise<RaidEntry[]> => (await this.raids.getRaids())
         .map((raid: Raid): RaidEntry => ({ raid, firedAt: new Date(raid.firedAt) })),
       (): void => this.notifications.failure('Could not load your raids.'),
+      (): Promise<number> => this.raids.countRaids(),
     );
   }
 }

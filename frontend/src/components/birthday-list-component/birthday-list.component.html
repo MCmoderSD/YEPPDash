@@ -75,9 +75,8 @@
         mat-row
         *matRowDef="let entry; columns: columns"
         class="birthday-list-row"
-        [class.birthday-list-clickable]="entry.user"
         [class.app-fade-in]="!initialLoad()"
-        (click)="showDetails(entry)"
+        [appUserDetails]="entry.user"
       ></tr>
 
       <tr class="birthday-list-empty-row" *matNoDataRow>
@@ -89,8 +88,7 @@
                 @for (row of skeletonRows(); track row) {
                   <div class="birthday-list-skeleton-row" aria-hidden="true">
                     <span class="birthday-list-skeleton-cell birthday-list-skeleton-cell-user">
-                      <span class="app-skeleton birthday-list-skeleton-avatar"></span>
-                      <span class="app-skeleton app-skeleton-bar birthday-list-skeleton-name"></span>
+                      <app-user-identity [ghost]="true" [ghostWidth]="ghostNameWidths[$index % 3]"/>
                     </span>
                     <span class="birthday-list-skeleton-cell birthday-list-skeleton-cell-date">
                       <span class="app-skeleton app-skeleton-bar birthday-list-skeleton-date"></span>

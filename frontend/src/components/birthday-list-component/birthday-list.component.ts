@@ -1,7 +1,6 @@
 import { Component, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -10,7 +9,6 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { BusyBarComponent } from '../busy-bar-component/busy-bar.component';
 import { TableFrameComponent } from '../table-frame-component/table-frame.component';
 import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
-import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { BirthdayService } from '../../services/birthday.service';
@@ -20,6 +18,7 @@ import { TwitchUser } from '../../data/twitch-user';
 import { ListState } from '../../services/list-state';
 import { TableSearchComponent } from '../table-search-component/table-search.component';
 import { filterRows } from '../../services/data-source';
+import { UserDetailsDirective } from '../../directives/user-details.directive';
 
 export interface BirthdayEntry {
   birthday: Birthday;
@@ -41,14 +40,13 @@ function labelFor(daysUntil: number): string {
   selector: 'app-birthday-list',
   templateUrl: './birthday-list.component.html',
   styleUrl: './birthday-list.component.scss',
-  imports: [TableSearchComponent, BusyBarComponent, DatePipe, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
+  imports: [UserDetailsDirective, TableSearchComponent, BusyBarComponent, DatePipe, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class BirthdayListComponent {
 
   private readonly birthdays: BirthdayService = inject(BirthdayService);
   private readonly auth: AuthService = inject(AuthService);
   private readonly notifications: NotificationService = inject(NotificationService);
-  private readonly dialog: MatDialog = inject(MatDialog);
 
   private readonly state: ListState<BirthdayEntry> = new ListState<BirthdayEntry>();
 
@@ -61,6 +59,7 @@ export class BirthdayListComponent {
   protected readonly busy: Signal<boolean> = this.state.refreshing;
   protected readonly skeletonRows: Signal<readonly number[]> = this.state.ghostRows;
 
+  protected readonly ghostNameWidths: readonly string[] = ['8rem', '6rem', '9.5rem'];
   protected readonly columns: string[] = ['user', 'date', 'age', 'next'];
 
   protected readonly dataSource: MatTableDataSource<BirthdayEntry> = new MatTableDataSource<BirthdayEntry>([]);
@@ -97,9 +96,6 @@ export class BirthdayListComponent {
     filterRows(this.dataSource, value);
   }
 
-  protected showDetails(entry: BirthdayEntry): void {
-    if (entry.user) UserInfoDialogComponent.open(this.dialog, entry.user);
-  }
 
   protected reload(): Promise<void> {
     return this.load();
@@ -110,7 +106,6 @@ export class BirthdayListComponent {
     if (!channelId) return;
 
     await this.state.load(
-      (): Promise<number> => this.birthdays.countFollowerBirthdays(channelId),
       async (): Promise<BirthdayEntry[]> => {
         const birthdays: FollowerBirthday[] = await this.birthdays.getFollowerBirthdays(channelId);
         const today: Date = new Date();
@@ -130,6 +125,7 @@ export class BirthdayListComponent {
         });
       },
       (): void => this.notifications.failure('Could not load the birthdays of your followers.'),
+      (): Promise<number> => this.birthdays.countFollowerBirthdays(channelId),
     );
   }
 }

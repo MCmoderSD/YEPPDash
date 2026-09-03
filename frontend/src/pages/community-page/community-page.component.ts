@@ -1,7 +1,6 @@
 import { Component, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -9,14 +8,14 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { BusyBarComponent } from '../../components/busy-bar-component/busy-bar.component';
 import { TableFrameComponent } from '../../components/table-frame-component/table-frame.component';
 import { UserIdentityComponent } from '../../components/user-identity-component/user-identity.component';
-import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
-import { filterRows, wireDataSource } from '../../services/data-source';
+import { TABLE_PAGE_SIZES, filterRows, wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchService } from '../../services/twitch.service';
 import { FollowerProfile } from '../../data/follower';
 import { ListState } from '../../services/list-state';
 import { TableSearchComponent } from '../../components/table-search-component/table-search.component';
+import { UserDetailsDirective } from '../../directives/user-details.directive';
 
 export interface CommunityEntry {
   user: FollowerProfile;
@@ -27,13 +26,12 @@ export interface CommunityEntry {
   selector: 'app-community-page',
   templateUrl: './community-page.component.html',
   styleUrl: './community-page.component.scss',
-  imports: [TableSearchComponent, BusyBarComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
+  imports: [UserDetailsDirective, TableSearchComponent, BusyBarComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class CommunityPageComponent {
 
   private readonly twitch: TwitchService = inject(TwitchService);
   private readonly notifications: NotificationService = inject(NotificationService);
-  private readonly dialog: MatDialog = inject(MatDialog);
 
   private readonly state: ListState<CommunityEntry> = new ListState<CommunityEntry>();
 
@@ -46,9 +44,10 @@ export class CommunityPageComponent {
   protected readonly refreshing: Signal<boolean> = this.state.refreshing;
   protected readonly ghostRows: Signal<readonly number[]> = this.state.ghostRows;
 
+  protected readonly ghostNameWidths: readonly string[] = ['min(9rem, 50%)', 'min(6rem, 40%)', 'min(12rem, 60%)'];
   protected readonly columns: string[] = ['user', 'followedAt'];
 
-  protected readonly pageSizes: number[] = [10, 25, 50, 100];
+  protected readonly pageSizes: readonly number[] = TABLE_PAGE_SIZES;
 
   protected readonly dataSource: MatTableDataSource<CommunityEntry> = new MatTableDataSource<CommunityEntry>([]);
 
@@ -81,9 +80,6 @@ export class CommunityPageComponent {
     filterRows(this.dataSource, value);
   }
 
-  protected showDetails(entry: CommunityEntry): void {
-    UserInfoDialogComponent.open(this.dialog, entry.user);
-  }
 
   protected reload(): Promise<void> {
     return this.load();
@@ -91,10 +87,10 @@ export class CommunityPageComponent {
 
   private async load(): Promise<void> {
     await this.state.load(
-      (): Promise<number> => this.twitch.countFollowers(),
       async (): Promise<CommunityEntry[]> => (await this.twitch.getFollowers())
         .map((user: FollowerProfile): CommunityEntry => ({ user, followedAt: new Date(user.followedAt) })),
       (): void => this.notifications.failure('Could not load your community.'),
+      (): Promise<number> => this.twitch.countFollowers(),
     );
   }
 }

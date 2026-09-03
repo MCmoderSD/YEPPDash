@@ -14,12 +14,12 @@ export class ListState<T> {
 
   readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
 
-  async load(count: () => Promise<number>, list: () => Promise<T[]>, onFailure: () => void): Promise<void> {
+  async load(list: () => Promise<T[]>, onFailure: () => void, count?: () => Promise<number>): Promise<void> {
     this.loading.set(true);
     this.failed.set(false);
     this.expected.set(null);
 
-    if (this.count() === 0) {
+    if (count && this.count() === 0) {
       void count()
         .then((expected: number): void => {
           if (this.loading()) this.expected.set(expected);

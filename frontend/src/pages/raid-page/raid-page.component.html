@@ -66,8 +66,7 @@
       <tr
         mat-row
         *matRowDef="let entry; columns: columns"
-        class="raid-page-row"
-        (click)="showDetails(entry)"
+        [appUserDetails]="entry.raid.raider"
       ></tr>
 
       <tr class="raid-page-empty-row" *matNoDataRow>
@@ -78,10 +77,7 @@
               <div class="raid-page-skeleton-list" aria-hidden="true">
                 @for (row of ghostRows(); track row) {
                   <div class="raid-page-skeleton-row">
-                    <span class="raid-page-skeleton-identity">
-                      <span class="app-skeleton raid-page-skeleton-avatar"></span>
-                      <span class="app-skeleton app-skeleton-bar raid-page-skeleton-name"></span>
-                    </span>
+                    <app-user-identity [ghost]="true" [ghostWidth]="ghostNameWidths[$index % 3]"/>
                     <span class="app-skeleton app-skeleton-bar raid-page-skeleton-viewers"></span>
                     <span class="app-skeleton app-skeleton-bar raid-page-skeleton-date"></span>
                   </div>

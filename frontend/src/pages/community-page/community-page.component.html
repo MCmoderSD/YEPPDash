@@ -66,8 +66,8 @@
       <tr
         mat-row
         *matRowDef="let entry; columns: columns"
-        class="community-page-row app-fade-in"
-        (click)="showDetails(entry)"
+        class="app-fade-in"
+        [appUserDetails]="entry.user"
       ></tr>
 
       <ng-container *matNoDataRow>
@@ -75,10 +75,7 @@
           @for (row of ghostRows(); track row) {
             <tr class="community-page-ghost-row" aria-hidden="true">
               <td class="community-page-ghost-cell">
-                <div class="community-page-identity">
-                  <span class="app-skeleton community-page-ghost-avatar"></span>
-                  <span class="app-skeleton app-skeleton-bar app-skeleton-text community-page-ghost-name"></span>
-                </div>
+                <app-user-identity [ghost]="true" [ghostWidth]="ghostNameWidths[$index % 3]"/>
               </td>
               <td class="community-page-date community-page-ghost-cell">
                 <span class="app-skeleton app-skeleton-bar app-skeleton-text community-page-ghost-date"></span>

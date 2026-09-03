@@ -20,12 +20,6 @@
   }
 }
 
-// Only the rows that actually open something say so.
-//noinspection CssUnusedSymbol
-.birthday-list-clickable {
-  cursor: pointer;
-}
-
 // A follower Twitch no longer knows is shown by name alone — no avatar circle, since there is no
 // picture behind it and an empty one would only read as a failed load.
 //
@@ -132,25 +126,7 @@
   justify-content: center;
 }
 
-.birthday-list-skeleton-avatar {
-  width: 2rem; // the real avatar is 32×32
-  height: 2rem;
-  border-radius: 50%;
-}
-
-.birthday-list-skeleton-name {
-  width: 8rem;
-}
-
 // Names are not all the same length, and rows that were would read as a barcode, not a list.
-.birthday-list-skeleton-row:nth-child(3n) .birthday-list-skeleton-name {
-  width: 6rem;
-}
-
-.birthday-list-skeleton-row:nth-child(3n + 2) .birthday-list-skeleton-name {
-  width: 9.5rem;
-}
-
 .birthday-list-skeleton-date {
   width: 6rem;
 }
@@ -167,5 +143,4 @@
 // text-align — a fixed-width block ignores that.
 .birthday-list-skeleton-count {
   width: 12rem;
-  margin-inline: auto;
 }

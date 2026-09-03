@@ -20,18 +20,6 @@
 // sentence.
 .community-page-count-skeleton {
   width: 6.5rem;
-
-  // A block-level bar needs its own margin to sit where text-align: center puts the real sentence.
-  margin-inline: auto;
-}
-
-.community-page-row {
-  cursor: pointer;
-
-  &:hover,
-  &:focus-within {
-    background: var(--mat-sys-surface-container-high);
-  }
 }
 
 .community-page-identity {
@@ -67,27 +55,8 @@
   vertical-align: middle;
 }
 
-// 32px, matching the real avatar's [width]/[height] attributes.
-.community-page-ghost-avatar {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-}
-
-.community-page-ghost-name {
-  width: min(9rem, 50%);
-}
-
 // A display name is not always the same length, and eight rows of the same bar would read as a
 // barcode rather than a list of people.
-.community-page-ghost-row:nth-child(3n) .community-page-ghost-name {
-  width: min(6rem, 40%);
-}
-
-.community-page-ghost-row:nth-child(3n + 2) .community-page-ghost-name {
-  width: min(12rem, 60%);
-}
-
 // "Following since" dates are all roughly the same width, so one size reads honestly here where
 // varying the name bars does not.
 .community-page-ghost-date {
