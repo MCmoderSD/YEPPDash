@@ -61,5 +61,5 @@
 // Once the number above it is past the ceiling the line stops being a hint and becomes the reason
 // the button will not move.
 .ban-user-hint-error {
-  color: var(--mat-sys-error);
+  color: var(--app-danger);
 }
