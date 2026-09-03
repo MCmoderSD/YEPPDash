@@ -20,6 +20,63 @@
   width: min(14rem, 70vw);
 }
 
+.wheel-page-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+// The name is the control that renames the wheel, the way an entry's name in the table below is the
+// control that renames the entry. Styled as the heading it reads as, with the pencil only there to
+// say so.
+.wheel-page-detail-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: var(--mat-sys-title-large);
+  text-align: start;
+  cursor: pointer;
+
+  mat-icon {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1.25rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.wheel-page-detail-name-text {
+  overflow-wrap: anywhere;
+}
+
+.wheel-page-skeleton-name {
+  width: 11rem;
+  height: 1.75rem;
+}
+
+// Pushed to the far end of the row: it is the one thing here that cannot be undone, and it has no
+// business sitting next to the name it would delete.
+.wheel-page-delete {
+  margin-inline-start: auto;
+}
+
 .wheel-page-layout {
   display: grid;
   gap: 1.5rem;

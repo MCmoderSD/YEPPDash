@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, effect, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, input, InputSignal, Signal, signal, untracked, viewChild, WritableSignal } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,16 +13,18 @@ import { TableFrameComponent } from '../../components/table-frame-component/tabl
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { OverlayLinkComponent } from '../../components/overlay-link-component/overlay-link.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
+import { WheelGridComponent } from '../../components/wheel-grid-component/wheel-grid.component';
 import { ConfirmActionDialogComponent } from '../../components/confirm-action-dialog-component/confirm-action-dialog.component';
 import { TextEditDialogComponent } from '../../components/text-edit-dialog-component/text-edit-dialog.component';
 import { WheelWinnerChoice, WheelWinnerDialogComponent, } from '../../components/wheel-winner-dialog-component/wheel-winner-dialog.component';
-import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { errorMessage } from '../../services/http-error';
 import { WheelService } from '../../services/wheel.service';
 import { WheelResultsService } from '../../services/wheel-results.service';
-import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, labelProblem, parseWheelFile, removeOne, renameEntry, shuffleEntries, sliceCount, sortEntries, splitEntries, WHEEL_FILE_NAME, WHEEL_LABEL_MAX_LENGTH, WHEEL_MAX_SLICES, WheelEntry, WheelFile, wheelFileContent, wheelSlices } from '../../data/wheel-entry';
+import { addEntry, entriesFrom, entryProblem, entryText, flattenEntries, parseWheelFile, removeOne, renameEntry, shuffleEntries, sliceCount, sortEntries, splitEntries, WheelEntry, wheelFileContent, wheelFileName, wheelSlices } from '../../data/wheel-entry';
 import { resultWonAt, WheelResult } from '../../data/wheel-result';
-import { CHANNEL_PARAM, overlayUrl, WHEEL_OVERLAY_PATH } from '../../data/overlay';
+import { Wheel, WHEEL_NAME_MAX_LENGTH, WheelSummary, WheelUpdate } from '../../data/wheel';
+import { overlayUrl, WHEEL_OVERLAY_PATH, WHEEL_PARAM } from '../../data/overlay';
 
 type WheelEntryRow = WheelEntry & { readonly ghost?: true };
 
@@ -34,23 +37,36 @@ function ghostRows(count: number | null): WheelEntryRow[] {
   selector: 'app-wheel-page',
   templateUrl: './wheel-page.component.html',
   styleUrl: './wheel-page.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, OverlayLinkComponent, TableFrameComponent, WheelComponent, LocaleDatePipe],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, MatTabsModule, OverlayLinkComponent, TableFrameComponent, WheelComponent, WheelGridComponent, LocaleDatePipe],
 })
 export class WheelPageComponent {
+
+  readonly wheel: InputSignal<string | undefined> = input<string>();
 
   private readonly notifications: NotificationService = inject(NotificationService);
   private readonly dialog: MatDialog = inject(MatDialog);
   private readonly document: Document = inject(DOCUMENT);
-  private readonly auth: AuthService = inject(AuthService);
+  private readonly router: Router = inject(Router);
   private readonly wheels: WheelService = inject(WheelService);
   private readonly wheelResults: WheelResultsService = inject(WheelResultsService);
 
-  private readonly wheel: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
+  private readonly board: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
   private readonly resultsSorter: Signal<MatSort | undefined> = viewChild(MatSort);
 
+  protected readonly summaries: WritableSignal<WheelSummary[]> = signal<WheelSummary[]>([]);
+
+  private readonly loaded: WritableSignal<boolean> = signal(false);
+
+  protected readonly skeleton: Signal<boolean> = computed((): boolean => !this.loaded());
+
+  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+
+  protected readonly name: WritableSignal<string> = signal('');
   protected readonly entries: WritableSignal<WheelEntry[]> = signal<WheelEntry[]>([]);
   protected readonly draft: WritableSignal<string> = signal('');
-  protected readonly loading: WritableSignal<boolean> = signal(false);
+
+  protected readonly detailLoading: WritableSignal<boolean> = signal(false);
+  protected readonly saving: WritableSignal<boolean> = signal(false);
 
   protected readonly results: WritableSignal<WheelResult[]> = signal<WheelResult[]>([]);
   protected readonly resultColumns: string[] = ['winner', 'time'];
@@ -60,34 +76,49 @@ export class WheelPageComponent {
 
   protected readonly columns: string[] = ['entry', 'actions'];
 
+  protected readonly selectedId: Signal<string | null> = computed((): string | null => {
+    const raw: string | undefined = this.wheel();
+    return raw === undefined || raw.length === 0 ? null : raw;
+  });
+
+  protected readonly detail: Signal<boolean> = computed((): boolean => this.selectedId() !== null);
+
   protected readonly slices: Signal<string[]> = computed((): string[] => wheelSlices(this.entries()));
 
   protected readonly total: Signal<number> = computed((): number => sliceCount(this.entries()));
 
-  protected readonly full: Signal<boolean> = computed((): boolean => this.total() >= WHEEL_MAX_SLICES);
+  protected readonly spinning: Signal<boolean> = computed((): boolean => this.board()?.spinning() ?? false);
 
-  protected readonly spinning: Signal<boolean> = computed((): boolean => this.wheel()?.spinning() ?? false);
+  protected readonly busy: Signal<boolean> = computed((): boolean =>
+    this.spinning() || this.saving() || this.detailLoading());
 
-  protected readonly busy: Signal<boolean> = computed((): boolean => this.spinning() || this.loading());
+  // The card the page was opened from already counted this wheel's entries, so the table can stand
+  // the right number of placeholders up while the entries themselves are still on their way.
+  private readonly expectedEntries: Signal<number | null> = computed((): number | null => {
+    const id: string | null = this.selectedId();
+    if (id === null) return null;
 
-  protected readonly initialLoad: Signal<boolean> = computed((): boolean => this.loading() && this.entries().length === 0);
-
-  protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
+    return this.summaries().find((summary: WheelSummary): boolean => summary.id === id)?.entryCount ?? null;
+  });
 
   protected readonly rows: Signal<WheelEntryRow[]> = computed((): WheelEntryRow[] =>
-    this.initialLoad() ? ghostRows(this.expected()) : this.entries());
-
-  private readonly channelId: Signal<string | null> = computed((): string | null => this.auth.currentUser()?.id ?? null);
+    this.detailLoading() ? ghostRows(this.expectedEntries()) : this.entries());
 
   protected readonly overlayUrl: Signal<string | null> = computed((): string | null => {
-    const channelId: string | null = this.channelId();
-    return channelId === null ? null : overlayUrl(WHEEL_OVERLAY_PATH, CHANNEL_PARAM, channelId);
+    const id: string | null = this.selectedId();
+    return id === null ? null : overlayUrl(WHEEL_OVERLAY_PATH, WHEEL_PARAM, id);
   });
 
   protected readonly label: (entry: WheelEntry) => string = entryText;
 
   constructor() {
-    void this.load();
+    void this.loadCount();
+    void this.loadList();
+
+    effect((): void => {
+      const id: string | null = this.selectedId();
+      untracked((): void => void this.loadWheel(id));
+    });
 
     this.resultsDataSource.sortingDataAccessor = (result, column): string | number =>
       column === 'time' ? resultWonAt(result).getTime() : result.label.toLowerCase();
@@ -99,15 +130,97 @@ export class WheelPageComponent {
     });
   }
 
-  protected readonly problem: Signal<string | null> = computed((): string | null => {
-    const problem: string | null = entryProblem(this.draft());
-    if (problem !== null) return problem;
-
-    return this.full() ? `A wheel holds at most ${WHEEL_MAX_SLICES} slices.` : null;
-  });
+  protected readonly problem: Signal<string | null> = computed((): string | null => entryProblem(this.draft()));
 
   protected readonly canAdd: Signal<boolean> = computed((): boolean =>
     !this.busy() && this.draft().trim().length > 0 && this.problem() === null);
+
+  protected select(id: string | null): void {
+    if (id === (this.wheel() ?? null)) return;
+
+    void this.router.navigate([], {
+      queryParams: { wheel: id },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  protected back(): void {
+    this.select(null);
+  }
+
+  protected async createWheel(): Promise<void> {
+    const name: string | undefined = await TextEditDialogComponent.ask(this.dialog, {
+      title: 'New wheel',
+      label: 'Name',
+      maxLength: WHEEL_NAME_MAX_LENGTH,
+      multiline: false,
+      confirmLabel: 'Create',
+      hint: 'Every wheel keeps its own entries, its own results and its own browser source.',
+    });
+
+    if (name === undefined) return;
+
+    this.saving.set(true);
+    try {
+      const created: Wheel = await this.wheels.create({ name, entries: [] });
+
+      await this.loadList();
+      this.select(created.id);
+
+      this.notifications.success(`“${created.name}” is ready — add your entries.`);
+    } catch (error: unknown) {
+      this.notifications.failure(errorMessage(error, 'Could not create the wheel.'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async renameWheel(): Promise<void> {
+    if (this.busy()) return;
+
+    const name: string | undefined = await TextEditDialogComponent.ask(this.dialog, {
+      title: 'Rename wheel',
+      label: 'Name',
+      text: this.name(),
+      maxLength: WHEEL_NAME_MAX_LENGTH,
+      multiline: false,
+    });
+
+    if (name === undefined) return;
+
+    this.name.set(name);
+    await this.persist();
+  }
+
+  protected async removeWheel(): Promise<void> {
+    const id: string | null = this.selectedId();
+    if (id === null) return;
+
+    const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
+      title: 'Delete this wheel?',
+      message: `“${this.name()}”, its ${this.entries().length} entries and its recorded results are removed, `
+        + 'and its browser source stops working.',
+      confirmLabel: 'Delete',
+    });
+
+    if (!confirmed) return;
+
+    this.saving.set(true);
+    try {
+      await this.wheels.remove(id);
+      this.wheelResults.clear(id);
+
+      await this.loadList();
+      this.select(null);
+
+      this.notifications.success('The wheel is gone.');
+    } catch (error: unknown) {
+      this.notifications.failure(errorMessage(error, 'Could not delete the wheel.'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
 
   protected add(): void {
     if (!this.canAdd()) return;
@@ -136,38 +249,15 @@ export class WheelPageComponent {
   private addAll(labels: readonly string[]): boolean {
     if (labels.length === 0) return false;
 
-    let added = 0;
-    let next: WheelEntry[] = this.entries();
+    this.entries.update((entries: WheelEntry[]): WheelEntry[] =>
+      labels.reduce((list: WheelEntry[], label: string): WheelEntry[] => addEntry(list, label), entries));
 
-    for (const label of labels) {
-      if (sliceCount(next) >= WHEEL_MAX_SLICES) break;
-
-      next = addEntry(next, label);
-      added++;
-    }
-
-    if (added === 0) {
-      this.notifications.failure(`A wheel holds at most ${WHEEL_MAX_SLICES} slices.`);
-      return false;
-    }
-
-    this.entries.set(next);
     void this.persist();
-
-    if (added < labels.length) {
-      this.notifications.failure(
-        `Added ${added} of ${labels.length} — a wheel holds at most ${WHEEL_MAX_SLICES} slices.`);
-    }
 
     return true;
   }
 
   protected addOne(label: string): void {
-    if (this.full()) {
-      this.notifications.failure(`A wheel holds at most ${WHEEL_MAX_SLICES} slices.`);
-      return;
-    }
-
     this.entries.update((entries: WheelEntry[]): WheelEntry[] => addEntry(entries, label));
     void this.persist();
   }
@@ -180,10 +270,8 @@ export class WheelPageComponent {
       title: 'Edit entry',
       label: 'Entry',
       text: entry.label,
-      maxLength: WHEEL_LABEL_MAX_LENGTH,
       multiline: false,
       hint: 'Renaming onto a name already listed merges the two.',
-      problem: labelProblem,
     });
 
     if (label === undefined) return;
@@ -209,28 +297,31 @@ export class WheelPageComponent {
 
   protected spin(): void {
     const count: number = this.slices().length;
-    const channelId: string | null = this.channelId();
-    if (count < 2 || this.spinning() || channelId === null) return;
+    const id: string | null = this.selectedId();
+    if (count < 2 || this.spinning() || id === null) return;
 
     const index: number = Math.floor(Math.random() * count);
 
-    this.wheel()?.spin(index);
-    void this.wheels.spin(channelId, index).catch((): void => undefined);
+    this.board()?.spin(index);
+    void this.wheels.spin(id, index).catch((): void => undefined);
   }
 
   protected async landed(spin: WheelSpin): Promise<void> {
-    const channelId: string | null = this.channelId();
+    const id: string | null = this.selectedId();
 
-    if (channelId !== null) this.results.set(this.wheelResults.record(channelId, spin.label));
+    if (id !== null) this.results.set(this.wheelResults.record(id, spin.label));
 
     const choice: WheelWinnerChoice = await WheelWinnerDialogComponent.announce(this.dialog, spin.label);
 
-    if (channelId !== null) void this.wheels.dismiss(channelId).catch((): void => undefined);
+    if (id !== null) void this.wheels.dismiss(id).catch((): void => undefined);
 
     if (choice === 'remove') this.removeOne(spin.label);
   }
 
   protected async resetResults(): Promise<void> {
+    const id: string | null = this.selectedId();
+    if (id === null) return;
+
     const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
       title: 'Clear the results?',
       message: `All ${this.results().length} recorded results will be removed.`,
@@ -239,10 +330,7 @@ export class WheelPageComponent {
 
     if (!confirmed) return;
 
-    const channelId: string | null = this.channelId();
-    if (channelId === null) return;
-
-    this.results.set(this.wheelResults.clear(channelId));
+    this.results.set(this.wheelResults.clear(id));
   }
 
   protected async clear(): Promise<void> {
@@ -270,7 +358,7 @@ export class WheelPageComponent {
     const link: HTMLAnchorElement = this.document.createElement('a');
 
     link.href = url;
-    link.download = WHEEL_FILE_NAME;
+    link.download = wheelFileName(this.name());
     link.click();
 
     view.URL.revokeObjectURL(url);
@@ -283,9 +371,9 @@ export class WheelPageComponent {
     input.value = '';
     if (!file) return;
 
-    const parsed: WheelFile = parseWheelFile(await file.text());
+    const parsed: string[] = parseWheelFile(await file.text());
 
-    if (parsed.entries.length === 0) {
+    if (parsed.length === 0) {
       this.notifications.failure('That file holds no entries.');
       return;
     }
@@ -294,52 +382,95 @@ export class WheelPageComponent {
       const confirmed: boolean = await ConfirmActionDialogComponent.confirm(this.dialog, {
         title: `Replace the wheel with ${file.name}?`,
         message: `The ${this.entries().length} entries on the wheel will be replaced by the `
-          + `${parsed.entries.length} in the file.`,
+          + `${parsed.length} in the file.`,
         confirmLabel: 'Replace',
       });
 
       if (!confirmed) return;
     }
 
-    this.entries.set(entriesFrom(parsed.entries));
-
-    if (parsed.rejected.length > 0) {
-      this.notifications.failure(
-        `Skipped ${parsed.rejected.length} line${parsed.rejected.length === 1 ? '' : 's'}: `
-        + `an entry cannot contain a comma, and a wheel holds at most ${WHEEL_MAX_SLICES}.`);
-    }
+    this.entries.set(entriesFrom(parsed));
 
     await this.persist();
-    this.notifications.success(`Imported ${parsed.entries.length} entries.`);
+    this.notifications.success(`Imported ${parsed.length} entries.`);
   }
 
-  private async load(): Promise<void> {
-    const channelId: string | null = this.channelId();
-    if (channelId === null) return;
-
-    this.results.set(this.wheelResults.list(channelId));
-
-    this.loading.set(true);
+  private async loadCount(): Promise<void> {
     try {
-      this.entries.set(entriesFrom(await this.wheels.getWheel(channelId)));
+      this.expected.set(await this.wheels.count());
     } catch {
-      this.notifications.failure('Could not load your wheel.');
-    } finally {
-      this.loading.set(false);
+      this.expected.set(null);
     }
+  }
+
+  private async loadList(): Promise<void> {
+    try {
+      const summaries: WheelSummary[] = await this.wheels.list();
+
+      this.summaries.set(summaries);
+      this.expected.set(summaries.length);
+    } catch (error: unknown) {
+      this.notifications.failure(errorMessage(error, 'Could not load your wheels.'));
+    } finally {
+      this.loaded.set(true);
+    }
+  }
+
+  private async loadWheel(id: string | null): Promise<void> {
+    if (id === null) {
+      this.reset();
+      return;
+    }
+
+    this.reset();
+    this.detailLoading.set(true);
+
+    try {
+      const wheel: Wheel = await this.wheels.getWheel(id);
+
+      this.name.set(wheel.name);
+      this.entries.set([...wheel.entries]);
+      this.results.set(this.wheelResults.list(id));
+      this.draft.set('');
+    } catch (error: unknown) {
+      this.notifications.failure(errorMessage(error, 'Could not load that wheel.'));
+      this.select(null);
+    } finally {
+      this.detailLoading.set(false);
+    }
+  }
+
+  private reset(): void {
+    this.name.set('');
+    this.entries.set([]);
+    this.draft.set('');
+    this.results.set([]);
   }
 
   private persist(): Promise<void> {
-    const channelId: string | null = this.channelId();
-    if (channelId === null) return Promise.resolve();
+    const id: string | null = this.selectedId();
+    if (id === null) return Promise.resolve();
 
-    const entries: string[] = flattenEntries(this.entries());
+    const update: WheelUpdate = { name: this.name(), entries: this.entries() };
 
     this.writing = this.writing
-      .then((): Promise<unknown> => this.wheels.saveWheel(channelId, entries))
-      .then((): void => undefined)
+      .then((): Promise<Wheel> => this.wheels.save(id, update))
+      .then((saved: Wheel): void => this.stamp(saved))
       .catch((): void => this.notifications.failure('Could not save your wheel.'));
 
     return this.writing;
+  }
+
+  private stamp(saved: Wheel): void {
+    this.summaries.update((current: WheelSummary[]): WheelSummary[] =>
+      current.map((summary: WheelSummary): WheelSummary => summary.id === saved.id
+        ? {
+          ...summary,
+          name: saved.name,
+          entryCount: saved.entries.length,
+          sliceCount: sliceCount(saved.entries),
+          updatedAt: saved.updatedAt,
+        }
+        : summary));
   }
 }

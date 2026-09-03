@@ -2,8 +2,8 @@ import { DOCUMENT } from '@angular/common';
 import { inject, Service } from '@angular/core';
 import { parseWheelResults, WheelResult } from '../data/wheel-result';
 
-function storageKey(channelId: string): string {
-  return `yeppdash.wheel-results.${channelId}`;
+function storageKey(wheelId: string): string {
+  return `yeppdash.wheel-results.${wheelId}`;
 }
 
 @Service()
@@ -11,25 +11,25 @@ export class WheelResultsService {
 
   private readonly storage: Storage | undefined = inject(DOCUMENT).defaultView?.localStorage;
 
-  list(channelId: string): WheelResult[] {
-    return parseWheelResults(this.storage?.getItem(storageKey(channelId)) ?? null);
+  list(wheelId: string): WheelResult[] {
+    return parseWheelResults(this.storage?.getItem(storageKey(wheelId)) ?? null);
   }
 
-  record(channelId: string, label: string): WheelResult[] {
-    const results: WheelResult[] = [...this.list(channelId), { label, wonAt: new Date().toISOString() }];
+  record(wheelId: string, label: string): WheelResult[] {
+    const results: WheelResult[] = [...this.list(wheelId), { label, wonAt: new Date().toISOString() }];
 
-    this.save(channelId, results);
+    this.save(wheelId, results);
     return results;
   }
 
-  clear(channelId: string): WheelResult[] {
-    this.storage?.removeItem(storageKey(channelId));
+  clear(wheelId: string): WheelResult[] {
+    this.storage?.removeItem(storageKey(wheelId));
     return [];
   }
 
-  private save(channelId: string, results: WheelResult[]): void {
+  private save(wheelId: string, results: WheelResult[]): void {
     try {
-      this.storage?.setItem(storageKey(channelId), JSON.stringify(results));
+      this.storage?.setItem(storageKey(wheelId), JSON.stringify(results));
     } catch {
       // A full quota or storage refused outright by the browser leaves the result on screen for the
       // rest of the session either way, so there is nothing further to do about to write itself.

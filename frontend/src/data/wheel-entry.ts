@@ -3,8 +3,6 @@ export interface WheelEntry {
   count: number;
 }
 
-export const WHEEL_LABEL_MAX_LENGTH: number = 500;
-
 const ENTRY_SPLIT: RegExp = /[\r\n,]+/;
 
 export function splitLabels(text: string): string[] {
@@ -20,26 +18,11 @@ export function splitEntries(text: string): string[] {
 export function entryProblem(text: string): string | null {
   if (!text.trim()) return null;
 
-  const labels: string[] = splitLabels(text);
-
-  if (labels.length === 0) return 'That is only separators — write a name to add.';
-
-  const overlong: string | undefined = labels.find(
-    (label: string): boolean => label.length > WHEEL_LABEL_MAX_LENGTH);
-
-  return overlong === undefined
-    ? null
-    : `An entry cannot be longer than ${WHEEL_LABEL_MAX_LENGTH} characters — that one is ${overlong.length}.`;
+  return splitLabels(text).length === 0 ? 'That is only separators — write a name to add.' : null;
 }
-
-export function labelProblem(label: string): string | null {
-  return label.includes(',') ? 'An entry cannot contain a comma.' : null;
-}
-
-export const WHEEL_MAX_SLICES: number = 200;
 
 export function cleanLabel(value: string): string {
-  return value.trim().replace(/\s+/g, ' ').slice(0, WHEEL_LABEL_MAX_LENGTH);
+  return value.trim().replace(/\s+/g, ' ');
 }
 
 export function sameLabel(left: string, right: string): boolean {
@@ -136,35 +119,18 @@ export function wheelSlices(entries: readonly WheelEntry[]): string[] {
   return slices;
 }
 
-// The flat list the server stores is what both the dashboard and the overlay are handed, and both
-// want slices out of it rather than the table in between.
-export function slicesFrom(labels: readonly string[]): string[] {
-  return wheelSlices(entriesFrom(labels));
-}
-
 export const WHEEL_FILE_NAME = 'lucky-wheel.txt';
 
-export interface WheelFile {
-  entries: string[];
-  rejected: string[];
+export function wheelFileName(name: string): string {
+  const slug: string = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  return slug.length === 0 ? WHEEL_FILE_NAME : `${slug}.txt`;
 }
 
 export function wheelFileContent(entries: readonly string[]): string {
   return entries.join('\n');
 }
 
-export function parseWheelFile(text: string): WheelFile {
-  const entries: string[] = [];
-  const rejected: string[] = [];
-
-  for (const label of splitEntries(text)) {
-    if (entries.length >= WHEEL_MAX_SLICES) {
-      rejected.push(label);
-      continue;
-    }
-
-    entries.push(label);
-  }
-
-  return { entries, rejected };
+export function parseWheelFile(text: string): string[] {
+  return splitEntries(text);
 }
