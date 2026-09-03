@@ -22,6 +22,12 @@
   color: var(--mat-sys-on-error-container);
 }
 
+// The message takes the row and leaves the rest to whatever is projected beside it as an action.
+.notice-text {
+  flex: 1;
+  min-width: 0;
+}
+
 // Material sizes its icons at 24px; these sit on body-small text and would tower over it.
 .notice-icon {
   flex: none;
