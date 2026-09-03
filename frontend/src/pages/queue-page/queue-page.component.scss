@@ -10,18 +10,6 @@
   margin-inline: auto;
 }
 
-.queue-page-header {
-  display: flex;
-  flex-direction: column;
-  gap: shell.$header-gap;
-  text-align: center;
-}
-
-.queue-page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
 // Closed with people still in it. Not an error — a queue is often closed on purpose while the last
 // few are worked through — but it is the state that gets left behind by accident, so it carries a
 // colour of its own instead of reading like any other closed queue.

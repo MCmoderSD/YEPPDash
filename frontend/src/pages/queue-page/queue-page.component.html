@@ -1,6 +1,6 @@
 <section class="queue-page">
-  <header class="queue-page-header">
-    <h1 class="queue-page-title">Queue</h1>
+  <header class="app-page-header">
+    <h1 class="app-page-title">Queue</h1>
     @if (loaded()) {
       <p class="queue-page-state app-fade-in" [class.queue-page-state-holding]="!queue().isOpen && rows().length > 0">
         <mat-icon class="queue-page-state-icon" aria-hidden="true">{{ queue().isOpen ? 'lock_open' : 'lock' }}</mat-icon>
@@ -81,7 +81,7 @@
 
     <div class="queue-page-panels app-fade-in">
 
-      <section class="queue-page-panel">
+      <section class="app-panel">
         <h2 class="queue-page-panel-title">The order</h2>
         <p class="queue-page-panel-hint">
           Everyone who has joined, first at the top. Drag by the handle to move somebody, or focus a
@@ -169,7 +169,7 @@
         }
       </section>
 
-      <section class="queue-page-panel">
+      <section class="app-panel">
         <h2 class="queue-page-panel-title">Who may join</h2>
 
         <mat-form-field appearance="outline" class="queue-page-field" subscriptSizing="dynamic">
@@ -200,7 +200,7 @@
     <app-queue-skeleton [rows]="queue().entries.length"/>
   }
 
-  <section class="queue-page-panel">
+  <section class="app-panel">
     <h2 class="queue-page-panel-title">Chat commands</h2>
     <p class="queue-page-panel-hint">
       Chat and this page work on the same queue, so anything either side does shows up on the other
