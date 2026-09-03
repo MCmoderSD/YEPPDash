@@ -1,6 +1,7 @@
 using Dapper;
 using MySqlConnector;
 using YEPPDash.Api.Data.Queue;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -178,7 +179,7 @@ public sealed class QueueRepository(MySqlConnection connection)
                 IsOpen,
                 ToRequirement(Requirement),
                 entries,
-                DateTime.SpecifyKind(UpdatedAt, DateTimeKind.Utc));
+                UpdatedAt.AsUtc());
         }
     }
 }

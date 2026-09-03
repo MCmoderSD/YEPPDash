@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using MySqlConnector;
 using YEPPDash.Api.Data.Quote;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -267,7 +268,7 @@ public sealed class QuoteRepository(MySqlConnection connection)
         return new Quote(
             row.Id,
             row.Quote,
-            new DateTimeOffset(DateTime.SpecifyKind(row.Timestamp, DateTimeKind.Utc)));
+            new DateTimeOffset(row.Timestamp.AsUtc()));
     }
 
     private sealed class QuoteRow

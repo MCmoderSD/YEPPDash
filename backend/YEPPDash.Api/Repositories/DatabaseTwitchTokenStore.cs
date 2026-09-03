@@ -1,6 +1,7 @@
 using Dapper;
 using YEPPDash.Api.Auth;
 using YEPPDash.Api.Data.Twitch;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -36,7 +37,7 @@ public sealed class DatabaseTwitchTokenStore(YeppDashConnectionFactory connectio
             cipher.Unprotect(row.AccessToken),
             cipher.Unprotect(row.RefreshToken),
             row.Scopes.Split(' ', StringSplitOptions.RemoveEmptyEntries),
-            new DateTimeOffset(DateTime.SpecifyKind(row.ExpiresAt, DateTimeKind.Utc)));
+            new DateTimeOffset(row.ExpiresAt.AsUtc()));
     }
     
     public async Task<IReadOnlyList<string>> GetUserIdsAsync(CancellationToken cancellationToken)

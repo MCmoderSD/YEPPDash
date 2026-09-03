@@ -3,6 +3,7 @@ using Dapper;
 using MCmoderSD.BdsmTestApi.Enums;
 using MySqlConnector;
 using YEPPDash.Api.Data.Bdsm;
+using YEPPDash.Api.Helpers;
 
 namespace YEPPDash.Api.Repositories;
 
@@ -71,7 +72,7 @@ public sealed class BdsmRepository(MySqlConnection connection)
             traits[kink] = Convert.ToDouble(row[BdsmTraits.Column(kink)], CultureInfo.InvariantCulture);
         }
 
-        var timestamp = DateTime.SpecifyKind(Convert.ToDateTime(row["timestamp"], CultureInfo.InvariantCulture), DateTimeKind.Utc);
+        var timestamp = Convert.ToDateTime(row["timestamp"], CultureInfo.InvariantCulture).AsUtc();
 
         return new BdsmResult(
             (string) row["id"],
