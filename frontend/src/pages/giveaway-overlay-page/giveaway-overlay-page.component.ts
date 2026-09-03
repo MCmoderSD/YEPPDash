@@ -1,17 +1,16 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, EffectCleanupRegisterFn, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
+import { OverlayFrameComponent } from '../../components/overlay-frame-component/overlay-frame.component';
 import { WheelComponent, WheelSpin } from '../../components/wheel-component/wheel.component';
 import { GiveawayService } from '../../services/giveaway.service';
-import { GiveawayListener, GiveawayOverlayMessage, GiveawaySyncService } from '../../services/giveaway-sync.service';
+import { GiveawayOverlayMessage, GiveawaySyncService } from '../../services/giveaway-sync.service';
+import { StreamListener } from '../../services/sse.service';
 import { GiveawayOverlaySlice, GiveawayOverlayState } from '../../data/giveaway';
-
-const TRANSPARENT: string = 'app-transparent';
 
 @Component({
   selector: 'app-giveaway-overlay-page',
   templateUrl: './giveaway-overlay-page.component.html',
   styleUrl: './giveaway-overlay-page.component.scss',
-  imports: [WheelComponent],
+  imports: [OverlayFrameComponent, WheelComponent],
 })
 export class GiveawayOverlayPageComponent {
 
@@ -19,12 +18,11 @@ export class GiveawayOverlayPageComponent {
 
   private readonly giveaways: GiveawayService = inject(GiveawayService);
   private readonly sync: GiveawaySyncService = inject(GiveawaySyncService);
-  private readonly document: Document = inject(DOCUMENT);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
   private readonly wheel: Signal<WheelComponent | undefined> = viewChild(WheelComponent);
 
-  private listener: GiveawayListener | null = null;
+  private listener: StreamListener | null = null;
 
   protected readonly slices: WritableSignal<string[]> = signal<string[]>([]);
   protected readonly weights: WritableSignal<number[]> = signal<number[]>([]);
@@ -32,16 +30,19 @@ export class GiveawayOverlayPageComponent {
   protected readonly winner: WritableSignal<string | null> = signal<string | null>(null);
   protected readonly loaded: WritableSignal<boolean> = signal(false);
 
-  constructor() {
-    const root: HTMLElement = this.document.documentElement;
-    root.classList.add(TRANSPARENT);
-    this.destroyRef.onDestroy((): void => root.classList.remove(TRANSPARENT));
+  protected readonly hint: Signal<string | null> = computed((): string | null => {
+    if (this.slices().length > 0) return null;
+    if (!this.giveaway()) return 'This link names no giveaway. Copy the overlay link again from the Giveaways page.';
 
+    return this.loaded() ? 'Nothing is being drawn right now.' : 'Loading…';
+  });
+
+  constructor() {
     effect((onCleanup: EffectCleanupRegisterFn): void => {
       const giveawayId: string | undefined = this.giveaway();
       if (!giveawayId) return;
 
-      const listener: GiveawayListener = this.sync.listenOverlay(
+      const listener: StreamListener = this.sync.listenOverlay(
         giveawayId, (message: GiveawayOverlayMessage): void => this.receive(message),
         (): void => void this.refresh(giveawayId)
       );
