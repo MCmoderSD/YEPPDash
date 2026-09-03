@@ -16,13 +16,6 @@
   width: 100%;
 }
 
-// Named so the form below can be sized against what is on screen rather than against the table,
-// which on a narrow viewport is the wider of the two. The frame itself never scrolls — the box
-// inside it does — so its inline size is exactly the width that is visible.
-.command-table-frame {
-  container-type: inline-size;
-}
-
 .command-table-row {
   cursor: pointer;
 
