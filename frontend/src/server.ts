@@ -291,7 +291,7 @@ const FAILED = `<!doctype html>
  * page would tell an attacker about the inside of the server and tell everyone else nothing.
  */
 app.use((error: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(`Failed to render ${req.originalUrl}`, error);
+  console.error('Failed to render', req.originalUrl, error);
 
   // Once the response has started there is no page left to replace it with.
   if (res.headersSent) return next(error);
