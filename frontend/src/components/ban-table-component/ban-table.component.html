@@ -1,16 +1,5 @@
 <div class="ban-table">
-  <mat-form-field appearance="outline" class="ban-table-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name, user ID or reason"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search placeholder="Name, user ID or reason" (query)="filter($event)"/>
 
   <app-table-frame>
     <table
@@ -43,7 +32,7 @@
         <th mat-header-cell *matHeaderCellDef scope="col">
           <span class="ban-table-hidden-label">Revoke</span>
         </th>
-        <td mat-cell *matCellDef="let ban" class="ban-table-actions">
+        <td mat-cell *matCellDef="let ban" class="app-table-actions">
           <button
             mat-icon-button
             type="button"

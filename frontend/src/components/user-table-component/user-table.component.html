@@ -1,17 +1,6 @@
 <div class="user-table">
 
-  <mat-form-field appearance="outline" class="user-table-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name or user ID"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search placeholder="Name or user ID" (query)="filter($event)"/>
 
   <app-table-frame>
     <table mat-table matSort [dataSource]="dataSource" class="app-data-table">
@@ -32,7 +21,7 @@
         <th mat-header-cell *matHeaderCellDef scope="col">
           <span class="user-table-hidden-label">Remove</span>
         </th>
-        <td mat-cell *matCellDef="let user" class="user-table-actions">
+        <td mat-cell *matCellDef="let user" class="app-table-actions">
           <button
             mat-icon-button
             type="button"

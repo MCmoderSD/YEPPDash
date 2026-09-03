@@ -1,9 +1,7 @@
 import { Component, computed, effect, inject, input, InputSignal, output, OutputEmitterRef, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { TableFrameComponent } from '../table-frame-component/table-frame.component';
@@ -11,6 +9,8 @@ import { UserIdentityComponent } from '../user-identity-component/user-identity.
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
 import { TwitchUser } from '../../data/twitch-user';
 import { ghostRows } from '../../data/skeleton';
+import { TableSearchComponent } from '../table-search-component/table-search.component';
+import { filterRows } from '../../services/data-source';
 
 export type UserTableMode = 'user' | 'vip' | 'editor' | 'moderator';
 
@@ -25,7 +25,7 @@ const ROLE_LABELS: Record<UserTableMode, string> = {
   selector: 'app-user-table',
   templateUrl: './user-table.component.html',
   styleUrl: './user-table.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
+  imports: [TableSearchComponent, MatButtonModule, MatIconModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
 })
 export class UserTableComponent {
 
@@ -88,7 +88,7 @@ export class UserTableComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
+    filterRows(this.dataSource, value);
   }
 
   protected showDetails(user: TwitchUser): void {

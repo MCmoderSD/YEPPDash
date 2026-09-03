@@ -8,10 +8,6 @@
   max-width: 36rem;
 }
 
-.user-table-search {
-  width: 100%;
-}
-
 .user-table-row {
   cursor: pointer;
 
@@ -27,12 +23,6 @@
   width: 7rem;
   color: var(--mat-sys-on-surface-variant);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.user-table-actions {
-  width: 3.5rem;
-  text-align: end;
   white-space: nowrap;
 }
 

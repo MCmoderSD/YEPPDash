@@ -2,18 +2,17 @@ import { Component, computed, inject, input, InputSignal, output, OutputEmitterR
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { TableFrameComponent } from '../table-frame-component/table-frame.component';
 import { UserIdentityComponent } from '../user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../user-info-dialog-component/user-info-dialog.component';
-import { wireDataSource } from '../../services/data-source';
+import { filterRows, wireDataSource } from '../../services/data-source';
 import { BannedUser } from '../../data/banned-user';
 import { ghostRows } from '../../data/skeleton';
+import { TableSearchComponent } from '../table-search-component/table-search.component';
 
 export type BanTableMode = 'timeout' | 'ban';
 
@@ -23,7 +22,7 @@ const COLUMNS: readonly string[] = ['user', 'when', 'reason', 'revoke'];
   selector: 'app-ban-table',
   templateUrl: './ban-table.component.html',
   styleUrl: './ban-table.component.scss',
-  imports: [DatePipe, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
+  imports: [TableSearchComponent, DatePipe, MatButtonModule, MatIconModule, MatPaginatorModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent],
 })
 export class BanTableComponent {
 
@@ -83,8 +82,7 @@ export class BanTableComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
-    this.dataSource.paginator?.firstPage();
+    filterRows(this.dataSource, value);
   }
 
   protected showDetails(ban: BannedUser): void {
