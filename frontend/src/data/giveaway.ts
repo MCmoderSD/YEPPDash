@@ -28,12 +28,6 @@ export interface GiveawaySummary {
 
 export const NEW_GIVEAWAY: string = 'new';
 
-export const DEFAULT_REWARD_IMAGE: string = 'https://static-cdn.jtvnw.net/custom-reward-images/default-2.png';
-
-export function rewardImage(reward: CustomReward | null): string {
-  return reward?.image?.url_2x ?? reward?.defaultImage?.url_2x ?? DEFAULT_REWARD_IMAGE;
-}
-
 export interface GiveawayParticipant {
   userId: string;
   userName: string;

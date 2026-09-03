@@ -70,53 +70,16 @@
               </p>
             }
 
-            <mat-form-field appearance="outline" class="giveaway-field">
-              <mat-label>Name</mat-label>
-              <input
-                matInput
-                #titleField
-                type="text"
-                autocomplete="off"
-                [disabled]="!editable()"
-                [attr.maxlength]="maxTitleLength"
-                [value]="title()"
-                (input)="title.set(titleField.value)"
-              />
-              <mat-hint align="end">{{ maxTitleLength - title().length }} characters left</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="giveaway-field">
-              <mat-label>Cost</mat-label>
-              <input
-                matInput
-                #costField
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                [disabled]="!editable()"
-                [attr.aria-invalid]="cost() < 1"
-                [value]="costText()"
-                (input)="setCost(costField.value)"
-              />
-              <app-number-stepper matSuffix [value]="cost()" [min]="1" [step]="100" (valueChange)="cost.set($event)"/>
-              <mat-hint>Channel points per entry</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="giveaway-field">
-              <mat-label>Description (optional)</mat-label>
-              <input
-                matInput
-                #descriptionField
-                type="text"
-                autocomplete="off"
-                [disabled]="!editable()"
-                [attr.maxlength]="maxDescriptionLength"
-                [value]="description()"
-                (input)="description.set(descriptionField.value)"
-              />
-              <mat-hint>Shown in the redeem dialog on Twitch</mat-hint>
-              <mat-hint align="end">{{ descriptionLeft() }} left</mat-hint>
-            </mat-form-field>
+            <app-reward-fields
+              [disabled]="!editable()"
+              costHint="Channel points per entry"
+              [title]="title()"
+              (titleChange)="title.set($event)"
+              [cost]="cost()"
+              (costChange)="cost.set($event)"
+              [description]="description()"
+              (descriptionChange)="description.set($event)"
+            />
 
             <h3 class="giveaway-heading">Cooldown &amp; limits</h3>
             <p class="giveaway-hint">Leave a field empty to switch that limit off.</p>
@@ -143,7 +106,7 @@
             <app-reward-preview
               [image]="tileImage()"
               [cost]="cost() || 0"
-              [color]="colorInvalid() ? '#9147FF' : color()"
+              [color]="colorInvalid() ? defaultColor : color()"
               [name]="title()"
             />
 
@@ -256,189 +219,14 @@
             </div>
 
             <div class="giveaway-tables">
-              <section class="giveaway-table-block">
-                <h3 class="giveaway-side-heading">Entries ({{ participants().length }})</h3>
+              <app-giveaway-entries-table
+                [participants]="participants()"
+                [status]="status()"
+                [busy]="busy()"
+                (removed)="removeParticipant($event)"
+              />
 
-                <div class="giveaway-table-wrap">
-                  <div class="giveaway-scroll" #entryScroll>
-                    <table mat-table matSort #participantSort="matSort" [dataSource]="participantSource" class="giveaway-table">
-
-                      <ng-container matColumnDef="user">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
-                        <td mat-cell *matCellDef="let entry">
-                          <div class="giveaway-identity">
-                            @if (entry.user) {
-                              <img
-                                class="giveaway-avatar"
-                                [ngSrc]="entry.user.profileImageUrl"
-                                [width]=32
-                                [height]=32
-                                loading="eager"
-                                alt=""
-                              />
-
-                              <app-user-badges [user]="entry.user"/>
-
-                              <button
-                                type="button"
-                                class="giveaway-name"
-                                [attr.aria-label]="'Details for ' + label(entry)"
-                                (click)="showDetails(entry.user, $event)"
-                              >
-                                <span class="giveaway-display-name" [style.--chat-color]="entry.user.color">
-                                  {{ label(entry) }}
-                                </span>
-                              </button>
-                            } @else {
-                              <span class="giveaway-avatar giveaway-avatar-blank" aria-hidden="true"></span>
-                              <span class="giveaway-display-name">{{ label(entry) }}</span>
-                            }
-                          </div>
-                        </td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="roles">
-                        <th mat-header-cell *matHeaderCellDef scope="col">Counted as</th>
-                        <td mat-cell *matCellDef="let entry">
-                          <span class="giveaway-roles">
-                            @if (entry.isFollower) { <span class="giveaway-role-tag">Follower</span> }
-                            @if (tier(entry); as tierName) { <span class="giveaway-role-tag">{{ tierName }}</span> }
-                            @if (entry.isVip) { <span class="giveaway-role-tag">VIP</span> }
-                            @if (entry.isModerator) { <span class="giveaway-role-tag">Moderator</span> }
-                            @if (!entry.isFollower && entry.subTier === 'None' && !entry.isVip && !entry.isModerator) {
-                              <span class="giveaway-role-none">—</span>
-                            }
-                          </span>
-                        </td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="multiplier">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Weight</th>
-                        <td mat-cell *matCellDef="let entry" class="giveaway-weight">
-                          <span class="giveaway-weight-value">×{{ entry.multiplier | number:'1.0-2' }}</span>
-                          <span class="giveaway-weight-odds">{{ odds(entry) | percent:'1.0-1' }}</span>
-                        </td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="entered">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Entered</th>
-                        <td mat-cell *matCellDef="let entry" class="giveaway-when">
-                          {{ entry.enteredAt | localeDate:'medium':'short' }}
-                        </td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef scope="col">
-                          <span class="app-visually-hidden">Actions</span>
-                        </th>
-                        <td mat-cell *matCellDef="let entry" class="giveaway-row-actions">
-                          <button
-                            mat-icon-button
-                            type="button"
-                            [disabled]="busy()"
-                            [attr.aria-label]="'Take ' + label(entry) + ' off the wheel'"
-                            matTooltip="Take off the wheel"
-                            (click)="removeParticipant(entry)"
-                          >
-                            <mat-icon aria-hidden="true">person_remove</mat-icon>
-                          </button>
-                        </td>
-                      </ng-container>
-
-                      <tr mat-header-row *matHeaderRowDef="participantColumns"></tr>
-                      <tr mat-row *matRowDef="let row; columns: participantColumns"></tr>
-
-                      <tr class="giveaway-empty-row" *matNoDataRow>
-                        <td class="giveaway-empty" [attr.colspan]="participantColumns.length">
-                          @if (status() === 'Open') {
-                            Nobody has entered yet. The reward is live in your channel.
-                          } @else {
-                            Nobody has entered yet.
-                          }
-                        </td>
-                      </tr>
-                    </table>
-                  </div>
-
-                  <app-scroll-bar [target]="entryScroll"/>
-                </div>
-              </section>
-
-              <section class="giveaway-table-block">
-                <h3 class="giveaway-side-heading">Winners ({{ winners().length }})</h3>
-
-                <div class="giveaway-table-wrap">
-                  <div class="giveaway-scroll" #winnerScroll>
-                    <table mat-table matSort #winnerSort="matSort" matSortActive="order" matSortDirection="asc"
-                           [dataSource]="winnerSource" class="giveaway-table">
-
-                      <ng-container matColumnDef="order">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">#</th>
-                        <td mat-cell *matCellDef="let winner" class="giveaway-order">{{ winner.drawOrder }}</td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="user">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Name</th>
-                        <td mat-cell *matCellDef="let winner">
-                          <div class="giveaway-identity">
-                            @if (winner.user) {
-                              <img
-                                class="giveaway-avatar"
-                                [ngSrc]="winner.user.profileImageUrl"
-                                [width]=32
-                                [height]=32
-                                loading="eager"
-                                alt=""
-                              />
-
-                              <app-user-badges [user]="winner.user"/>
-
-                              <button
-                                type="button"
-                                class="giveaway-name"
-                                [attr.aria-label]="'Details for ' + winnerName(winner)"
-                                (click)="showDetails(winner.user, $event)"
-                              >
-                                <span class="giveaway-display-name" [style.--chat-color]="winner.user.color">
-                                  {{ winnerName(winner) }}
-                                </span>
-                              </button>
-                            } @else {
-                              <span class="giveaway-avatar giveaway-avatar-blank" aria-hidden="true"></span>
-                              <span class="giveaway-display-name">{{ winnerName(winner) }}</span>
-                            }
-                          </div>
-                        </td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="multiplier">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Weight</th>
-                        <td mat-cell *matCellDef="let winner" class="giveaway-weight">
-                          <span class="giveaway-weight-value">×{{ winner.multiplier | number:'1.0-2' }}</span>
-                        </td>
-                      </ng-container>
-
-                      <ng-container matColumnDef="won">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Drawn</th>
-                        <td mat-cell *matCellDef="let winner" class="giveaway-when">
-                          {{ winner.wonAt | localeDate:'medium':'short' }}
-                        </td>
-                      </ng-container>
-
-                      <tr mat-header-row *matHeaderRowDef="winnerColumns"></tr>
-                      <tr mat-row *matRowDef="let row; columns: winnerColumns"></tr>
-
-                      <tr class="giveaway-empty-row" *matNoDataRow>
-                        <td class="giveaway-empty" [attr.colspan]="winnerColumns.length">
-                          Nobody has been drawn yet.
-                        </td>
-                      </tr>
-                    </table>
-                  </div>
-
-                  <app-scroll-bar [target]="winnerScroll"/>
-                </div>
-              </section>
+              <app-giveaway-winners-table [winners]="winners()"/>
             </div>
           </div>
         </mat-tab>
