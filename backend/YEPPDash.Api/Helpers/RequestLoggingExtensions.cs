@@ -38,7 +38,7 @@ public static class RequestLoggingExtensions
                 logger.Log(
                     level,
                     "{Method} {Path} -> {StatusCode} in {Elapsed:0.0}ms",
-                    context.Request.Method,
+                    LogSafe.OneLine(context.Request.Method),
                     LogSafe.OneLine(context.Request.Path.Value),
                     status,
                     Stopwatch.GetElapsedTime(started).TotalMilliseconds);
