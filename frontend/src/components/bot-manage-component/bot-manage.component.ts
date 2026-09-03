@@ -3,8 +3,8 @@ import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { BusyBarComponent } from '../busy-bar-component/busy-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { BotService } from '../../services/bot.service';
 import { TwitchService } from '../../services/twitch.service';
@@ -19,7 +19,7 @@ import { ShoutoutSettings } from '../../data/shoutout';
   selector: 'app-bot-manage',
   templateUrl: './bot-manage.component.html',
   styleUrl: './bot-manage.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatProgressBarModule, MatSlideToggleModule],
+  imports: [BusyBarComponent, NgOptimizedImage, MatButtonModule, MatCardModule, MatIconModule, MatSlideToggleModule],
 })
 export class BotManageComponent {
 

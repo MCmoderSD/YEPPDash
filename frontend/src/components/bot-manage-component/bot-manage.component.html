@@ -1,11 +1,6 @@
 <mat-card appearance="outlined" class="bot-manage">
 
-  <mat-progress-bar
-    class="bot-manage-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!working()"
-    [style.visibility]="working() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="working()"/>
 
   <mat-card-content class="bot-manage-body">
 
