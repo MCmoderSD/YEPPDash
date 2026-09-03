@@ -10,7 +10,7 @@ namespace YEPPDash.Api.Controllers;
 [Route("bot")]
 public sealed class BotController(YeppBotClient bot, ILogger<BotController> logger) : ControllerBase
 {
-    [HttpPost("{userId}/join")]
+    [HttpPost("{userId:int}/join")]
     public async Task<IActionResult> Join(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -18,7 +18,7 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
         return Answer(await bot.JoinChannelAsync(userId, cancellationToken));
     }
 
-    [HttpPost("{userId}/leave")]
+    [HttpPost("{userId:int}/leave")]
     public async Task<IActionResult> Leave(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;

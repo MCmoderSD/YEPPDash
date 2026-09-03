@@ -17,7 +17,7 @@ public sealed class SubathonTimerController(
     ILogger<SubathonTimerController> logger) : ControllerBase
 {
     [AllowAnonymous]
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:int}")]
     public async Task<IActionResult> GetTimer(string userId, CancellationToken cancellationToken)
     {
         if (!int.TryParse(userId, out _)) return BadRequest("That is not a Twitch user ID.");
@@ -28,7 +28,7 @@ public sealed class SubathonTimerController(
     }
 
     [AllowAnonymous]
-    [HttpGet("{userId}/stream")]
+    [HttpGet("{userId:int}/stream")]
     public async Task Stream(string userId, CancellationToken cancellationToken)
     {
         if (!int.TryParse(userId, out var channelId))
@@ -45,43 +45,43 @@ public sealed class SubathonTimerController(
         logger.LogDebug("An overlay stopped watching the timer of channel {ChannelId}", channelId);
     }
 
-    [HttpPost("{userId}/start")]
+    [HttpPost("{userId:int}/start")]
     public Task<IActionResult> Start(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.StartAsync(userId, token), cancellationToken);
     }
 
-    [HttpPost("{userId}/pause")]
+    [HttpPost("{userId:int}/pause")]
     public Task<IActionResult> Pause(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.PauseAsync(userId, token), cancellationToken);
     }
 
-    [HttpPost("{userId}/reset")]
+    [HttpPost("{userId:int}/reset")]
     public Task<IActionResult> Reset(string userId, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.ResetAsync(userId, token), cancellationToken);
     }
 
-    [HttpPost("{userId}/adjust")]
+    [HttpPost("{userId:int}/adjust")]
     public Task<IActionResult> Adjust(string userId, [FromBody] SubathonTimerSecondsRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.AdjustAsync(userId, request.Seconds, token), cancellationToken);
     }
 
-    [HttpPost("{userId}/set")]
+    [HttpPost("{userId:int}/set")]
     public Task<IActionResult> Set(string userId, [FromBody] SubathonTimerSecondsRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.SetAsync(userId, request.Seconds, token), cancellationToken);
     }
 
-    [HttpPut("{userId}/config")]
+    [HttpPut("{userId:int}/config")]
     public Task<IActionResult> SaveConfig(string userId, [FromBody] SubathonTimerConfigRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.SaveConfigAsync(userId, request.StartSeconds, token), cancellationToken);
     }
 
-    [HttpPut("{userId}/style")]
+    [HttpPut("{userId:int}/style")]
     public Task<IActionResult> SaveStyle(string userId, [FromBody] SubathonTimerStyleRequest request, CancellationToken cancellationToken)
     {
         return CommandAsync(userId, token => timers.SaveStyleAsync(userId, request.Style, token), cancellationToken);

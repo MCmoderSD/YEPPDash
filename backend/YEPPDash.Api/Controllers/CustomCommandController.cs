@@ -13,7 +13,7 @@ namespace YEPPDash.Api.Controllers;
 public sealed class CustomCommandController(
     CustomCommandService commands, ILogger<CustomCommandController> logger) : ControllerBase
 {
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:int}")]
     public async Task<IActionResult> GetCommands(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -22,7 +22,7 @@ public sealed class CustomCommandController(
         return Ok(found.Select(CustomCommandResponse.From));
     }
 
-    [HttpPost("{userId}")]
+    [HttpPost("{userId:int}")]
     public async Task<IActionResult> AddCommand(
         string userId, [FromBody] CustomCommandRequest request, CancellationToken cancellationToken)
     {
@@ -49,7 +49,7 @@ public sealed class CustomCommandController(
         }
     }
 
-    [HttpPatch("{userId}/{name}")]
+    [HttpPatch("{userId:int}/{name}")]
     public async Task<IActionResult> UpdateCommand(
         string userId, string name, [FromBody] CustomCommandRequest request, CancellationToken cancellationToken)
     {
@@ -76,7 +76,7 @@ public sealed class CustomCommandController(
         }
     }
 
-    [HttpPatch("{userId}/{name}/active")]
+    [HttpPatch("{userId:int}/{name}/active")]
     public async Task<IActionResult> SetActive(
         string userId,
         string name,
@@ -89,7 +89,7 @@ public sealed class CustomCommandController(
         return command is null ? NotFound() : Ok(CustomCommandResponse.From(command));
     }
 
-    [HttpDelete("{userId}/{name}")]
+    [HttpDelete("{userId:int}/{name}")]
     public async Task<IActionResult> DeleteCommand(string userId, string name, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;

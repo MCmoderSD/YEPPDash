@@ -15,7 +15,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
     private const int MaxUploadBytes = 5 * 1024 * 1024;
 
 
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:int}")]
     public async Task<IActionResult> GetQuotes(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -24,7 +24,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return Ok(found.Select(QuoteResponse.From));
     }
 
-    [HttpPost("{userId}")]
+    [HttpPost("{userId:int}")]
     public async Task<IActionResult> AddQuote(string userId, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -42,7 +42,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         }
     }
 
-    [HttpGet("{userId}/export")]
+    [HttpGet("{userId:int}/export")]
     public async Task<IActionResult> ExportQuotes(string userId, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -53,7 +53,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return File(workbook, QuoteWorkbook.ContentType, name);
     }
 
-    [HttpPost("{userId}/import")]
+    [HttpPost("{userId:int}/import")]
     [RequestSizeLimit(MaxUploadBytes)]
     public async Task<IActionResult> ImportQuotes(string userId, IFormFile? file, CancellationToken cancellationToken)
     {
@@ -79,7 +79,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         }
     }
 
-    [HttpPatch("{userId}/{id:int}")]
+    [HttpPatch("{userId:int}/{id:int}")]
     public async Task<IActionResult> UpdateQuote(string userId, int id, [FromBody] QuoteTextRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -89,7 +89,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return quote is null ? NotFound() : Ok(QuoteResponse.From(quote));
     }
 
-    [HttpDelete("{userId}/{id:int}")]
+    [HttpDelete("{userId:int}/{id:int}")]
     public async Task<IActionResult> DeleteQuote(string userId, int id, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
@@ -97,7 +97,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         return await quotes.DeleteAsync(userId, id, cancellationToken) ? NoContent() : NotFound();
     }
 
-    [HttpPatch("{userId}/{id:int}/position")]
+    [HttpPatch("{userId:int}/{id:int}/position")]
     public async Task<IActionResult> MoveQuote(string userId, int id, [FromBody] QuotePositionRequest request, CancellationToken cancellationToken)
     {
         if (Denied(userId) is { } denied) return denied;
