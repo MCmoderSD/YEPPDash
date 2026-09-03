@@ -50,7 +50,7 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="community-page-scroll">
+  <app-table-frame>
     <table
       mat-table
       matSort
@@ -58,35 +58,13 @@
       matSortDirection="desc"
       matSortDisableClear="true"
       [dataSource]="dataSource"
-      class="community-page-grid"
+      class="app-data-table"
     >
 
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Follower</th>
         <td mat-cell *matCellDef="let entry">
-          <div class="community-page-identity">
-            <img
-              class="community-page-avatar"
-              [ngSrc]="entry.user.profileImageUrl"
-              [width]=32
-              [height]=32
-              loading="eager"
-              alt=""
-            />
-
-            <app-user-badges [user]="entry.user"/>
-
-            <button
-              type="button"
-              class="community-page-user"
-              [attr.aria-label]="'Details for ' + entry.user.displayName"
-              (click)="showDetails(entry, $event)"
-            >
-              <span class="community-page-name" [style.--chat-color]="entry.user.color">
-                {{ entry.user.displayName }}
-              </span>
-            </button>
-          </div>
+          <app-user-identity [user]="entry.user"/>
         </td>
       </ng-container>
 
@@ -125,7 +103,7 @@
           }
         } @else {
           <tr class="community-page-empty-row" role="row">
-            <td class="community-page-empty" [attr.colspan]="columns.length">
+            <td class="app-table-empty" [attr.colspan]="columns.length">
               @if (unreachable()) {
                 Could not load your community. Please try again.
               } @else if (query()) {
@@ -138,7 +116,7 @@
         }
       </ng-container>
     </table>
-  </div>
+  </app-table-frame>
 
   <mat-paginator
     class="community-page-paginator"
@@ -147,6 +125,4 @@
     showFirstLastButtons="true"
     aria-label="Select a page of followers"
   />
-
-  <app-scroll-bar [target]="scroll"/>
 </section>
