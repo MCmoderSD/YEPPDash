@@ -110,7 +110,7 @@ public sealed class SubathonTimerController(
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the timer of channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the timer of channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

@@ -37,7 +37,7 @@ public sealed class AuthController(
 
         if (error is not null)
         {
-            logger.LogInformation("Login via Twitch aborted: {Error} ({Description})", error, errorDescription);
+            logger.LogInformation("Login via Twitch aborted: {Error} ({Description})", LogSafe.OneLine(error), LogSafe.OneLine(errorDescription));
             return RedirectToFrontend(error);
         }
 
@@ -62,7 +62,7 @@ public sealed class AuthController(
         }
         catch (TwitchOAuthException exception)
         {
-            logger.LogWarning(exception, "Login via Twitch failed ({StatusCode}): {Body}", exception.StatusCode, exception.ResponseBody);
+            logger.LogWarning(exception, "Login via Twitch failed ({StatusCode}): {Body}", exception.StatusCode, LogSafe.OneLine(exception.ResponseBody));
             return RedirectToFrontend("twitch_error");
         }
 

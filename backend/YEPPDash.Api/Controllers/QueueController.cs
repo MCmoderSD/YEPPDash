@@ -36,7 +36,7 @@ public sealed class QueueController(
 
         if (!string.Equals(User.GetTwitchId(), userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to watch the queue of the channel {UserId}", User.GetTwitchId(), userId);
+            logger.LogWarning("User {TwitchId} tried to watch the queue of the channel {UserId}", User.GetTwitchId(), LogSafe.OneLine(userId));
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return;
         }
@@ -112,7 +112,7 @@ public sealed class QueueController(
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the queue of the channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the queue of the channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

@@ -34,7 +34,7 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
 
         if (status is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
         {
-            logger.LogError("YEPPBot rejected this dashboard's API key: {Message}", result.Message);
+            logger.LogError("YEPPBot rejected this dashboard's API key: {Message}", LogSafe.OneLine(result.Message));
             status = StatusCodes.Status502BadGateway;
         }
 
@@ -48,7 +48,7 @@ public sealed class BotController(YeppBotClient bot, ILogger<BotController> logg
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to move the bot in channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to move the bot in channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

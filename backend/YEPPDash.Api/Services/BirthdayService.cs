@@ -2,6 +2,7 @@ using System.Globalization;
 using MySqlConnector;
 using YEPPDash.Api.Data.Birthday;
 using YEPPDash.Api.Exceptions.Birthday;
+using YEPPDash.Api.Helpers;
 using YEPPDash.Api.Repositories;
 
 namespace YEPPDash.Api.Services;
@@ -55,7 +56,7 @@ public sealed class BirthdayService(
 
         logger.LogDebug(
             "{Matched} of {Stored} stored birthdays belong to channel {BroadcasterId} or its {Followers} followers",
-            matched.Count, birthdays.Count, broadcasterId, followers.Count);
+            matched.Count, birthdays.Count, LogSafe.OneLine(broadcasterId), followers.Count);
 
         return matched;
     }

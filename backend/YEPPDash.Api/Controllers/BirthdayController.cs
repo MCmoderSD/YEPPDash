@@ -25,7 +25,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            logger.LogWarning(exception, "Cannot count the follower birthdays of channel {UserId}", userId);
+            logger.LogWarning(exception, "Cannot count the follower birthdays of channel {UserId}", LogSafe.OneLine(userId));
             return StatusCode(StatusCodes.Status502BadGateway);
         }
     }
@@ -41,7 +41,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
         }
         catch (Exception exception) when (exception is TwitchOAuthException or HttpRequestException)
         {
-            logger.LogWarning(exception, "Cannot read the followers of channel {UserId}", userId);
+            logger.LogWarning(exception, "Cannot read the followers of channel {UserId}", LogSafe.OneLine(userId));
             return StatusCode(StatusCodes.Status502BadGateway);
         }
     }
@@ -70,7 +70,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
         }
         catch (UnknownBirthdayUserException exception)
         {
-            logger.LogWarning(exception, "Cannot store a birthday for user {UserId}", userId);
+            logger.LogWarning(exception, "Cannot store a birthday for user {UserId}", LogSafe.OneLine(userId));
             return Conflict("YEPPBot does not know this user yet, so it cannot store a birthday.");
         }
     }
@@ -96,7 +96,7 @@ public sealed class BirthdayController(BirthdayService birthdays, ILogger<Birthd
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the birthdays of user {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the birthdays of user {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

@@ -39,12 +39,12 @@ public sealed class CustomCommandController(
         }
         catch (DuplicateCustomCommandException exception)
         {
-            logger.LogInformation("Rejected command '{Trigger}' for {UserId}: already taken", exception.Trigger, userId);
+            logger.LogInformation("Rejected command '{Trigger}' for {UserId}: already taken", LogSafe.OneLine(exception.Trigger), LogSafe.OneLine(userId));
             return Conflict(exception.Message);
         }
         catch (UnknownCustomCommandChannelException exception)
         {
-            logger.LogWarning(exception, "Cannot add a command for channel {UserId}", userId);
+            logger.LogWarning(exception, "Cannot add a command for channel {UserId}", LogSafe.OneLine(userId));
             return Conflict("YEPPBot does not know this channel yet, so it cannot store commands for it.");
         }
     }
@@ -66,12 +66,12 @@ public sealed class CustomCommandController(
         }
         catch (DuplicateCustomCommandException exception)
         {
-            logger.LogInformation("Rejected command '{Trigger}' for {UserId}: already taken", exception.Trigger, userId);
+            logger.LogInformation("Rejected command '{Trigger}' for {UserId}: already taken", LogSafe.OneLine(exception.Trigger), LogSafe.OneLine(userId));
             return Conflict(exception.Message);
         }
         catch (UnknownCustomCommandChannelException exception)
         {
-            logger.LogWarning(exception, "Cannot update a command for channel {UserId}", userId);
+            logger.LogWarning(exception, "Cannot update a command for channel {UserId}", LogSafe.OneLine(userId));
             return Conflict("YEPPBot does not know this channel yet, so it cannot store commands for it.");
         }
     }
@@ -104,7 +104,7 @@ public sealed class CustomCommandController(
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the commands of channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the commands of channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 

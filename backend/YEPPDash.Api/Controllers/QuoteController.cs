@@ -37,7 +37,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         }
         catch (UnknownQuoteChannelException exception)
         {
-            logger.LogWarning(exception, "Cannot add a quote for channel {UserId}", userId);
+            logger.LogWarning(exception, "Cannot add a quote for channel {UserId}", LogSafe.OneLine(userId));
             return Conflict("YEPPBot does not know this channel yet, so it cannot store quotes for it.");
         }
     }
@@ -69,12 +69,12 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
         }
         catch (QuoteWorkbookException exception)
         {
-            logger.LogInformation("Rejected a quote import for {UserId}: {Reason}", userId, exception.Message);
+            logger.LogInformation("Rejected a quote import for {UserId}: {Reason}", LogSafe.OneLine(userId), LogSafe.OneLine(exception.Message));
             return BadRequest(exception.Message);
         }
         catch (UnknownQuoteChannelException exception)
         {
-            logger.LogWarning(exception, "Cannot import quotes for channel {UserId}", userId);
+            logger.LogWarning(exception, "Cannot import quotes for channel {UserId}", LogSafe.OneLine(userId));
             return Conflict("YEPPBot does not know this channel yet, so it cannot store quotes for it.");
         }
     }
@@ -113,7 +113,7 @@ public sealed class QuoteController(QuoteService quotes, ILogger<QuoteController
 
         if (!string.Equals(twitchId, userId, StringComparison.Ordinal))
         {
-            logger.LogWarning("User {TwitchId} tried to reach the quotes of channel {UserId}", twitchId, userId);
+            logger.LogWarning("User {TwitchId} tried to reach the quotes of channel {UserId}", twitchId, LogSafe.OneLine(userId));
             return Forbid();
         }
 
