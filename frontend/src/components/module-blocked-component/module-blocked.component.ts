@@ -15,6 +15,7 @@ export class ModuleBlockedComponent {
   readonly reason: InputSignal<string> = input.required<string>();
 
   readonly icon: InputSignal<string> = input<string>('lock');
+  readonly mask: InputSignal<string> = input<string>('');
   readonly label: InputSignal<string> = input<string>('Unavailable');
   readonly note: InputSignal<string> = input<string>('');
 

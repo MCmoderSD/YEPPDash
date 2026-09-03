@@ -24,6 +24,14 @@
   color: var(--mat-sys-outline);
 }
 
+// Same footprint and same colour as the icon it stands in for — currentcolor is what carries the
+// rule above into the mask.
+.blocked-icon-mask {
+  display: block;
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
 .blocked-label {
   margin: 0;
   font: var(--mat-sys-label-large);
