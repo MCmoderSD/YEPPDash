@@ -1,13 +1,8 @@
-@use '../../styles/chat-color' as chat;
-
 .raid-page {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-
-  // The containing block for the scroll bar drawn over the table below.
-  position: relative;
 
   // Same width as the community list: a badge column on top of a name, plus two narrow ones.
   width: min(48rem, 100%);
@@ -53,26 +48,6 @@
   align-self: stretch;
 }
 
-.raid-page-scroll {
-  align-self: stretch;
-  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
-  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
-  overflow: auto hidden;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-outlined);
-}
-
-table.raid-page-grid {
-  width: 100%;
-  background: transparent;
-
-  //noinspection CssUnusedSymbol
-  .mdc-data-table__cell,
-  .mdc-data-table__header-cell {
-    padding: 0 0.5rem;
-  }
-}
-
 .raid-page-row {
   cursor: pointer;
 
@@ -80,46 +55,6 @@ table.raid-page-grid {
   &:focus-within {
     background: var(--mat-sys-surface-container-high);
   }
-}
-
-.raid-page-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-// Carries the keyboard path to the details dialog now that the row itself is the mouse path. It
-// wraps the name alone: the badges sit ahead of it, and nesting them in a control with its own
-// aria-label would hide them from a screen reader.
-.raid-page-user {
-  flex: none;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
-}
-
-.raid-page-avatar {
-  flex: none;
-  display: block;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-// Never wrapped: a Twitch name is at most 25 characters, and letting the longest one break across
-// four lines would make its row tower over every other. The table scrolls sideways instead.
-.raid-page-name {
-  @include chat.chat-color;
-
-  white-space: nowrap;
 }
 
 .raid-page-viewers {
@@ -137,12 +72,6 @@ table.raid-page-grid {
 .raid-page-paginator {
   align-self: stretch;
   background: transparent;
-}
-
-.raid-page-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: center;
 }
 
 // --- The first-load skeleton -----------------------------------------------------------------
@@ -183,7 +112,7 @@ table.raid-page-grid {
 // One ghost row, laid out as a grid because there is no second <tr> to give it: the three columns
 // mirror the real ones (flexible Raider column, 6rem Viewers, 13rem Raided at), the 1rem gap
 // mirrors two adjacent cells' 0.5rem paddings meeting in the middle, and the 0 0.5rem edge padding
-// mirrors the real table's own first/last cell padding (scss above, table.raid-page-grid). The
+// mirrors the real table's own first/last cell padding (.app-data-table in styles.scss). The
 // height is Material's own ~52px data-table row.
 .raid-page-skeleton-row {
   display: grid;

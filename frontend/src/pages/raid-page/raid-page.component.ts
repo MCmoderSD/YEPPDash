@@ -1,5 +1,4 @@
 import { Component, computed, inject, Signal, signal, viewChild, WritableSignal } from '@angular/core';
-import { NgOptimizedImage } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,14 +8,15 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ScrollBarComponent } from '../../components/scroll-bar-component/scroll-bar.component';
-import { UserBadgesComponent } from '../../components/user-badges-component/user-badges.component';
+import { TableFrameComponent } from '../../components/table-frame-component/table-frame.component';
+import { UserIdentityComponent } from '../../components/user-identity-component/user-identity.component';
 import { UserInfoDialogComponent } from '../../components/user-info-dialog-component/user-info-dialog.component';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { wireDataSource } from '../../services/data-source';
 import { NotificationService } from '../../services/notification.service';
 import { RaidService } from '../../services/raid.service';
 import { Raid } from '../../data/raid';
+import { ghostRows } from '../../data/skeleton';
 
 export interface RaidEntry {
   raid: Raid;
@@ -27,7 +27,7 @@ export interface RaidEntry {
   selector: 'app-raid-page',
   templateUrl: './raid-page.component.html',
   styleUrl: './raid-page.component.scss',
-  imports: [NgOptimizedImage, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatProgressBarModule, MatSortModule, MatTableModule, ScrollBarComponent, UserBadgesComponent, LocaleDatePipe],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatPaginatorModule, MatProgressBarModule, MatSortModule, MatTableModule, TableFrameComponent, UserIdentityComponent, LocaleDatePipe],
 })
 export class RaidPageComponent {
 
@@ -54,11 +54,7 @@ export class RaidPageComponent {
 
   protected readonly expected: WritableSignal<number | null> = signal<number | null>(null);
 
-  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => {
-    const expected: number | null = this.expected();
-    if (expected === null || expected <= 0) return [];
-    return Array.from({ length: Math.min(expected, 25) }, (_: unknown, index: number): number => index);
-  });
+  protected readonly ghostRows: Signal<readonly number[]> = computed((): readonly number[] => ghostRows(this.expected()));
 
   protected readonly pageSizes: number[] = [10, 25, 50, 100];
 
@@ -99,8 +95,7 @@ export class RaidPageComponent {
     this.dataSource.paginator?.firstPage();
   }
 
-  protected showDetails(entry: RaidEntry, event?: Event): void {
-    event?.stopPropagation();
+  protected showDetails(entry: RaidEntry): void {
     UserInfoDialogComponent.open(this.dialog, entry.raid.raider);
   }
 

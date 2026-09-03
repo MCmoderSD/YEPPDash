@@ -45,7 +45,7 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="raid-page-scroll">
+  <app-table-frame>
     <table
       mat-table
       matSort
@@ -53,36 +53,14 @@
       matSortDirection="desc"
       matSortDisableClear="true"
       [dataSource]="dataSource"
-      class="raid-page-grid"
+      class="app-data-table"
       [class.app-fade-in]="!skeleton()"
     >
 
       <ng-container matColumnDef="raider">
         <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Raider</th>
         <td mat-cell *matCellDef="let entry">
-          <div class="raid-page-identity">
-            <img
-              class="raid-page-avatar"
-              [ngSrc]="entry.raid.raider.profileImageUrl"
-              [width]=32
-              [height]=32
-              loading="eager"
-              alt=""
-            />
-
-            <app-user-badges [user]="entry.raid.raider"/>
-
-            <button
-              type="button"
-              class="raid-page-user"
-              [attr.aria-label]="'Details for ' + entry.raid.raider.displayName"
-              (click)="showDetails(entry, $event)"
-            >
-              <span class="raid-page-name" [style.--chat-color]="entry.raid.raider.color">
-                {{ entry.raid.raider.displayName }}
-              </span>
-            </button>
-          </div>
+          <app-user-identity [user]="entry.raid.raider"/>
         </td>
       </ng-container>
 
@@ -109,7 +87,7 @@
       ></tr>
 
       <tr class="raid-page-empty-row" *matNoDataRow>
-        <td class="raid-page-empty" [class.raid-page-empty-skeleton]="skeleton()" [attr.colspan]="columns.length">
+        <td class="app-table-empty" [class.raid-page-empty-skeleton]="skeleton()" [attr.colspan]="columns.length">
           @if (skeleton()) {
             <div class="raid-page-skeleton-rows app-skeleton-appear" role="status">
               <span class="app-visually-hidden">Loading your raids…</span>
@@ -136,7 +114,7 @@
         </td>
       </tr>
     </table>
-  </div>
+  </app-table-frame>
 
   <mat-paginator
     class="raid-page-paginator"
@@ -145,6 +123,4 @@
     showFirstLastButtons="true"
     aria-label="Select a page of raids"
   />
-
-  <app-scroll-bar [target]="scroll"/>
 </section>
