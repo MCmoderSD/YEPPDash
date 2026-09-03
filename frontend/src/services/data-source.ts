@@ -26,3 +26,5 @@ export function filterRows<T>(dataSource: MatTableDataSource<T>, value: string):
   dataSource.filter = value.trim().toLowerCase();
   dataSource.paginator?.firstPage();
 }
+
+export const TABLE_PAGE_SIZES: readonly number[] = [10, 25, 50, 100];

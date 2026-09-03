@@ -44,6 +44,10 @@
   white-space: nowrap;
 }
 
+.identity-ghost-name {
+  height: 1.25rem;
+}
+
 // Where the name sits in a column too narrow to scroll out of — the queue's cards — wrapping is the
 // only way a long name stays readable.
 :host(.user-identity-wrap) .identity-name {

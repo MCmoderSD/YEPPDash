@@ -1,0 +1,47 @@
+@use '../../styles/chat-color' as chat;
+
+// The avatar carries the row on its own, with the badges and the name reading as one line beneath it.
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.profile-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+
+  // The dialog scales with the viewport, so the avatar has to as well or it swallows a narrow one.
+  width: clamp(5rem, 20vw, 8rem);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+// Badges in front of the name rather than above it, the way every list shows them. Never wrapped:
+// a full set of badges plus a long name outgrows a narrow dialog, and wrapping would push the
+// badges back onto their own line above the name — the arrangement this row exists to avoid. The
+// name breaks instead, since it is the part that can take a second line.
+.profile-title {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.profile-name {
+  @include chat.chat-color;
+
+  // Without this the name refuses to shrink below its longest word and pushes the badges out of
+  // the dialog instead of breaking.
+  min-width: 0;
+
+  margin: 0;
+
+  // A step up from headline-small so the name holds its own beside the medium badges: its line box
+  // is 36px, the height of the badges themselves, so the two sit on one another's baseline.
+  font: var(--mat-sys-headline-medium);
+  overflow-wrap: anywhere;
+}

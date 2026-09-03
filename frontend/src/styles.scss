@@ -635,6 +635,40 @@ body {
   font: var(--mat-sys-body-medium);
 }
 
+// A table row that stands for something with a page behind it. Applied by UserDetailsDirective
+// rather than written into each table, so a row that has nothing to open never claims it does.
+.app-table-row-link {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-within {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+// A short, quiet label sitting inside a row — an alias, a count — reading as a tag rather than as
+// more of the row's text.
+.app-chip {
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  white-space: nowrap;
+}
+
+.app-panel-title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+// The count line is centred by its ancestor's text-align, which only ever steers inline content —
+// .app-skeleton fixes the bar's own display to block, so it needs a margin to land in the same
+// place. Each page still sets the width its own sentence sets to.
+.app-page-sub > .app-skeleton-bar {
+  margin-inline: auto;
+}
+
 // The row of buttons above a list. Centred because the lists it sits over are centred too, and
 // wrapping because on a phone three buttons do not fit across.
 .app-toolbar {

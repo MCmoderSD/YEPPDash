@@ -1,4 +1,12 @@
-@if (user(); as known) {
+@if (ghost()) {
+  <span class="app-skeleton identity-avatar" aria-hidden="true"></span>
+
+  <span
+    class="app-skeleton app-skeleton-bar identity-ghost-name"
+    [style.width]="ghostWidth()"
+    aria-hidden="true"
+  ></span>
+} @else if (user(); as known) {
   <img
     class="identity-avatar"
     [ngSrc]="known.profileImageUrl"

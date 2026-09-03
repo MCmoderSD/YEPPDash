@@ -18,10 +18,13 @@ export class UserIdentityComponent {
 
   private readonly dialog: MatDialog = inject(MatDialog);
 
-  readonly user: InputSignal<TwitchUser | null> = input.required<TwitchUser | null>();
+  readonly user: InputSignal<TwitchUser | null> = input<TwitchUser | null>(null);
 
   readonly name: InputSignal<string> = input<string>('');
   readonly wrap: InputSignal<boolean> = input<boolean>(false);
+
+  readonly ghost: InputSignal<boolean> = input<boolean>(false);
+  readonly ghostWidth: InputSignal<string> = input<string>('9rem');
 
   protected show(user: TwitchUser, event: Event): void {
     event.stopPropagation();
