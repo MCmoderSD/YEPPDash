@@ -6,17 +6,7 @@ const TICK_MS: number = 250;
 
 @Component({
   selector: 'app-timer-display',
-  template: `
-    <span class="timer-display-value">
-      @for (slot of slots(); track $index) {
-        <span class="timer-display-slot">
-          @for (character of slot; track character) {
-            <span class="timer-display-character" animate.enter="timer-display-enter">{{ character }}</span>
-          }
-        </span>
-      }
-    </span>
-  `,
+  templateUrl: './timer-display.component.html',
   styleUrl: './timer-display.component.scss',
 })
 export class TimerDisplayComponent {

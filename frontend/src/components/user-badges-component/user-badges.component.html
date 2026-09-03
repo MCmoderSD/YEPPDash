@@ -1,0 +1,9 @@
+@if (badges().length > 0) {
+  <ul class="user-badges" [attr.aria-label]="'Roles of ' + user().displayName">
+    @for (preset of badges(); track preset) {
+      <li>
+        <app-badge [preset]="preset" [size]="size()" />
+      </li>
+    }
+  </ul>
+}
