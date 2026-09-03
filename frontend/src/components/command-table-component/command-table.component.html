@@ -13,7 +13,7 @@
     <mat-icon matSuffix aria-hidden="true">search</mat-icon>
   </mat-form-field>
 
-  <div #scroll class="command-table-scroll" [attr.role]="initialLoad() ? 'status' : null">
+  <app-table-frame class="command-table-frame" [attr.role]="initialLoad() ? 'status' : null">
     @if (initialLoad()) {
       <span class="app-visually-hidden">Loading your commands…</span>
     }
@@ -26,7 +26,7 @@
       [dataSource]="dataSource"
       [trackBy]="trackByName"
       [attr.aria-hidden]="initialLoad() ? 'true' : null"
-      class="command-table-grid"
+      class="app-data-table"
     >
 
       <ng-container matColumnDef="name">
@@ -169,10 +169,9 @@
       ></tr>
 
       <tr class="command-table-empty-row" *matNoDataRow>
-        <td class="command-table-empty" [attr.colspan]="columns.length">
+        <td class="app-table-empty" [attr.colspan]="columns.length">
           @if (initialLoad()) {
-            <!-- Nothing: the scroll container above already carries the one role="status" that
-                 says the table is loading, and a second sentence here would repeat it. -->
+            <!-- Nothing: the scroll container above already carries the one role="status" that says the table is loading, and a second sentence here would repeat it. -->
           } @else if (unreachable()) {
             Could not load your commands. Please try again.
           } @else if (query()) {
@@ -183,7 +182,5 @@
         </td>
       </tr>
     </table>
-  </div>
-
-  <app-scroll-bar [target]="scroll"/>
+  </app-table-frame>
 </div>

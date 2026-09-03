@@ -21,7 +21,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { CommandEditComponent } from '../command-edit-component/command-edit.component';
-import { ScrollBarComponent } from '../scroll-bar-component/scroll-bar.component';
+import { TableFrameComponent } from '../table-frame-component/table-frame.component';
 import {
   commandTriggers,
   CustomCommand,
@@ -79,7 +79,7 @@ function skeletonRows(count: number): CustomCommand[] {
   selector: 'app-command-table',
   templateUrl: './command-table.component.html',
   styleUrl: './command-table.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSlideToggleModule, MatSortModule, MatTableModule, CommandEditComponent, ScrollBarComponent],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSlideToggleModule, MatSortModule, MatTableModule, CommandEditComponent, TableFrameComponent],
 })
 export class CommandTableComponent {
 

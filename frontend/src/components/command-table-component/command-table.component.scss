@@ -13,9 +13,6 @@
   align-items: center;
   gap: 1rem;
 
-  // The containing block for the scroll bar drawn over the table below, so its geometry stays a
-  // local matter instead of depending on whatever ancestor happens to be positioned.
-  position: relative;
   width: 100%;
 }
 
@@ -27,30 +24,11 @@
   margin-block-end: -1.25rem;
 }
 
-// The outline sits on the scroll container so it spans the full width, and narrow viewports scroll
-// the columns instead of squashing them.
-.command-table-scroll {
-  align-self: stretch;
-  // Both axes on purpose: overflow-x alone computes overflow-y to auto, and a rounding pixel
-  // on a scaled display is then enough to summon a vertical bar over rows that already fit.
-  overflow: auto hidden;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-outlined);
-
-  // Named so the form below can be sized against what is on screen rather than against the table,
-  // which on a narrow viewport is the wider of the two.
+// Named so the form below can be sized against what is on screen rather than against the table,
+// which on a narrow viewport is the wider of the two. The frame itself never scrolls — the box
+// inside it does — so its inline size is exactly the width that is visible.
+.command-table-frame {
   container-type: inline-size;
-}
-
-table.command-table-grid {
-  width: 100%;
-  background: transparent;
-
-  //noinspection CssUnusedSymbol
-  .mdc-data-table__cell,
-  .mdc-data-table__header-cell {
-    padding: 0 0.5rem;
-  }
 }
 
 .command-table-row {
@@ -307,12 +285,6 @@ table.command-table-grid {
       transition: none;
     }
   }
-}
-
-.command-table-empty {
-  padding: 1.5rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-  text-align: center;
 }
 
 // Header text the table needs for screen readers but that would only add noise on screen.
