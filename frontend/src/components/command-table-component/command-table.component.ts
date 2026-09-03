@@ -22,6 +22,8 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { CommandEditComponent } from '../command-edit-component/command-edit.component';
 import { TableFrameComponent } from '../table-frame-component/table-frame.component';
+import { TableSearchComponent } from '../table-search-component/table-search.component';
+import { filterRows } from '../../services/data-source';
 import {
   commandTriggers,
   CustomCommand,
@@ -79,7 +81,7 @@ function skeletonRows(count: number): CustomCommand[] {
   selector: 'app-command-table',
   templateUrl: './command-table.component.html',
   styleUrl: './command-table.component.scss',
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSlideToggleModule, MatSortModule, MatTableModule, CommandEditComponent, TableFrameComponent],
+  imports: [TableSearchComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSlideToggleModule, MatSortModule, MatTableModule, CommandEditComponent, TableFrameComponent],
 })
 export class CommandTableComponent {
 
@@ -176,7 +178,7 @@ export class CommandTableComponent {
 
   protected filter(value: string): void {
     this.query.set(value.trim());
-    this.dataSource.filter = value.trim().toLowerCase();
+    filterRows(this.dataSource, value);
   }
 
   protected toggle(command: CustomCommand, event?: Event): void {

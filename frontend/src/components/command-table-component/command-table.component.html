@@ -1,17 +1,6 @@
 <div class="command-table">
 
-  <mat-form-field appearance="outline" class="command-table-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name, alias or message"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search class="table-search-tucked" placeholder="Name, alias or message" (query)="filter($event)"/>
 
   <app-table-frame class="command-table-frame" [attr.role]="initialLoad() ? 'status' : null">
     @if (initialLoad()) {
@@ -102,7 +91,7 @@
         <th mat-header-cell *matHeaderCellDef scope="col">
           <span class="command-table-hidden-label">Actions</span>
         </th>
-        <td mat-cell *matCellDef="let command" class="command-table-actions">
+        <td mat-cell *matCellDef="let command" class="app-table-actions command-table-actions">
           @if (isSkeleton(command)) {
             <span class="app-skeleton command-table-skeleton-action" aria-hidden="true"></span>
           } @else {

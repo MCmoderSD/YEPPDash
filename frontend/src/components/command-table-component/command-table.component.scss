@@ -16,14 +16,6 @@
   width: 100%;
 }
 
-.command-table-search {
-  align-self: stretch;
-
-  // Material reserves room under the field for a hint or error; there is neither here, so it would
-  // only push the table away from the search box.
-  margin-block-end: -1.25rem;
-}
-
 // Named so the form below can be sized against what is on screen rather than against the table,
 // which on a narrow viewport is the wider of the two. The frame itself never scrolls — the box
 // inside it does — so its inline size is exactly the width that is visible.
@@ -161,9 +153,7 @@
 }
 
 .command-table-actions {
-  width: 6.5rem;
-  text-align: end;
-  white-space: nowrap;
+  --app-table-actions-width: 6.5rem;
 }
 
 // --- initial-load ghosts ---------------------------------------------------------------------
