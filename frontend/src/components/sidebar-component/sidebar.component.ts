@@ -23,7 +23,7 @@ function headingRows(groups: readonly NavGroup[]): ReadonlyMap<string, number> {
 
 const ACTIVE_MATCH: IsActiveMatchOptions = {
   paths: 'exact',
-  queryParams: 'ignored',
+  queryParams: 'subset',
   matrixParams: 'ignored',
   fragment: 'ignored',
 };
