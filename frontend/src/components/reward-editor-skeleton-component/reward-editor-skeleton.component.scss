@@ -1,0 +1,99 @@
+// The same two columns the editors' own shell draws, so the ghosts stand where the form will. The
+// breakpoint at which the preview drops under the form is the caller's, set on this element from the
+// page's stylesheet — the two editors cap their columns at different widths and so collapse at
+// different points.
+:host {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 2rem;
+  align-self: stretch;
+}
+
+// Not .app-visually-hidden: that one stays in the flow, and here the flow is a grid whose two
+// columns are already spoken for.
+.reward-skeleton-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.reward-skeleton-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.reward-skeleton-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// --- Stand-ins, shaped like what replaces them ------------------------------------------------
+
+.reward-skeleton-heading {
+  width: 8rem;
+  height: 1.25rem;
+}
+
+.reward-skeleton-field {
+  height: 3.5rem;
+  border-radius: var(--app-radius-sm);
+}
+
+.reward-skeleton-panel {
+  border-radius: var(--app-radius-md);
+}
+
+.reward-skeleton-tile {
+  height: 10.875rem;
+  border-radius: var(--app-radius-md);
+}
+
+.reward-skeleton-short {
+  width: 60%;
+}
+
+.reward-skeleton-switches {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reward-skeleton-toggle {
+  width: 5.5rem;
+  height: 1.25rem;
+}
+
+.reward-skeleton-swatch {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+}
+
+.reward-skeleton-status {
+  height: 2.5rem;
+}
+
+.reward-skeleton-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reward-skeleton-delete,
+.reward-skeleton-save {
+  height: 2.5rem;
+}
+
+.reward-skeleton-delete {
+  width: 6.5rem;
+}
+
+.reward-skeleton-save {
+  width: 8.5rem;
+}

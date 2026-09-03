@@ -605,6 +605,64 @@ body {
   white-space: nowrap;
 }
 
+// The column a row's buttons sit in: as narrow as its content and never wrapped, so the buttons stay
+// on one line and the flexible column keeps the rest. Its width is a custom property because that is
+// the one number that changes with how many buttons a table carries.
+.app-table-actions {
+  width: var(--app-table-actions-width, 3.5rem);
+  text-align: end;
+  white-space: nowrap;
+}
+
+// A page's own heading block: the title over one quiet line saying how much is on the page. Global
+// rather than a component because the line under the title is the page's — every one of them phrases
+// it differently, ghosts it on a different flag and fades it at a different level of the markup.
+.app-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.app-page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.app-page-sub {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+// The row of buttons above a list. Centred because the lists it sits over are centred too, and
+// wrapping because on a phone three buttons do not fit across.
+.app-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+// A quiet line under a heading or beside a control, explaining what the thing above it does.
+.app-hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// A bordered block grouping one setting with its controls, used where a page has several such groups
+// stacked down a column.
+.app-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
 // The app draws its own arrows (components/number-stepper-component), so the browser's built-in
 // pair would only ever be a second, blunter copy of the same control sitting next to it. Global
 // because it is a normalisation rather than one field's styling: any number input the app grows

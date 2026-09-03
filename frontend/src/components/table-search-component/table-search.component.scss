@@ -1,0 +1,15 @@
+:host {
+  display: block;
+  align-self: stretch;
+}
+
+// Material reserves room under the field for a hint or error; where there is neither, that gap only
+// pushes the table away from the box above it. Asked for by the caller rather than taken by default,
+// because a field standing on its own does want the room.
+:host(.table-search-tucked) {
+  margin-block-end: -1.25rem;
+}
+
+.table-search-field {
+  width: 100%;
+}
