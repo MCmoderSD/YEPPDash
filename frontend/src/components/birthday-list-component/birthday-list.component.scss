@@ -13,45 +13,6 @@
   margin-inline: auto;
 }
 
-.birthday-list-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.birthday-list-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-}
-
-.birthday-list-count {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-}
-
-.birthday-list-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.birthday-list-search {
-  align-self: stretch;
-
-  // Material reserves room under the field for a hint or error; there is neither here, so it would
-  // only push the table away from the search box.
-  margin-block-end: -1.25rem;
-}
-
-// Kept in the layout while idle so the table does not jump every time a request starts.
-.birthday-list-progress {
-  flex: none;
-  align-self: stretch;
-}
-
 .birthday-list-row {
   &:hover,
   &:focus-within {

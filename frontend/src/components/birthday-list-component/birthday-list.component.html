@@ -1,8 +1,8 @@
 <section class="birthday-list">
 
-  <header class="birthday-list-header">
-    <h1 class="birthday-list-title">Follower Birthdays</h1>
-    <p class="birthday-list-count">
+  <header class="app-page-header">
+    <h1 class="app-page-title">Follower Birthdays</h1>
+    <p class="app-page-sub">
       @if (initialLoad()) {
         <span class="app-skeleton app-skeleton-bar app-skeleton-text birthday-list-skeleton-count" aria-hidden="true"></span>
       } @else {
@@ -11,7 +11,7 @@
     </p>
   </header>
 
-  <div class="birthday-list-toolbar">
+  <div class="app-toolbar">
     <button
       mat-stroked-button
       type="button"
@@ -23,25 +23,9 @@
     </button>
   </div>
 
-  <mat-progress-bar
-    class="birthday-list-progress"
-    mode="indeterminate"
-    [attr.aria-hidden]="!busy()"
-    [style.visibility]="busy() ? 'visible' : 'hidden'"
-  />
+  <app-busy-bar [busy]="busy()"/>
 
-  <mat-form-field appearance="outline" class="birthday-list-search">
-    <mat-label>Search</mat-label>
-    <input
-      matInput
-      #search
-      type="search"
-      autocomplete="off"
-      placeholder="Name or user ID"
-      (input)="filter(search.value)"
-    />
-    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
-  </mat-form-field>
+  <app-table-search class="table-search-tucked" placeholder="Name or user ID" (query)="filter($event)"/>
 
   <app-table-frame>
     <table
