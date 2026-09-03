@@ -27,8 +27,6 @@ public sealed record WheelEntry(string Label, int Count)
 
         return order;
     }
-
-    public static IReadOnlyList<WheelEntry> From(IEnumerable<string> labels) => Merge(labels.Select(label => new WheelEntry(label, 1)));
 }
 
 public sealed record WheelConfig(

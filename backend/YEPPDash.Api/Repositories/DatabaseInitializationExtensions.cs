@@ -18,16 +18,6 @@ public static class DatabaseInitializationExtensions
             await connection.ExecuteAsync(DatabaseTwitchTokenStore.CreateTableSql);
 
             await connection.ExecuteAsync(WheelRepository.CreateTableSql);
-
-            var moved = await WheelMigration.RunAsync(connection);
-
-            if (moved > 0)
-            {
-                logger.LogInformation(
-                    "Carried {Count} wheels into Wheels and WheelEntries. The tables they came from are empty now and can be dropped",
-                    moved);
-            }
-
             await connection.ExecuteAsync(TimeoutRewardRepository.CreateTableSql);
             await connection.ExecuteAsync(GiveawayRepository.CreateTableSql);
             await connection.ExecuteAsync(RedemptionLogRepository.CreateTableSql);
