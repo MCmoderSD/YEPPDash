@@ -9,14 +9,14 @@ namespace YEPPDash.Api.Auth;
 public static class AuthServiceCollectionExtensions
 {
     public static IServiceCollection AddYeppDashAuth(
-        this IServiceCollection services, IConfiguration configuration, string dbTarget)
+        this IServiceCollection services, IConfiguration configuration, string environmentName, DatabaseOptions database)
     {
         var options = new TwitchAuthOptions
         {
-            ClientId = configuration.GetRequiredValue($"Twitch:ClientId{dbTarget}", $"dbTarget '{dbTarget}'"),
-            ClientSecret = configuration.GetRequiredValue($"Twitch:ClientSecret{dbTarget}", $"dbTarget '{dbTarget}'"),
-            RedirectUri = configuration.GetRequiredValue("Twitch:RedirectUri"),
-            Scopes = TwitchScopes.For(dbTarget)
+            ClientId = configuration.GetRequiredValue("Twitch:ClientId"),
+            ClientSecret = configuration.GetRequiredValue("Twitch:ClientSecret"),
+            RedirectUri = configuration.GetRequiredValue($"Twitch:RedirectUri:{environmentName}"),
+            Scopes = TwitchScopes.For(environmentName)
         };
 
         services.AddSingleton(options);
@@ -33,7 +33,7 @@ public static class AuthServiceCollectionExtensions
             client.BaseAddress = new Uri(TwitchApiClient.BaseUrl);
         });
 
-        AddTokenStore(services, configuration, dbTarget);
+        AddTokenStore(services, database);
 
         services
             .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -61,18 +61,12 @@ public static class AuthServiceCollectionExtensions
         return services;
     }
 
-    private static void AddTokenStore(IServiceCollection services, IConfiguration configuration, string dbTarget)
+    // Twitch tokens are only ever persisted, never held in memory, so a token store that cannot
+    // reach its database is not something to start up without. DatabaseOptions.From has already
+    // refused anything half-configured by the time this runs.
+    private static void AddTokenStore(IServiceCollection services, DatabaseOptions database)
     {
-        var connectionString = configuration.GetYeppDashConnectionString(dbTarget);
-
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            throw new InvalidOperationException(
-                $"Missing connection string 'ConnectionStrings:YeppDash{dbTarget}' for DbTarget '{dbTarget}'. " +
-                "Twitch tokens are only ever persisted, so there is nothing to fall back to.");
-        }
-
-        services.AddSingleton(new YeppDashConnectionFactory(connectionString));
+        services.AddSingleton(new YeppDashConnectionFactory(database.YeppDashConnectionString));
         services.AddScoped<DatabaseTwitchTokenStore>();
     }
 }

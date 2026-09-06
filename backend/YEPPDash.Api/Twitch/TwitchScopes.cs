@@ -2,9 +2,9 @@ namespace YEPPDash.Api.Twitch;
 
 public static class TwitchScopes
 {
-    public static string[] For(string dbTarget)
+    public static string[] For(string environmentName)
     {
-        return dbTarget.Equals("Prod", StringComparison.OrdinalIgnoreCase) ? Prod : Dev;
+        return environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) ? Prod : Dev;
     }
 
     // What the broadcaster is asked to grant in production: everything the dashboard calls

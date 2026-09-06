@@ -16,3 +16,9 @@
 .env
 .env.*
 !.env.example
+
+# The publish output carries every appsettings file it finds. A release build never reads these two
+# — they sit behind #if DEBUG — but the file would still ship inside the image with the credentials
+# readable, so keep them out of the build context in the first place.
+**/appsettings.Local.json
+**/*.local.json
