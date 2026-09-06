@@ -1,0 +1,88 @@
+// The centred notice a screen falls back to when it has nothing of its own to show: an icon, a
+// quiet line above the heading, one sentence explaining it, and the way back out. The error page
+// and a module the channel cannot reach both arrived at exactly this, down to the numbers.
+//
+// A mixin rather than a component because the two say different things and take different inputs.
+// What they share is the geometry, not the words in it.
+//
+// $prefix is the component's own class prefix, $width the cap on the centred column.
+@mixin shell($prefix, $width) {
+  :host {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+  }
+
+  .#{$prefix} {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+
+    width: 100%;
+    max-width: $width;
+    text-align: center;
+  }
+
+  .#{$prefix}-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 3rem;
+    color: var(--mat-sys-outline);
+  }
+
+  // The line above the heading — a status number, or what kind of block this is. It is the one part
+  // a reader may need to repeat to somebody, so it is legible rather than decorative; the heading is
+  // what carries the screen.
+  .#{$prefix}-label {
+    margin: 0;
+    font: var(--mat-sys-label-large);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mat-sys-outline);
+  }
+
+  .#{$prefix}-heading {
+    margin: 0;
+    font: var(--mat-sys-headline-medium);
+    color: var(--mat-sys-on-surface);
+  }
+
+  .#{$prefix}-body {
+    margin: 0;
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  // An outlined link and not a button, because it navigates.
+  .#{$prefix}-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    margin-top: 0.75rem;
+    padding: 0.625rem 1rem;
+    border: var(--app-border);
+    border-radius: var(--app-radius-md);
+
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface);
+    text-decoration: none;
+
+    transition:
+      border-color var(--app-motion-fast) var(--app-ease),
+      background-color var(--app-motion-fast) var(--app-ease);
+
+    &:hover {
+      border-color: var(--mat-sys-primary);
+      background: var(--mat-sys-surface-container-high);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+    }
+  }
+}
