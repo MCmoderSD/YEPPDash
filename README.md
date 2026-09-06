@@ -27,7 +27,7 @@ Status: early beta, actively developed. Twitch login, moderator/VIP/editor manag
 | Backend | ASP.NET Core 10 (C#), MVC Controllers, Dapper + MySqlConnector, ClosedXML |
 | Frontend | Angular 22 + Angular Material, SSR (`@angular/ssr` + Express) |
 | Auth | Twitch OAuth2 (authorization code) + Helix `/users` — no local passwords/user table |
-| Database | Shared MariaDB (`helix` schema), owned and migrated by YEPPBot, plus YEPPDash's own `TwitchToken`, `Wheel`, `TimeoutReward`, `RoleRestore` and `RedemptionLog` tables |
+| Database | One MariaDB for both environments, split by schema: YEPPBot owns and migrates `helix` (`YEPPBot-Dev` in development), YEPPDash owns `YEPPDash` (`YEPPDash-Dev`) |
 | Twitch events | EventSub over WebSocket, one connection per broadcaster — every EventSub limit is counted per client id and user id together |
 | Live updates | Server-Sent Events, one in-process hub per feature — assumes a single backend instance, which `docker-compose.yaml` runs |
 | Reverse proxy | Caddy, run by the operator outside this repo — subdomain routing (`dash.yeppbot.com`/`.dev` → frontend, `api.yeppbot.com`/`.dev` → backend) |

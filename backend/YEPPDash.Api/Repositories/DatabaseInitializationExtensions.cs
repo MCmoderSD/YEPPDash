@@ -5,7 +5,7 @@ namespace YEPPDash.Api.Repositories;
 
 public static class DatabaseInitializationExtensions
 {
-    public static async Task InitializeYeppDashDatabaseAsync(this IServiceProvider services, string dbTarget)
+    public static async Task InitializeYeppDashDatabaseAsync(this IServiceProvider services, string environmentName)
     {
         using var scope = services.CreateScope();
 
@@ -25,8 +25,8 @@ public static class DatabaseInitializationExtensions
         catch (MySqlException exception)
         {
             throw new InvalidOperationException(
-                $"Cannot use 'ConnectionStrings:YeppDash{dbTarget}': {exception.Message} " +
-                "The configured user needs CREATE, SELECT, INSERT, UPDATE and DELETE on the YEPPDash database.",
+                $"Cannot use the database behind 'Database:Schemas:{environmentName}': {exception.Message} " +
+                "The configured user needs CREATE, SELECT, INSERT, UPDATE and DELETE on the YEPPDash schema.",
                 exception);
         }
 

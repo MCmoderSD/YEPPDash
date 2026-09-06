@@ -7,20 +7,11 @@ services:
     restart: unless-stopped
     pull_policy: always
     environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      DbTarget: ${DB_TARGET:-Dev}
-      ConnectionStrings__HelixDev: ${CONNECTIONSTRINGS__HELIXDEV:-}
-      ConnectionStrings__HelixProd: ${CONNECTIONSTRINGS__HELIXPROD:-}
-      ConnectionStrings__YeppDashDev: ${CONNECTIONSTRINGS__YEPPDASHDEV:-}
-      ConnectionStrings__YeppDashProd: ${CONNECTIONSTRINGS__YEPPDASHPROD:-}
-      Twitch__ClientIdDev: ${TWITCH__CLIENTIDDEV:-}
-      Twitch__ClientIdProd: ${TWITCH__CLIENTIDPROD:-}
-      Twitch__ClientSecretDev: ${TWITCH__CLIENTSECRETDEV:-}
-      Twitch__ClientSecretProd: ${TWITCH__CLIENTSECRETPROD:-}
-      Twitch__RedirectUri: ${TWITCH__REDIRECTURI}
-      AllowedFrontendOrigins__0: ${ALLOWEDFRONTENDORIGINS__0}
-      AllowedFrontendOrigins__1: ${ALLOWEDFRONTENDORIGINS__1}
-      AllowedFrontendOrigins__2: ${ALLOWEDFRONTENDORIGINS__2}
+      ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT}
+      Database__User: ${DATABASE_USER}
+      Database__Password: ${DATABASE_PASSWORD}
+      Twitch__ClientId: ${TWITCH_CLIENT_ID}
+      Twitch__ClientSecret: ${TWITCH_CLIENT_SECRET}
     ports:
       - 8080:8080/tcp
 

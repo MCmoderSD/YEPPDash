@@ -14,6 +14,7 @@ public sealed class AuthController(
     TwitchAuthService authService,
     TwitchChannelWarmup warmup,
     IConfiguration configuration,
+    IHostEnvironment environment,
     ILogger<AuthController> logger) : ControllerBase
 {
     [HttpGet("login")]
@@ -124,7 +125,8 @@ public sealed class AuthController(
         return
             returnUrl is not null
             && Uri.TryCreate(returnUrl, UriKind.Absolute, out var uri)
-            && configuration.GetAllowedFrontendOrigins().Contains($"{uri.Scheme}://{uri.Authority}");
+            && configuration.GetAllowedFrontendOrigins(environment.EnvironmentName)
+                .Contains($"{uri.Scheme}://{uri.Authority}");
     }
 
     private static string Known(string error)
@@ -136,7 +138,7 @@ public sealed class AuthController(
 
     private IActionResult RedirectToFrontend(string error)
     {
-        var origin = configuration.GetAllowedFrontendOrigins().FirstOrDefault();
+        var origin = configuration.GetAllowedFrontendOrigins(environment.EnvironmentName).FirstOrDefault();
         if (origin is null)
         {
             return BadRequest($"Login failed: {error}");

@@ -12,17 +12,17 @@ public static class BotServiceCollectionExtensions
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
 
     public static IServiceCollection AddYeppBot(
-        this IServiceCollection services, IConfiguration configuration, string dbTarget)
+        this IServiceCollection services, IConfiguration configuration, string environmentName)
     {
-        var baseUrl = configuration[$"YeppBot:BaseUrl{dbTarget}"] ?? configuration["YeppBot:BaseUrl"];
+        var baseUrl = configuration[$"YEPPBot:BaseUrl{environmentName}"] ?? configuration["YEPPBot:BaseUrl"];
 
         var options = new YeppBotOptions
         {
             BaseAddress = ToBaseAddress(baseUrl),
-            ApiKey = ApiKeyFor(configuration.GetRequiredValue($"Twitch:ClientSecret{dbTarget}")),
+            ApiKey = ApiKeyFor(configuration.GetRequiredValue("Twitch:ClientSecret")),
             AllowUntrustedCertificate =
-                configuration.GetValue($"YeppBot:AllowUntrustedCertificate{dbTarget}", false)
-                || configuration.GetValue("YeppBot:AllowUntrustedCertificate", false)
+                configuration.GetValue($"YEPPBot:AllowUntrustedCertificate{environmentName}", false)
+                || configuration.GetValue("YEPPBot:AllowUntrustedCertificate", false)
         };
 
         services.AddSingleton(options);

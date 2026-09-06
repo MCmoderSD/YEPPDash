@@ -7,14 +7,9 @@ public static class ConfigurationExtensions
 {
     extension(IConfiguration configuration)
     {
-        public string[] GetAllowedFrontendOrigins()
+        public string[] GetAllowedFrontendOrigins(string environmentName)
         {
-            return configuration.GetSection("AllowedFrontendOrigins").Get<string[]>() ?? [];
-        }
-
-        public string? GetYeppDashConnectionString(string dbTarget)
-        {
-            return configuration.GetConnectionString($"YeppDash{dbTarget}");
+            return configuration.GetSection($"AllowedFrontendOrigins:{environmentName}").Get<string[]>() ?? [];
         }
 
         public string GetRequiredValue(string key, string? context = null)

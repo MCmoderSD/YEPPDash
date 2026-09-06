@@ -30,12 +30,16 @@ docker-compose.override.yml
 # ── Secrets / local config (never commit real credentials) ──
 # Blanket-ignore every environment-flavored appsettings file (Local, Production, Staging,
 # whatever gets added later) so a stray one with real credentials can't be committed by
-# accident. The two base files are checked in on purpose — no secrets in either, just
-# non-sensitive defaults (DbTarget, logging) — so they're explicitly un-ignored again.
+# accident. appsettings.json is checked in on purpose — it holds no secrets, only the settings that
+# differ per environment, keyed by environment name. The Development exception stays for the day
+# somebody wants a local override again; the file itself is gone because it had nothing left to say.
 appsettings.*.json
 !appsettings.json
 !appsettings.Development.json
 *.local.json
+# Same suffix for prose: docs/access.local.md maps out who may reach which schema, which is
+# a shopping list for anyone who gets hold of it.
+*.local.md
 .env
 .env.*
 !.env.example
