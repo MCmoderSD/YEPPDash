@@ -1,55 +1,13 @@
-:host {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-}
+@use '../../styles/centered-notice' as notice;
 
-.blocked {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
+@include notice.shell('blocked', 34rem);
 
-  width: 100%;
-  max-width: 34rem;
-  text-align: center;
-}
-
-.blocked-icon {
-  width: 3rem;
-  height: 3rem;
-  font-size: 3rem;
-  color: var(--mat-sys-outline);
-}
-
-// Same footprint and same colour as the icon it stands in for — currentcolor is what carries the
-// rule above into the mask.
+// Same footprint and same colour as the icon it stands in for — current color is what carries the
+// mixin's rule into the mask.
 .blocked-icon-mask {
   display: block;
   background: currentcolor;
   mask: var(--icon) center / contain no-repeat;
-}
-
-.blocked-label {
-  margin: 0;
-  font: var(--mat-sys-label-large);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--mat-sys-outline);
-}
-
-.blocked-heading {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
-  color: var(--mat-sys-on-surface);
-}
-
-.blocked-reason {
-  margin: 0;
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
 }
 
 // What to do about it, rather than what the rule is — set apart from the paragraph above so the
@@ -62,33 +20,4 @@
 
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
-}
-
-.blocked-home {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  margin-top: 0.75rem;
-  padding: 0.625rem 1rem;
-  border: var(--app-border);
-  border-radius: var(--app-radius-md);
-
-  font: var(--mat-sys-label-large);
-  color: var(--mat-sys-on-surface);
-  text-decoration: none;
-
-  transition:
-    border-color var(--app-motion-fast) var(--app-ease),
-    background-color var(--app-motion-fast) var(--app-ease);
-
-  &:hover {
-    border-color: var(--mat-sys-primary);
-    background: var(--mat-sys-surface-container-high);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
 }

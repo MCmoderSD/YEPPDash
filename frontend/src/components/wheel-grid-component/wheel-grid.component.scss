@@ -48,6 +48,7 @@
   width: 3.5rem;
   height: 3.5rem;
   background: currentColor;
+  //noinspection CssUnknownTarget
   mask: url('/lucky-wheel.svg') center / contain no-repeat;
   opacity: 0.55;
 }
