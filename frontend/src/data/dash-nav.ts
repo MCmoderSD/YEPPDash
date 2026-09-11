@@ -180,8 +180,6 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   },
 ];
 
-export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap((group: NavGroup): NavItem[] => group.items);
-
 export function navGroupsFor(channelPoints: boolean): readonly NavGroup[] {
   if (channelPoints) return NAV_GROUPS;
 

@@ -53,9 +53,16 @@
     visibility var(--app-motion-base);
 }
 
+// Visible the instant it opens, and hidden only once it has finished closing. A transition takes its
+// timing from the state it is moving into, so the delay above only ever applies on the way out.
+// Transitioned the same way in both directions, the panel was still counted as hidden in the first
+// frame of opening — the frame focus is moved into it — and the focus went nowhere.
 :host(.faq-drawer-open) {
   translate: 0 0;
   visibility: visible;
+  transition:
+    translate var(--app-timing-base),
+    visibility 0s;
 }
 
 // A phone has no room for a panel beside anything, so it takes the width — but still not the
