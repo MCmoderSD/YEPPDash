@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { computed, inject, Service, signal, Signal, WritableSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
@@ -13,6 +14,7 @@ interface Chosen {
 export class FaqDrawerService {
 
   private readonly router: Router = inject(Router);
+  private readonly document: Document = inject(DOCUMENT);
 
   private readonly url: Signal<string> = toSignal(
     this.router.events.pipe(
@@ -94,7 +96,7 @@ export class FaqDrawerService {
     this.chosen.set(null);
     this.query.set('');
 
-    if (restoreFocus) this.trigger?.focus();
+    if (restoreFocus) (this.trigger ?? this.document.querySelector<HTMLElement>('[aria-controls="faq-drawer"]'))?.focus();
     this.trigger = null;
   }
 }

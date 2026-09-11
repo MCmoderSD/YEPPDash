@@ -1,6 +1,6 @@
 import { Params } from '@angular/router';
 import { isDashHost } from '../services/dash-host';
-import type { RoleManagementMode } from "../components/role-management-component/role-management.component";
+import type { RoleManagementMode } from '../components/role-management-component/role-management.component';
 
 export type NavItemId =
   | 'moderators'
