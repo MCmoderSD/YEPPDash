@@ -1,0 +1,63 @@
+<div
+  class="topics"
+  [class.topics-chips]="layout() === 'chips'"
+  [class.topics-responsive]="layout() === 'responsive'"
+  role="group"
+  aria-label="Filter answers by topic"
+>
+
+  <button
+    type="button"
+    class="topic"
+    [class.topic-active]="selected() === null"
+    [attr.aria-pressed]="selected() === null"
+    (click)="pick(null)"
+  >
+    <mat-icon class="topic-icon" aria-hidden="true">apps</mat-icon>
+    <span class="topic-label">All topics</span>
+    <span class="topic-count">{{ count('all') }}</span>
+  </button>
+
+  @if (showGeneral()) {
+    <button
+      type="button"
+      class="topic"
+      [class.topic-active]="selected() === general.id"
+      [attr.aria-pressed]="selected() === general.id"
+      (click)="pick(general.id)"
+    >
+      <mat-icon class="topic-icon" aria-hidden="true">{{ general.icon }}</mat-icon>
+      <span class="topic-label">{{ general.label }}</span>
+      <span class="topic-count">{{ count(general.id) }}</span>
+    </button>
+  }
+
+  @for (group of groups(); track group.id) {
+    <div class="topic-group">
+      <p class="topic-group-label">{{ group.label }}</p>
+
+      @for (topic of group.topics; track topic.id) {
+        <button
+          type="button"
+          class="topic"
+          [class.topic-active]="selected() === topic.id"
+          [attr.aria-pressed]="selected() === topic.id"
+          (click)="pick(topic.id)"
+        >
+          @if (topic.mask; as mask) {
+            <span class="topic-icon topic-icon-mask" [style.--icon]="'url(' + mask + ')'" aria-hidden="true"></span>
+          } @else {
+            <mat-icon
+              class="topic-icon"
+              aria-hidden="true"
+              [fontSet]="topic.outlined ? 'material-icons-outlined' : 'material-icons'"
+            >{{ topic.icon }}</mat-icon>
+          }
+
+          <span class="topic-label">{{ topic.label }}</span>
+          <span class="topic-count">{{ count(topic.id) }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>

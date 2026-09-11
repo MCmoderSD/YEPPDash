@@ -26,6 +26,11 @@
 
 .dash-drawer {
   width: var(--app-sidebar-width);
+
+  // Horizontal swipes on the drawer open and close it (DrawerSwipeService). Handed to the browser as
+  // well, a sideways pan here can start its own history navigation on touch screens that have one —
+  // the panel only ever scrolls vertically, so that is all it lets the browser do. Pinch-zoom stays.
+  touch-action: pan-y pinch-zoom;
   max-width: 85vw;
 
   // A shade above the page so the drawer reads as a panel beside the content rather than as part

@@ -1,0 +1,59 @@
+@for (key of [view()]; track key) {
+  <div class="faq-list-view app-fade-in">
+
+    @if (sections().length === 0) {
+
+      <div class="faq-list-empty">
+        <mat-icon class="faq-list-empty-icon" aria-hidden="true">search_off</mat-icon>
+
+        <p class="faq-list-empty-text">
+          @if (search()) {
+            Nothing here answers &ldquo;{{ search() }}&rdquo;.
+          } @else {
+            Nothing here yet.
+          }
+        </p>
+
+        @if (search()) {
+          <button mat-stroked-button type="button" class="faq-list-empty-action" (click)="cleared.emit()">
+            <mat-icon aria-hidden="true">close</mat-icon>
+            <span>Clear search</span>
+          </button>
+        }
+      </div>
+
+    } @else {
+
+      @for (section of sections(); track section.topic.id) {
+        <section class="faq-list-section">
+
+          @if (headings()) {
+            <h2 class="faq-list-heading">
+              @if (section.topic.mask; as mask) {
+                <span class="faq-list-heading-icon faq-list-heading-mask" [style.--icon]="'url(' + mask + ')'" aria-hidden="true"></span>
+              } @else {
+                <mat-icon
+                  class="faq-list-heading-icon"
+                  aria-hidden="true"
+                  [fontSet]="section.topic.outlined ? 'material-icons-outlined' : 'material-icons'"
+                >{{ section.topic.icon }}</mat-icon>
+              }
+
+              <span>{{ section.topic.label }}</span>
+            </h2>
+          }
+
+          <div class="faq-list-entries">
+            @for (entry of section.entries; track entry.id) {
+              <app-faq-entry
+                [id]="entry.id"
+                [entry]="entry"
+                [open]="open() === entry.id"
+              />
+            }
+          </div>
+        </section>
+      }
+    }
+  </div>
+}

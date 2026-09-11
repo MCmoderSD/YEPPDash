@@ -1,18 +1,7 @@
-import { Component, input, InputSignal } from '@angular/core';
+import { Component, input, InputSignal, linkedSignal, WritableSignal } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
-
-export interface FaqEntry {
-  readonly question: string;
-  readonly answer: string;
-  readonly details: readonly string[];
-  readonly link?: FaqLink;
-}
-
-interface FaqLink {
-  readonly label: string;
-  readonly url: string;
-}
+import { FaqEntry } from '../../data/faq';
 
 @Component({
   selector: 'app-faq-entry',
@@ -23,4 +12,8 @@ interface FaqLink {
 export class FaqEntryComponent {
 
   readonly entry: InputSignal<FaqEntry> = input.required<FaqEntry>();
+
+  readonly open: InputSignal<boolean> = input(false);
+
+  protected readonly expanded: WritableSignal<boolean> = linkedSignal((): boolean => this.open());
 }

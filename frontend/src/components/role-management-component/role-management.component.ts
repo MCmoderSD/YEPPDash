@@ -10,7 +10,7 @@ import { TwitchService } from '../../services/twitch.service';
 import { NotificationService } from '../../services/notification.service';
 import { TwitchUser } from '../../data/twitch-user';
 
-  export enum RoleManagementMode {
+export enum RoleManagementMode {
   Moderator = 'moderator',
   Vip = 'vip',
 }

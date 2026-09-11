@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, InputSignal, Signal, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, InputSignal, Signal, signal, viewChild, WritableSignal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { firstValueFrom } from 'rxjs';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 import { AuthService } from '../../services/auth.service';
 import { faqLink } from '../../services/dash-host';
+import { FaqDrawerService } from '../../services/faq-drawer.service';
 import { BirthdayService } from '../../services/birthday.service';
 import { NotificationService } from '../../services/notification.service';
 import { Birthday, BirthdayDraft, birthdayToDate } from '../../data/birthday';
@@ -30,6 +31,8 @@ export class UserMenuComponent {
 
   readonly user: InputSignal<Broadcaster> = input.required<Broadcaster>();
 
+  protected readonly faq: FaqDrawerService = inject(FaqDrawerService);
+
   protected readonly faqUrl: string | null = faqLink();
 
   private readonly stored: WritableSignal<Birthday | null> = signal<Birthday | null>(null);
@@ -41,8 +44,15 @@ export class UserMenuComponent {
     return birthday ? birthdayToDate(birthday) : null;
   });
 
+  private readonly trigger: Signal<ElementRef<HTMLElement> | undefined> =
+    viewChild('trigger', { read: ElementRef<HTMLElement> });
+
   constructor() {
     effect((): void => void this.load(this.user().id));
+  }
+
+  protected toggleFaq(): void {
+    this.faq.toggle(this.trigger()?.nativeElement);
   }
 
   protected async editBirthday(): Promise<void> {

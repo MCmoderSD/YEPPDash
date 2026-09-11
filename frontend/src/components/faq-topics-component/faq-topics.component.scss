@@ -1,0 +1,182 @@
+:host {
+  display: block;
+}
+
+// --- The column ---------------------------------------------------------------------------------
+
+.topics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+// The group is a heading and its rows, not a box: laying it out flat is what lets the whole thing
+// become one line of pills without the groups turning into three separate scrollers.
+.topic-group {
+  display: contents;
+}
+
+// The same treatment the sidebar gives a group heading, because it is the same idea in the same
+// shape: a word that sorts the rows under it and is not itself a target.
+.topic-group-label {
+  margin: 1rem 0 0.25rem;
+  padding-inline: 0.625rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-large);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.topic {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 0;
+  border-radius: var(--app-radius-md);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color var(--app-timing-fast),
+    color var(--app-timing-fast);
+
+  &:hover {
+    background: var(--app-tint-hover);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &:active {
+    background: var(--app-tint-pressed);
+  }
+}
+
+.topic-icon {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+  color: var(--mat-sys-outline);
+  transition: color var(--app-timing-fast);
+}
+
+// Artwork the icon font does not carry, painted through a mask so it takes the row's own colour —
+// placed as an image it would keep the colour it was drawn in while the label beside it moved.
+.topic-icon-mask {
+  display: block;
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.topic-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// How many answers are behind this topic right now. Tabular figures so a column of them lines up on
+// the digit rather than drifting by a fraction of a character.
+.topic-count {
+  flex: none;
+  min-width: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: var(--app-radius-pill);
+  color: var(--mat-sys-outline);
+  font: var(--mat-sys-label-small);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+// Three signals, the same three the sidebar's current page carries: a tinted ground, the brand
+// colour, and a heavier weight — so which topic is chosen survives a monochrome display and the
+// forms of colour blindness that would flatten the tint against the page.
+.topic-active {
+  background: var(--app-tint-primary);
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--app-tint-primary-strong);
+    color: var(--mat-sys-primary);
+  }
+
+  .topic-icon {
+    color: var(--mat-sys-primary);
+  }
+
+  .topic-count {
+    background: var(--app-tint-primary-strong);
+    color: var(--mat-sys-primary);
+  }
+}
+
+// --- The row ------------------------------------------------------------------------------------
+// Everything above, laid along one line instead of down a column: same buttons, same states, and no
+// group headings — a heading inside a scrolling row is passed rather than read.
+
+@mixin chip-row {
+  flex-direction: row;
+  gap: 0.375rem;
+  overflow-x: auto;
+
+  // Room for the ring focus draws, which a tight scrollport would clip on the first and last pill.
+  padding: 0.25rem;
+  margin: -0.25rem;
+
+  // A bar under a single row of pills costs more height than the row itself. The pills are reachable
+  // by wheel, trackpad and touch, and the last one is deliberately left visibly cut off when there
+  // is more, which is what says the row continues.
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  // Reaching the end of the row stops there instead of handing the rest of the gesture to the page,
+  // which on a phone would start scrolling the answers sideways under the thumb.
+  overscroll-behavior-x: contain;
+
+  .topic-group-label {
+    display: none;
+  }
+
+  .topic {
+    flex: none;
+    width: auto;
+    padding: 0.375rem 0.75rem;
+    border: var(--app-border);
+    border-radius: var(--app-radius-pill);
+  }
+
+  .topic-active {
+    border-color: var(--mat-sys-primary);
+  }
+
+  .topic-label {
+    flex: none;
+  }
+
+  .topic-count {
+    min-width: 0;
+    padding: 0;
+    background: none;
+  }
+}
+
+.topics-chips {
+  @include chip-row;
+}
+
+// Where the page has a column to give the list, this is that column; below it there is no room
+// beside the answers for one, so the same buttons run along a line above them instead. The width is
+// the one the dashboard uses for the same decision about its own navigation.
+@media (max-width: 59.999rem) {
+  .topics-responsive {
+    @include chip-row;
+  }
+}

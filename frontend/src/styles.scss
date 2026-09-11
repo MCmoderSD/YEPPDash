@@ -281,6 +281,20 @@ body {
   background: transparent;
 }
 
+// In the dashboard a sideways swipe opens and closes the two drawers (DrawerSwipeService). Chrome
+// reads the same swipe as back/forward navigation whenever the page itself does not scroll that way,
+// draws its arrow at the edge and leaves the page. This switches that off, and only there: on the
+// dashboard, on devices that have a touch screen at all — a trackpad-only machine keeps its
+// two-finger back swipe everywhere, and the public pages keep it on every device.
+//
+// On the root element because that is where Chrome looks: it is the viewport's overscroll that
+// turns into navigation, not any one element's.
+@media (any-pointer: coarse) {
+  html:has(app-dash-page) {
+    overscroll-behavior-x: none;
+  }
+}
+
 // Takes the platform's own scroll bar out of the picture, leaving the element scrollable. Added
 // and removed by ScrollBarComponent, which draws the app's bar over the element instead — this
 // class is only global because the element it applies to lives outside that component.

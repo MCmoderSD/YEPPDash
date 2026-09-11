@@ -1,0 +1,92 @@
+:host {
+  display: block;
+}
+
+// The column the sections stand in. It is rebuilt whenever the topic changes — that is what makes
+// .app-fade-in run again, since a CSS animation only plays when the element carrying it is new.
+// The entrance itself is the app's own: the same fade and the same small settle that every table,
+// card and panel uses when its content lands, on the same token, and taken to a single frame by the
+// reduced-motion contract without this having to know about it.
+.faq-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.faq-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faq-list-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.faq-list-heading-icon {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+  color: var(--mat-sys-primary);
+}
+
+// Artwork the icon font does not carry, painted through a mask so it takes the heading's colour
+// rather than the one it was drawn in.
+.faq-list-heading-mask {
+  display: block;
+  background: currentcolor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.faq-list-entries {
+  display: grid;
+
+  // Wider than a hairline: the cards carry their own edge, and packed tighter than this two closed
+  // ones read as a single control with a line through it.
+  gap: 0.75rem;
+}
+
+// A card is what a link to one answer lands on, so it has to clear the pinned navbar rather than
+// being scrolled to exactly the top of the viewport and left underneath it.
+app-faq-entry {
+  display: block;
+  scroll-margin-block-start: calc(var(--app-navbar-block) + 1.5rem);
+}
+
+// --- Nothing to show ----------------------------------------------------------------------------
+// The same hairline box the page's closing note uses, so an empty result reads as part of the page
+// rather than as something having gone wrong.
+
+.faq-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  border: var(--app-border);
+  border-radius: var(--app-radius-lg);
+  background: var(--mat-sys-surface-container-low);
+  text-align: center;
+}
+
+.faq-list-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  font-size: 2rem;
+  color: var(--mat-sys-outline);
+}
+
+.faq-list-empty-text {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+
+  // A searched-for phrase can be anything, including one long unbroken word pasted in — which
+  // without this pushes the box wider than the column it sits in.
+  overflow-wrap: anywhere;
+}

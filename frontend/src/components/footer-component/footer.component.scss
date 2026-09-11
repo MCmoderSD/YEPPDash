@@ -1,3 +1,12 @@
+// Laid over the FAQ panel, which runs to the bottom of the screen: as the page reaches its end this
+// slides up across the panel's lower edge, and that is how the panel comes to stop at the footer
+// without anything having to follow the scroll. Nothing else ever meets it — the notifications
+// settle above it in the flow.
+:host {
+  position: relative;
+  z-index: 45;
+}
+
 .footer {
   background: var(--mat-sys-surface-container);
   border-block-start: var(--app-border);
