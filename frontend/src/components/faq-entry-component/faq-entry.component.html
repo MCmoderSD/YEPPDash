@@ -1,7 +1,8 @@
 <mat-expansion-panel
   class="app-expansion-card"
-  [class.app-expansion-card-open]="panel.expanded"
-  #panel
+  [class.app-expansion-card-open]="expanded()"
+  [expanded]="expanded()"
+  (expandedChange)="expanded.set($event)"
 >
 
   <mat-expansion-panel-header class="faq-entry-header">

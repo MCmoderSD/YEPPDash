@@ -1,0 +1,69 @@
+<header class="faq-drawer-head">
+  <div class="faq-drawer-heading">
+    <h2 class="faq-drawer-title">FAQ</h2>
+
+    <p class="faq-drawer-context">
+      @if (topicLabel(); as label) {
+        @if (faq.following()) {
+          Answers about <strong>{{ label }}</strong>, because that is the module you are on.
+        } @else {
+          Answers about <strong>{{ label }}</strong>.
+        }
+      } @else {
+        Every answer, across the whole dashboard.
+      }
+    </p>
+
+    @if (fullPageUrl(); as url) {
+      <a class="faq-drawer-full" [href]="url" target="_blank" rel="noopener">
+        <span>Open the full FAQ</span>
+        <mat-icon aria-hidden="true">open_in_new</mat-icon>
+      </a>
+    } @else {
+      <a class="faq-drawer-full" routerLink="/faq" [queryParams]="fullPageParams()">
+        <span>Open the full FAQ</span>
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+      </a>
+    }
+  </div>
+
+  <button
+    mat-icon-button
+    type="button"
+    class="faq-drawer-close"
+    aria-label="Close the FAQ panel"
+    (click)="faq.close()"
+    #closer
+  >
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+</header>
+
+<app-table-search
+  class="faq-drawer-search table-search-tucked"
+  placeholder="A word from the question or the answer"
+  [value]="faq.search()"
+  (query)="faq.changeSearch($event)"
+/>
+
+<app-faq-topics
+  class="faq-drawer-topics"
+  layout="chips"
+  [selected]="faq.topic()"
+  [counts]="counts()"
+  (picked)="faq.pick($event)"
+/>
+
+<div class="faq-drawer-body">
+  <p class="faq-drawer-summary" role="status">
+    {{ count() }} {{ count() === 1 ? 'answer' : 'answers' }}
+  </p>
+
+  <app-faq-list
+    [view]="faq.topic() ?? 'all'"
+    [sections]="sections()"
+    [headings]="grouped()"
+    [search]="faq.search()"
+    (cleared)="faq.changeSearch('')"
+  />
+</div>

@@ -1,0 +1,198 @@
+// Not a mat-sidenav, on purpose. Material's over-mode drawer traps focus for as long as it is open,
+// which is right for a dialog and wrong here: this panel is meant to be read *while* the module
+// behind it is being used, so tabbing out of it has to work. A side-mode drawer would not trap, but
+// it takes its width out of the content column and shoves the page sideways instead. Neither is
+// what was wanted, and both are more code to fight than this is to write.
+//
+// Fixed to the viewport rather than to the shell, because the shell is as tall as the whole page:
+// parked inside it the panel would be a page-tall column with its own footer somewhere below the
+// fold. Sitting under the navbar leaves the FAQ button, the account menu and the drawer toggle
+// reachable while it is open — which matters when the same button is what closes it again.
+//
+// It runs from the navbar to the bottom of the screen, and the navbar and footer are both laid over
+// it (see their z-index): the footer slides up across the panel's lower end as the page reaches it,
+// the way it passes over the sidebar on the other side. That has to be the browser's doing. Moving
+// the bottom edge from a scroll listener instead made it trail the footer by a frame on every
+// scroll — scrolling runs on its own thread, the listener hears about it afterwards — and it
+// wobbled.
+//
+// It starts one pixel early, under the navbar's hairline rather than just below it. Butted up
+// against it, the two edges land on half a device pixel at 150% scaling and round apart, leaving a
+// thin gap across the top.
+:host {
+  position: fixed;
+
+  // Above the page's own scroll bar, which floats down the right edge at 30 and would otherwise be
+  // drawn over the panel — the pointer being near that edge is what reveals it, and reaching for
+  // this panel puts it there. Still far below the CDK overlay, so a menu or a dialog opened from
+  // inside the panel wins over it, including this panel's own sort control.
+  z-index: 40;
+  inset-block: var(--app-navbar-height) 0;
+  inset-inline-end: 0;
+
+  display: flex;
+  flex-direction: column;
+  width: min(26rem, 100vw);
+
+  border-inline-start: var(--app-border);
+  background: var(--mat-sys-surface-container-low);
+  box-shadow: var(--app-elevation-3);
+
+
+  // Closed, and out of the way of everything: off the edge, invisible to the pointer, and out of
+  // the tab order through the inert attribute the component sets alongside this.
+  // A horizontal swipe closes the panel (DrawerSwipeService), so the browser is not also offered the
+  // sideways pan it might read as history navigation. The chip row scrolls on its own regardless: a
+  // scroll container nearer the finger decides for itself.
+  touch-action: pan-y pinch-zoom;
+
+  translate: 100% 0;
+  visibility: hidden;
+  transition:
+    translate var(--app-timing-base),
+    visibility var(--app-motion-base);
+}
+
+:host(.faq-drawer-open) {
+  translate: 0 0;
+  visibility: visible;
+}
+
+// A phone has no room for a panel beside anything, so it takes the width — but still not the
+// navbar, which is where the button that closes it lives.
+@media (max-width: 30rem) {
+  :host {
+    width: 100vw;
+    border-inline-start: 0;
+  }
+}
+
+// --- Head ---------------------------------------------------------------------------------------
+
+.faq-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem 0.75rem 1.25rem;
+  border-block-end: var(--app-border);
+}
+
+.faq-drawer-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.faq-drawer-title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+// What the panel is showing and why. The "because that is the module you are on" half only appears
+// while the topic is following the page: once it has been picked by hand, saying so would be
+// explaining the reader's own click back to them.
+.faq-drawer-context {
+  margin: 0.25rem 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  line-height: 1.5;
+
+  strong {
+    color: var(--mat-sys-on-surface);
+    font-weight: 600;
+  }
+}
+
+.faq-drawer-close {
+  flex: none;
+  margin-block-start: -0.25rem;
+}
+
+// In the head rather than at the foot, where it used to sit: the foot of the panel is what the page
+// footer slides across at the bottom of the page, and a link parked there went under with it.
+.faq-drawer-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-block-start: 0.5rem;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-label-large);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+
+  mat-icon {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+}
+
+// --- Controls -----------------------------------------------------------------------------------
+
+.faq-drawer-search {
+  padding: 1rem 1.25rem 0;
+}
+
+.faq-drawer-topics {
+  padding: 0.75rem 1.25rem 0;
+}
+
+// --- Body ---------------------------------------------------------------------------------------
+// The only part that scrolls. The head, the filters and the link out hold still, so the controls
+// are where they were left however far down the answers the reader has gone.
+
+.faq-drawer-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0.75rem 1.25rem 1.25rem;
+
+  // Room below the last answer for however much of the panel the footer is covering, so it can still
+  // be scrolled clear of it. This only lengthens the list's scroll — nothing on screen hangs off it —
+  // so the frame it arrives late costs nothing.
+  padding-block-end: calc(1.25rem + var(--app-footer-inset, 0px));
+  overflow-y: auto;
+
+  // The app draws its own scroll bars over elements it owns, but that one sits below menus and
+  // dialogs on purpose — which makes it the wrong tool for something that is itself an overlay.
+  // This is the native bar, dressed to match it, exactly as the select panel does.
+  &::-webkit-scrollbar {
+    width: 0.75rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  // The transparent border with content-box clipping is what insets a thin thumb inside the wider
+  // strip, the way the drawn bar centres one in a thicker track.
+  &::-webkit-scrollbar-thumb {
+    border: 0.1875rem solid transparent;
+    border-radius: var(--app-radius-pill);
+    background-color: var(--mat-sys-outline);
+    background-clip: content-box;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mat-sys-primary);
+  }
+
+  // Firefox, which has the standard properties and not the pseudo-elements.
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mat-sys-outline) transparent;
+  }
+
+  // Reaching the end of the answers stops there rather than handing the rest of the gesture to the
+  // module underneath, which would otherwise scroll away behind the panel being read.
+  overscroll-behavior: contain;
+}
+
+.faq-drawer-summary {
+  margin: 0 0 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}

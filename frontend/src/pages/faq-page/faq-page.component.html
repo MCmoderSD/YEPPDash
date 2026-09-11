@@ -1,25 +1,51 @@
 <section class="faq">
 
   <header class="faq-header">
-    <p class="faq-eyebrow">Help</p>
     <h1 class="faq-title">Frequently asked questions</h1>
     <p class="faq-intro">
-      What YEPPBot is, what this dashboard does with your Twitch account, and how finished any of it actually is. Pick a question to open it.
+      What YEPPBot is, what this dashboard does with your Twitch account, and how each module works.
+      Pick a topic, or search for the thing you are stuck on.
     </p>
   </header>
 
-  <div class="faq-entries">
-    @for (entry of entries; track entry.question) {
-      <app-faq-entry [entry]="entry"/>
-    }
-  </div>
+  <div class="faq-layout">
 
-  <aside class="faq-more">
-    <mat-icon class="faq-more-icon" aria-hidden="true">forum</mat-icon>
-    <p class="faq-more-text">
-      Still stuck? Ask on
-      <a href="https://github.com/MCmoderSD/YEPPDash/issues" target="_blank" rel="noopener">GitHub</a>
-      and it will end up on this page.
-    </p>
-  </aside>
+    <app-faq-topics
+      class="faq-rail"
+      [selected]="activeTopic()"
+      [counts]="counts()"
+      (picked)="pickTopic($event)"
+    />
+
+    <div class="faq-main">
+
+      <app-table-search
+        class="faq-page-search table-search-tucked"
+        placeholder="A word from the question or the answer"
+        [value]="search()"
+        (query)="changeSearch($event)"
+      />
+
+      <div class="faq-results">
+        <p class="faq-summary" role="status">{{ summary() }}</p>
+
+        <app-faq-list
+          [view]="activeTopic() ?? 'all'"
+          [sections]="sections()"
+          [open]="fragment()"
+          [search]="search()"
+          (cleared)="changeSearch('')"
+        />
+
+        <aside class="faq-more">
+          <mat-icon class="faq-more-icon" aria-hidden="true">forum</mat-icon>
+          <p class="faq-more-text">
+            Still stuck? Ask on
+            <a href="https://github.com/MCmoderSD/YEPPDash/issues" target="_blank" rel="noopener">GitHub</a>
+            and it will end up on this page.
+          </p>
+        </aside>
+      </div>
+    </div>
+  </div>
 </section>

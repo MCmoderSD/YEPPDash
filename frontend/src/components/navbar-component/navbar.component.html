@@ -6,21 +6,49 @@
           <span class="app-skeleton navbar-skeleton-toggle-fill"></span>
         </span>
       } @else if (auth.currentUser()) {
-        <button
-          mat-icon-button
-          type="button"
-          aria-label="Toggle dashboard navigation"
-          (click)="sidebar.toggle()"
-          class="app-fade-in"
-        >
-          <mat-icon aria-hidden="true">menu</mat-icon>
-        </button>
+        @if (sidebar.available()) {
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Toggle dashboard navigation"
+            (click)="sidebar.toggle()"
+            class="app-fade-in"
+          >
+            <mat-icon aria-hidden="true">menu</mat-icon>
+          </button>
+        } @else if (navigating()) {
+          <span class="navbar-skeleton-toggle app-skeleton-appear" aria-hidden="true">
+            <span class="app-skeleton navbar-skeleton-toggle-fill"></span>
+          </span>
+        } @else if (dashboardUrl; as url) {
+          <a mat-icon-button [href]="url" aria-label="Back to the dashboard" class="app-fade-in">
+            <mat-icon aria-hidden="true">arrow_back</mat-icon>
+          </a>
+        } @else {
+          <a mat-icon-button [routerLink]="overviewPath" aria-label="Back to the dashboard" class="app-fade-in">
+            <mat-icon aria-hidden="true">arrow_back</mat-icon>
+          </a>
+        }
       }
       <a class="navbar-brand" routerLink="/">YEPPDash</a>
     </div>
 
     <div class="navbar-end" [class.navbar-end-authed]="auth.currentUser()">
-      @if (faqUrl; as url) {
+      @if (faq.available()) {
+        <button
+          mat-button
+          type="button"
+          class="navbar-faq"
+          [class.navbar-faq-open]="faq.opened()"
+          [attr.aria-expanded]="faq.opened()"
+          aria-controls="faq-drawer"
+          (click)="toggleFaq()"
+          #trigger
+        >
+          <mat-icon aria-hidden="true">quiz</mat-icon>
+          FAQ
+        </button>
+      } @else if (faqUrl; as url) {
         <a mat-button class="navbar-faq" [href]="url">
           <mat-icon aria-hidden="true">quiz</mat-icon>
           FAQ

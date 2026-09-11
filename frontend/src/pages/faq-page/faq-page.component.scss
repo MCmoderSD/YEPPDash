@@ -5,31 +5,20 @@
   padding: 3rem 1rem 4rem;
 }
 
+// Wider than the legal pages, and deliberately: this one carries a column of topics beside the
+// answers, and the answers themselves still land around a comfortable line length inside it.
 .faq {
   width: 100%;
-
-  // Wider than a bare reading column would be, because the answers sit inside cards with padding of
-  // their own — the text itself still lands around a comfortable line length.
-  max-width: 44rem;
+  max-width: 62rem;
 }
 
-// --- Header -----------------------------------------------------------------------------------
+// --- Header ---------------------------------------------------------------------------------
 
 .faq-header {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-block-end: 2rem;
-}
-
-// The same eyebrow the dashboard's landing page uses, so a public page and a signed-in one read as
-// parts of the same product rather than two designs.
-.faq-eyebrow {
-  margin: 0;
-  color: var(--mat-sys-primary);
-  font: var(--mat-sys-label-medium);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .faq-title {
@@ -45,14 +34,100 @@
   line-height: 1.6;
 }
 
-// --- Entries ----------------------------------------------------------------------------------
+// --- Layout ---------------------------------------------------------------------------------
+// Stacked by default — search, then topics, then answers — which is the order they are used in on a
+// phone. Given the width for a second column the topics move beside the answers and stay there while
+// the page scrolls.
+//
+// The search and the answers are wrapped in .faq-main so the wide layout is a grid of exactly two
+// items, neither of them spanning a row. A single tall item spanning both rows of a two-row grid has
+// its height shared out between them, which inflated the row above and left a strip of dead page
+// between the controls and the first answer. Narrow, that wrapper is display: contents, so the
+// boxes are laid out as one column again and can be interleaved in the order above.
 
-.faq-entries {
-  display: grid;
+.faq-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
 
-  // Wider than the old half-rem: the cards carry their own edge now, and packed tighter than this
-  // two closed cards read as one control with a line through it.
-  gap: 0.75rem;
+.faq-main {
+  display: contents;
+}
+
+.faq-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // A flex or grid item's automatic minimum is its content, which a long unbroken search term or a
+  // wide card would push past the column — taking the whole page with it.
+  min-width: 0;
+}
+
+// How many answers are on the page right now. Quiet, because it is a readout rather than a heading,
+// but present, because filtering that silently returns fewer results is filtering you cannot trust.
+.faq-summary {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// Stacked, the boxes are wanted in the order they are used rather than the order they are written
+// in — the topics are written first because that is where they belong once there is a column for
+// them. Confined to this width on purpose: order applies to grid items too, and left standing it
+// swapped the two columns of the wide layout around.
+@media (max-width: 59.999rem) {
+  .faq-page-search {
+    order: 1;
+  }
+
+  .faq-rail {
+    order: 2;
+  }
+
+  .faq-results {
+    order: 3;
+  }
+}
+
+// The width the dashboard uses for the same decision about its own navigation: below it there is no
+// room for a column beside the content, above it there is.
+@media (min-width: 60rem) {
+  .faq-layout {
+    display: grid;
+    column-gap: 2.5rem;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .faq-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+  }
+
+  // Held against the navbar while the answers beside it scroll. A sticky box travels inside its own
+  // containing block, which for a grid item is the area it was placed in — and that area is as tall
+  // as the answers, which is exactly the room it needs.
+  .faq-rail {
+    position: sticky;
+    top: calc(var(--app-navbar-block) + 1.5rem);
+
+    // Its own scroll once the list of topics outgrows the band the navbar leaves of the viewport,
+    // rather than a column running off the bottom with no way to reach the end of it.
+    max-height: calc(100dvh - var(--app-navbar-block) - 3rem);
+    overflow-y: auto;
+
+    // No bar down a list this short. It is reachable by wheel and trackpad, and a bar sitting over
+    // the topics costs more than it explains.
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
 // --- Closing note -----------------------------------------------------------------------------
@@ -61,12 +136,12 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  margin-block-start: 2.5rem;
+  margin-block-start: 1.25rem;
   padding: 1rem 1.25rem;
   border: var(--app-border);
   border-radius: var(--app-radius-lg);
 
-  // A step below the question cards rather than level with them, so it reads as a footnote to the
+  // A step below the answer cards rather than level with them, so it reads as a footnote to the
   // list instead of as one more entry in it.
   background: var(--mat-sys-surface-container-low);
 }

@@ -4,6 +4,7 @@
   class="user-menu-trigger"
   [matMenuTriggerFor]="menu"
   [attr.aria-label]="'Account menu for ' + user().displayName"
+  #trigger
 >
 
   <span class="user-menu-identity">
@@ -50,7 +51,12 @@
 
   <mat-divider/>
 
-  @if (faqUrl; as url) {
+  @if (faq.available()) {
+    <button mat-menu-item type="button" class="user-menu-faq" (click)="toggleFaq()">
+      <mat-icon aria-hidden="true">quiz</mat-icon>
+      <span>FAQ</span>
+    </button>
+  } @else if (faqUrl; as url) {
     <a mat-menu-item class="user-menu-faq" [href]="url">
       <mat-icon aria-hidden="true">quiz</mat-icon>
       <span>FAQ</span>

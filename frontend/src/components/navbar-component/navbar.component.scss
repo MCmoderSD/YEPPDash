@@ -8,8 +8,10 @@
   position: sticky;
   top: 0;
 
-  // Over the page and its own sticky sidebar, under the page's scroll bar and the CDK overlay.
-  z-index: 10;
+  // Over the page, its sticky sidebar and the FAQ panel, which starts under this bar's hairline and
+  // relies on it to draw that edge. Under the CDK overlay. The page's own scroll bar is lower but
+  // never meets this: it begins where the bar ends.
+  z-index: 50;
 }
 
 .navbar {
@@ -79,6 +81,16 @@
 // the thing here that can be cut and still be read.
 .navbar-faq {
   flex: none;
+}
+
+// While the panel it opens is out, the button carries the same three signals the sidebar gives the
+// page you are on — a tinted ground, the brand colour, a heavier label — so it reads as a control
+// that is currently on rather than as one that was merely clicked. aria-expanded says the same
+// thing to anybody not looking at it.
+.navbar-faq-open {
+  background: var(--app-tint-primary);
+  color: var(--mat-sys-primary);
+  font-weight: 600;
 }
 
 // Signed out the bar holds little else, so the FAQ has the room. Signed in it competes with the

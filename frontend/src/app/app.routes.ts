@@ -1,6 +1,5 @@
 import { CanMatchFn, type Routes } from '@angular/router';
 import { LandingPageComponent } from '../pages/landing-page/landing-page.component';
-import { FaqPageComponent } from '../pages/faq-page/faq-page.component';
 import { ImprintPageComponent } from '../pages/imprint-page/imprint-page.component';
 import { PrivacyPageComponent } from '../pages/privacy-page/privacy-page.component';
 import { TermsPageComponent } from '../pages/terms-page/terms-page.component';
@@ -47,7 +46,7 @@ export const routes: Routes = [
   },
   {
     path: 'faq',
-    component: FaqPageComponent,
+    loadComponent: () => import('../pages/faq-page/faq-page.component').then((module) => module.FaqPageComponent),
     title: 'FAQ',
     canMatch: [otherHostMatch],
     data: {

@@ -4,11 +4,9 @@ import { computed, inject, Service, signal, Signal, WritableSignal } from '@angu
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
-// Below this the drawer has to be an overlay: the content column left beside a 17.5rem drawer is
-// too narrow for the tables the dashboard is mostly made of.
-const WIDE = '(min-width: 60rem)';
 
-const STORAGE_KEY = 'yeppdash.sidebar-expanded';
+const WIDE: string = '(min-width: 60rem)';
+const STORAGE_KEY: string = 'yeppdash.sidebar-expanded';
 
 @Service()
 export class SidebarService {
@@ -26,22 +24,49 @@ export class SidebarService {
 
   private readonly overlay: WritableSignal<boolean> = signal(false);
 
+  private readonly present: WritableSignal<boolean> = signal(false);
+
+  readonly available: Signal<boolean> = this.present.asReadonly();
+
   readonly expanded: Signal<boolean> = this.pinned.asReadonly();
 
   readonly opened: Signal<boolean> = computed((): boolean => this.wide() || this.overlay());
 
+  register(): () => void {
+    this.present.set(true);
+
+    return (): void => {
+      this.present.set(false);
+      this.overlay.set(false);
+    };
+  }
+
   toggle(): void {
     if (this.wide()) {
-      this.pinned.update((pinned: boolean): boolean => !pinned);
-      this.persist(this.pinned());
+      this.pin(!this.pinned());
       return;
     }
 
     this.overlay.update((open: boolean): boolean => !open);
   }
 
+  show(): void {
+    if (this.wide()) this.pin(true);
+    else this.overlay.set(true);
+  }
+
+  hide(): void {
+    if (this.wide()) this.pin(false);
+    else this.overlay.set(false);
+  }
+
   close(): void {
     this.overlay.set(false);
+  }
+
+  private pin(expanded: boolean): void {
+    this.pinned.set(expanded);
+    this.persist(expanded);
   }
 
   private restore(): boolean {
