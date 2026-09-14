@@ -10,7 +10,7 @@
     <ItemGroup>
         <PackageReference Include="BDSM-Test-API" Version="1.0.1"/>
         <PackageReference Include="ClosedXML" Version="0.105.1"/>
-        <PackageReference Include="Dapper" Version="2.1.79"/>
+        <PackageReference Include="Dapper" Version="2.1.86"/>
         <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1"/>
         <PackageReference Include="MySqlConnector" Version="2.6.2"/>
     </ItemGroup>
