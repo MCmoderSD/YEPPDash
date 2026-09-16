@@ -24,29 +24,60 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      # Angular's compiler peer-pins the TypeScript minor it supports, so a major
-      # bump ahead of Angular breaks the build. It moves when Angular moves.
+      # A new Angular major comes with migrations that only `ng update` runs. Applied as a plain
+      # version bump it leaves the code on APIs that moved, so majors are taken by hand — and with
+      # them the three packages below that Angular pins.
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      # Angular's compiler peer-pins the TypeScript minor it supports (Angular 22: >=6.0 <6.1), so
+      # even a minor bump ahead of Angular breaks the build. Patch releases only; it moves when
+      # Angular moves.
       - dependency-name: "typescript"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # @angular/build supports one vitest major (Angular 22: ^4). A newer one still installs, but npm
+      # lists it as invalid and ng update refuses to run until it is undone — see #94 and #98.
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      # Angular's peer range (Angular 22: ^6.5.3 || ^7.4.0).
+      - dependency-name: "rxjs"
         update-types: ["version-update:semver-major"]
       # Must match the node tag in frontend/Dockerfile, not run ahead of it.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
     groups:
+      # Minor and patch releases only. A major update arrives as a PR of its own, so it can be
+      # closed on its own: folded into a group, vitest 5 came back inside the next grouped PR (#94)
+      # after its own PR (#91) had been closed.
       angular-dependencies:
         patterns:
           - "@angular/*"
+        update-types:
+          - "minor"
+          - "patch"
       other-dependencies:
         patterns:
           - "*"
         exclude-patterns:
           - "@angular/*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Backend — .NET / NuGet
   - package-ecosystem: "nuget"
     directory: "/backend"
     schedule:
       interval: "daily"
+    ignore:
+      # ClosedXML caps it below its next major (0.105: [3.1.1, 4.0.0)), so a major bump ahead of
+      # ClosedXML no longer restores. It moves when ClosedXML moves.
+      - dependency-name: "DocumentFormat.OpenXml"
+        update-types: ["version-update:semver-major"]
     groups:
+      # As above: majors arrive on their own.
       dotnet-dependencies:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
