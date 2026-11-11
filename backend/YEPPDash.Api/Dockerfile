@@ -1,5 +1,5 @@
 # ---- Stage 1: Build ----
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0-alpine AS build
 WORKDIR /src
 
 # NuGet.config comes along: BDSM-Test-API lives on the Nexus, not on nuget.org, and without it
